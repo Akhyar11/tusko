@@ -9,6 +9,7 @@ import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
 import OrderSuccessPage from './components/OrderSuccessPage';
 import OrderListPage from './components/OrderListPage';
+import OrderDetailPage from './components/OrderDetailPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
@@ -17,9 +18,10 @@ import { CheckCircle2, Filter } from 'lucide-react';
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders'
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
+  const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -314,13 +316,45 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {currentView === 'orders' ? (
+        {currentView === 'order-detail' ? (
+          <OrderDetailPage
+            order={selectedOrderForDetail}
+            onBack={() => setCurrentView('orders')}
+            onPayOrder={(order) => {
+              setLastCompletedOrder(order);
+              setCurrentView('order-success');
+            }}
+            onBuyAgain={(item) => {
+              const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
+              handleAddToCart(foundProd, 1);
+              setCurrentView('cart');
+            }}
+            onCancelOrder={(order) => {
+              setOrders(prev => prev.map(o => 
+                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
+                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
+                  : o
+              ));
+              setSelectedOrderForDetail(prev => ({ ...prev, status: 'cancelled', payment_status: 'cancelled' }));
+              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
+            }}
+            onCompleteOrder={(order) => {
+              setOrders(prev => prev.map(o => 
+                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
+                  ? { ...o, status: 'completed' } 
+                  : o
+              ));
+              setSelectedOrderForDetail(prev => ({ ...prev, status: 'completed' }));
+              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
+            }}
+          />
+        ) : currentView === 'orders' ? (
           <OrderListPage
             orders={orders}
             onBackToShopping={() => setCurrentView('catalog')}
             onViewOrderDetail={(order) => {
-              setLastCompletedOrder(order);
-              setCurrentView('order-success');
+              setSelectedOrderForDetail(order);
+              setCurrentView('order-detail');
             }}
             onPayOrder={(order) => {
               setLastCompletedOrder(order);
