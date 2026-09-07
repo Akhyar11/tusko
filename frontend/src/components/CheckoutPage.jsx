@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods } from '../data/mockCheckoutData';
+import AddressModal from './AddressModal';
 
 export default function CheckoutPage({
   checkoutItems = [],
@@ -27,6 +28,38 @@ export default function CheckoutPage({
   const [addresses, setAddresses] = useState(mockAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+  const handleSaveAddress = (newOrUpdated) => {
+    setAddresses(prev => {
+      const exists = prev.some(a => a.id === newOrUpdated.id);
+      let updated;
+      if (exists) {
+        updated = prev.map(a => a.id === newOrUpdated.id ? newOrUpdated : a);
+      } else {
+        updated = [...prev, newOrUpdated];
+      }
+
+      if (newOrUpdated.is_default) {
+        updated = updated.map(a => ({
+          ...a,
+          is_default: a.id === newOrUpdated.id
+        }));
+      }
+      return updated;
+    });
+
+    setSelectedAddressId(newOrUpdated.id);
+  };
+
+  const handleDeleteAddress = (id) => {
+    setAddresses(prev => prev.filter(a => a.id !== id));
+    if (selectedAddressId === id) {
+      const remaining = addresses.filter(a => a.id !== id);
+      if (remaining.length > 0) {
+        setSelectedAddressId(remaining[0].id);
+      }
+    }
+  };
 
   // Selected courier per store
   const [selectedExpedition, setSelectedExpedition] = useState(mockExpeditions[0]);
@@ -387,57 +420,15 @@ export default function CheckoutPage({
       </div>
 
       {/* Address Selection Modal */}
-      {isAddressModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-              <h3 className="font-bold text-sm sm:text-base text-gray-900">Pilih Alamat Pengiriman</h3>
-              <button
-                onClick={() => setIsAddressModalOpen(false)}
-                className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                ✕ Tutup
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-              {addresses.map(addr => {
-                const isSelected = selectedAddressId === addr.id;
-                return (
-                  <div
-                    key={addr.id}
-                    onClick={() => {
-                      setSelectedAddressId(addr.id);
-                      setIsAddressModalOpen(false);
-                    }}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500'
-                        : 'border-gray-200 hover:border-emerald-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-gray-900">{addr.recipient_name}</span>
-                      <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-semibold">
-                        {addr.label}
-                      </span>
-                      {addr.is_default && (
-                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">
-                          Utama
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{addr.phone}</p>
-                    <p className="text-xs text-gray-700 mt-1 leading-relaxed">
-                      {addr.full_address}, {addr.city}, {addr.postal_code}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        addresses={addresses}
+        selectedAddressId={selectedAddressId}
+        onSelectAddress={(id) => setSelectedAddressId(id)}
+        onSaveAddress={handleSaveAddress}
+        onDeleteAddress={handleDeleteAddress}
+      />
 
       {/* Order Success / Payment Instructions Modal */}
       {orderSuccessData && (
