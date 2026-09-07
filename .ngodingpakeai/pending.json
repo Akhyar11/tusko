@@ -1,0 +1,150 @@
+{
+  "repo": "Toko Online",
+  "generatedForCommit": "22aab3ea646ab9a3aa8101c8d362c000a9984be4",
+  "files": [
+    {
+      "path": ".codex/skills/ngodingpakeai/SKILL.md",
+      "reason": "new",
+      "language": "markdown",
+      "size": 17863
+    },
+    {
+      "path": ".gitignore",
+      "reason": "new",
+      "language": null,
+      "size": 44
+    },
+    {
+      "path": ".ngodingpakeaiignore",
+      "reason": "new",
+      "language": null,
+      "size": 269
+    },
+    {
+      "path": "AGENTS.md",
+      "reason": "new",
+      "language": "markdown",
+      "size": 17617
+    },
+    {
+      "path": "frontend/.gitignore",
+      "reason": "new",
+      "language": null,
+      "size": 253
+    },
+    {
+      "path": "frontend/.oxlintrc.json",
+      "reason": "new",
+      "language": "json",
+      "size": 231
+    },
+    {
+      "path": "frontend/README.md",
+      "reason": "new",
+      "language": "markdown",
+      "size": 1009
+    },
+    {
+      "path": "frontend/index.html",
+      "reason": "new",
+      "language": "html",
+      "size": 360
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "reason": "new",
+      "language": "json",
+      "size": 62048
+    },
+    {
+      "path": "frontend/package.json",
+      "reason": "new",
+      "language": "json",
+      "size": 554
+    },
+    {
+      "path": "frontend/src/App.css",
+      "reason": "new",
+      "language": "css",
+      "size": 2891
+    },
+    {
+      "path": "frontend/src/App.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 4307
+    },
+    {
+      "path": "frontend/src/components/CategoryBar.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 2382
+    },
+    {
+      "path": "frontend/src/components/Footer.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 4668
+    },
+    {
+      "path": "frontend/src/components/Navbar.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 5992
+    },
+    {
+      "path": "frontend/src/components/ProductCard.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 4898
+    },
+    {
+      "path": "frontend/src/components/ProductGrid.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 2983
+    },
+    {
+      "path": "frontend/src/components/PromoBanner.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 4521
+    },
+    {
+      "path": "frontend/src/data/mockProducts.js",
+      "reason": "new",
+      "language": "javascript",
+      "size": 6935
+    },
+    {
+      "path": "frontend/src/index.css",
+      "reason": "new",
+      "language": "css",
+      "size": 328
+    },
+    {
+      "path": "frontend/src/main.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 229
+    },
+    {
+      "path": "frontend/src/utils/formatters.js",
+      "reason": "new",
+      "language": "javascript",
+      "size": 212
+    },
+    {
+      "path": "frontend/vite.config.js",
+      "reason": "new",
+      "language": "javascript",
+      "size": 233
+    },
+    {
+      "path": "package.json",
+      "reason": "new",
+      "language": "json",
+      "size": 176
+    }
+  ]
+}

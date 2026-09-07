@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, MapPin, BadgeCheck, Plus, ShoppingCart } from 'lucide-react';
+import { Star, MapPin, BadgeCheck, Plus, Flame, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
 export default function ProductCard({ 
@@ -7,8 +7,13 @@ export default function ProductCard({
   onAddToCart = () => {},
   onSelectProduct = () => {}
 }) {
-  const isLowStock = product.stock <= product.stock_minimum && product.stock > 0;
-  const isOutOfStock = product.stock <= 0;
+  const stock = Number(product.stock ?? 0);
+  const minStock = Number(product.stock_minimum ?? 5);
+  const isOutOfStock = stock <= 0;
+  const isLowStock = !isOutOfStock && stock <= minStock;
+
+  // Percentage for stock bar (low stock warning)
+  const stockRatioPercent = Math.min(100, Math.max(10, Math.round((stock / (minStock * 2)) * 100)));
 
   return (
     <div 
@@ -21,7 +26,9 @@ export default function ProductCard({
           src={product.image_url}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+          className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 ${
+            isOutOfStock ? 'grayscale opacity-75' : ''
+          }`}
         />
 
         {/* Badges Overlay */}
@@ -38,10 +45,24 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Out of Stock Overlay */}
+        {/* Stock Badge on Top Right */}
+        <div className="absolute top-2 right-2 z-10">
+          {isOutOfStock ? (
+            <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+              Habis
+            </span>
+          ) : isLowStock ? (
+            <span className="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+              <Flame size={11} className="fill-current" />
+              Sisa {stock}!
+            </span>
+          ) : null}
+        </div>
+
+        {/* Out of Stock Dark Overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center">
-            <span className="bg-rose-600 text-white font-bold text-xs px-3 py-1 rounded-md">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center">
+            <span className="bg-gray-900/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-gray-700 shadow-md">
               Stok Habis
             </span>
           </div>
@@ -89,23 +110,49 @@ export default function ProductCard({
             <span className="text-gray-300">•</span>
             <span>{product.sold_count}+ terjual</span>
           </div>
-        </div>
 
-        {/* Stock status & Action */}
-        <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
-          <div>
-            {isLowStock && (
-              <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-                Sisa {product.stock}
-              </span>
-            )}
-            {!isLowStock && !isOutOfStock && (
-              <span className="text-[10px] text-gray-400">
-                Stok: {product.stock}
-              </span>
+          {/* Stock Indicator Progress & Details */}
+          <div className="mt-2.5 pt-2 border-t border-gray-100">
+            {isOutOfStock ? (
+              <div className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold">
+                <AlertCircle size={12} />
+                <span>Stok tidak tersedia</span>
+              </div>
+            ) : isLowStock ? (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-rose-600 flex items-center gap-0.5">
+                    <Flame size={12} className="fill-rose-500 text-rose-500" />
+                    Segera Habis
+                  </span>
+                  <span className="text-gray-500 font-medium text-[10px]">
+                    Sisa <strong className="text-rose-600">{stock}</strong> unit
+                  </span>
+                </div>
+                {/* Visual stock bar */}
+                <div className="w-full bg-rose-100 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-rose-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${stockRatioPercent}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-[11px] text-gray-500">
+                <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Stok Tersedia
+                </span>
+                <span className="text-gray-400 text-[10px]">
+                  {stock} unit
+                </span>
+              </div>
             )}
           </div>
+        </div>
 
+        {/* Action Button */}
+        <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-end">
           <button
             type="button"
             disabled={isOutOfStock}
@@ -113,11 +160,11 @@ export default function ProductCard({
               e.stopPropagation();
               onAddToCart(product);
             }}
-            className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            title="Tambah ke Keranjang"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            title={isOutOfStock ? "Stok Habis" : "Tambah ke Keranjang"}
           >
             <Plus size={14} />
-            <span>Keranjang</span>
+            <span>{isOutOfStock ? 'Stok Habis' : '+ Keranjang'}</span>
           </button>
         </div>
       </div>
