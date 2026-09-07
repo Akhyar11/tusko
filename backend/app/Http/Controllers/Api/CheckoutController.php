@@ -242,6 +242,16 @@ class CheckoutController extends Controller
 
         $order->load(['items', 'shippingAddress', 'expedition']);
 
+        // Send order confirmation email
+        $recipientEmail = $order->user?->email ?: $request->input('email');
+        if ($recipientEmail) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(new \App\Mail\OrderConfirmationMail($order));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal mengirim email konfirmasi pesanan: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'message' => 'Pesanan berhasil dibuat.',
             'data' => new OrderResource($order),
@@ -313,6 +323,35 @@ class CheckoutController extends Controller
                 'order_number' => $order->order_number,
                 'snap_token' => $result['token'],
                 'redirect_url' => $result['redirect_url'],
+            ],
+        ]);
+    }
+
+    /**
+     * Send or re-send order confirmation email to customer.
+     */
+    public function sendConfirmationEmail(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'user'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $recipientEmail = $request->input('email') ?: $order->user?->email;
+
+        if (! $recipientEmail) {
+            return response()->json([
+                'message' => 'Alamat email penerima tidak ditemukan. Mohon sertakan email.',
+            ], 422);
+        }
+
+        \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(new \App\Mail\OrderConfirmationMail($order));
+
+        return response()->json([
+            'message' => "Email konfirmasi pesanan berhasil dikirim ke {$recipientEmail}.",
+            'data' => [
+                'order_number' => $order->order_number,
+                'recipient_email' => $recipientEmail,
             ],
         ]);
     }
