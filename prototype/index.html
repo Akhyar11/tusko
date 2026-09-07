@@ -133,10 +133,15 @@
         <button onclick="fitAllArtboards()" class="px-2.5 py-1.5 text-zinc-300 hover:text-white border-l border-zinc-800 text-[10px] font-bold">FIT</button>
       </div>
 
-      <!-- Quick Fullscreen link -->
-      <a href="cart.html" target="_blank" class="bg-white text-black hover:bg-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors">
+      <!-- Quick Refresh & External Link Controls -->
+      <button onclick="refreshAllIframes()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors" title="Muat ulang konten di semua frame">
+        <iconify-icon icon="lucide:rotate-cw" class="text-xs text-amber-400"></iconify-icon>
+        <span>Segarkan</span>
+      </button>
+
+      <a href="beranda.html" target="_blank" class="bg-white text-black hover:bg-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors" title="Buka Beranda langsung di tab baru">
         <iconify-icon icon="lucide:external-link" class="text-xs"></iconify-icon>
-        <span>Buka Mandiri</span>
+        <span>Buka Beranda</span>
       </a>
     </div>
   </header>
@@ -251,7 +256,7 @@
             
             <iframe 
               id="frame-beranda" 
-              src="beranda.html?v=2026_r5" 
+              src="beranda.html" 
               class="w-full h-[900px] bg-white border-0"
             ></iframe>
 
@@ -292,7 +297,7 @@
 
             <iframe 
               id="frame-detail" 
-              src="detail-produk.html?v=2026_r5" 
+              src="detail-produk.html" 
               class="w-full h-[900px] bg-white border-0"
             ></iframe>
 
@@ -333,7 +338,7 @@
 
             <iframe 
               id="frame-cart" 
-              src="cart.html?v=2026_r5" 
+              src="cart.html" 
               class="w-full h-[900px] bg-white border-0"
             ></iframe>
 
@@ -530,6 +535,25 @@
         renderTransform();
       }
     }, { passive: false });
+
+    // Refresh all iframe sources with dynamic timestamp to guarantee no cache stale
+    function refreshAllIframes() {
+      const ts = Date.now();
+      const frames = [
+        { id: 'frame-beranda', file: 'beranda.html' },
+        { id: 'frame-detail', file: 'detail-produk.html' },
+        { id: 'frame-cart', file: 'cart.html' }
+      ];
+      frames.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el) {
+          el.src = `${f.file}?_t=${ts}`;
+        }
+      });
+    }
+
+    // Refresh on initial canvas load
+    refreshAllIframes();
 
     // Initial render
     renderTransform();

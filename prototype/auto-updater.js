@@ -29,10 +29,17 @@
         isUpdating = true;
         showToastNotification();
         setTimeout(() => {
-          // Force reload dengan cache buster
+          // Segarkan semua iframe jika ada di halaman canvas
+          document.querySelectorAll('iframe').forEach(frame => {
+            try {
+              const srcBase = frame.src.split('?')[0];
+              frame.src = srcBase + '?_t=' + latestTimestamp;
+            } catch(e) {}
+          });
+          // Force reload halaman dengan cache buster
           const cleanUrl = window.location.href.split('?')[0];
-          window.location.href = cleanUrl + '?v=' + latestTimestamp;
-        }, 1200);
+          window.location.replace(cleanUrl + '?_t=' + latestTimestamp);
+        }, 1000);
       }
     } catch (e) {
       // Abaikan jika ada gangguan koneksi sesaat
