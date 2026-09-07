@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -82,9 +83,14 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug): JsonResponse
     {
-        $product = Product::with(['category', 'images'])
-            ->where('id', $idOrSlug)
-            ->orWhere('slug', $idOrSlug)
+        $product = Product::with(['category.parent', 'images'])
+            ->where(function ($q) use ($idOrSlug) {
+                if (is_numeric($idOrSlug)) {
+                    $q->where('id', (int) $idOrSlug)->orWhere('slug', $idOrSlug);
+                } else {
+                    $q->where('slug', $idOrSlug);
+                }
+            })
             ->first();
 
         if (!$product) {
@@ -97,7 +103,7 @@ class ProductController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Detail produk berhasil dimuat',
-            'data' => new ProductResource($product)
+            'data' => new ProductDetailResource($product)
         ]);
     }
 }

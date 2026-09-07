@@ -110,4 +110,36 @@ class ProductApiTest extends TestCase
 
         $this->assertCount(1, $response->json('data.images'));
     }
+
+    public function test_can_show_product_detail_by_id(): void
+    {
+        $category = Category::factory()->create();
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'name' => 'Webcam Full HD 1080p',
+            'slug' => 'webcam-full-hd-1080p',
+        ]);
+
+        $response = $this->getJson("/api/products/{$product->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'data' => [
+                    'id' => $product->id,
+                    'name' => 'Webcam Full HD 1080p',
+                ]
+            ]);
+    }
+
+    public function test_returns_404_when_product_not_found(): void
+    {
+        $response = $this->getJson('/api/products/non-existent-product-slug');
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'status' => 'error',
+                'message' => 'Produk tidak ditemukan'
+            ]);
+    }
 }
