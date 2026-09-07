@@ -35,6 +35,23 @@ export default function CartPage({
   const [promoError, setPromoError] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
 
+  // Confirmation modal state for deleting items
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'single', item } | { type: 'bulk', ids, count }
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === 'single') {
+      onRemoveItem(deleteTarget.item.id);
+      setSelectedItemIds(prev => prev.filter(id => id !== deleteTarget.item.id));
+    } else if (deleteTarget.type === 'bulk') {
+      deleteTarget.ids.forEach(id => onRemoveItem(id));
+      setSelectedItemIds(prev => prev.filter(id => !deleteTarget.ids.includes(id)));
+    }
+
+    setDeleteTarget(null);
+  };
+
   // Toggle single item selection
   const handleToggleItem = (id) => {
     setSelectedItemIds(prev => 
@@ -168,10 +185,11 @@ export default function CartPage({
             {selectedItemIds.length > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  selectedItemIds.forEach(id => onRemoveItem(id));
-                  setSelectedItemIds([]);
-                }}
+                onClick={() => setDeleteTarget({
+                  type: 'bulk',
+                  ids: selectedItemIds,
+                  count: selectedItemIds.length
+                })}
                 className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 size={14} />
@@ -272,10 +290,15 @@ export default function CartPage({
                           <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
                             <button
                               type="button"
-                              disabled={item.quantity <= 1}
-                              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => {
+                                if (item.quantity <= 1) {
+                                  setDeleteTarget({ type: 'single', item });
+                                } else {
+                                  onUpdateQuantity(item.id, item.quantity - 1);
+                                }
+                              }}
                               className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                              title="Kurangi 1"
+                              title={item.quantity <= 1 ? "Hapus barang" : "Kurangi 1"}
                             >
                               <Minus size={14} />
                             </button>
@@ -306,7 +329,7 @@ export default function CartPage({
 
                           <button
                             type="button"
-                            onClick={() => onRemoveItem(item.id)}
+                            onClick={() => setDeleteTarget({ type: 'single', item })}
                             className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                             title="Hapus dari keranjang"
                           >
@@ -444,6 +467,66 @@ export default function CartPage({
         </div>
 
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                  {deleteTarget.type === 'single' ? 'Hapus Barang?' : 'Hapus Pilihan Barang?'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Tindakan ini akan menghapus barang dari keranjang belanja.
+                </p>
+              </div>
+            </div>
+
+            {/* Preview of item being deleted */}
+            {deleteTarget.type === 'single' && (
+              <div className="my-3 p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-3">
+                <img
+                  src={deleteTarget.item.image_url}
+                  alt=""
+                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{deleteTarget.item.name}</p>
+                  <p className="text-xs text-emerald-600 font-bold mt-0.5">{formatRupiah(deleteTarget.item.price)}</p>
+                </div>
+              </div>
+            )}
+
+            {deleteTarget.type === 'bulk' && (
+              <div className="my-3 p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-700">
+                <span>Kamu akan menghapus <strong>{deleteTarget.count}</strong> barang sekaligus.</span>
+              </div>
+            )}
+
+            {/* Modal Buttons */}
+            <div className="mt-5 flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                Kembali
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
