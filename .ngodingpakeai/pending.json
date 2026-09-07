@@ -1,148 +1,148 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "22aab3ea646ab9a3aa8101c8d362c000a9984be4",
+  "generatedForCommit": "c683667b35882a2964a15e20822e127e71d4ac71",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 17863
     },
     {
       "path": ".gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 44
     },
     {
       "path": ".ngodingpakeaiignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 269
     },
     {
       "path": "AGENTS.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 17617
     },
     {
       "path": "frontend/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 253
     },
     {
       "path": "frontend/.oxlintrc.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 231
     },
     {
       "path": "frontend/README.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 1009
     },
     {
       "path": "frontend/index.html",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "html",
       "size": 360
     },
     {
       "path": "frontend/package-lock.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 62048
     },
     {
       "path": "frontend/package.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 554
     },
     {
       "path": "frontend/src/App.css",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "css",
       "size": 2891
     },
     {
       "path": "frontend/src/App.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 4307
     },
     {
       "path": "frontend/src/components/CategoryBar.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 2382
     },
     {
       "path": "frontend/src/components/Footer.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 4668
     },
     {
       "path": "frontend/src/components/Navbar.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 5992
     },
     {
       "path": "frontend/src/components/ProductCard.jsx",
-      "reason": "new",
+      "reason": "changed",
       "language": "javascript",
-      "size": 4898
+      "size": 7350
     },
     {
       "path": "frontend/src/components/ProductGrid.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 2983
     },
     {
       "path": "frontend/src/components/PromoBanner.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 4521
     },
     {
       "path": "frontend/src/data/mockProducts.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 6935
     },
     {
       "path": "frontend/src/index.css",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "css",
       "size": 328
     },
     {
       "path": "frontend/src/main.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 229
     },
     {
       "path": "frontend/src/utils/formatters.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 212
     },
     {
       "path": "frontend/vite.config.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 233
     },
     {
       "path": "package.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 176
     }

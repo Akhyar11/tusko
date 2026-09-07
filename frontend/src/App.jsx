@@ -1,14 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import PromoBanner from './components/PromoBanner';
 import CategoryBar from './components/CategoryBar';
 import ProductGrid from './components/ProductGrid';
+import ProductDetail from './components/ProductDetail';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
-import { CheckCircle2, ShoppingBag } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [products] = useState(mockProducts);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -17,6 +19,11 @@ export default function App() {
     { id: 3, quantity: 1 }
   ]);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedProduct]);
 
   // Total items in cart
   const cartTotalCount = useMemo(() => {
@@ -81,7 +88,21 @@ export default function App() {
   };
 
   const handleSelectProduct = (product) => {
-    console.log('Selected product:', product);
+    setSelectedProduct(product);
+  };
+
+  const handleSelectCategory = (catId) => {
+    setSelectedCategoryId(catId);
+    if (selectedProduct) {
+      setSelectedProduct(null);
+    }
+  };
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    if (selectedProduct && query.trim() !== '') {
+      setSelectedProduct(null);
+    }
   };
 
   return (
@@ -98,33 +119,43 @@ export default function App() {
       <Navbar
         cartCount={cartTotalCount}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
         selectedCategory={selectedCategoryId}
-        onSelectCategory={setSelectedCategoryId}
+        onSelectCategory={handleSelectCategory}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {/* Promotional Carousel */}
-        <PromoBanner />
+        {selectedProduct ? (
+          <ProductDetail
+            product={selectedProduct}
+            onBack={() => setSelectedProduct(null)}
+            onAddToCart={handleAddToCart}
+          />
+        ) : (
+          <>
+            {/* Promotional Carousel */}
+            <PromoBanner />
 
-        {/* Quick Category Bar */}
-        <CategoryBar
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-        />
+            {/* Quick Category Bar */}
+            <CategoryBar
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={handleSelectCategory}
+            />
 
-        {/* Product Catalog Grid */}
-        <ProductGrid
-          products={filteredProducts}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          onAddToCart={handleAddToCart}
-          onSelectProduct={handleSelectProduct}
-          categoryTitle={activeCategory ? activeCategory.name : null}
-          searchQuery={searchQuery}
-        />
+            {/* Product Catalog Grid */}
+            <ProductGrid
+              products={filteredProducts}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              onAddToCart={handleAddToCart}
+              onSelectProduct={handleSelectProduct}
+              categoryTitle={activeCategory ? activeCategory.name : null}
+              searchQuery={searchQuery}
+            />
+          </>
+        )}
       </main>
 
       {/* Footer */}
