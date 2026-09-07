@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import OrderStatusModal from './OrderStatusModal';
+import PrintReceiptModal from './PrintReceiptModal';
 
 export default function OrderDetailPage({
   order = null,
@@ -31,13 +32,15 @@ export default function OrderDetailPage({
   onBuyAgain = () => {},
   onCancelOrder = () => {},
   onCompleteOrder = () => {},
-  onUpdateStatus = () => {}
+  onUpdateStatus = () => {},
+  onPrintReceipt = null
 }) {
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
 
   if (!order) {
     return (
@@ -164,6 +167,14 @@ export default function OrderDetailPage({
   const statusConfig = getStatusConfig(order.status);
   const StatusIcon = statusConfig.icon;
 
+  const handleOpenPrintReceipt = () => {
+    if (typeof onPrintReceipt === 'function') {
+      onPrintReceipt(order);
+    } else {
+      setIsPrintReceiptModalOpen(true);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 space-y-5">
       
@@ -179,6 +190,17 @@ export default function OrderDetailPage({
         </button>
 
         <div className="flex items-center gap-2">
+          {/* Tombol Cetak Resi Pengiriman */}
+          <button
+            type="button"
+            onClick={handleOpenPrintReceipt}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-indigo-700 font-bold bg-indigo-50 border border-indigo-300 rounded-xl hover:bg-indigo-100 transition-colors cursor-pointer shadow-2xs"
+            title="Cetak Label Resi Pengiriman"
+          >
+            <Printer size={14} className="text-indigo-600" />
+            <span>Cetak Resi</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsStatusModalOpen(true)}
@@ -195,7 +217,7 @@ export default function OrderDetailPage({
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer shadow-2xs"
           >
             <Printer size={14} />
-            <span>Cetak Bukti Transaksi</span>
+            <span>Cetak Invoice</span>
           </button>
         </div>
       </div>
@@ -255,18 +277,29 @@ export default function OrderDetailPage({
           <div className="flex items-center justify-between pb-2 border-b border-gray-100">
             <div className="flex items-center gap-2 font-bold text-gray-900 text-xs sm:text-sm">
               <Truck size={16} className="text-emerald-600" />
-              <span>Info Pengiriman</span>
+              <span>Info Pengiriman & Resi</span>
             </div>
-            {trackingNumber && (
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setIsTrackingModalOpen(true)}
-                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                onClick={handleOpenPrintReceipt}
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                title="Cetak Label Resi Pengiriman"
               >
-                <span>Lacak Resi</span>
-                <ChevronRight size={13} />
+                <Printer size={12} />
+                <span>Cetak Resi</span>
               </button>
-            )}
+              {trackingNumber && (
+                <button
+                  type="button"
+                  onClick={() => setIsTrackingModalOpen(true)}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Lacak</span>
+                  <ChevronRight size={13} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2 text-xs">
@@ -297,6 +330,29 @@ export default function OrderDetailPage({
             <div className="flex justify-between">
               <span className="text-gray-500">Estimasi Tiba:</span>
               <span className="text-gray-700 font-medium">{expeditionEtd}</span>
+            </div>
+          </div>
+
+          {/* Action Box Cetak Label Resi Siap Tempel */}
+          <div className="pt-2 border-t border-gray-100">
+            <div className="p-3 bg-neutral-50 rounded-xl border border-dashed border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="space-y-0.5 min-w-0">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900">
+                  <FileText size={14} className="text-indigo-600 shrink-0" />
+                  <span className="truncate">Label Resi Pengiriman Paket</span>
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  Format barcode & alamat standar {expeditionName} siap cetak & tempel pada paket.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenPrintReceipt}
+                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <Printer size={13} />
+                <span>Cetak Label Resi</span>
+              </button>
             </div>
           </div>
         </div>
@@ -475,6 +531,17 @@ export default function OrderDetailPage({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Tombol Cetak Resi di Footer */}
+          <button
+            type="button"
+            onClick={handleOpenPrintReceipt}
+            className="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-700 transition-colors cursor-pointer flex items-center gap-1.5"
+            title="Cetak Label Resi Pengiriman"
+          >
+            <Printer size={13} className="text-indigo-600" />
+            <span>Cetak Resi</span>
+          </button>
+
           {order.status === 'pending' && (
             <>
               <button
@@ -623,6 +690,13 @@ export default function OrderDetailPage({
         onClose={() => setIsStatusModalOpen(false)}
         order={order}
         onUpdateStatus={onUpdateStatus}
+      />
+
+      {/* Shipping Receipt Print Modal */}
+      <PrintReceiptModal
+        isOpen={isPrintReceiptModalOpen}
+        onClose={() => setIsPrintReceiptModalOpen(false)}
+        order={order}
       />
 
     </div>

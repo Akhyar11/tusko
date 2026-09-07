@@ -12,11 +12,14 @@ import OrderListPage from './components/OrderListPage';
 import OrderDetailPage from './components/OrderDetailPage';
 import FinancialTransactionsPage from './components/FinancialTransactionsPage';
 import StockManagementPage from './components/StockManagementPage';
+import TemplateManagementPage from './components/TemplateManagementPage';
+import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
+import { initialExpeditions } from './data/mockExpeditionSettings';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 export default function App() {
@@ -30,6 +33,7 @@ export default function App() {
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
   const [stockLogs, setStockLogs] = useState(initialStockLogs);
+  const [expeditions, setExpeditions] = useState(initialExpeditions);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -401,6 +405,8 @@ export default function App() {
         onOpenOrders={() => setCurrentView('orders')}
         onOpenTransactions={() => setCurrentView('transactions')}
         onOpenStock={() => setCurrentView('stock')}
+        onOpenTemplates={() => setCurrentView('templates')}
+        onOpenExpeditions={() => setCurrentView('expeditions')}
       />
 
       {/* Main Container */}
@@ -474,6 +480,8 @@ export default function App() {
             onUpdateStatus={handleUpdateOrderStatus}
             onOpenFinancialTransactions={() => setCurrentView('transactions')}
             onOpenStock={() => setCurrentView('stock')}
+            onOpenTemplates={() => setCurrentView('templates')}
+            onOpenExpeditions={() => setCurrentView('expeditions')}
           />
         ) : currentView === 'transactions' ? (
           <FinancialTransactionsPage
@@ -521,6 +529,49 @@ export default function App() {
               setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${tx.amount.toLocaleString('id-ID')})!`);
             }}
           />
+        ) : currentView === 'templates' ? (
+          <TemplateManagementPage
+            onBack={() => setCurrentView('orders')}
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+          />
+        ) : currentView === 'expeditions' ? (
+          <ExpeditionSettingsPage
+            expeditions={expeditions}
+            onBack={() => setCurrentView('orders')}
+            onAddExpedition={(newExp) => {
+              setExpeditions(prev => [newExp, ...prev]);
+            }}
+            onDeleteExpedition={(targetExp) => {
+              setExpeditions(prev => prev.filter(e => e.id !== targetExp.id));
+            }}
+            onEditRate={(updatedData) => {
+              setExpeditions(prev => prev.map(e => 
+                e.id === updatedData.id
+                  ? { ...e, rateType: updatedData.rateType, baseRate: updatedData.baseRate }
+                  : e
+              ));
+            }}
+            onSetDefault={(exp) => {
+              setExpeditions(prev => prev.map(e => ({
+                ...e,
+                isDefault: e.id === exp.id
+              })));
+              setToastMessage(`${exp.name} (${exp.service}) dijadikan ekspedisi utama toko!`);
+            }}
+            onToggleActive={(exp) => {
+              setExpeditions(prev => prev.map(e => 
+                e.id === exp.id ? { ...e, isActive: !e.isActive } : e
+              ));
+              setToastMessage(`Status ${exp.name} (${exp.service}) diubah menjadi ${!exp.isActive ? 'Aktif' : 'Nonaktif'}.`);
+            }}
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+          />
         ) : currentView === 'order-success' ? (
           <OrderSuccessPage
             orderData={lastCompletedOrder}
@@ -533,6 +584,7 @@ export default function App() {
         ) : currentView === 'checkout' ? (
           <CheckoutPage
             checkoutItems={checkoutItems}
+            availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
             onFinishOrder={(order) => {
               // Remove checked out items from cart

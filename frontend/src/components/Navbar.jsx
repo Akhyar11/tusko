@@ -12,7 +12,8 @@ import {
   X, 
   TrendingUp, 
   Zap, 
-  ShieldCheck 
+  ShieldCheck,
+  Truck
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
@@ -28,7 +29,9 @@ export default function Navbar({
   onOpenCart = () => {},
   onOpenOrders = () => {},
   onOpenTransactions = () => {},
-  onOpenStock = () => {}
+  onOpenStock = () => {},
+  onOpenTemplates = () => {},
+  onOpenExpeditions = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const desktopSearchRef = useRef(null);
@@ -285,13 +288,34 @@ export default function Navbar({
               <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Stok</span>
             </div>
 
+            {/* Template Email & Resi shortcut */}
+            <div 
+              onClick={onOpenTemplates}
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
+              title="Kelola Template Email & Resi"
+            >
+              <Mail size={20} />
+              <span className="hidden xl:inline text-xs font-bold uppercase tracking-wider">Template</span>
+            </div>
+
+            {/* Expedition Settings shortcut */}
+            <div 
+              onClick={onOpenExpeditions}
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
+              title="Pengaturan Jasa Ekspedisi & Kurir"
+            >
+              <Truck size={20} />
+              <span className="hidden xl:inline text-xs font-bold uppercase tracking-wider">Ekspedisi</span>
+            </div>
+
             {/* Notifications */}
             <div className="hidden md:flex items-center gap-1 text-neutral-300">
-              <button className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer">
+              <button 
+                onClick={onOpenTemplates}
+                className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer"
+                title="Kelola Template Email & Resi"
+              >
                 <Bell size={20} />
-              </button>
-              <button className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer">
-                <Mail size={20} />
               </button>
             </div>
 

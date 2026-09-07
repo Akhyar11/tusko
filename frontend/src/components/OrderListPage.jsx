@@ -18,11 +18,14 @@ import {
   MapPin,
   Package,
   Wallet,
-  Boxes
+  Boxes,
+  Printer,
+  Mail
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { orderStatuses, mockOrders } from '../data/mockOrders';
 import OrderStatusModal from './OrderStatusModal';
+import PrintReceiptModal from './PrintReceiptModal';
 
 export default function OrderListPage({
   orders = mockOrders,
@@ -34,7 +37,9 @@ export default function OrderListPage({
   onCompleteOrder = () => {},
   onUpdateStatus = () => {},
   onOpenFinancialTransactions = () => {},
-  onOpenStock = () => {}
+  onOpenStock = () => {},
+  onOpenTemplates = () => {},
+  onOpenExpeditions = () => {}
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -42,6 +47,7 @@ export default function OrderListPage({
   const [copiedInvoice, setCopiedInvoice] = useState(null);
   const [trackingModalOrder, setTrackingModalOrder] = useState(null);
   const [statusModalOrder, setStatusModalOrder] = useState(null);
+  const [printReceiptOrder, setPrintReceiptOrder] = useState(null);
 
   const handleCopy = (invoice) => {
     navigator.clipboard?.writeText(invoice);
@@ -196,6 +202,24 @@ export default function OrderListPage({
           >
             <Boxes size={15} className="text-blue-600" />
             <span>Stok Gudang</span>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenTemplates}
+            className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold text-xs rounded-xl border border-purple-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="Kelola Template Email Notifikasi & Format Resi"
+          >
+            <Mail size={15} className="text-purple-600" />
+            <span>Template</span>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenExpeditions}
+            className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs rounded-xl border border-indigo-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="Kelola Jasa Ekspedisi & Tarif Ongkir Toko"
+          >
+            <Truck size={15} className="text-indigo-600" />
+            <span>Ekspedisi</span>
           </button>
           <button
             type="button"
@@ -506,6 +530,19 @@ export default function OrderListPage({
                       <span>Ubah Status</span>
                     </button>
 
+                    {/* Cetak Resi Button */}
+                    {(order.status === 'processing' || order.status === 'shipped' || order.status === 'completed') && (
+                      <button
+                        type="button"
+                        onClick={() => setPrintReceiptOrder(order)}
+                        className="px-3 py-1.5 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 border border-gray-200 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                        title="Cetak Label Resi Pengiriman"
+                      >
+                        <Printer size={13} />
+                        <span>Cetak Resi</span>
+                      </button>
+                    )}
+
                     {/* View Details Button */}
                     <button
                       type="button"
@@ -621,6 +658,13 @@ export default function OrderListPage({
         onClose={() => setStatusModalOrder(null)}
         order={statusModalOrder}
         onUpdateStatus={onUpdateStatus}
+      />
+
+      {/* Print Receipt Modal */}
+      <PrintReceiptModal
+        isOpen={Boolean(printReceiptOrder)}
+        onClose={() => setPrintReceiptOrder(null)}
+        order={printReceiptOrder}
       />
 
     </div>

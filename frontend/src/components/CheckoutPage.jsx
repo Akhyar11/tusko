@@ -29,7 +29,8 @@ import PaymentInstructionModal from './PaymentInstructionModal';
 export default function CheckoutPage({
   checkoutItems = [],
   onBackToCart = () => {},
-  onFinishOrder = () => {}
+  onFinishOrder = () => {},
+  availableExpeditions = null
 }) {
   const [addresses, setAddresses] = useState(mockAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
@@ -73,14 +74,37 @@ export default function CheckoutPage({
     }
   };
 
-  // Selected courier per store
-  const [selectedExpedition, setSelectedExpedition] = useState(mockExpeditions[0]);
-  const [isExpeditionModalOpen, setIsExpeditionModalOpen] = useState(false);
-
   const totalWeight = useMemo(() => {
     const count = checkoutItems.reduce((acc, item) => acc + item.quantity, 0);
     return Number((count * 0.4).toFixed(1)) || 0.4;
   }, [checkoutItems]);
+
+  const activeExpeditions = useMemo(() => {
+    if (availableExpeditions && availableExpeditions.length > 0) {
+      return availableExpeditions.filter(e => e.isActive !== false);
+    }
+    return mockExpeditions;
+  }, [availableExpeditions]);
+
+  const initialDefaultExp = useMemo(() => {
+    return activeExpeditions.find(e => e.isDefault) || activeExpeditions[0];
+  }, [activeExpeditions]);
+
+  // Selected courier per store
+  const [selectedExpedition, setSelectedExpedition] = useState(() => {
+    const base = initialDefaultExp.baseRate || initialDefaultExp.baseCost || initialDefaultExp.cost || 18000;
+    const rateType = initialDefaultExp.rateType || 'per_kg';
+    const isFree = Boolean(initialDefaultExp.is_free);
+    const cost = isFree ? 0 : (rateType === 'per_kg' ? Math.max(1, Math.ceil(0.4)) * base : base);
+
+    return {
+      ...initialDefaultExp,
+      baseCost: base,
+      cost,
+      is_free: isFree
+    };
+  });
+  const [isExpeditionModalOpen, setIsExpeditionModalOpen] = useState(false);
   
   // Selected payment method
   const [selectedPayment, setSelectedPayment] = useState(mockPaymentMethods[0].methods[0]);
@@ -113,8 +137,16 @@ export default function CheckoutPage({
   }, [checkoutItems]);
 
   const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
-  const shippingCost = selectedExpedition.is_free ? 0 : selectedExpedition.cost;
-  const shippingSavings = selectedExpedition.is_free ? selectedExpedition.baseCost : 0;
+  
+  const shippingCost = useMemo(() => {
+    if (!selectedExpedition) return 0;
+    if (selectedExpedition.is_free) return 0;
+    const base = selectedExpedition.baseRate || selectedExpedition.baseCost || selectedExpedition.cost || 18000;
+    const rateType = selectedExpedition.rateType || 'per_kg';
+    return rateType === 'per_kg' ? Math.max(1, Math.ceil(totalWeight)) * base : base;
+  }, [selectedExpedition, totalWeight]);
+
+  const shippingSavings = selectedExpedition?.is_free ? (selectedExpedition.baseCost || selectedExpedition.baseRate || 18000) : 0;
   const insuranceCost = withInsurance ? 2500 : 0;
   const serviceFee = 1000;
   const paymentFee = selectedPayment.fee || 0;
@@ -717,6 +749,7 @@ export default function CheckoutPage({
         selectedExpedition={selectedExpedition}
         onSelectExpedition={(exp) => setSelectedExpedition(exp)}
         totalWeight={totalWeight}
+        expeditions={activeExpeditions}
       />
 
       {/* Order Success / Payment Instructions Modal */}

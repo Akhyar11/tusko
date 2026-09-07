@@ -8,14 +8,35 @@ export default function ExpeditionModal({
   onClose = () => {},
   selectedExpedition = null,
   onSelectExpedition = () => {},
-  totalWeight = 1.2 // in kg
+  totalWeight = 1.2, // in kg
+  expeditions = null
 }) {
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!isOpen) return null;
 
-  const filteredExpeditions = mockExpeditions.filter(exp => {
+  const rawList = (expeditions && expeditions.length > 0)
+    ? expeditions.filter(e => e.isActive !== false)
+    : mockExpeditions;
+
+  const dynamicExpeditions = rawList.map(exp => {
+    const baseRate = exp.baseRate || exp.baseCost || exp.cost || 18000;
+    const rateType = exp.rateType || 'per_kg';
+    const isFree = Boolean(exp.is_free);
+    const calculatedCost = isFree 
+      ? 0 
+      : (rateType === 'per_kg' ? Math.max(1, Math.ceil(totalWeight)) * baseRate : baseRate);
+
+    return {
+      ...exp,
+      baseCost: baseRate,
+      cost: calculatedCost,
+      is_free: isFree
+    };
+  });
+
+  const filteredExpeditions = dynamicExpeditions.filter(exp => {
     const matchesCategory = selectedCategory === 'Semua' || exp.category === selectedCategory;
     const matchesSearch = exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           exp.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
