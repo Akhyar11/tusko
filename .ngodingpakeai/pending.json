@@ -1,6 +1,6 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "61f790ddd9ce5d75972367280455c42877da19e3",
+  "generatedForCommit": "e9700986ab1261fcbd2b071040280b95e8173f10",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
@@ -72,7 +72,7 @@
       "path": "frontend/src/App.jsx",
       "reason": "changed",
       "language": "javascript",
-      "size": 5184
+      "size": 5458
     },
     {
       "path": "frontend/src/components/CategoryBar.jsx",
@@ -88,9 +88,9 @@
     },
     {
       "path": "frontend/src/components/Navbar.jsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "javascript",
-      "size": 5992
+      "size": 11198
     },
     {
       "path": "frontend/src/components/ProductCard.jsx",
@@ -100,15 +100,15 @@
     },
     {
       "path": "frontend/src/components/ProductDetail.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 17648
     },
     {
       "path": "frontend/src/components/ProductGrid.jsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "javascript",
-      "size": 2983
+      "size": 4232
     },
     {
       "path": "frontend/src/components/PromoBanner.jsx",
@@ -118,7 +118,7 @@
     },
     {
       "path": "frontend/src/data/mockProducts.js",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 10674
     },
