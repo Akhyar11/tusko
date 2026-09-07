@@ -1,0 +1,192 @@
+/**
+ * Mock Data Transaksi Keuangan (Cashflow In/Out)
+ * Sesuai PRD Tabel `transactions`
+ * Menangani pencatatan transaksi masuk (income) dan keluar (expense)
+ */
+
+export const transactionCategories = [
+  { id: 'all', label: 'Semua Kategori' },
+  { id: 'order_payment', label: 'Pembayaran Pesanan', type: 'income' },
+  { id: 'capital_deposit', label: 'Modal / Setoran Kas', type: 'income' },
+  { id: 'shipping_fee', label: 'Ongkos Kirim Kurir', type: 'expense' },
+  { id: 'gateway_fee', label: 'Biaya Payment Gateway', type: 'expense' },
+  { id: 'restock', label: 'Pengadaan Stok Produk', type: 'expense' },
+  { id: 'operational', label: 'Operasional & Kemasan', type: 'expense' },
+  { id: 'refund', label: 'Pengembalian Dana', type: 'expense' }
+];
+
+export const mockTransactions = [
+  {
+    id: 1,
+    transaction_number: 'TRX/20260907/IN-0091',
+    order_id: 1,
+    order_number: 'INV/20260907/TK/884920',
+    type: 'income',
+    category: 'order_payment',
+    category_label: 'Pembayaran Pesanan',
+    amount: 491000,
+    description: 'Pembayaran pesanan Keyboard Mechanical via BCA VA',
+    payment_method: 'BCA Virtual Account (Midtrans)',
+    status: 'pending',
+    created_at: '2026-09-07T09:30:00Z',
+    customer_name: 'Akhyar Ramadan'
+  },
+  {
+    id: 2,
+    transaction_number: 'TRX/20260906/IN-0088',
+    order_id: 2,
+    order_number: 'INV/20260906/TK/771923',
+    type: 'income',
+    category: 'order_payment',
+    category_label: 'Pembayaran Pesanan',
+    amount: 503000,
+    description: 'Pembayaran pesanan TWS Earbuds & Kaos Polos via GoPay/QRIS',
+    payment_method: 'GoPay / QRIS (Midtrans)',
+    status: 'settled',
+    created_at: '2026-09-06T14:20:00Z',
+    customer_name: 'Akhyar Ramadan'
+  },
+  {
+    id: 3,
+    transaction_number: 'TRX/20260906/EX-0089',
+    order_id: 2,
+    order_number: 'INV/20260906/TK/771923',
+    type: 'expense',
+    category: 'gateway_fee',
+    category_label: 'Biaya Payment Gateway',
+    amount: 3500,
+    description: 'MDR Transaksi QRIS Midtrans 0.7%',
+    payment_method: 'Midtrans Settlement Fee',
+    status: 'settled',
+    created_at: '2026-09-06T14:21:00Z'
+  },
+  {
+    id: 4,
+    transaction_number: 'TRX/20260906/EX-0090',
+    order_id: 2,
+    order_number: 'INV/20260906/TK/771923',
+    type: 'expense',
+    category: 'shipping_fee',
+    category_label: 'Ongkos Kirim Kurir',
+    amount: 22000,
+    description: 'Pelunasan ongkir SiCepat BEST (Next Day)',
+    payment_method: 'Saldo Ekspedisi SiCepat',
+    status: 'settled',
+    created_at: '2026-09-06T15:00:00Z'
+  },
+  {
+    id: 5,
+    transaction_number: 'TRX/20260905/IN-0082',
+    order_id: 3,
+    order_number: 'INV/20260905/TK/554812',
+    type: 'income',
+    category: 'order_payment',
+    category_label: 'Pembayaran Pesanan',
+    amount: 867500,
+    description: 'Pembayaran Smart Watch Ultra via Transfer Bank Mandiri',
+    payment_method: 'Transfer Mandiri',
+    status: 'settled',
+    created_at: '2026-09-05T10:10:00Z',
+    customer_name: 'Akhyar Ramadan'
+  },
+  {
+    id: 6,
+    transaction_number: 'TRX/20260905/EX-0083',
+    order_id: 3,
+    order_number: 'INV/20260905/TK/554812',
+    type: 'expense',
+    category: 'shipping_fee',
+    category_label: 'Ongkos Kirim Kurir',
+    amount: 16000,
+    description: 'Drop paket kurir J&T Express resi JT9928172654',
+    payment_method: 'Kas Toko / Tunai',
+    status: 'settled',
+    created_at: '2026-09-05T17:50:00Z'
+  },
+  {
+    id: 7,
+    transaction_number: 'TRX/20260904/EX-0079',
+    order_id: null,
+    order_number: null,
+    type: 'expense',
+    category: 'restock',
+    category_label: 'Pengadaan Stok Produk',
+    amount: 2450000,
+    description: 'Pengadaan 10 unit Mechanical Keyboard RGB dari Distributor Utama',
+    payment_method: 'BCA Bisnis Transfer',
+    status: 'settled',
+    created_at: '2026-09-04T11:00:00Z'
+  },
+  {
+    id: 8,
+    transaction_number: 'TRX/20260903/EX-0072',
+    order_id: null,
+    order_number: null,
+    type: 'expense',
+    category: 'operational',
+    category_label: 'Operasional & Kemasan',
+    amount: 185000,
+    description: 'Pembelian 100 pcs corrugated mailer box + 2 roll bubble wrap hitam',
+    payment_method: 'Kas Toko / QRIS',
+    status: 'settled',
+    created_at: '2026-09-03T16:20:00Z'
+  },
+  {
+    id: 9,
+    transaction_number: 'TRX/20260901/IN-0065',
+    order_id: 4,
+    order_number: 'INV/20260901/TK/119284',
+    type: 'income',
+    category: 'order_payment',
+    category_label: 'Pembayaran Pesanan',
+    amount: 301000,
+    description: 'Pembayaran pesanan Backpack Laptop 15.6 Inch via BCA VA',
+    payment_method: 'BCA Virtual Account (Midtrans)',
+    status: 'settled',
+    created_at: '2026-09-01T08:25:00Z',
+    customer_name: 'Akhyar Ramadan'
+  },
+  {
+    id: 10,
+    transaction_number: 'TRX/20260901/EX-0066',
+    order_id: 4,
+    order_number: 'INV/20260901/TK/119284',
+    type: 'expense',
+    category: 'gateway_fee',
+    category_label: 'Biaya Payment Gateway',
+    amount: 4000,
+    description: 'Fee Virtual Account Midtrans flat rate',
+    payment_method: 'Midtrans Settlement Fee',
+    status: 'settled',
+    created_at: '2026-09-01T08:26:00Z'
+  },
+  {
+    id: 11,
+    transaction_number: 'TRX/20260901/EX-0067',
+    order_id: 4,
+    order_number: 'INV/20260901/TK/119284',
+    type: 'expense',
+    category: 'shipping_fee',
+    category_label: 'Ongkos Kirim Kurir',
+    amount: 14000,
+    description: 'Pelunasan ongkir Anteraja resi 100029384756',
+    payment_method: 'Saldo Ekspedisi Anteraja',
+    status: 'settled',
+    created_at: '2026-09-01T15:10:00Z'
+  },
+  {
+    id: 12,
+    transaction_number: 'TRX/20260830/IN-0050',
+    order_id: null,
+    order_number: null,
+    type: 'income',
+    category: 'capital_deposit',
+    category_label: 'Modal / Setoran Kas',
+    amount: 5000000,
+    description: 'Setoran modal kas awal bulan toko operasional',
+    payment_method: 'Setor Kas Bank Mandiri',
+    status: 'settled',
+    created_at: '2026-08-30T09:00:00Z',
+    customer_name: 'Owner Toko'
+  }
+];

@@ -10,19 +10,26 @@ import CheckoutPage from './components/CheckoutPage';
 import OrderSuccessPage from './components/OrderSuccessPage';
 import OrderListPage from './components/OrderListPage';
 import OrderDetailPage from './components/OrderDetailPage';
+import FinancialTransactionsPage from './components/FinancialTransactionsPage';
+import StockManagementPage from './components/StockManagementPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
+import { mockTransactions } from './data/mockTransactions';
+import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail'
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
+  const [transactions, setTransactions] = useState(mockTransactions);
+  const [inventory, setInventory] = useState(initialInventory);
+  const [stockLogs, setStockLogs] = useState(initialStockLogs);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -392,6 +399,8 @@ export default function App() {
         onResetHome={handleResetHome}
         onOpenCart={() => setCurrentView('cart')}
         onOpenOrders={() => setCurrentView('orders')}
+        onOpenTransactions={() => setCurrentView('transactions')}
+        onOpenStock={() => setCurrentView('stock')}
       />
 
       {/* Main Container */}
@@ -463,6 +472,54 @@ export default function App() {
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
             onUpdateStatus={handleUpdateOrderStatus}
+            onOpenFinancialTransactions={() => setCurrentView('transactions')}
+            onOpenStock={() => setCurrentView('stock')}
+          />
+        ) : currentView === 'transactions' ? (
+          <FinancialTransactionsPage
+            transactions={transactions}
+            onBackToShopping={() => setCurrentView('catalog')}
+            onViewOrders={() => setCurrentView('orders')}
+            onOpenStock={() => setCurrentView('stock')}
+            onViewOrderDetail={(orderRef) => {
+              const matchedOrder = orders.find(o => 
+                o.id === orderRef.id || 
+                (orderRef.order_number && (o.order_number === orderRef.order_number || o.invoice_number === orderRef.order_number))
+              );
+              if (matchedOrder) {
+                setSelectedOrderForDetail(matchedOrder);
+                setCurrentView('order-detail');
+              } else {
+                setCurrentView('orders');
+              }
+            }}
+          />
+        ) : currentView === 'stock' ? (
+          <StockManagementPage
+            inventory={inventory}
+            stockLogs={stockLogs}
+            onBackToShopping={() => setCurrentView('catalog')}
+            onViewOrders={() => setCurrentView('orders')}
+            onViewTransactions={() => setCurrentView('transactions')}
+            onAddExpenseTransaction={(tx) => {
+              const newFinancialTx = {
+                id: Date.now(),
+                transaction_number: `TRX/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/EX-${Math.floor(1000 + Math.random() * 9000)}`,
+                order_id: null,
+                order_number: null,
+                type: 'expense',
+                category: tx.category || 'restock',
+                category_label: tx.category_label || 'Pengadaan Stok Produk',
+                amount: tx.amount,
+                description: tx.description,
+                payment_method: tx.payment_method || 'Kas Toko / Transfer',
+                status: 'settled',
+                created_at: new Date().toISOString(),
+                customer_name: 'Gudang & Inventaris'
+              };
+              setTransactions(prev => [newFinancialTx, ...prev]);
+              setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${tx.amount.toLocaleString('id-ID')})!`);
+            }}
           />
         ) : currentView === 'order-success' ? (
           <OrderSuccessPage
@@ -515,6 +572,24 @@ export default function App() {
                 }
               };
               setOrders(prev => [newFormattedOrder, ...prev]);
+
+              // Catat transaksi keuangan baru ke buku kas (status: pending)
+              const newFinancialTx = {
+                id: Date.now(),
+                transaction_number: `TRX/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/IN-${Math.floor(1000 + Math.random() * 9000)}`,
+                order_id: newFormattedOrder.id,
+                order_number: newFormattedOrder.order_number,
+                type: 'income',
+                category: 'order_payment',
+                category_label: 'Pembayaran Pesanan',
+                amount: newFormattedOrder.totals.grand_total,
+                description: `Pembayaran pesanan ${newFormattedOrder.order_number} (${order.paymentMethod?.name || 'Virtual Account'})`,
+                payment_method: order.paymentMethod?.name || 'Midtrans Payment',
+                status: 'pending',
+                created_at: new Date().toISOString(),
+                customer_name: order.address?.recipient_name || 'Pembeli'
+              };
+              setTransactions(prev => [newFinancialTx, ...prev]);
 
               setCurrentView('order-success');
               setToastMessage(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);

@@ -3,6 +3,8 @@ import {
   Search, 
   ShoppingCart, 
   ShoppingBag, 
+  Wallet,
+  Boxes,
   Bell, 
   Mail, 
   HelpCircle, 
@@ -24,7 +26,9 @@ export default function Navbar({
   onSelectProduct = () => {},
   onResetHome = () => {},
   onOpenCart = () => {},
-  onOpenOrders = () => {}
+  onOpenOrders = () => {},
+  onOpenTransactions = () => {},
+  onOpenStock = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const desktopSearchRef = useRef(null);
@@ -251,14 +255,34 @@ export default function Navbar({
               )}
             </div>
 
-            {/* Orders / Transactions shortcut */}
+            {/* Orders shortcut */}
             <div 
               onClick={onOpenOrders}
               className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Daftar Transaksi"
+              title="Daftar Pesanan Toko"
             >
-              <ShoppingBag size={21} />
+              <ShoppingBag size={20} />
               <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Pesanan</span>
+            </div>
+
+            {/* Financial Transactions shortcut */}
+            <div 
+              onClick={onOpenTransactions}
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
+              title="Transaksi Keuangan (Arus Kas)"
+            >
+              <Wallet size={20} />
+              <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Keuangan</span>
+            </div>
+
+            {/* Stock Management shortcut */}
+            <div 
+              onClick={onOpenStock}
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
+              title="Manajemen Stok Inventaris"
+            >
+              <Boxes size={20} />
+              <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Stok</span>
             </div>
 
             {/* Notifications */}

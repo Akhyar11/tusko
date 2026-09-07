@@ -16,7 +16,9 @@ import {
   AlertCircle,
   FileText,
   MapPin,
-  Package
+  Package,
+  Wallet,
+  Boxes
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { orderStatuses, mockOrders } from '../data/mockOrders';
@@ -30,7 +32,9 @@ export default function OrderListPage({
   onBuyAgain = () => {},
   onCancelOrder = () => {},
   onCompleteOrder = () => {},
-  onUpdateStatus = () => {}
+  onUpdateStatus = () => {},
+  onOpenFinancialTransactions = () => {},
+  onOpenStock = () => {}
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -174,14 +178,34 @@ export default function OrderListPage({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onBackToShopping}
-          className="self-start sm:self-auto px-4 py-2 bg-white hover:bg-emerald-50 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-600 transition-colors cursor-pointer flex items-center gap-1.5"
-        >
-          <span>Belanja Lagi</span>
-          <ChevronRight size={14} />
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={onOpenFinancialTransactions}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs rounded-xl border border-amber-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="Buka Catatan Transaksi Arus Kas Keuangan"
+          >
+            <Wallet size={15} className="text-amber-600" />
+            <span>Arus Kas</span>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenStock}
+            className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs rounded-xl border border-blue-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="Buka Manajemen Stok & Inventaris Gudang"
+          >
+            <Boxes size={15} className="text-blue-600" />
+            <span>Stok Gudang</span>
+          </button>
+          <button
+            type="button"
+            onClick={onBackToShopping}
+            className="px-3.5 py-2 bg-white hover:bg-emerald-50 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-600 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+          >
+            <span>Belanja Lagi</span>
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Status Filter Tabs (Tokopedia Style) */}
