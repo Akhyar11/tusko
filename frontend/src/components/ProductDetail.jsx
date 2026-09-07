@@ -23,17 +23,17 @@ export default function ProductDetail({
   onAddToCart = () => {},
   onBuyNow = () => {}
 }) {
-  if (!product) return null;
-
-  const galleryImages = product.gallery && product.gallery.length > 0 
+  const galleryImages = product?.gallery && product.gallery.length > 0 
     ? product.gallery 
-    : [product.image_url];
+    : [product?.image_url].filter(Boolean);
 
-  const [activeImage, setActiveImage] = useState(galleryImages[0]);
+  const [activeImage, setActiveImage] = useState(galleryImages[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [isWishlist, setIsWishlist] = useState(false);
   const [activeTab, setActiveTab] = useState('detail');
+
+  if (!product) return null;
 
   const stock = Number(product.stock ?? 0);
   const minStock = Number(product.stock_minimum ?? 5);

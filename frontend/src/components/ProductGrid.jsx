@@ -31,7 +31,7 @@ export default function ProductGrid({
               <button
                 type="button"
                 onClick={onClearSearch}
-                className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-0.5 rounded-full font-medium transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 px-2.5 py-0.5 rounded-full font-bold transition-colors cursor-pointer"
               >
                 <span>Hapus filter pencarian</span>
                 <X size={12} />
@@ -39,23 +39,23 @@ export default function ProductGrid({
             )}
           </div>
           
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-neutral-500 mt-0.5 font-medium">
             {searchQuery
-              ? `Ditemukan ${products.length} produk yang cocok dengan kata kunci Anda`
-              : `Menampilkan ${products.length} produk pilihan berkualitas`}
+              ? `Ditemukan ${products.length} perlengkapan olahraga yang sesuai`
+              : `Menampilkan ${products.length} produk pilihan terbaik`}
           </p>
         </div>
 
         {/* Sort Options */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 hidden sm:inline flex items-center gap-1">
+          <span className="text-xs text-neutral-500 hidden sm:inline flex items-center gap-1 font-semibold">
             <SlidersHorizontal size={14} />
             Urutkan:
           </span>
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="text-xs font-medium bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer text-gray-700"
+            className="text-xs font-semibold bg-white border border-neutral-300 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 cursor-pointer text-neutral-800 shadow-2xs"
           >
             <option value="relevant">Paling Sesuai</option>
             <option value="price_low">Harga Terendah</option>
@@ -68,21 +68,21 @@ export default function ProductGrid({
 
       {/* Grid Content */}
       {products.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-12 text-center my-6 shadow-2xs">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-400 mb-4">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-10 sm:p-12 text-center my-6 shadow-2xs">
+          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto text-neutral-400 mb-4">
             <PackageSearch size={32} />
           </div>
-          <h3 className="text-base font-bold text-gray-800">
+          <h3 className="text-base font-extrabold text-neutral-900 uppercase">
             {searchQuery ? `Tidak ada produk untuk "${searchQuery}"` : 'Produk tidak ditemukan'}
           </h3>
-          <p className="text-xs text-gray-500 mt-1.5 max-w-md mx-auto leading-relaxed">
-            Coba periksa ejaan kata kunci, gunakan sinonim atau kata yang lebih umum, atau hapus filter untuk melihat semua produk.
+          <p className="text-xs text-neutral-500 mt-1.5 max-w-md mx-auto leading-relaxed">
+            Coba periksa kata kunci Anda, gunakan kata umum seperti "jersey", "sepatu", atau reset filter untuk melihat semua koleksi Tusko.
           </p>
           {searchQuery && (
             <button
               type="button"
               onClick={onClearSearch}
-              className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+              className="mt-4 px-4 py-2 bg-neutral-900 hover:bg-amber-500 hover:text-neutral-950 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               Lihat Semua Produk
             </button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Zap, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, Trophy, ShieldCheck } from 'lucide-react';
 
 export default function PromoBanner() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -7,30 +7,33 @@ export default function PromoBanner() {
   const banners = [
     {
       id: 1,
-      tag: 'SUPER SALE 9.9',
-      title: 'Diskon Spesial Gadget & Aksesoris',
-      subtitle: 'Hemat hingga 50% + Cashback Kilat s.d Rp 500rb',
-      bgGradient: 'from-emerald-600 to-teal-800',
-      badgeColor: 'bg-amber-400 text-amber-950',
-      actionText: 'Serbu Sekarang',
+      tag: 'NEW RELEASE 2026',
+      title: 'TUSKO PRO MATCHDAY JERSEY',
+      subtitle: 'Dirancang dengan teknologi sirkulasi AeroTech™ & ultra-lightweight jacquard untuk performa maksimal atlet di lapangan.',
+      bgGradient: 'from-zinc-900 via-neutral-900 to-amber-950',
+      badgeColor: 'bg-amber-400 text-neutral-950 font-black',
+      icon: Zap,
+      actionText: 'Lihat Koleksi Jersey',
     },
     {
       id: 2,
-      tag: 'BEBAS ONGKIR',
-      title: 'Kirim Belanjaan ke Seluruh Nusantara',
-      subtitle: 'Belanja apa saja tanpa khawatir ongkir bersama partner ekspedisi terpercaya',
-      bgGradient: 'from-blue-600 to-indigo-800',
-      badgeColor: 'bg-emerald-400 text-emerald-950',
-      actionText: 'Cek Syarat & Ketentuan',
+      tag: 'MARATHON READY',
+      title: 'HYPERPACE CARBON RACER',
+      subtitle: 'Energy return 88% dengan busa PEBA NitroFoam™ & Full-length Curved Carbon Plate untuk memecahkan rekor personal Anda.',
+      bgGradient: 'from-blue-950 via-slate-900 to-neutral-900',
+      badgeColor: 'bg-sky-400 text-neutral-950 font-black',
+      icon: Trophy,
+      actionText: 'Jelajahi Sepatu Lari',
     },
     {
       id: 3,
-      tag: 'OFFICIAL STORE',
-      title: 'Produk 100% Original & Bergaransi',
-      subtitle: 'Jaminan uang kembali jika barang terbukti tidak asli',
-      bgGradient: 'from-purple-600 to-slate-900',
-      badgeColor: 'bg-rose-400 text-rose-950',
-      actionText: 'Lihat Brand Resmi',
+      tag: 'TUSKO GUARANTEE',
+      title: '100% ORIGINAL & BEBAS ONGKIR',
+      subtitle: 'Semua produk bergaransi resmi. Pengiriman cepat ke seluruh pelosok Indonesia dengan proteksi asuransi pengiriman.',
+      bgGradient: 'from-emerald-950 via-neutral-900 to-zinc-900',
+      badgeColor: 'bg-emerald-400 text-neutral-950 font-black',
+      icon: ShieldCheck,
+      actionText: 'Cek Penawaran Spesial',
     },
   ];
 
@@ -42,64 +45,69 @@ export default function PromoBanner() {
   }, [banners.length]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-sm my-4 bg-gray-900">
+    <div className="relative w-full overflow-hidden rounded-2xl shadow-md my-4 bg-neutral-950 border border-neutral-800">
       <div 
         className="flex transition-transform duration-500 ease-out"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
-        {banners.map((banner) => (
-          <div
-            key={banner.id}
-            className={`min-w-full h-44 sm:h-56 md:h-64 bg-linear-to-r ${banner.bgGradient} p-6 sm:p-10 flex flex-col justify-center text-white relative`}
-          >
-            <div className="max-w-xl z-10">
-              <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-2.5 ${banner.badgeColor}`}>
-                <Zap size={12} className="fill-current" />
-                {banner.tag}
-              </span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
-                {banner.title}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-100 mt-2 line-clamp-2">
-                {banner.subtitle}
-              </p>
-              <button className="mt-4 px-4 py-2 bg-white text-gray-900 hover:bg-gray-100 text-xs sm:text-sm font-semibold rounded-lg shadow-sm w-fit transition-transform active:scale-95 cursor-pointer">
-                {banner.actionText}
-              </button>
-            </div>
+        {banners.map((banner) => {
+          const IconTag = banner.icon;
+          return (
+            <div
+              key={banner.id}
+              className={`min-w-full h-52 sm:h-64 md:h-72 bg-gradient-to-r ${banner.bgGradient} p-6 sm:p-10 flex flex-col justify-center text-white relative`}
+            >
+              <div className="max-w-xl z-10">
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-2.5 ${banner.badgeColor}`}>
+                  <IconTag size={13} className="fill-current" />
+                  {banner.tag}
+                </span>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-none uppercase italic">
+                  {banner.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-neutral-300 mt-3 line-clamp-2 max-w-lg leading-relaxed font-medium">
+                  {banner.subtitle}
+                </p>
+                <button className="mt-5 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs sm:text-sm font-extrabold uppercase tracking-wide rounded-xl shadow-md w-fit transition-all active:scale-95 cursor-pointer">
+                  {banner.actionText}
+                </button>
+              </div>
 
-            {/* Decorative circles */}
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center opacity-20 pointer-events-none">
-              <div className="w-56 h-56 rounded-full border-8 border-white"></div>
+              {/* Athletic decorative stripes */}
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-3 opacity-15 pointer-events-none transform -skew-x-12">
+                <div className="w-10 h-72 bg-white"></div>
+                <div className="w-10 h-72 bg-white"></div>
+                <div className="w-10 h-72 bg-white"></div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Nav buttons */}
       <button
         onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-md backdrop-blur-xs transition-opacity cursor-pointer"
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
         aria-label="Previous slide"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={20} />
       </button>
       <button
         onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-md backdrop-blur-xs transition-opacity cursor-pointer"
+        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
         aria-label="Next slide"
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={20} />
       </button>
 
       {/* Dots Indicator */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+      <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
         {banners.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`h-1.5 rounded-full transition-all cursor-pointer ${
-              currentSlide === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
+            className={`h-2 rounded-full transition-all cursor-pointer ${
+              currentSlide === idx ? 'w-7 bg-amber-400' : 'w-2 bg-neutral-600 hover:bg-neutral-400'
             }`}
             aria-label={`Slide ${idx + 1}`}
           />

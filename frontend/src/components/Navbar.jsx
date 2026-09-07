@@ -2,17 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
   ShoppingCart, 
-  ShoppingBag,
+  ShoppingBag, 
   Bell, 
   Mail, 
-  Smartphone, 
   HelpCircle, 
-  Store,
-  ChevronDown,
-  X,
-  Clock,
-  TrendingUp,
-  Tag
+  ChevronDown, 
+  X, 
+  TrendingUp, 
+  Zap, 
+  ShieldCheck 
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
@@ -20,7 +18,7 @@ export default function Navbar({
   cartCount = 0, 
   searchQuery = '', 
   onSearchChange = () => {},
-  selectedCategory = null,
+  _selectedCategory = null,
   onSelectCategory = () => {},
   products = [],
   onSelectProduct = () => {},
@@ -32,11 +30,11 @@ export default function Navbar({
   const searchContainerRef = useRef(null);
 
   const trendingSearches = [
-    'Mechanical Keyboard', 
-    'Smartphone 5G', 
-    'Kaos Polos', 
-    'TWS Bluetooth', 
-    'Monitor 27 Inch'
+    'Jersey Matchday 2026', 
+    'Sepatu Marathon Carbon', 
+    'Celana Training Tapered', 
+    'Gym Duffle Bag', 
+    'Kaos Kaki Anti-Slip'
   ];
 
   // Live matching products for dropdown preview
@@ -44,7 +42,7 @@ export default function Navbar({
     ? products
         .filter((p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.location.toLowerCase().includes(searchQuery.toLowerCase())
+          (p.location && p.location.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .slice(0, 4)
     : [];
@@ -71,27 +69,31 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-xs">
+    <header className="sticky top-0 z-50 bg-neutral-950 border-b border-neutral-800 text-white shadow-md">
       {/* Top Bar */}
-      <div className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 py-1.5 px-4 hidden md:block">
+      <div className="bg-neutral-900 border-b border-neutral-800 text-[11px] text-neutral-400 py-1.5 px-4 hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center gap-1 hover:text-emerald-600 cursor-pointer">
-              <Smartphone size={13} />
-              Download TokoOnline App
+          <div className="flex items-center space-x-5">
+            <span className="flex items-center gap-1 text-amber-400 font-bold uppercase tracking-wider">
+              <Zap size={13} className="fill-current" />
+              TUSKO OFFICIAL STORE
             </span>
-            <span className="hover:text-emerald-600 cursor-pointer">Mitra TokoOnline</span>
-            <span className="flex items-center gap-1 hover:text-emerald-600 cursor-pointer">
-              <Store size={13} />
-              Mulai Berjualan
+            <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+              <ShieldCheck size={13} className="text-emerald-400" />
+              Garansi Tukar Ukuran 7 Hari
+            </span>
+            <span className="hover:text-white transition-colors cursor-pointer">
+              Bebas Ongkir Seluruh Indonesia
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="flex items-center gap-1 hover:text-emerald-600 cursor-pointer">
+            <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
               <HelpCircle size={13} />
-              Bantuan
+              Bantuan & CS
             </span>
-            <span className="hover:text-emerald-600 cursor-pointer">Tentang TokoOnline</span>
+            <span className="hover:text-white transition-colors cursor-pointer">
+              Tentang Tusko Performance
+            </span>
           </div>
         </div>
       </div>
@@ -102,26 +104,28 @@ export default function Navbar({
           {/* Logo */}
           <div 
             onClick={onResetHome}
-            className="flex items-center gap-2 cursor-pointer select-none group"
+            className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
           >
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:bg-emerald-700 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-neutral-950 font-black text-2xl shadow-md group-hover:bg-amber-400 transition-colors transform -skew-x-6">
               T
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-emerald-600 leading-none">
-                Toko<span className="text-gray-900">Online</span>
+              <span className="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">
+                TUSKO<span className="text-amber-400">.</span>
               </span>
-              <span className="text-[10px] text-gray-400 font-medium">Beli Cepat & Nyaman</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mt-0.5">
+                Sport & Performance
+              </span>
             </div>
           </div>
 
           {/* Category Dropdown Button */}
           <button 
             onClick={() => onSelectCategory(null)}
-            className="hidden lg:flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            className="hidden lg:flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-neutral-300 hover:text-amber-400 px-3 py-2 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
           >
             <span>Kategori</span>
-            <ChevronDown size={16} />
+            <ChevronDown size={15} />
           </button>
 
           {/* Search Bar Container */}
@@ -132,17 +136,17 @@ export default function Navbar({
                 value={searchQuery}
                 onFocus={() => setIsFocused(true)}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Cari di TokoOnline (misal: keyboard, baju, hp)..."
-                className="w-full pl-10 pr-10 py-2.5 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all"
+                placeholder="Cari perlengkapan olahraga (jersey, running shoes, gym gear)..."
+                className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-neutral-900 border border-neutral-750 text-white rounded-xl placeholder-neutral-500 focus:outline-none focus:border-amber-500 focus:bg-neutral-900/90 focus:ring-2 focus:ring-amber-500/20 transition-all"
               />
-              <Search className="absolute left-3.5 top-3 text-gray-400" size={18} />
+              <Search className="absolute left-3.5 top-3 text-neutral-400" size={17} />
 
               {/* Clear search button */}
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-white cursor-pointer"
                 >
                   <X size={16} />
                 </button>
@@ -151,13 +155,13 @@ export default function Navbar({
 
             {/* Search Dropdown Modal/Suggestions */}
             {isFocused && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 text-xs">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800 overflow-hidden z-50 text-xs">
                 {/* When query is empty: Trending and Recent */}
                 {!searchQuery.trim() ? (
-                  <div className="p-3">
-                    <div className="flex items-center gap-1.5 text-gray-400 font-semibold mb-2">
-                      <TrendingUp size={14} className="text-emerald-600" />
-                      <span>Pencarian Populer Hari Ini</span>
+                  <div className="p-3.5">
+                    <div className="flex items-center gap-1.5 text-neutral-400 font-bold mb-2.5 uppercase tracking-wider text-[10px]">
+                      <TrendingUp size={14} className="text-amber-400" />
+                      <span>Paling Dicari Atlet & Komunitas</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {trendingSearches.map((item, idx) => (
@@ -165,7 +169,7 @@ export default function Navbar({
                           key={idx}
                           type="button"
                           onClick={() => handleSelectSuggestion(item)}
-                          className="px-2.5 py-1 bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 rounded-lg transition-colors cursor-pointer"
+                          className="px-2.5 py-1 bg-neutral-800 hover:bg-amber-500 hover:text-neutral-950 text-neutral-200 rounded-lg font-medium transition-colors cursor-pointer"
                         >
                           {item}
                         </button>
@@ -176,35 +180,35 @@ export default function Navbar({
                   <div>
                     {/* Live suggestions matching products */}
                     {liveSuggestions.length > 0 ? (
-                      <div className="divide-y divide-gray-100">
-                        <div className="px-3 py-2 bg-gray-50 text-gray-500 font-semibold flex items-center justify-between">
-                          <span>Saran Produk</span>
-                          <span className="text-[11px] text-gray-400">Tekan enter untuk melihat semua</span>
+                      <div className="divide-y divide-neutral-800">
+                        <div className="px-3.5 py-2 bg-neutral-950 text-neutral-400 font-bold flex items-center justify-between text-[11px]">
+                          <span>Saran Produk Tusko</span>
+                          <span className="text-[10px] text-neutral-500">Tekan enter untuk melihat semua</span>
                         </div>
                         {liveSuggestions.map((product) => (
                           <div
                             key={product.id}
                             onClick={() => handleProductClick(product)}
-                            className="p-2.5 flex items-center gap-3 hover:bg-emerald-50/60 cursor-pointer transition-colors"
+                            className="p-3 flex items-center gap-3 hover:bg-neutral-800/80 cursor-pointer transition-colors"
                           >
                             <img
                               src={product.image_url}
                               alt=""
-                              className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                              className="w-10 h-10 rounded-lg object-cover border border-neutral-700 shrink-0"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-800 truncate">{product.name}</p>
+                              <p className="font-semibold text-neutral-100 truncate">{product.name}</p>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="font-bold text-emerald-600">{formatRupiah(product.price)}</span>
-                                <span className="text-gray-400 text-[10px]">• {product.location}</span>
+                                <span className="font-black text-amber-400">{formatRupiah(product.price)}</span>
+                                <span className="text-neutral-400 text-[10px]">• {product.location}</span>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        <span>Tekan enter untuk mencari "<strong>{searchQuery}</strong>" di seluruh katalog</span>
+                      <div className="p-4 text-center text-neutral-400">
+                        <span>Tekan enter untuk mencari "<strong>{searchQuery}</strong>" di seluruh etalase Tusko</span>
                       </div>
                     )}
                   </div>
@@ -213,13 +217,13 @@ export default function Navbar({
             )}
 
             {/* Popular Searches below search bar */}
-            <div className="hidden md:flex items-center gap-2 mt-1.5 overflow-x-auto text-[11px] text-gray-500">
-              <span className="text-gray-400">Paling dicari:</span>
+            <div className="hidden md:flex items-center gap-2 mt-1.5 overflow-x-auto text-[11px] text-neutral-400">
+              <span className="text-neutral-500 font-medium">Tren:</span>
               {trendingSearches.map((item, idx) => (
                 <button
                   key={idx}
                   onClick={() => onSearchChange(item)}
-                  className="hover:text-emerald-600 transition-colors whitespace-nowrap cursor-pointer"
+                  className="hover:text-amber-400 transition-colors whitespace-nowrap cursor-pointer font-medium"
                 >
                   {item}
                 </button>
@@ -228,16 +232,16 @@ export default function Navbar({
           </div>
 
           {/* Actions & Icons */}
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Cart Icon with badge */}
             <div 
               onClick={onOpenCart}
-              className="relative cursor-pointer p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-emerald-600 transition-colors"
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors"
               title="Keranjang Belanja"
             >
               <ShoppingCart size={22} />
               {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center leading-none">
+                <span className="absolute top-0.5 right-0.5 bg-amber-500 text-neutral-950 text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-4 text-center leading-none shadow-sm">
                   {cartCount}
                 </span>
               )}
@@ -246,31 +250,31 @@ export default function Navbar({
             {/* Orders / Transactions shortcut */}
             <div 
               onClick={onOpenOrders}
-              className="relative cursor-pointer p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-emerald-600 transition-colors flex items-center gap-1.5"
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
               title="Daftar Transaksi"
             >
               <ShoppingBag size={21} />
-              <span className="hidden md:inline text-xs font-semibold">Transaksi</span>
+              <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Pesanan</span>
             </div>
 
-            {/* Notifications & Messages */}
-            <div className="hidden sm:flex items-center gap-1 text-gray-600">
-              <button className="p-2 rounded-lg hover:bg-gray-100 hover:text-emerald-600 transition-colors cursor-pointer">
+            {/* Notifications */}
+            <div className="hidden sm:flex items-center gap-1 text-neutral-300">
+              <button className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer">
                 <Bell size={20} />
               </button>
-              <button className="p-2 rounded-lg hover:bg-gray-100 hover:text-emerald-600 transition-colors cursor-pointer">
+              <button className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer">
                 <Mail size={20} />
               </button>
             </div>
 
-            <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+            <div className="h-6 w-px bg-neutral-800 hidden sm:block"></div>
 
             {/* Auth buttons */}
             <div className="flex items-center gap-2">
-              <button className="px-3.5 py-1.5 text-xs font-semibold text-emerald-600 border border-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer">
+              <button className="px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neutral-200 border border-neutral-700 rounded-xl hover:bg-neutral-800 hover:border-neutral-600 transition-colors cursor-pointer">
                 Masuk
               </button>
-              <button className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer">
+              <button className="px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-xs transition-colors cursor-pointer">
                 Daftar
               </button>
             </div>

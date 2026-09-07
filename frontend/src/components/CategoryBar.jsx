@@ -1,25 +1,27 @@
 import React from 'react';
 import { 
-  Tv, 
-  Laptop, 
-  Smartphone, 
   Shirt, 
-  Sparkles, 
-  Car, 
-  Coffee, 
-  HeartPulse,
+  Footprints, 
+  Dumbbell, 
+  Shield, 
+  Zap, 
+  Trophy, 
+  Activity, 
+  Sparkles,
+  Flame,
   Grid
 } from 'lucide-react';
 
 const iconMap = {
-  Tv: Tv,
-  Laptop: Laptop,
-  Smartphone: Smartphone,
   Shirt: Shirt,
+  Footprints: Footprints,
+  Dumbbell: Dumbbell,
+  Shield: Shield,
+  Zap: Zap,
+  Trophy: Trophy,
+  Activity: Activity,
   Sparkles: Sparkles,
-  Car: Car,
-  Coffee: Coffee,
-  HeartPulse: HeartPulse,
+  Flame: Flame,
 };
 
 export default function CategoryBar({ 
@@ -28,23 +30,25 @@ export default function CategoryBar({
   onSelectCategory = () => {} 
 }) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-2xs border border-gray-100 my-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-          <Grid size={16} className="text-emerald-600" />
-          Kategori Pilihan
-        </h3>
+    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-gray-200/80 my-4">
+      <div className="flex items-center justify-between mb-3.5">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-5 bg-amber-500 rounded-full" />
+          <h3 className="text-sm sm:text-base font-extrabold text-gray-900 tracking-tight uppercase">
+            Kategori Unggulan
+          </h3>
+        </div>
         {selectedCategoryId && (
           <button 
             onClick={() => onSelectCategory(null)}
-            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
+            className="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
           >
-            Reset Filter
+            Reset Pilihan
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5 sm:gap-3">
         {categories.map((cat) => {
           const IconComponent = iconMap[cat.icon] || Grid;
           const isSelected = selectedCategoryId === cat.id;
@@ -53,18 +57,18 @@ export default function CategoryBar({
             <button
               key={cat.id}
               onClick={() => onSelectCategory(isSelected ? null : cat.id)}
-              className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer text-center group ${
+              className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer text-center group ${
                 isSelected 
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-700 shadow-2xs' 
-                  : 'border-gray-100 hover:border-emerald-200 hover:bg-gray-50 text-gray-700'
+                  ? 'border-gray-900 bg-gray-900 text-white shadow-md' 
+                  : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 text-gray-700'
               }`}
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105 ${
-                isSelected ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-emerald-100 group-hover:text-emerald-700'
+              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105 ${
+                isSelected ? 'bg-amber-500 text-gray-950' : 'bg-gray-100 text-gray-700 group-hover:bg-amber-100 group-hover:text-amber-800'
               }`}>
                 <IconComponent size={20} />
               </div>
-              <span className="text-[11px] font-medium line-clamp-1">
+              <span className={`text-[11px] font-semibold line-clamp-1 ${isSelected ? 'text-white' : 'text-gray-800'}`}>
                 {cat.name}
               </span>
             </button>

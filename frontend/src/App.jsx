@@ -40,12 +40,12 @@ export default function App() {
   // Initial cart with realistic mock items from mockProducts
   const [cart, setCart] = useState(() => [
     {
-      ...mockProducts[0], // Mechanical Keyboard
+      ...mockProducts[0], // Tusko Pro Matchday Football Jersey
       quantity: 1
     },
     {
-      ...mockProducts[2], // TWS Earphone
-      quantity: 2
+      ...mockProducts[1], // Tusko HyperPace Carbon Running Shoes
+      quantity: 1
     }
   ]);
   
@@ -327,16 +327,16 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#f5f6f8]">
       {/* Toast Notification with Cart Shortcut */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/95 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs sm:text-sm animate-bounce">
-          <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
-          <span>{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 text-white border border-neutral-700 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
+          <CheckCircle2 size={18} className="text-amber-400 shrink-0" />
+          <span className="font-semibold">{toastMessage}</span>
           <button
             type="button"
             onClick={() => {
               setCurrentView('cart');
               setToastMessage(null);
             }}
-            className="ml-2 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer shrink-0"
+            className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-xl transition-colors cursor-pointer shrink-0 tracking-wider"
           >
             Lihat Keranjang
           </button>
@@ -522,12 +522,12 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsMobileFilterOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-600 hover:bg-emerald-100 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-amber-400 text-xs font-black uppercase tracking-wider rounded-xl border border-neutral-800 hover:bg-neutral-800 cursor-pointer shadow-xs"
               >
                 <Filter size={14} />
                 <span>Filter</span>
                 {activeFiltersCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                  <span className="w-5 h-5 rounded-full bg-amber-500 text-neutral-950 text-[10px] flex items-center justify-center font-black">
                     {activeFiltersCount}
                   </span>
                 )}

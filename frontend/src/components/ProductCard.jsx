@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, MapPin, BadgeCheck, Plus, Flame, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Star, MapPin, Plus, Flame, AlertCircle } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
 export default function ProductCard({ 
@@ -18,41 +18,41 @@ export default function ProductCard({
   return (
     <div 
       onClick={() => onSelectProduct(product)}
-      className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-500 transition-all duration-200 flex flex-col cursor-pointer"
+      className="group bg-white rounded-2xl border border-neutral-200/90 overflow-hidden hover:shadow-xl hover:border-neutral-900 transition-all duration-300 flex flex-col cursor-pointer relative"
     >
       {/* Product Image Container */}
-      <div className="relative aspect-square w-full bg-gray-100 overflow-hidden">
+      <div className="relative aspect-square w-full bg-neutral-100 overflow-hidden">
         <img
           src={product.image_url}
           alt={product.name}
           loading="lazy"
-          className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 ${
+          className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ${
             isOutOfStock ? 'grayscale opacity-75' : ''
           }`}
         />
 
         {/* Badges Overlay */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
           {product.is_official && (
-            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-xs flex items-center gap-0.5">
-              Official Store
+            <span className="bg-neutral-950 text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
+              TUSKO PRO
             </span>
           )}
           {product.free_shipping && (
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
               Bebas Ongkir
             </span>
           )}
         </div>
 
         {/* Stock Badge on Top Right */}
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-2.5 right-2.5 z-10">
           {isOutOfStock ? (
-            <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
               Habis
             </span>
           ) : isLowStock ? (
-            <span className="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1 animate-pulse uppercase tracking-wider">
               <Flame size={11} className="fill-current" />
               Sisa {stock}!
             </span>
@@ -61,8 +61,8 @@ export default function ProductCard({
 
         {/* Out of Stock Dark Overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center">
-            <span className="bg-gray-900/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-gray-700 shadow-md">
+          <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-2xs flex items-center justify-center">
+            <span className="bg-neutral-900 text-white font-black text-xs px-3.5 py-1.5 rounded-xl border border-neutral-700 shadow-lg uppercase tracking-wider">
               Stok Habis
             </span>
           </div>
@@ -70,66 +70,70 @@ export default function ProductCard({
       </div>
 
       {/* Product Info */}
-      <div className="p-3.5 flex-1 flex flex-col justify-between">
+      <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
+          {/* Seller / Brand */}
+          <div className="flex items-center justify-between text-[11px] text-neutral-400 mb-1 font-semibold uppercase tracking-wider">
+            <span>{product.seller_name || 'Tusko Official'}</span>
+            <div className="flex items-center gap-0.5 text-neutral-500">
+              <MapPin size={11} className="shrink-0" />
+              <span className="truncate max-w-[100px]">{product.location}</span>
+            </div>
+          </div>
+
           {/* Title */}
-          <h4 className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+          <h4 className="text-xs sm:text-sm font-bold text-neutral-900 line-clamp-2 leading-snug group-hover:text-amber-600 transition-colors">
             {product.name}
           </h4>
 
           {/* Price */}
-          <div className="mt-2">
-            <span className="text-sm sm:text-base font-extrabold text-gray-900">
-              {formatRupiah(product.price)}
-            </span>
+          <div className="mt-2.5">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
+                {formatRupiah(product.price)}
+              </span>
+            </div>
             
             {product.discount_percentage > 0 && (
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1 py-0.2 rounded">
-                  {product.discount_percentage}%
+                <span className="text-[10px] font-extrabold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded">
+                  -{product.discount_percentage}%
                 </span>
-                <span className="text-[11px] text-gray-400 line-through">
+                <span className="text-[11px] text-neutral-400 line-through font-medium">
                   {formatRupiah(product.original_price)}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Location & Seller */}
-          <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-2">
-            <MapPin size={12} className="text-gray-400 shrink-0" />
-            <span className="truncate">{product.location}</span>
-          </div>
-
           {/* Rating & Sold Count */}
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-600 mt-1">
-            <div className="flex items-center text-amber-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-neutral-600 mt-2">
+            <div className="flex items-center text-amber-500 font-bold">
               <Star size={12} className="fill-current" />
-              <span className="font-semibold ml-0.5 text-gray-800">{product.rating}</span>
+              <span className="ml-1 text-neutral-900">{product.rating}</span>
             </div>
-            <span className="text-gray-300">•</span>
-            <span>{product.sold_count}+ terjual</span>
+            <span className="text-neutral-300">•</span>
+            <span className="font-medium text-neutral-500">{product.sold_count}+ terjual</span>
           </div>
 
-          {/* Stock Indicator Progress & Details */}
-          <div className="mt-2.5 pt-2 border-t border-gray-100">
+          {/* Stock Indicator */}
+          <div className="mt-3 pt-2 border-t border-neutral-100">
             {isOutOfStock ? (
-              <div className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold">
+              <div className="flex items-center gap-1 text-[11px] text-rose-600 font-bold">
                 <AlertCircle size={12} />
                 <span>Stok tidak tersedia</span>
               </div>
             ) : isLowStock ? (
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-rose-600 flex items-center gap-0.5">
-                    <Flame size={12} className="fill-rose-500 text-rose-500" />
-                    Segera Habis
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-extrabold text-rose-600 flex items-center gap-0.5 uppercase tracking-wider">
+                    <Flame size={11} className="fill-rose-500" />
+                    Stok Menipis
                   </span>
-                  <span className="text-gray-500 font-medium text-[10px]">
+                  <span className="text-neutral-500 font-bold">
                     Sisa <strong className="text-rose-600">{stock}</strong> unit
                   </span>
                 </div>
-                {/* Visual stock bar */}
                 <div className="w-full bg-rose-100 rounded-full h-1.5 overflow-hidden">
                   <div 
                     className="bg-rose-500 h-full rounded-full transition-all duration-500"
@@ -138,12 +142,12 @@ export default function ProductCard({
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between text-[11px] text-gray-500">
-                <span className="flex items-center gap-1 text-emerald-600 font-medium">
+              <div className="flex items-center justify-between text-[10px] text-neutral-500">
+                <span className="flex items-center gap-1 text-emerald-600 font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Stok Tersedia
+                  Ready Stock
                 </span>
-                <span className="text-gray-400 text-[10px]">
+                <span className="text-neutral-400 font-medium">
                   {stock} unit
                 </span>
               </div>
@@ -152,7 +156,7 @@ export default function ProductCard({
         </div>
 
         {/* Action Button */}
-        <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-end">
+        <div className="mt-3.5 pt-2 border-t border-neutral-100">
           <button
             type="button"
             disabled={isOutOfStock}
@@ -160,10 +164,10 @@ export default function ProductCard({
               e.stopPropagation();
               onAddToCart(product);
             }}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-900 text-white hover:bg-amber-500 hover:text-neutral-950 rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-98"
             title={isOutOfStock ? "Stok Habis" : "Tambah ke Keranjang"}
           >
-            <Plus size={14} />
+            <Plus size={14} className="stroke-[3]" />
             <span>{isOutOfStock ? 'Stok Habis' : '+ Keranjang'}</span>
           </button>
         </div>
