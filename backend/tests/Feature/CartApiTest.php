@@ -163,4 +163,93 @@ class CartApiTest extends TestCase
             ->assertJsonPath('data.total_quantity', 1)
             ->assertJsonPath('data.items.0.product.name', 'Mechanical Keyboard Gaming');
     }
+
+    public function test_can_update_cart_item_quantity_and_notes(): void
+    {
+        $sessionId = 'session_update_test';
+
+        $addResponse = $this->postJson('/api/cart/items', [
+            'product_id' => $this->product->id,
+            'quantity' => 1,
+            'session_id' => $sessionId,
+        ])->assertStatus(201);
+
+        $itemId = $addResponse->json('data.items.0.id');
+
+        $updateResponse = $this->putJson("/api/cart/items/{$itemId}", [
+            'quantity' => 4,
+            'notes' => 'Catatan diperbarui',
+            'session_id' => $sessionId,
+        ]);
+
+        $updateResponse->assertStatus(200)
+            ->assertJsonPath('message', 'Jumlah barang berhasil diperbarui.')
+            ->assertJsonPath('data.total_quantity', 4)
+            ->assertJsonPath('data.items.0.quantity', 4)
+            ->assertJsonPath('data.items.0.notes', 'Catatan diperbarui')
+            ->assertJsonPath('data.items.0.subtotal', 2000000);
+    }
+
+    public function test_update_item_fails_when_quantity_exceeds_stock(): void
+    {
+        $sessionId = 'session_update_stock_test';
+
+        $addResponse = $this->postJson('/api/cart/items', [
+            'product_id' => $this->product->id,
+            'quantity' => 1,
+            'session_id' => $sessionId,
+        ])->assertStatus(201);
+
+        $itemId = $addResponse->json('data.items.0.id');
+
+        $response = $this->putJson("/api/cart/items/{$itemId}", [
+            'quantity' => 25, // stock is 10
+            'session_id' => $sessionId,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonStructure(['message', 'available_stock']);
+    }
+
+    public function test_can_remove_item_from_cart(): void
+    {
+        $sessionId = 'session_remove_test';
+
+        $addResponse = $this->postJson('/api/cart/items', [
+            'product_id' => $this->product->id,
+            'quantity' => 1,
+            'session_id' => $sessionId,
+        ])->assertStatus(201);
+
+        $itemId = $addResponse->json('data.items.0.id');
+
+        $deleteResponse = $this->deleteJson("/api/cart/items/{$itemId}?session_id={$sessionId}");
+
+        $deleteResponse->assertStatus(200)
+            ->assertJsonPath('message', 'Item berhasil dihapus dari keranjang.')
+            ->assertJsonPath('data.total_quantity', 0)
+            ->assertJsonCount(0, 'data.items');
+
+        $this->assertDatabaseMissing('cart_items', ['id' => $itemId]);
+    }
+
+    public function test_can_clear_all_items_in_cart(): void
+    {
+        $sessionId = 'session_clear_test';
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $this->product->id,
+            'quantity' => 2,
+            'session_id' => $sessionId,
+        ])->assertStatus(201);
+
+        $clearResponse = $this->deleteJson("/api/cart/clear?session_id={$sessionId}");
+
+        $clearResponse->assertStatus(200)
+            ->assertJsonPath('message', 'Semua item di keranjang berhasil dikosongkan.')
+            ->assertJsonPath('data.total_quantity', 0)
+            ->assertJsonCount(0, 'data.items');
+
+        $this->assertDatabaseEmpty('cart_items');
+    }
 }

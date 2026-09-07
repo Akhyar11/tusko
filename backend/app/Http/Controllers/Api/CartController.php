@@ -102,4 +102,81 @@ class CartController extends Controller
             'data' => new CartResource($cart),
         ], 201);
     }
+
+    /**
+     * Update quantity and notes for an existing cart item.
+     */
+    public function updateItem(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:255'],
+            'session_id' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $cart = $this->resolveCart($request);
+
+        $cartItem = CartItem::with('product')
+            ->where('cart_id', $cart->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $newQuantity = (int) $request->input('quantity');
+
+        if ($newQuantity > $cartItem->product->stock) {
+            return response()->json([
+                'message' => "Jumlah barang melebihi stok yang tersedia ({$cartItem->product->stock} unit).",
+                'available_stock' => $cartItem->product->stock,
+            ], 422);
+        }
+
+        $cartItem->update([
+            'quantity' => $newQuantity,
+            'notes' => $request->has('notes') ? $request->input('notes') : $cartItem->notes,
+        ]);
+
+        $cart->load(['items.product.category', 'items.product.images']);
+
+        return response()->json([
+            'message' => 'Jumlah barang berhasil diperbarui.',
+            'data' => new CartResource($cart),
+        ]);
+    }
+
+    /**
+     * Remove an item from the cart.
+     */
+    public function removeItem(Request $request, int $id): JsonResponse
+    {
+        $cart = $this->resolveCart($request);
+
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $cartItem->delete();
+
+        $cart->load(['items.product.category', 'items.product.images']);
+
+        return response()->json([
+            'message' => 'Item berhasil dihapus dari keranjang.',
+            'data' => new CartResource($cart),
+        ]);
+    }
+
+    /**
+     * Clear all items in the cart.
+     */
+    public function clear(Request $request): JsonResponse
+    {
+        $cart = $this->resolveCart($request);
+        $cart->items()->delete();
+
+        $cart->load(['items.product.category', 'items.product.images']);
+
+        return response()->json([
+            'message' => 'Semua item di keranjang berhasil dikosongkan.',
+            'data' => new CartResource($cart),
+        ]);
+    }
 }
