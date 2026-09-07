@@ -1,6 +1,6 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "e9700986ab1261fcbd2b071040280b95e8173f10",
+  "generatedForCommit": "5f9ae384a4ebce1892c49ac011afad009609a497",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
@@ -72,13 +72,19 @@
       "path": "frontend/src/App.jsx",
       "reason": "changed",
       "language": "javascript",
-      "size": 5458
+      "size": 11097
     },
     {
       "path": "frontend/src/components/CategoryBar.jsx",
       "reason": "needs_summary",
       "language": "javascript",
       "size": 2382
+    },
+    {
+      "path": "frontend/src/components/FilterSidebar.jsx",
+      "reason": "new",
+      "language": "javascript",
+      "size": 13567
     },
     {
       "path": "frontend/src/components/Footer.jsx",
@@ -88,7 +94,7 @@
     },
     {
       "path": "frontend/src/components/Navbar.jsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 11198
     },
@@ -106,7 +112,7 @@
     },
     {
       "path": "frontend/src/components/ProductGrid.jsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 4232
     },
