@@ -62,7 +62,7 @@ export const mockProducts = [
       { id: 'v107', sku: 'TSK-JRS-SHT-RED-M', sleeve: 'Pendek', color: 'Crimson Red', size: 'M', price: 389000, stock: 7 },
       { id: 'v108', sku: 'TSK-JRS-SHT-RED-L', sleeve: 'Pendek', color: 'Crimson Red', size: 'L', price: 389000, stock: 6 },
       { id: 'v109', sku: 'TSK-JRS-SHT-RED-XL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XL', price: 409000, stock: 4 },
-      { id: 'v110', sku: 'TSK-JRS-SHT-RED-XXL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XXL', price: 424000, stock: 2 },
+      { id: 'v110', sku: 'TSK-JRS-SHT-RED-XXL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XXL', price: 424000, stock: 0 },
       { id: 'v111', sku: 'TSK-JRS-LNG-NVY-M', sleeve: 'Panjang', color: 'Deep Navy', size: 'M', price: 419000, stock: 5 },
       { id: 'v112', sku: 'TSK-JRS-LNG-NVY-L', sleeve: 'Panjang', color: 'Deep Navy', size: 'L', price: 419000, stock: 6 },
       { id: 'v113', sku: 'TSK-JRS-LNG-NVY-XL', sleeve: 'Panjang', color: 'Deep Navy', size: 'XL', price: 439000, stock: 3 },

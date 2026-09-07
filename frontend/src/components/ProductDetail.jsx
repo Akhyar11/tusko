@@ -42,14 +42,14 @@ export default function ProductDetail({
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Initialize selectedOptions from the first variant if available
+  // Initialize selectedOptions from the first available in-stock variant if available
   const [selectedOptions, setSelectedOptions] = useState(() => {
     if (product?.variants && product.variants.length > 0) {
-      const first = product.variants[0];
+      const firstAvailable = product.variants.find((v) => (Number(v.stock) || 0) > 0) || product.variants[0];
       const initial = {};
       (product.variant_levels || []).forEach((lvl) => {
-        if (first[lvl.code] !== undefined) {
-          initial[lvl.code] = first[lvl.code];
+        if (firstAvailable[lvl.code] !== undefined) {
+          initial[lvl.code] = firstAvailable[lvl.code];
         }
       });
       return initial;
@@ -83,11 +83,80 @@ export default function ProductDetail({
   // Calculate estimated loyalty points earned (1% from purchase)
   const loyaltyPointsEarned = Math.floor(currentPrice * 0.01);
 
-  const handleSelectOption = (levelCode, optionValue) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
+  // Check hierarchical availability of an option based on preceding selections
+  const getOptionAvailability = (levelIndex, levelCode, optionVal) => {
+    if (!product?.variants || product.variants.length === 0) {
+      return { available: true, existsInMatrix: true, stock: product?.stock ?? 99, reason: null };
+    }
+
+    // Match this option value + all selections made in PRECEDING levels (0 to levelIndex - 1)
+    const matchingVariants = product.variants.filter((v) => {
+      if (v[levelCode] !== optionVal) return false;
+
+      for (let i = 0; i < levelIndex; i++) {
+        const prevLevel = product.variant_levels[i];
+        const prevChoice = selectedOptions[prevLevel.code];
+        if (prevChoice && v[prevLevel.code] !== prevChoice) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (matchingVariants.length === 0) {
+      return { available: false, existsInMatrix: false, stock: 0, reason: 'Tidak tersedia' };
+    }
+
+    const totalStock = matchingVariants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+    if (totalStock <= 0) {
+      return { available: false, existsInMatrix: true, stock: 0, reason: 'Habis' };
+    }
+
+    return { available: true, existsInMatrix: true, stock: totalStock, reason: null };
+  };
+
+  // Smart hierarchical selection handler
+  const handleSelectOption = (levelIndex, levelCode, optionValue) => {
+    const status = getOptionAvailability(levelIndex, levelCode, optionValue);
+    if (!status.available) return;
+
+    const newOptions = {
+      ...selectedOptions,
       [levelCode]: optionValue
-    }));
+    };
+
+    // Auto-reconcile subsequent levels if their current choices became unavailable
+    if (product.variant_levels && product.variant_levels.length > 0) {
+      for (let i = levelIndex + 1; i < product.variant_levels.length; i++) {
+        const nextLevel = product.variant_levels[i];
+        const currentNextChoice = newOptions[nextLevel.code];
+
+        const isValid = product.variants.some((v) => {
+          if (v[nextLevel.code] !== currentNextChoice) return false;
+          for (let j = 0; j <= levelIndex; j++) {
+            const checkLevel = product.variant_levels[j];
+            if (v[checkLevel.code] !== newOptions[checkLevel.code]) return false;
+          }
+          return (Number(v.stock) || 0) > 0;
+        });
+
+        if (!isValid) {
+          const compatibleVariant = product.variants.find((v) => {
+            for (let j = 0; j <= levelIndex; j++) {
+              const checkLevel = product.variant_levels[j];
+              if (v[checkLevel.code] !== newOptions[checkLevel.code]) return false;
+            }
+            return (Number(v.stock) || 0) > 0;
+          });
+
+          if (compatibleVariant && compatibleVariant[nextLevel.code]) {
+            newOptions[nextLevel.code] = compatibleVariant[nextLevel.code];
+          }
+        }
+      }
+    }
+
+    setSelectedOptions(newOptions);
   };
 
   const getVariantTitle = () => {
@@ -405,7 +474,7 @@ export default function ProductDetail({
                 )}
               </div>
 
-              {product.variant_levels.map((level) => {
+              {product.variant_levels.map((level, levelIdx) => {
                 const currentVal = selectedOptions[level.code];
                 return (
                   <div key={level.code} className="space-y-2">
@@ -423,18 +492,34 @@ export default function ProductDetail({
                     <div className="flex flex-wrap gap-2">
                       {level.options.map((opt) => {
                         const isChosen = currentVal === opt;
+                        const availability = getOptionAvailability(levelIdx, level.code, opt);
+                        const isAvailable = availability.available;
+
                         return (
                           <button
                             key={opt}
                             type="button"
-                            onClick={() => handleSelectOption(level.code, opt)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                            disabled={!isAvailable}
+                            onClick={() => handleSelectOption(levelIdx, level.code, opt)}
+                            title={
+                              isAvailable
+                                ? `${opt} - Stok tersedia: ${availability.stock}`
+                                : `${opt} - ${availability.reason}`
+                            }
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 ${
                               isChosen
-                                ? 'bg-neutral-950 text-amber-400 border-neutral-950 shadow-sm ring-2 ring-amber-400/40'
-                                : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-400 hover:bg-white'
+                                ? 'bg-neutral-950 text-amber-400 border-neutral-950 shadow-sm ring-2 ring-amber-400/40 cursor-pointer'
+                                : !isAvailable
+                                ? 'bg-neutral-100 text-neutral-400 border-neutral-200 line-through opacity-60 cursor-not-allowed'
+                                : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-400 hover:bg-white cursor-pointer'
                             }`}
                           >
-                            {opt}
+                            <span>{opt}</span>
+                            {!isAvailable && (
+                              <span className="text-[9px] font-semibold text-rose-500 normal-case no-underline">
+                                ({availability.reason || 'Habis'})
+                              </span>
+                            )}
                           </button>
                         );
                       })}
