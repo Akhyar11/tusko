@@ -6,6 +6,7 @@ import FilterSidebar from './components/FilterSidebar';
 import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
+import CheckoutPage from './components/CheckoutPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { CheckCircle2, Filter } from 'lucide-react';
@@ -13,7 +14,8 @@ import { CheckCircle2, Filter } from 'lucide-react';
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart'
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout'
+  const [checkoutItems, setCheckoutItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -306,15 +308,26 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {currentView === 'cart' ? (
+        {currentView === 'checkout' ? (
+          <CheckoutPage
+            checkoutItems={checkoutItems}
+            onBackToCart={() => setCurrentView('cart')}
+            onFinishOrder={(order) => {
+              // Remove checked out items from cart
+              setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
+              setToastMessage(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);
+            }}
+          />
+        ) : currentView === 'cart' ? (
           <CartPage
             cart={cart}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveCartItem}
             onClearCart={handleClearCart}
             onBackToShopping={() => setCurrentView('catalog')}
-            onProceedToCheckout={({ selectedItems, grandTotal }) => {
-              setToastMessage(`Menyiapkan checkout untuk ${selectedItems.length} barang...`);
+            onProceedToCheckout={({ selectedItems }) => {
+              setCheckoutItems(selectedItems);
+              setCurrentView('checkout');
             }}
           />
         ) : currentView === 'detail' && selectedProduct ? (
