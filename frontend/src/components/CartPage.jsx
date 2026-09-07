@@ -396,64 +396,81 @@ export default function CartPage({
             </form>
 
             {/* Breakdown */}
-            <div className="space-y-2 pt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600">
+            <div className="space-y-2.5 pt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600">
               <div className="flex justify-between">
                 <span>Total Harga ({selectedItems.reduce((s, i) => s + i.quantity, 0)} barang)</span>
                 <span className="font-semibold text-gray-800">{formatRupiah(subtotal)}</span>
               </div>
 
               {totalProductDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-emerald-600 font-medium">
                   <span>Total Diskon Produk</span>
                   <span>-{formatRupiah(totalProductDiscount)}</span>
                 </div>
               )}
 
               {promoDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600">
-                  <span>Potongan Promo</span>
+                <div className="flex justify-between text-emerald-600 font-medium">
+                  <span>Potongan Kupon Promo</span>
                   <span>-{formatRupiah(promoDiscount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
                 <span className="flex items-center gap-1">
-                  <span>Perkiraan Ongkir</span>
+                  <span>Biaya Pengiriman (Ongkir)</span>
                   <Truck size={12} className="text-gray-400" />
                 </span>
                 <span className="font-semibold text-gray-800">
                   {estimatedShipping === 0 ? (
-                    <span className="text-emerald-600 font-bold">Gratis Ongkir</span>
+                    <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded text-[11px]">
+                      Gratis Ongkir
+                    </span>
                   ) : (
                     formatRupiah(estimatedShipping)
                   )}
                 </span>
               </div>
+
+              <div className="flex justify-between text-gray-500 text-xs">
+                <span>Biaya Layanan Aplikasi</span>
+                <span className="font-medium text-gray-700">
+                  {selectedItems.length > 0 ? formatRupiah(1000) : formatRupiah(0)}
+                </span>
+              </div>
             </div>
+
+            {/* Total Savings Highlight Badge */}
+            {(totalProductDiscount > 0 || promoDiscount > 0) && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-800 font-semibold">
+                <span>Total Penghematan:</span>
+                <span className="text-emerald-700 font-extrabold">
+                  {formatRupiah(totalProductDiscount + promoDiscount)}
+                </span>
+              </div>
+            )}
 
             {/* Grand Total */}
             <div className="pt-3 border-t border-gray-200 flex items-baseline justify-between">
               <div>
-                <span className="text-xs text-gray-500 font-medium block">Total Tagihan:</span>
-                <span className="text-lg sm:text-xl font-extrabold text-gray-900">
-                  {formatRupiah(grandTotal)}
+                <span className="text-xs text-gray-500 font-medium block">Total Tagihan Pembayaran:</span>
+                <span className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
+                  {formatRupiah(selectedItems.length > 0 ? grandTotal + 1000 : 0)}
                 </span>
               </div>
-              {promoDiscount > 0 && (
-                <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
-                  Hemat {formatRupiah(promoDiscount)}
-                </span>
-              )}
             </div>
 
             {/* Checkout Button */}
             <button
               type="button"
               disabled={selectedItems.length === 0}
-              onClick={() => onProceedToCheckout({ selectedItems, grandTotal })}
+              onClick={() => onProceedToCheckout({ 
+                selectedItems, 
+                grandTotal: selectedItems.length > 0 ? grandTotal + 1000 : 0 
+              })}
               className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <span>Beli Sekarang ({selectedItems.length})</span>
+              <span>Lanjut ke Pembayaran ({selectedItems.length})</span>
               <ChevronRight size={16} />
             </button>
 
