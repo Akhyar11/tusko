@@ -29,3 +29,9 @@ Route::prefix('addresses')->group(function () {
     Route::delete('/{id}', [\App\Http\Controllers\Api\ShippingAddressController::class, 'destroy']);
     Route::post('/{id}/set-default', [\App\Http\Controllers\Api\ShippingAddressController::class, 'setDefault']);
 });
+
+Route::prefix('expeditions')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ExpeditionController::class, 'index']);
+    Route::get('/categories', [\App\Http\Controllers\Api\ExpeditionController::class, 'categories']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
+});
