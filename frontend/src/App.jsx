@@ -5,6 +5,7 @@ import CategoryBar from './components/CategoryBar';
 import FilterSidebar from './components/FilterSidebar';
 import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/ProductDetail';
+import CartPage from './components/CartPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { CheckCircle2, Filter } from 'lucide-react';
@@ -12,6 +13,7 @@ import { CheckCircle2, Filter } from 'lucide-react';
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -26,16 +28,24 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  const [cart, setCart] = useState([
-    { id: 1, quantity: 1 },
-    { id: 3, quantity: 1 }
+  // Initial cart with realistic mock items from mockProducts
+  const [cart, setCart] = useState(() => [
+    {
+      ...mockProducts[0], // Mechanical Keyboard
+      quantity: 1
+    },
+    {
+      ...mockProducts[2], // TWS Earphone
+      quantity: 2
+    }
   ]);
+  
   const [toastMessage, setToastMessage] = useState(null);
 
   // Scroll to top when view changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [selectedProduct]);
+  }, [currentView, selectedProduct]);
 
   // Total items in cart
   const cartTotalCount = useMemo(() => {
@@ -185,7 +195,7 @@ export default function App() {
     sortBy
   ]);
 
-  // Add to cart handler
+  // Cart operations
   const handleAddToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -194,31 +204,63 @@ export default function App() {
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { id: product.id, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1 }];
     });
 
-    setToastMessage(`"${product.name.slice(0, 30)}..." berhasil masuk ke keranjang!`);
+    setToastMessage(`"${product.name.slice(0, 28)}..." ditambahkan ke keranjang!`);
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
   };
 
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveCartItem(productId);
+      return;
+    }
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const handleRemoveCartItem = (productId) => {
+    setCart((prev) => prev.filter((item) => item.id !== productId));
+    setToastMessage('Item berhasil dihapus dari keranjang.');
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const handleClearCart = () => {
+    setCart([]);
+  };
+
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
+    setCurrentView('detail');
   };
 
   const handleSelectCategory = (catId) => {
     setSelectedCategoryId(catId);
-    if (selectedProduct) {
-      setSelectedProduct(null);
+    if (currentView !== 'catalog') {
+      setCurrentView('catalog');
     }
   };
 
   const handleSearchChange = (query) => {
     setSearchQuery(query);
-    if (selectedProduct && query.trim() !== '') {
-      setSelectedProduct(null);
+    if (currentView !== 'catalog' && query.trim() !== '') {
+      setCurrentView('catalog');
     }
+  };
+
+  const handleResetHome = () => {
+    setSelectedProduct(null);
+    setCurrentView('catalog');
+    handleResetFilters();
+    setSearchQuery('');
   };
 
   return (
@@ -240,19 +282,27 @@ export default function App() {
         onSelectCategory={handleSelectCategory}
         products={products}
         onSelectProduct={handleSelectProduct}
-        onResetHome={() => {
-          setSelectedProduct(null);
-          handleResetFilters();
-          setSearchQuery('');
-        }}
+        onResetHome={handleResetHome}
+        onOpenCart={() => setCurrentView('cart')}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {selectedProduct ? (
+        {currentView === 'cart' ? (
+          <CartPage
+            cart={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveCartItem}
+            onClearCart={handleClearCart}
+            onBackToShopping={() => setCurrentView('catalog')}
+            onProceedToCheckout={({ selectedItems, grandTotal }) => {
+              setToastMessage(`Menyiapkan checkout untuk ${selectedItems.length} barang...`);
+            }}
+          />
+        ) : currentView === 'detail' && selectedProduct ? (
           <ProductDetail
             product={selectedProduct}
-            onBack={() => setSelectedProduct(null)}
+            onBack={() => setCurrentView('catalog')}
             onAddToCart={handleAddToCart}
           />
         ) : (

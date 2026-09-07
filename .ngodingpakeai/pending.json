@@ -1,6 +1,6 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "81a1b143d0fe758e83ed414c8fc35a67ad5630a5",
+  "generatedForCommit": "3256663b7c4e84704ded7ad99de42eeaf2a88eea",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
@@ -54,7 +54,7 @@
       "path": "backend/.phpunit.result.cache",
       "reason": "changed",
       "language": null,
-      "size": 584
+      "size": 739
     },
     {
       "path": "backend/AGENTS.md",
@@ -76,9 +76,9 @@
     },
     {
       "path": "backend/app/Http/Controllers/Api/ProductController.php",
-      "reason": "new",
+      "reason": "changed",
       "language": "php",
-      "size": 3379
+      "size": 3647
     },
     {
       "path": "backend/app/Http/Controllers/Controller.php",
@@ -87,8 +87,14 @@
       "size": 77
     },
     {
-      "path": "backend/app/Http/Resources/ProductResource.php",
+      "path": "backend/app/Http/Resources/ProductDetailResource.php",
       "reason": "new",
+      "language": "php",
+      "size": 2102
+    },
+    {
+      "path": "backend/app/Http/Resources/ProductResource.php",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1434
     },
@@ -112,7 +118,7 @@
     },
     {
       "path": "backend/app/Models/User.php",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "php",
       "size": 799
     },
@@ -130,7 +136,7 @@
     },
     {
       "path": "backend/bootstrap/app.php",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "php",
       "size": 727
     },
@@ -142,13 +148,13 @@
     },
     {
       "path": "backend/bootstrap/cache/packages.php",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "php",
       "size": 963
     },
     {
       "path": "backend/bootstrap/cache/services.php",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "php",
       "size": 22575
     },
@@ -160,13 +166,13 @@
     },
     {
       "path": "backend/composer.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 2713
     },
     {
       "path": "backend/composer.lock",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": null,
       "size": 310254
     },
@@ -220,7 +226,7 @@
     },
     {
       "path": "backend/config/sanctum.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 3105
     },
@@ -298,7 +304,7 @@
     },
     {
       "path": "backend/database/migrations/2026_09_07_042758_create_personal_access_tokens_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 863
     },
@@ -364,7 +370,7 @@
     },
     {
       "path": "backend/routes/api.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 411
     },
@@ -448,9 +454,9 @@
     },
     {
       "path": "backend/tests/Feature/ProductApiTest.php",
-      "reason": "new",
+      "reason": "changed",
       "language": "php",
-      "size": 3595
+      "size": 4581
     },
     {
       "path": "backend/tests/Feature/ProductSeederTest.php",
