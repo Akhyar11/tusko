@@ -122,6 +122,13 @@ export default function App() {
         onSearchChange={handleSearchChange}
         selectedCategory={selectedCategoryId}
         onSelectCategory={handleSelectCategory}
+        products={products}
+        onSelectProduct={handleSelectProduct}
+        onResetHome={() => {
+          setSelectedProduct(null);
+          setSelectedCategoryId(null);
+          setSearchQuery('');
+        }}
       />
 
       {/* Main Container */}
@@ -153,6 +160,7 @@ export default function App() {
               onSelectProduct={handleSelectProduct}
               categoryTitle={activeCategory ? activeCategory.name : null}
               searchQuery={searchQuery}
+              onClearSearch={() => setSearchQuery('')}
             />
           </>
         )}
