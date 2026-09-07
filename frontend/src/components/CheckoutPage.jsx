@@ -14,7 +14,11 @@ import {
   AlertCircle,
   Copy,
   Clock,
-  Plus
+  Plus,
+  Tag,
+  Sparkles,
+  Loader2,
+  Shield
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
@@ -82,6 +86,16 @@ export default function CheckoutPage({
   const [selectedPayment, setSelectedPayment] = useState(mockPaymentMethods[0].methods[0]);
   const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState({
+    code: 'DISKON20',
+    name: 'Kupon Diskon Checkout TokoOnline',
+    discount: 20000
+  });
+  const [couponError, setCouponError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Shipping protection
   const [withInsurance, setWithInsurance] = useState(true);
 
@@ -98,12 +112,37 @@ export default function CheckoutPage({
     return checkoutItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   }, [checkoutItems]);
 
+  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
   const shippingCost = selectedExpedition.is_free ? 0 : selectedExpedition.cost;
+  const shippingSavings = selectedExpedition.is_free ? selectedExpedition.baseCost : 0;
   const insuranceCost = withInsurance ? 2500 : 0;
   const serviceFee = 1000;
   const paymentFee = selectedPayment.fee || 0;
 
-  const grandTotal = totalItemPrice + shippingCost + insuranceCost + serviceFee + paymentFee;
+  const totalSavings = shippingSavings + discountAmount;
+  const grandTotal = Math.max(0, totalItemPrice - discountAmount + shippingCost + insuranceCost + serviceFee + paymentFee);
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    if (code === 'DISKON20' || code === 'HEMAT20') {
+      setAppliedCoupon({ code, discount: 20000, name: 'Kupon Diskon Belanja Rp 20.000' });
+      setCouponError('');
+      setCouponInput('');
+    } else if (code === 'TOKOPEDIA50' || code === 'PROMO50') {
+      setAppliedCoupon({ code, discount: 50000, name: 'Kupon Diskon Spesial Rp 50.000' });
+      setCouponError('');
+      setCouponInput('');
+    } else {
+      setCouponError('Kode promo tidak valid atau telah kedaluwarsa');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError('');
+  };
 
   // Group items by store
   const groupedItems = useMemo(() => {
@@ -125,22 +164,28 @@ export default function CheckoutPage({
 
   // Handle Pay Now
   const handlePayNow = () => {
-    const invoiceNumber = `INV/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/TK/${Math.floor(100000 + Math.random() * 900000)}`;
-    const vaNumber = `8808${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+      const invoiceNumber = `INV/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/TK/${Math.floor(100000 + Math.random() * 900000)}`;
+      const vaNumber = `8808${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 
-    const orderData = {
-      invoiceNumber,
-      vaNumber,
-      totalAmount: grandTotal,
-      paymentMethod: selectedPayment,
-      address: currentAddress,
-      expedition: selectedExpedition,
-      items: checkoutItems,
-      createdAt: new Date().toISOString()
-    };
+      const orderData = {
+        invoiceNumber,
+        vaNumber,
+        totalAmount: grandTotal,
+        totalSavings,
+        appliedCoupon,
+        paymentMethod: selectedPayment,
+        address: currentAddress,
+        expedition: selectedExpedition,
+        items: checkoutItems,
+        createdAt: new Date().toISOString()
+      };
 
-    setOrderSuccessData(orderData);
-    onFinishOrder(orderData);
+      setOrderSuccessData(orderData);
+      onFinishOrder(orderData);
+    }, 600);
   };
 
   const handleCopyVa = (text) => {
@@ -449,29 +494,93 @@ export default function CheckoutPage({
         {/* Right Sidebar: Ringkasan Pembayaran (Sticky) */}
         <div className="lg:col-span-4">
           <div className="sticky top-20 bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs space-y-4">
-            <h3 className="font-extrabold text-gray-900 text-sm sm:text-base pb-2 border-b border-gray-100">
-              Ringkasan Pembayaran
+            <h3 className="font-extrabold text-gray-900 text-sm sm:text-base pb-2 border-b border-gray-100 flex items-center justify-between">
+              <span>Ringkasan Pembayaran</span>
+              <span className="text-[11px] text-gray-400 font-normal">{checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} barang</span>
             </h3>
 
-            <div className="space-y-2.5 text-xs text-gray-600">
+            {/* Promo / Coupon Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
+                <Tag size={13} className="text-emerald-600" />
+                <span>Makin Hemat Pakai Promo</span>
+              </label>
+
+              {appliedCoupon ? (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold text-emerald-800 block">{appliedCoupon.code}</span>
+                      <span className="text-[10px] text-emerald-600">Hemat {formatRupiah(appliedCoupon.discount)}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    placeholder="Masukkan kode: DISKON20"
+                    className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 uppercase font-medium"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                  >
+                    Terapkan
+                  </button>
+                </form>
+              )}
+
+              {couponError && (
+                <span className="text-[10px] text-rose-600 block">{couponError}</span>
+              )}
+            </div>
+
+            {/* Detailed Itemized Costs */}
+            <div className="space-y-2.5 text-xs text-gray-600 pt-2 border-t border-gray-100">
               <div className="flex justify-between">
-                <span>Total Harga ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} barang)</span>
+                <span>Total Harga Barang</span>
                 <span className="font-semibold text-gray-800">{formatRupiah(totalItemPrice)}</span>
               </div>
 
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Diskon Promo Kupon</span>
+                  <span className="font-bold">- {formatRupiah(discountAmount)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
-                <span>Ongkos Kirim ({selectedExpedition.name})</span>
+                <span>Total Ongkos Kirim</span>
                 <span className="font-semibold text-gray-800">
                   {selectedExpedition.is_free ? (
-                    <span className="text-emerald-600 font-bold">Gratis</span>
-                  ) : (
-                    formatRupiah(selectedExpedition.cost)
-                  )}
+                    <span className="line-through text-gray-400 font-normal mr-1.5">
+                      {formatRupiah(selectedExpedition.baseCost)}
+                    </span>
+                  ) : null}
+                  <span>{selectedExpedition.is_free ? 'Gratis' : formatRupiah(selectedExpedition.cost)}</span>
                 </span>
               </div>
 
+              {shippingSavings > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Potongan Bebas Ongkir</span>
+                  <span className="font-bold">- {formatRupiah(shippingSavings)}</span>
+                </div>
+              )}
+
               {/* Insurance Checkbox */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-0.5">
                 <label className="flex items-center gap-2 cursor-pointer select-none text-gray-700">
                   <input
                     type="checkbox"
@@ -487,45 +596,106 @@ export default function CheckoutPage({
               </div>
 
               <div className="flex justify-between text-gray-500">
-                <span>Biaya Layanan</span>
+                <span>Biaya Jasa Aplikasi</span>
                 <span className="font-medium text-gray-700">{formatRupiah(serviceFee)}</span>
               </div>
 
               {paymentFee > 0 && (
                 <div className="flex justify-between text-gray-500">
-                  <span>Biaya Transaksi</span>
+                  <span>Biaya Transaksi Pembayaran</span>
                   <span className="font-medium text-gray-700">{formatRupiah(paymentFee)}</span>
                 </div>
               )}
             </div>
 
+            {/* Total Savings Highlight Banner */}
+            {totalSavings > 0 && (
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center gap-2 text-xs text-emerald-800">
+                <Sparkles size={16} className="text-emerald-600 shrink-0 animate-pulse" />
+                <span className="leading-snug">
+                  Kamu berhemat <strong>{formatRupiah(totalSavings)}</strong> untuk transaksi belanja ini!
+                </span>
+              </div>
+            )}
+
             {/* Grand Total */}
             <div className="pt-3 border-t border-gray-200 flex items-baseline justify-between">
               <div>
-                <span className="text-xs text-gray-500 font-medium block">Total Pembayaran:</span>
+                <span className="text-xs text-gray-500 font-medium block">Total Tagihan:</span>
                 <span className="text-xl sm:text-2xl font-black text-emerald-700">
                   {formatRupiah(grandTotal)}
                 </span>
               </div>
+              <span className="text-[11px] text-gray-400">Termasuk PPN</span>
             </div>
 
-            {/* Pay Button */}
-            <button
-              type="button"
-              onClick={handlePayNow}
-              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>Bayar Sekarang</span>
-              <ChevronRight size={16} />
-            </button>
+            {/* Pay Button Card */}
+            <div className="space-y-1.5">
+              <div className="text-[11px] text-gray-500 flex items-center justify-between">
+                <span>Metode:</span>
+                <strong className="text-gray-800 truncate max-w-[180px]">{selectedPayment.name}</strong>
+              </div>
 
-            <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-gray-400 text-center">
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={handlePayNow}
+                className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-extrabold text-sm rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Memproses Pesanan...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Bayar Sekarang</span>
+                    <ChevronRight size={16} />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] text-gray-400 text-center">
               <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
-              <span>Dengan melanjutkan, kamu menyetujui S&K Transaksi TokoOnline</span>
+              <span>Transaksi aman terenkripsi 256-bit & Bergaransi Resmi</span>
             </div>
           </div>
         </div>
 
+      </div>
+
+      {/* Mobile Sticky Checkout Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 p-3 shadow-lg flex items-center justify-between gap-3">
+        <div>
+          <span className="text-[10px] text-gray-500 block">Total Tagihan:</span>
+          <span className="text-base font-black text-emerald-700 leading-tight">
+            {formatRupiah(grandTotal)}
+          </span>
+          {totalSavings > 0 && (
+            <span className="text-[9px] text-emerald-600 font-bold block">
+              Hemat {formatRupiah(totalSavings)}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          disabled={isProcessing}
+          onClick={handlePayNow}
+          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span>Memproses...</span>
+            </>
+          ) : (
+            <>
+              <span>Bayar Sekarang</span>
+              <ChevronRight size={14} />
+            </>
+          )}
+        </button>
       </div>
 
       {/* Address Selection Modal */}
