@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin &amp; Operasional - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+    /* Custom Scrollbar for Dashboard tables */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #121318; }
+    ::-webkit-scrollbar-thumb { background: #2a2c35; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3d404d; }
+  </style>
+</head>
+<body class="bg-[#0e0f12] text-neutral-200 antialiased selection:bg-amber-500 selection:text-black min-h-screen flex flex-col">
+
+  <!-- ================= MOBILE OFF-CANVAS SIDEBAR DRAWER ================= -->
+  <div id="mobile-drawer" class="fixed inset-0 z-50 lg:hidden hidden">
+    <!-- Backdrop Overlay -->
+    <div onclick="toggleMobileDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"></div>
+    
+    <!-- Drawer Content -->
+    <div class="fixed inset-y-0 left-0 max-w-xs w-full bg-[#15161b] border-r border-neutral-800 p-5 flex flex-col justify-between shadow-2xl z-10">
+      <div class="space-y-6">
+        <!-- Brand in Drawer -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-amber-400 text-black flex items-center justify-center font-sport font-black text-lg -skew-x-6">
+              T
+            </div>
+            <div>
+              <span class="font-sport font-black text-lg tracking-tight uppercase text-white">TUSKO<span class="text-amber-500">.</span></span>
+              <span class="block text-[8px] font-bold tracking-widest text-amber-400 uppercase font-mono">OPERATIONS</span>
+            </div>
+          </div>
+          <button onclick="toggleMobileDrawer()" class="p-1.5 text-neutral-400 hover:text-white rounded bg-neutral-800">
+            <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+          </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-1 text-xs font-semibold">
+          <a href="#" onclick="showToast('Halaman: Ringkasan Dashboard'); toggleMobileDrawer(); return false;" class="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span class="flex items-center gap-2.5">
+              <iconify-icon icon="lucide:layout-dashboard" class="text-base"></iconify-icon>
+              <span>Ringkasan (Overview)</span>
+            </span>
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+          </a>
+          <a href="#orders-section" onclick="toggleMobileDrawer();" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+            <span class="flex items-center gap-2.5">
+              <iconify-icon icon="lucide:package-check" class="text-base"></iconify-icon>
+              <span>Antrean Pesanan</span>
+            </span>
+            <span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-mono text-[10px] font-bold">42</span>
+          </a>
+          <a href="#inventory-section" onclick="toggleMobileDrawer();" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+            <span class="flex items-center gap-2.5">
+              <iconify-icon icon="lucide:boxes" class="text-base"></iconify-icon>
+              <span>Produk &amp; Stok Kritis</span>
+            </span>
+            <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono text-[10px] font-bold">3 Alert</span>
+          </a>
+          <a href="#" onclick="showToast('Buka daftar 8.420 Member Tusko Club'); toggleMobileDrawer(); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+            <iconify-icon icon="lucide:users" class="text-base"></iconify-icon>
+            <span>Member Tusko Club</span>
+          </a>
+          <a href="#" onclick="showToast('Kelola Kode Voucher &amp; Promo'); toggleMobileDrawer(); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+            <iconify-icon icon="lucide:ticket" class="text-base"></iconify-icon>
+            <span>Voucher &amp; Promosi</span>
+          </a>
+          <a href="#" onclick="showToast('Buka Laporan Keuangan &amp; Penjualan'); toggleMobileDrawer(); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+            <iconify-icon icon="lucide:bar-chart-3" class="text-base"></iconify-icon>
+            <span>Laporan Penjualan</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Drawer Bottom -->
+      <div class="pt-4 border-t border-neutral-800 space-y-3">
+        <a href="beranda.html" target="_blank" class="flex items-center justify-between w-full px-3 py-2 rounded bg-neutral-800/80 hover:bg-neutral-800 text-neutral-300 text-xs font-semibold">
+          <span class="flex items-center gap-2">
+            <iconify-icon icon="lucide:store" class="text-amber-400"></iconify-icon>
+            <span>Kunjungi Toko Online</span>
+          </span>
+          <iconify-icon icon="lucide:external-link" class="text-xs"></iconify-icon>
+        </a>
+        <a href="admin-login.html" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-400 hover:text-red-300">
+          <iconify-icon icon="lucide:log-out"></iconify-icon>
+          <span>Keluar Sesi Admin</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOPBAR ================= -->
+  <header class="bg-[#131418] border-b border-neutral-800 sticky top-0 z-40 h-16 flex items-center px-4 sm:px-6">
+    <div class="w-full flex items-center justify-between gap-4">
+      
+      <!-- Left: Mobile Toggle & Brand Logo -->
+      <div class="flex items-center gap-3">
+        <!-- Mobile Drawer Toggle Button -->
+        <button onclick="toggleMobileDrawer()" class="lg:hidden p-2 rounded bg-neutral-800 text-neutral-300 hover:text-white focus:outline-none" title="Buka Menu Admin">
+          <iconify-icon icon="lucide:menu" class="text-xl"></iconify-icon>
+        </button>
+
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-amber-400 text-black flex items-center justify-center font-sport font-black text-lg -skew-x-6">
+            T
+          </div>
+          <div class="leading-none hidden sm:block">
+            <span class="font-sport font-black text-lg tracking-tight uppercase text-white">TUSKO<span class="text-amber-500">.</span></span>
+            <span class="block text-[8px] font-bold tracking-widest text-amber-400 uppercase font-mono">OPERATIONS CONTROL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Global Quick Search -->
+      <div class="flex-1 max-w-md mx-2 sm:mx-6">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="Cari ID Pesanan, No. Resi, SKU Sepatu, atau Nama..." 
+            class="w-full bg-[#1a1c22] border border-neutral-700/80 focus:border-amber-400 text-neutral-200 px-3.5 py-2 pl-9 text-xs rounded-lg focus:outline-none transition-colors"
+          />
+          <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm"></iconify-icon>
+        </div>
+      </div>
+
+      <!-- Right: System Status & User Profile -->
+      <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+        
+        <!-- Server Status Indicator (Desktop) -->
+        <div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>ONLINE • JKT-01</span>
+        </div>
+
+        <!-- Notification Bell -->
+        <button onclick="showToast('3 Pesanan Baru masuk 5 menit yang lalu!');" class="p-2 rounded-lg bg-[#1a1c22] border border-neutral-700/80 text-neutral-300 hover:text-white relative" title="Notifikasi Baru">
+          <iconify-icon icon="lucide:bell" class="text-base"></iconify-icon>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500"></span>
+        </button>
+
+        <!-- Quick Link to Storefront -->
+        <a href="beranda.html" target="_blank" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800 text-xs font-semibold transition-colors" title="Lihat Toko Sebagai Pembeli">
+          <iconify-icon icon="lucide:store" class="text-amber-400 text-sm"></iconify-icon>
+          <span>Buka Toko</span>
+        </a>
+
+        <!-- Admin Profile Pill -->
+        <div class="flex items-center gap-2 pl-2 border-l border-neutral-800">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center text-black font-sport font-black text-xs font-bold">
+            AK
+          </div>
+          <div class="hidden sm:block text-left leading-tight">
+            <span class="block text-xs font-bold text-white">Akhyar Pratama</span>
+            <span class="block text-[9px] text-amber-400 font-mono">Super Admin</span>
+          </div>
+          <a href="admin-login.html" class="text-neutral-400 hover:text-red-400 p-1" title="Keluar Sesi Admin">
+            <iconify-icon icon="lucide:log-out" class="text-sm"></iconify-icon>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN LAYOUT WITH DESKTOP SIDEBAR ================= -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- DESKTOP FIXED SIDEBAR -->
+    <aside class="hidden lg:flex w-64 bg-[#121317] border-r border-neutral-800 flex-col justify-between p-4 flex-shrink-0">
+      <div class="space-y-6">
+        
+        <!-- Section Menu Utama -->
+        <div>
+          <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider font-mono block px-3 mb-2">
+            MODUL OPERASIONAL
+          </span>
+          <nav class="space-y-1 text-xs font-semibold">
+            <a href="#" class="flex items-center justify-between px-3 py-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <span class="flex items-center gap-2.5">
+                <iconify-icon icon="lucide:layout-dashboard" class="text-base"></iconify-icon>
+                <span>Ringkasan Toko</span>
+              </span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            </a>
+            <a href="#orders-section" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <span class="flex items-center gap-2.5">
+                <iconify-icon icon="lucide:package-check" class="text-base"></iconify-icon>
+                <span>Antrean Pesanan</span>
+              </span>
+              <span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-mono text-[10px] font-bold">42</span>
+            </a>
+            <a href="#inventory-section" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <span class="flex items-center gap-2.5">
+                <iconify-icon icon="lucide:boxes" class="text-base"></iconify-icon>
+                <span>Katalog &amp; Stok</span>
+              </span>
+              <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono text-[10px] font-bold">3 Kritis</span>
+            </a>
+            <a href="#" onclick="showToast('8.420 Member Terdaftar di Tusko Club'); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <iconify-icon icon="lucide:users" class="text-base"></iconify-icon>
+              <span>Member Tusko Club</span>
+            </a>
+            <a href="#" onclick="showToast('5 Kode Promo aktif saat ini'); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <iconify-icon icon="lucide:ticket" class="text-base"></iconify-icon>
+              <span>Voucher Diskon (15%)</span>
+            </a>
+            <a href="#" onclick="showToast('Membuka Rekapitulasi Pembukuan &amp; Omset'); return false;" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <iconify-icon icon="lucide:bar-chart-3" class="text-base"></iconify-icon>
+              <span>Laporan Finansial</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Section Pengaturan & Akses -->
+        <div>
+          <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider font-mono block px-3 mb-2">
+            PENGATURAN SISTEM
+          </span>
+          <nav class="space-y-1 text-xs font-semibold">
+            <a href="#" onclick="showToast('Audit Log Keamanan: Semua akses tercatat'); return false;" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <iconify-icon icon="lucide:shield-alert" class="text-base"></iconify-icon>
+              <span>Log Audit &amp; Keamanan</span>
+            </a>
+            <a href="#" onclick="showToast('Pengaturan Toko &amp; Kurir Rekanan'); return false;" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
+              <iconify-icon icon="lucide:settings" class="text-base"></iconify-icon>
+              <span>Konfigurasi Toko</span>
+            </a>
+          </nav>
+        </div>
+
+      </div>
+
+      <!-- Sidebar Bottom Diagnostic Card -->
+      <div class="bg-[#17181e] border border-neutral-800 p-3.5 rounded-xl space-y-2">
+        <div class="flex items-center justify-between text-[11px] font-bold text-neutral-300">
+          <span class="flex items-center gap-1.5">
+            <iconify-icon icon="lucide:hard-drive" class="text-amber-400"></iconify-icon>
+            <span>Kapasitas Cloud</span>
+          </span>
+          <span class="font-mono text-emerald-400 text-[10px]">42% Digunakan</span>
+        </div>
+        <div class="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+          <div class="bg-amber-400 h-full rounded-full" style="width: 42%;"></div>
+        </div>
+        <div class="flex justify-between text-[9px] text-neutral-500 font-mono">
+          <span>Latensi DB: 14ms</span>
+          <span>Uptime: 99.98%</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- DASHBOARD SCROLLABLE CONTENT VIEWPORT -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      
+      <!-- 1. Top Action Toolbar & Greeting -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-[11px] font-mono text-neutral-400">
+            <span>OPERATIONAL CONTROL CENTER</span>
+            <span>&bull;</span>
+            <span class="text-amber-400">SENIN, 7 SEPTEMBER 2026</span>
+          </div>
+          <h1 class="font-sport font-black text-2xl sm:text-3xl uppercase tracking-tight text-white mt-0.5">
+            RINGKASAN OPERASIONAL TOKO
+          </h1>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="showToast('Membuka Form Tambah Sepatu/Jersey Baru');" class="bg-amber-500 hover:bg-amber-400 text-black font-sport font-black text-xs uppercase px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-lg shadow-amber-500/10">
+            <iconify-icon icon="lucide:plus-circle" class="text-sm"></iconify-icon>
+            <span>+ Tambah Produk</span>
+          </button>
+          <button onclick="showToast('Membuka Generator Kode Voucher Promo 15%');" class="bg-[#1a1c22] hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
+            <iconify-icon icon="lucide:ticket" class="text-sm text-amber-400"></iconify-icon>
+            <span>Buat Voucher</span>
+          </button>
+          <button onclick="showToast('✓ Laporan Rekap Penjualan (CSV) berhasil diekspor!');" class="bg-[#1a1c22] hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-bold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-colors" title="Download Laporan Penjualan">
+            <iconify-icon icon="lucide:download" class="text-sm text-emerald-400"></iconify-icon>
+            <span>Ekspor Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Core KPI Metric Cards (4 Cards Grid) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- KPI 1: Omset Penjualan -->
+        <div class="bg-[#15161c] border border-neutral-800 p-5 rounded-xl relative overflow-hidden group hover:border-neutral-700 transition-colors">
+          <div class="flex items-center justify-between text-neutral-400 text-xs font-semibold mb-2">
+            <span>Total Omset Bulan Ini</span>
+            <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+              <iconify-icon icon="lucide:dollar-sign" class="text-base"></iconify-icon>
+            </span>
+          </div>
+          <div class="font-sport font-black text-2xl sm:text-3xl text-white tracking-tight">
+            Rp 428.500.000
+          </div>
+          <div class="flex items-center gap-1.5 text-xs mt-2 font-mono">
+            <span class="text-emerald-400 font-bold flex items-center">
+              <iconify-icon icon="lucide:trending-up" class="text-xs mr-0.5"></iconify-icon> +18.4%
+            </span>
+            <span class="text-neutral-500">vs bulan lalu</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-neutral-800/80 flex justify-between text-[11px] text-neutral-400">
+            <span>Target Rp 500 Jt</span>
+            <span class="font-bold text-neutral-300">85.7%</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: Pesanan Perlu Diproses -->
+        <div class="bg-[#15161c] border border-red-500/30 p-5 rounded-xl relative overflow-hidden group hover:border-red-500/50 transition-colors">
+          <div class="flex items-center justify-between text-neutral-400 text-xs font-semibold mb-2">
+            <span>Antrean Pengiriman</span>
+            <span class="p-2 rounded-lg bg-red-500/10 text-red-400 animate-pulse">
+              <iconify-icon icon="lucide:truck" class="text-base"></iconify-icon>
+            </span>
+          </div>
+          <div class="font-sport font-black text-2xl sm:text-3xl text-white tracking-tight flex items-baseline gap-2">
+            <span>42</span>
+            <span class="text-xs font-normal text-red-400 font-mono">Perlu Dikirim</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs mt-2 font-mono">
+            <span class="text-amber-400 font-bold">12 Urgent Same-Day</span>
+            <span class="text-neutral-500">&bull; 1.284 total</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-neutral-800/80 flex justify-between text-[11px] text-neutral-400">
+            <span>Batas Pengiriman</span>
+            <span class="font-bold text-amber-400">Sebelum 17:00 WIB</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: Anggota Tusko Club -->
+        <div class="bg-[#15161c] border border-neutral-800 p-5 rounded-xl relative overflow-hidden group hover:border-neutral-700 transition-colors">
+          <div class="flex items-center justify-between text-neutral-400 text-xs font-semibold mb-2">
+            <span>Member Tusko Club</span>
+            <span class="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+              <iconify-icon icon="lucide:award" class="text-base"></iconify-icon>
+            </span>
+          </div>
+          <div class="font-sport font-black text-2xl sm:text-3xl text-white tracking-tight">
+            8.420
+          </div>
+          <div class="flex items-center gap-1.5 text-xs mt-2 font-mono">
+            <span class="text-emerald-400 font-bold flex items-center">
+              <iconify-icon icon="lucide:user-plus" class="text-xs mr-0.5"></iconify-icon> +340
+            </span>
+            <span class="text-neutral-500">pendaftar baru</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-neutral-800/80 flex justify-between text-[11px] text-neutral-400">
+            <span>Klaim Diskon 15%</span>
+            <span class="font-bold text-neutral-300">289 Voucher Terpakai</span>
+          </div>
+        </div>
+
+        <!-- KPI 4: Rasio Konversi Checkout -->
+        <div class="bg-[#15161c] border border-neutral-800 p-5 rounded-xl relative overflow-hidden group hover:border-neutral-700 transition-colors">
+          <div class="flex items-center justify-between text-neutral-400 text-xs font-semibold mb-2">
+            <span>Conversion Rate (CR)</span>
+            <span class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+              <iconify-icon icon="lucide:zap" class="text-base"></iconify-icon>
+            </span>
+          </div>
+          <div class="font-sport font-black text-2xl sm:text-3xl text-white tracking-tight">
+            3.8%
+          </div>
+          <div class="flex items-center gap-1.5 text-xs mt-2 font-mono">
+            <span class="text-blue-400 font-bold flex items-center">
+              <iconify-icon icon="lucide:arrow-up-right" class="text-xs mr-0.5"></iconify-icon> +0.6%
+            </span>
+            <span class="text-neutral-500">pasca redesign PDP</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-neutral-800/80 flex justify-between text-[11px] text-neutral-400">
+            <span>Rata-rata Order</span>
+            <span class="font-bold text-neutral-300">Rp 1.150.000</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 3. Main Operational Sections Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT COLUMN: ORDER FULFILLMENT MANAGEMENT (col-span-8) -->
+        <div id="orders-section" class="lg:col-span-8 space-y-4">
+          
+          <div class="bg-[#15161c] border border-neutral-800 rounded-xl p-5 space-y-4 shadow-xl">
+            
+            <!-- Table Header with Filters -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-800">
+              <div>
+                <h2 class="font-sport font-black text-lg text-white uppercase tracking-tight flex items-center gap-2">
+                  <span>ANTREAN PEMROSESAN PESANAN</span>
+                  <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-mono font-bold">42 Masuk</span>
+                </h2>
+                <p class="text-xs text-neutral-400">Kelola resi pengiriman kurir ekspedisi J&amp;T, SiCepat, dan Paxel Instant.</p>
+              </div>
+
+              <!-- Quick Order Search inside Table -->
+              <button onclick="batchPrintLabels()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-colors">
+                <iconify-icon icon="lucide:printer"></iconify-icon>
+                <span>Cetak Semua Label (42)</span>
+              </button>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs font-semibold">
+              <button onclick="filterOrders('all')" id="tab-all" class="px-3 py-1.5 rounded-lg bg-amber-500 text-black font-bold whitespace-nowrap">
+                Semua Pesanan
+              </button>
+              <button onclick="filterOrders('unshipped')" id="tab-unshipped" class="px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white whitespace-nowrap flex items-center gap-1.5">
+                <span>Perlu Dikirim</span>
+                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+              </button>
+              <button onclick="filterOrders('packing')" id="tab-packing" class="px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white whitespace-nowrap">
+                Sedang Dikemas (18)
+              </button>
+              <button onclick="filterOrders('shipping')" id="tab-shipping" class="px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white whitespace-nowrap">
+                Dalam Pengiriman (105)
+              </button>
+              <button onclick="filterOrders('completed')" id="tab-completed" class="px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white whitespace-nowrap">
+                Selesai
+              </button>
+            </div>
+
+            <!-- Responsive Orders Table Container -->
+            <div class="overflow-x-auto border border-neutral-800 rounded-lg">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-[#1a1c23] border-b border-neutral-800 text-[11px] font-mono text-neutral-400 uppercase tracking-wider">
+                    <th class="p-3">ID &amp; Waktu</th>
+                    <th class="p-3">Pelanggan</th>
+                    <th class="p-3">Detail Produk</th>
+                    <th class="p-3">Total &amp; Bayar</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-800/60 font-medium">
+                  
+                  <!-- Order 1: Perlu Dikirim -->
+                  <tr class="hover:bg-neutral-800/40 transition-colors order-row" data-status="unshipped">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">#TSK-9841</span>
+                      <span class="text-[10px] text-amber-400">8 mnt lalu</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="font-bold text-white block">Budi Pratama</span>
+                      <span class="text-[10px] text-neutral-400 flex items-center gap-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-neutral-500"></iconify-icon> Jakarta Selatan
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center gap-2.5">
+                        <img 
+                          src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=120&q=80" 
+                          alt="Ultimashow" 
+                          class="w-9 h-9 object-cover rounded bg-neutral-800 flex-shrink-0 border border-neutral-700"
+                        />
+                        <div class="leading-tight">
+                          <span class="font-bold text-white block truncate max-w-[150px]">Sepatu Ultimashow</span>
+                          <span class="text-[10px] text-amber-400 font-mono">UK 8 (42) &bull; Qty: 1</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">Rp 850.000</span>
+                      <span class="text-[10px] text-emerald-400">BCA VA &bull; Lunas</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        PERLU DIKIRIM
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="processOrder('TSK-9841', 'Budi Pratama');" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] rounded transition-colors" title="Cetak label dan proses resi pengiriman">
+                        Cetak Resi
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Order 2: Sedang Dikemas -->
+                  <tr class="hover:bg-neutral-800/40 transition-colors order-row" data-status="packing">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">#TSK-9840</span>
+                      <span class="text-[10px] text-neutral-400">24 mnt lalu</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="font-bold text-white block">Siti Rahma</span>
+                      <span class="text-[10px] text-neutral-400 flex items-center gap-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-neutral-500"></iconify-icon> Surabaya
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center gap-2.5">
+                        <img 
+                          src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=120&q=80" 
+                          alt="Jersey Matchday" 
+                          class="w-9 h-9 object-cover rounded bg-neutral-800 flex-shrink-0 border border-neutral-700"
+                        />
+                        <div class="leading-tight">
+                          <span class="font-bold text-white block truncate max-w-[150px]">Jersey Aerotech Pro</span>
+                          <span class="text-[10px] text-blue-400 font-mono">Size L &bull; Qty: 2</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">Rp 718.000</span>
+                      <span class="text-[10px] text-emerald-400">QRIS &bull; Lunas</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 font-mono">
+                        DIKEMAS
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="updateShipping('TSK-9840');" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-[11px] rounded transition-colors" title="Masukkan nomor resi kurir">
+                        Input Resi
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Order 3: Perlu Dikirim -->
+                  <tr class="hover:bg-neutral-800/40 transition-colors order-row" data-status="unshipped">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">#TSK-9839</span>
+                      <span class="text-[10px] text-amber-400">41 mnt lalu</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="font-bold text-white block">Dimas Setiawan</span>
+                      <span class="text-[10px] text-neutral-400 flex items-center gap-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-neutral-500"></iconify-icon> Bandung
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center gap-2.5">
+                        <img 
+                          src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=120&q=80" 
+                          alt="Pelat Karbon" 
+                          class="w-9 h-9 object-cover rounded bg-neutral-800 flex-shrink-0 border border-neutral-700"
+                        />
+                        <div class="leading-tight">
+                          <span class="font-bold text-white block truncate max-w-[150px]">Sepatu Pelat Karbon</span>
+                          <span class="text-[10px] text-amber-400 font-mono">UK 8.5 (42.5) &bull; Qty: 1</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">Rp 1.650.000</span>
+                      <span class="text-[10px] text-emerald-400">Mandiri Bill &bull; Lunas</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        PERLU DIKIRIM
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="processOrder('TSK-9839', 'Dimas Setiawan');" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] rounded transition-colors">
+                        Cetak Resi
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Order 4: Dalam Pengiriman -->
+                  <tr class="hover:bg-neutral-800/40 transition-colors order-row" data-status="shipping">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">#TSK-9838</span>
+                      <span class="text-[10px] text-neutral-400">2 jam lalu</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="font-bold text-white block">Maya Anggraini</span>
+                      <span class="text-[10px] text-neutral-400 flex items-center gap-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-neutral-500"></iconify-icon> Medan
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center gap-2.5">
+                        <img 
+                          src="https://images.unsplash.com/photo-1506152983158-b4a74a01c721?auto=format&fit=crop&w=120&q=80" 
+                          alt="Celana Kompresi" 
+                          class="w-9 h-9 object-cover rounded bg-neutral-800 flex-shrink-0 border border-neutral-700"
+                        />
+                        <div class="leading-tight">
+                          <span class="font-bold text-white block truncate max-w-[150px]">Celana Kompresi 2-in-1</span>
+                          <span class="text-[10px] text-purple-400 font-mono">Size M &bull; Qty: 1</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">Rp 489.000</span>
+                      <span class="text-[10px] text-emerald-400">GoPay &bull; Lunas</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20 font-mono">
+                        DIKIRIM (J&amp;T)
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="showToast('No. Resi J&T: JT28491823910 - Kurir Sedang Menuju Medan');" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-[11px] rounded transition-colors">
+                        Lacak Kurir
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Order 5: Selesai -->
+                  <tr class="hover:bg-neutral-800/40 transition-colors order-row" data-status="completed">
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">#TSK-9837</span>
+                      <span class="text-[10px] text-neutral-400">Kemarin</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="font-bold text-white block">Reza Fahlevi</span>
+                      <span class="text-[10px] text-neutral-400 flex items-center gap-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-neutral-500"></iconify-icon> Yogyakarta
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center gap-2.5">
+                        <img 
+                          src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=120&q=80" 
+                          alt="Tas Duffle" 
+                          class="w-9 h-9 object-cover rounded bg-neutral-800 flex-shrink-0 border border-neutral-700"
+                        />
+                        <div class="leading-tight">
+                          <span class="font-bold text-white block truncate max-w-[150px]">Tas Duffle Sport 45L</span>
+                          <span class="text-[10px] text-emerald-400 font-mono">All Size &bull; Qty: 1</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 font-mono">
+                      <span class="font-bold text-white block">Rp 389.000</span>
+                      <span class="text-[10px] text-emerald-400">BCA VA &bull; Lunas</span>
+                    </td>
+                    <td class="p-3">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20 font-mono">
+                        SELESAI
+                      </span>
+                    </td>
+                    <td class="p-3 text-right">
+                      <button onclick="showToast('Pesanan #TSK-9837 telah diterima pembeli.');" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-[11px] rounded transition-colors">
+                        Detail
+                      </button>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Footer Pagination -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 text-xs text-neutral-400">
+              <span class="font-mono">Menampilkan 5 dari 42 pesanan antrean</span>
+              <div class="flex items-center gap-1 font-mono">
+                <button class="px-2.5 py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white">&larr; Prev</button>
+                <span class="px-3 py-1 rounded bg-amber-500 text-black font-bold">1</span>
+                <button class="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white">2</button>
+                <button class="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white">3</button>
+                <button class="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white">Next &rarr;</button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: LOW STOCK ALERT & CATEGORY STATS (col-span-4) -->
+        <div class="lg:col-span-4 space-y-6">
+          
+          <!-- 1. Inventory Alert Card (Low Stock < 5) -->
+          <div id="inventory-section" class="bg-[#15161c] border border-neutral-800 rounded-xl p-5 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                <h3 class="font-sport font-black text-base text-white uppercase tracking-tight">
+                  STOK MENIPIS (&lt; 5 UNIT)
+                </h3>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px] font-mono font-bold">
+                3 Kritis
+              </span>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              
+              <!-- Item 1 -->
+              <div class="p-3 rounded-lg bg-[#1a1c22] border border-red-500/30 flex items-center justify-between gap-2">
+                <div>
+                  <span class="font-bold text-white block">Sepatu Ultimashow FX3632</span>
+                  <span class="text-[10px] text-neutral-400 font-mono">Varian: UK 8 (42) &bull; SKU: FX3632-42</span>
+                  <div class="flex items-center gap-1.5 mt-1">
+                    <span class="px-1.5 py-0.2 rounded bg-red-500/20 text-red-400 font-bold text-[10px] font-mono">
+                      Sisa 2 Pasang!
+                    </span>
+                    <span class="text-[10px] text-neutral-400">12 di keranjang pembeli</span>
+                  </div>
+                </div>
+                <button onclick="restockPO('Sepatu Ultimashow FX3632 UK 8');" class="px-2.5 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-black font-bold text-[10px] whitespace-nowrap transition-colors">
+                  + Restock
+                </button>
+              </div>
+
+              <!-- Item 2 -->
+              <div class="p-3 rounded-lg bg-[#1a1c22] border border-amber-500/30 flex items-center justify-between gap-2">
+                <div>
+                  <span class="font-bold text-white block">Jersey Tusko Aerotech Matchday</span>
+                  <span class="text-[10px] text-neutral-400 font-mono">Varian: Size L &bull; Hitam Merah</span>
+                  <div class="flex items-center gap-1.5 mt-1">
+                    <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold text-[10px] font-mono">
+                      Sisa 3 Pcs
+                    </span>
+                  </div>
+                </div>
+                <button onclick="restockPO('Jersey Aerotech Matchday Size L');" class="px-2.5 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-black font-bold text-[10px] whitespace-nowrap transition-colors">
+                  + Restock
+                </button>
+              </div>
+
+              <!-- Item 3 -->
+              <div class="p-3 rounded-lg bg-[#1a1c22] border border-amber-500/30 flex items-center justify-between gap-2">
+                <div>
+                  <span class="font-bold text-white block">Celana Kompresi 2-in-1 Pro</span>
+                  <span class="text-[10px] text-neutral-400 font-mono">Varian: Size M &bull; Hitam Abu</span>
+                  <div class="flex items-center gap-1.5 mt-1">
+                    <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold text-[10px] font-mono">
+                      Sisa 4 Pcs
+                    </span>
+                  </div>
+                </div>
+                <button onclick="restockPO('Celana Kompresi 2-in-1 Size M');" class="px-2.5 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-black font-bold text-[10px] whitespace-nowrap transition-colors">
+                  + Restock
+                </button>
+              </div>
+
+            </div>
+
+            <button onclick="showToast('Membuka Manajemen Inventori &amp; Master Stok');" class="w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+              <span>Buka Seluruh Inventori Gudang</span>
+              <iconify-icon icon="lucide:arrow-right" class="text-xs"></iconify-icon>
+            </button>
+          </div>
+
+          <!-- 2. Sport Category Sales Breakdown -->
+          <div class="bg-[#15161c] border border-neutral-800 rounded-xl p-5 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 class="font-sport font-black text-base text-white uppercase tracking-tight">
+                PENJUALAN KATEGORI OLAHRAGA
+              </h3>
+              <span class="text-[10px] text-neutral-400 font-mono">Bulan Ini</span>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+              
+              <!-- Running -->
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded bg-amber-400"></span>
+                    <span>Lari &amp; Marathon (Running)</span>
+                  </span>
+                  <span class="font-mono font-bold text-white">46% (Rp 197.1 Jt)</span>
+                </div>
+                <div class="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-amber-400 h-full rounded-full" style="width: 46%;"></div>
+                </div>
+              </div>
+
+              <!-- Sepakbola -->
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded bg-emerald-400"></span>
+                    <span>Sepakbola &amp; Futsal</span>
+                  </span>
+                  <span class="font-mono font-bold text-white">26% (Rp 111.4 Jt)</span>
+                </div>
+                <div class="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-emerald-400 h-full rounded-full" style="width: 26%;"></div>
+                </div>
+              </div>
+
+              <!-- Gym & Fitness -->
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded bg-blue-400"></span>
+                    <span>Gym, Fitness &amp; Training</span>
+                  </span>
+                  <span class="font-mono font-bold text-white">18% (Rp 77.1 Jt)</span>
+                </div>
+                <div class="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-blue-400 h-full rounded-full" style="width: 18%;"></div>
+                </div>
+              </div>
+
+              <!-- Basket & Kasual -->
+              <div>
+                <div class="flex justify-between font-semibold mb-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded bg-purple-400"></span>
+                    <span>Basket &amp; Aksesori</span>
+                  </span>
+                  <span class="font-mono font-bold text-white">10% (Rp 42.9 Jt)</span>
+                </div>
+                <div class="w-full bg-neutral-800 h-2 rounded-full overflow-hidden">
+                  <div class="bg-purple-400 h-full rounded-full" style="width: 10%;"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 3. Recent Audit & Activity Log -->
+          <div class="bg-[#15161c] border border-neutral-800 rounded-xl p-5 space-y-3 text-xs">
+            <h3 class="font-sport font-black text-sm text-neutral-300 uppercase tracking-tight">
+              LOG AKTIVITAS STAF TERAKHIR
+            </h3>
+            <div class="space-y-2.5 text-[11px] text-neutral-400">
+              <div class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
+                <div>
+                  <span class="font-bold text-white">Akhyar (Super Admin)</span> mencetak 28 label pengiriman kurir J&amp;T Express.
+                  <span class="text-[9px] text-neutral-500 font-mono block">10 menit yang lalu</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></span>
+                <div>
+                  Sistem otomatis mengalokasikan <span class="font-bold text-amber-400">8.500 Poin Tusko Club</span> untuk pesanan #TSK-9835.
+                  <span class="text-[9px] text-neutral-500 font-mono block">32 menit yang lalu</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></span>
+                <div>
+                  Manajer Gudang mengonfirmasi penerimaan 50 pasang restock <span class="font-bold text-white">Ultimashow FX3632</span>.
+                  <span class="text-[9px] text-neutral-500 font-mono block">1 jam yang lalu</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ================= NOTIFICATION TOAST & INTERACTION SCRIPTS ================= -->
+  <script>
+    function toggleMobileDrawer() {
+      const drawer = document.getElementById('mobile-drawer');
+      drawer.classList.toggle('hidden');
+    }
+
+    function filterOrders(status) {
+      // Update Tab Styles
+      ['all', 'unshipped', 'packing', 'shipping', 'completed'].forEach(s => {
+        const tab = document.getElementById(`tab-${s}`);
+        if (tab) {
+          if (s === status) {
+            tab.className = 'px-3 py-1.5 rounded-lg bg-amber-500 text-black font-bold whitespace-nowrap';
+          } else {
+            tab.className = 'px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 hover:text-white whitespace-nowrap';
+          }
+        }
+      });
+
+      // Filter Table Rows
+      const rows = document.querySelectorAll('.order-row');
+      rows.forEach(r => {
+        if (status === 'all' || r.getAttribute('data-status') === status) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    function processOrder(orderId, customer) {
+      showToast(`✓ Resi & Label Kurir untuk pesanan #${orderId} (${customer}) berhasil digenerate! Siap cetak thermal label.`);
+    }
+
+    function updateShipping(orderId) {
+      showToast(`✓ No. Resi otomatis diterbitkan untuk #${orderId}: JT${Math.floor(1000000000 + Math.random() * 9000000000)}`);
+    }
+
+    function batchPrintLabels() {
+      showToast('✓ Mengirim 42 dokumen label pengiriman ke printer barcode gudang...');
+    }
+
+    function restockPO(product) {
+      showToast(`✓ Purchase Order restock 50 unit untuk "${product}" berhasil dibuat dan dikirim ke Vendor!`);
+    }
+
+    function showToast(msg) {
+      const existing = document.getElementById('dashboard-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'dashboard-toast';
+      toast.className = 'fixed bottom-6 right-6 max-w-sm bg-neutral-900 border border-amber-500 text-white px-4 py-3 text-xs font-bold shadow-2xl z-50 flex items-start gap-2.5 rounded-xl animate-bounce';
+      toast.innerHTML = '<iconify-icon icon="lucide:check-circle-2" class="text-amber-400 text-lg flex-shrink-0 mt-0.5"></iconify-icon><div class="leading-relaxed">' + msg + '</div>';
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast && toast.parentNode) toast.remove();
+      }, 3800);
+    }
+  </script>
+
+  <!-- Live Auto-Reload Engine on GitHub Push -->
+  <script src="auto-updater.js"></script>
+</body>
+</html>

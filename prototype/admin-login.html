@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Masuk Admin &amp; Operasional - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#0f1013] text-neutral-100 antialiased min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-black">
+
+  <!-- 1. Top Security Alert Bar -->
+  <div class="bg-[#18191f] border-b border-neutral-800 text-[11px] py-2 px-4 text-neutral-400 font-medium">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-neutral-300 font-mono">TUSKO OPERATIONS NETWORK • SECURE GATEWAY</span>
+      </div>
+      <div class="flex items-center gap-4 text-[10px] font-mono">
+        <span class="flex items-center gap-1 text-emerald-400">
+          <iconify-icon icon="lucide:shield-check"></iconify-icon> SSL 256-BIT ENCRYPTED
+        </span>
+        <span class="hidden sm:inline text-neutral-600">|</span>
+        <span class="hidden sm:inline text-neutral-400">IP LOGGING ACTIVE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Header Back Office Branding -->
+  <header class="py-6 px-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Brand Logo -->
+        <a href="beranda.html" class="flex items-center gap-2 group" title="Kembali ke Etalase Pelanggan">
+          <div class="w-9 h-9 bg-white text-black flex items-center justify-center font-sport font-black text-xl tracking-tighter -skew-x-6 group-hover:bg-amber-400 transition-colors">
+            T
+          </div>
+          <div class="leading-none">
+            <span class="font-sport font-black text-xl tracking-tight uppercase text-white">TUSKO<span class="text-amber-500">.</span></span>
+            <span class="block text-[9px] font-bold tracking-widest text-amber-400 uppercase font-mono">OPERATIONS HQ</span>
+          </div>
+        </a>
+      </div>
+
+      <a href="beranda.html" class="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors border border-neutral-800 px-3 py-1.5 rounded hover:bg-neutral-800">
+        <iconify-icon icon="lucide:external-link" class="text-sm"></iconify-icon>
+        <span class="hidden sm:inline">Kunjungi</span> Toko Pelanggan
+      </a>
+    </div>
+  </header>
+
+  <!-- 3. Main Login Container -->
+  <main class="max-w-md w-full mx-auto px-4 py-8 flex-1 flex flex-col justify-center">
+    <div class="bg-[#16171c] border border-neutral-800 rounded-xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <!-- Glow Accent Line -->
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-emerald-500 to-blue-500"></div>
+
+      <!-- Portal Header -->
+      <div class="mb-6 text-center sm:text-left">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold font-mono tracking-wider uppercase mb-2">
+          <iconify-icon icon="lucide:lock" class="text-xs"></iconify-icon>
+          Portal Khusus Staf &amp; Manajemen
+        </div>
+        <h1 class="font-sport font-black text-2xl uppercase tracking-tight text-white">
+          MASUK PANEL ADMIN
+        </h1>
+        <p class="text-xs text-neutral-400 mt-1 leading-relaxed">
+          Akses kontrol inventori sepatu, pemrosesan resi pesanan, dan laporan analitik Tusko Performance.
+        </p>
+      </div>
+
+      <!-- Login Form -->
+      <form onsubmit="event.preventDefault(); handleAdminLogin();" class="space-y-4">
+        
+        <!-- Field 1: Email / Admin ID -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5">
+            Email Staf Operasional / NIP *
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="admin-email" 
+              value="superadmin@tusko.co.id" 
+              required 
+              placeholder="nama@tusko.co.id" 
+              class="w-full bg-[#0d0e11] border border-neutral-700 focus:border-amber-400 text-white px-3.5 py-2.5 pl-10 text-xs focus:outline-none rounded transition-colors font-mono"
+            />
+            <iconify-icon icon="lucide:user-check" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-base"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Field 2: Password -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-neutral-300">
+              Kata Sandi Admin *
+            </label>
+            <a href="#" onclick="showResetNotice(); return false;" class="text-[11px] text-amber-400 hover:underline">
+              Bantuan IT Helpdesk?
+            </a>
+          </div>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="admin-password" 
+              value="tusko-ops-2026" 
+              required 
+              placeholder="••••••••••••" 
+              class="w-full bg-[#0d0e11] border border-neutral-700 focus:border-amber-400 text-white px-3.5 py-2.5 pl-10 pr-10 text-xs focus:outline-none rounded transition-colors font-mono"
+            />
+            <iconify-icon icon="lucide:key" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-base"></iconify-icon>
+            <button type="button" onclick="toggleAdminPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white" title="Lihat/Sembunyikan">
+              <iconify-icon id="admin-eye-icon" icon="lucide:eye" class="text-base"></iconify-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Field 3: 2FA Security PIN -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-300 mb-1.5 flex items-center justify-between">
+            <span>Kode PIN Keamanan (2FA Token) *</span>
+            <span class="text-[10px] text-emerald-400 font-mono font-normal">Auto-Generated</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="admin-pin" 
+              value="849 201" 
+              maxlength="7" 
+              required 
+              placeholder="6 Digit PIN" 
+              class="w-full bg-[#0d0e11] border border-neutral-700 focus:border-amber-400 text-white px-3.5 py-2.5 pl-10 text-xs focus:outline-none rounded transition-colors font-mono tracking-widest text-base"
+            />
+            <iconify-icon icon="lucide:shield-alert" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-base"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Remember Device & Session Duration -->
+        <div class="flex items-center justify-between text-xs text-neutral-400 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" checked class="w-4 h-4 rounded bg-[#0d0e11] border-neutral-700 text-amber-500 focus:ring-0 focus:ring-offset-0">
+            <span>Ingat perangkat terpercaya</span>
+          </label>
+          <span class="text-[10px] text-neutral-500 font-mono">Sesi 8 Jam</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          id="btn-login-admin"
+          class="w-full bg-amber-500 hover:bg-amber-400 text-black font-sport font-black text-sm uppercase tracking-wider py-3.5 px-4 rounded flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-[0.99] mt-2"
+        >
+          <span>MASUK KE DASHBOARD ADMIN</span>
+          <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+        </button>
+
+      </form>
+
+      <!-- Instant Testing Helper Banner -->
+      <div class="mt-6 pt-5 border-t border-neutral-800 text-center">
+        <div class="bg-[#0f1013] border border-neutral-800 p-3.5 rounded-lg text-left space-y-2">
+          <div class="flex items-center justify-between text-[11px] font-bold text-neutral-300">
+            <span class="flex items-center gap-1.5 text-amber-400">
+              <iconify-icon icon="lucide:sparkles"></iconify-icon>
+              Mode Uji Coba Cepat (Demo):
+            </span>
+            <span class="text-[10px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded font-mono">Super Admin</span>
+          </div>
+          <p class="text-[11px] text-neutral-400 leading-relaxed">
+            Kredensial demo telah diisi otomatis. Cukup klik tombol <strong>Masuk ke Dashboard Admin</strong> di atas untuk langsung membuka panel kendali.
+          </p>
+          <div class="flex gap-2 pt-1">
+            <button onclick="fillDemo('superadmin@tusko.co.id', 'Super Admin')" class="text-[10px] font-mono px-2 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded transition-colors">
+              Set: Super Admin
+            </button>
+            <button onclick="fillDemo('fulfillment@tusko.co.id', 'Manajer Gudang')" class="text-[10px] font-mono px-2 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded transition-colors">
+              Set: Gudang &amp; Resi
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 4. Footer System Info -->
+  <footer class="py-5 border-t border-neutral-800 text-center text-xs text-neutral-500">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono">
+      <div>&copy; 2026 PT Tusko Performance Indonesia • Operations v2.4.0</div>
+      <div class="flex items-center gap-4 text-neutral-400">
+        <span class="flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Server Jakarta (JKT-01)
+        </span>
+        <a href="admin-dashboard.html" class="hover:text-amber-400 underline">Bypass Langsung &rarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notification Toast & Interactions -->
+  <script>
+    function toggleAdminPassword() {
+      const pwdInput = document.getElementById('admin-password');
+      const icon = document.getElementById('admin-eye-icon');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.setAttribute('icon', 'lucide:eye-off');
+      } else {
+        pwdInput.type = 'password';
+        icon.setAttribute('icon', 'lucide:eye');
+      }
+    }
+
+    function fillDemo(email, role) {
+      document.getElementById('admin-email').value = email;
+      document.getElementById('admin-password').value = 'tusko-ops-2026';
+      document.getElementById('admin-pin').value = '849 201';
+      showToast('Kredensial demo diatur untuk: ' + role);
+    }
+
+    function handleAdminLogin() {
+      const btn = document.getElementById('btn-login-admin');
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2" class="animate-spin text-base"></iconify-icon><span>MEMVERIFIKASI AKSES STAF...</span>';
+      btn.disabled = true;
+
+      showToast('✓ Akses Terverifikasi! Mengalihkan ke Dashboard Admin...');
+      
+      setTimeout(() => {
+        window.location.href = 'admin-dashboard.html';
+      }, 1200);
+    }
+
+    function showResetNotice() {
+      showToast('Hubungi Security Officer melalui security@tusko.co.id atau slack internal #it-support.');
+    }
+
+    function showToast(msg) {
+      const existing = document.getElementById('admin-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'admin-toast';
+      toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 bg-neutral-900 border border-amber-500 text-white px-5 py-3 text-xs font-bold shadow-2xl z-50 flex items-center gap-2 rounded-lg';
+      toast.innerHTML = '<iconify-icon icon="lucide:shield-check" class="text-amber-400 text-base flex-shrink-0"></iconify-icon><span>' + msg + '</span>';
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast && toast.parentNode) toast.remove();
+      }, 3500);
+    }
+  </script>
+
+  <!-- Live Auto-Reload Engine on GitHub Push -->
+  <script src="auto-updater.js"></script>
+</body>
+</html>
