@@ -1,6 +1,6 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "475cf5c59532a6ab8528a04bf2cffc87c8cd2013",
+  "generatedForCommit": "2dd426b3c01925098c9efe5d1fe16bd8aa5e60c7",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
@@ -10,7 +10,7 @@
     },
     {
       "path": ".gitignore",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": null,
       "size": 63
     },
@@ -28,385 +28,403 @@
     },
     {
       "path": "backend/.editorconfig",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 275
     },
     {
       "path": "backend/.gitattributes",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 186
     },
     {
       "path": "backend/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 341
     },
     {
       "path": "backend/.npmrc",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 31
     },
     {
-      "path": "backend/AGENTS.md",
+      "path": "backend/.phpunit.result.cache",
       "reason": "new",
+      "language": null,
+      "size": 178
+    },
+    {
+      "path": "backend/AGENTS.md",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 1446
     },
     {
       "path": "backend/CLAUDE.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 1446
     },
     {
       "path": "backend/README.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 3700
     },
     {
       "path": "backend/app/Http/Controllers/Controller.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 77
     },
     {
       "path": "backend/app/Models/Category.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 704
     },
     {
       "path": "backend/app/Models/Product.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1104
     },
     {
       "path": "backend/app/Models/ProductImage.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 509
     },
     {
       "path": "backend/app/Models/User.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 840
     },
     {
       "path": "backend/app/Providers/AppServiceProvider.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 361
     },
     {
       "path": "backend/artisan",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 425
     },
     {
       "path": "backend/bootstrap/app.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 684
     },
     {
       "path": "backend/bootstrap/cache/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/bootstrap/cache/packages.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 830
     },
     {
       "path": "backend/bootstrap/cache/services.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 22467
     },
     {
       "path": "backend/bootstrap/providers.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 89
     },
     {
       "path": "backend/composer.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 2678
     },
     {
       "path": "backend/composer.lock",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 307949
     },
     {
       "path": "backend/config/app.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 4281
     },
     {
       "path": "backend/config/auth.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 4040
     },
     {
       "path": "backend/config/cache.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 4369
     },
     {
       "path": "backend/config/database.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 6876
     },
     {
       "path": "backend/config/filesystems.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 2532
     },
     {
       "path": "backend/config/logging.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 4606
     },
     {
       "path": "backend/config/mail.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 3631
     },
     {
       "path": "backend/config/queue.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 4199
     },
     {
       "path": "backend/config/services.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1039
     },
     {
       "path": "backend/config/session.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 8423
     },
     {
       "path": "backend/database/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 10
     },
     {
-      "path": "backend/database/factories/UserFactory.php",
+      "path": "backend/database/factories/CategoryFactory.php",
       "reason": "new",
+      "language": "php",
+      "size": 559
+    },
+    {
+      "path": "backend/database/factories/UserFactory.php",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1044
     },
     {
       "path": "backend/database/migrations/0001_01_01_000000_create_users_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1551
     },
     {
       "path": "backend/database/migrations/0001_01_01_000001_create_cache_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 873
     },
     {
       "path": "backend/database/migrations/0001_01_01_000002_create_jobs_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1883
     },
     {
       "path": "backend/database/migrations/2026_09_07_000001_create_categories_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 718
     },
     {
       "path": "backend/database/migrations/2026_09_07_000002_create_products_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 1020
     },
     {
       "path": "backend/database/migrations/2026_09_07_000003_create_product_images_table.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 730
     },
     {
       "path": "backend/database/seeders/DatabaseSeeder.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 562
     },
     {
       "path": "backend/database/seeders/ProductSeeder.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 7577
     },
     {
       "path": "backend/package.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 461
     },
     {
       "path": "backend/phpunit.xml",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 1322
     },
     {
       "path": "backend/public/.htaccess",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 740
     },
     {
       "path": "backend/public/index.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 543
     },
     {
       "path": "backend/public/robots.txt",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 24
     },
     {
       "path": "backend/resources/css/app.css",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "css",
       "size": 339
     },
     {
       "path": "backend/resources/js/app.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 3
     },
     {
       "path": "backend/resources/views/welcome.blade.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 72302
     },
     {
       "path": "backend/routes/console.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 210
     },
     {
       "path": "backend/routes/web.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 108
     },
     {
       "path": "backend/storage/app/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 33
     },
     {
       "path": "backend/storage/app/private/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/storage/app/public/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/storage/framework/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 129
     },
     {
       "path": "backend/storage/framework/cache/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 21
     },
     {
       "path": "backend/storage/framework/cache/data/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/storage/framework/sessions/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/storage/framework/testing/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
       "path": "backend/storage/framework/views/.gitignore",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": null,
       "size": 14
     },
     {
-      "path": "backend/tests/Feature/ExampleTest.php",
+      "path": "backend/tests/Feature/CategoryTest.php",
       "reason": "new",
+      "language": "php",
+      "size": 1129
+    },
+    {
+      "path": "backend/tests/Feature/ExampleTest.php",
+      "reason": "needs_summary",
       "language": "php",
       "size": 359
     },
     {
       "path": "backend/tests/TestCase.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 142
     },
     {
       "path": "backend/tests/Unit/ExampleTest.php",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "php",
       "size": 243
     },
     {
       "path": "backend/vite.config.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
       "size": 632
     },
