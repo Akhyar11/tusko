@@ -3,613 +3,572 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sepatu Ultimashow FX3632 - Tusko Performance</title>
+  <title>Sepatu Ultimashow FX3632 Core Black - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: "Inter", sans-serif; }
-    .font-sport { font-family: "Outfit", sans-serif; }
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-
-  <style>
-    @media (max-width: 768px) {
-      /* Top bar responsive */
-      [data-node-id="top-bar"] { padding: 6px 12px !important; font-size: 10px !important; }
-      [data-node-id="top-bar"] > div > div:last-child { display: none !important; }
-      
-      /* Main Header responsive */
-      [data-node-id="pdp-header"] { padding: 0 12px !important; height: 60px !important; }
-      [data-node-id="pdp-header"] nav { display: none !important; }
-      [data-node-id="pdp-header"] input { width: 130px !important; }
-      
-      /* Product layout 1 col on mobile */
-      .p-detail-produk [data-node-id="pdp-container"],
-      .p-detail-produk main > div:nth-child(3) { 
-        display: flex !important;
-        flex-direction: column !important;
-        padding: 12px !important;
-        gap: 20px !important;
-      }
-      
-      /* Gallery mobile */
-      [data-node-id="pdp-gallery"] {
-        width: 100% !important;
-      }
-      
-      /* Size selector mobile */
-      [data-node-id="size-matrix"] {
-        grid-template-columns: repeat(4, 1fr) !important;
-      }
-      
-      /* Buy box */
-      [data-node-id="pdp-buy-box"] {
-        width: 100% !important;
-        position: static !important;
-      }
-    }
-  </style>
-
 </head>
-<body class="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen">
-  
+<body class="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen pb-20 sm:pb-0">
 
-
-  <main
-    aria-label="Sepatu Ultimashow FX3632 - Detail Produk"
-    class="p-detail-produk"
-    data-node-id="detail-produk"
-    style="min-height: 100vh; font-family: 'AdihausDIN', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; color: #000000;"
-  >
-    <!-- 1. Top Announcement Utility Bar (Benchmark: adidas.co.id Top Bar) -->
-    <div data-node-id="top-bar" style="background-color: #000000; color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 8px 24px; text-transform: uppercase;">
-      <div style="max-width: 1360px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <span>GRATIS ONGKIR SELURUH INDONESIA DENGAN MIN. BELANJA RP 500.000</span>
-          <span style="color: #525252;">|</span>
-          <span style="color: #f59e0b;">PENGEMBALIAN &amp; TUKAR UKURAN GRATIS 14 HARI</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 20px; color: #d4d4d4;">
-          <a href="#" style="color: inherit; text-decoration: none;">Lacak Pesanan</a>
-          <a href="#" style="color: inherit; text-decoration: none;">Bantuan &amp; CS</a>
-          <a href="#" style="color: #f59e0b; text-decoration: none; font-weight: 800;">Gabung Tusko Club</a>
-          <span style="color: #a3a3a3;">ID | IDR</span>
-        </div>
+  <!-- 1. Top Announcement Utility Bar -->
+  <div class="bg-black text-white text-[11px] font-bold py-2 px-4 text-center tracking-wider uppercase">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 mx-auto sm:mx-0">
+        <iconify-icon icon="lucide:truck" class="text-sm text-amber-400"></iconify-icon>
+        <span>GRATIS ONGKIR SELURUH INDONESIA MIN. RP 500.000</span>
+        <span class="hidden md:inline text-neutral-600">|</span>
+        <span class="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
+      </div>
+      <div class="hidden lg:flex items-center gap-6 text-neutral-400 text-xs">
+        <a href="#" class="hover:text-white transition-colors flex items-center gap-1">
+          <iconify-icon icon="lucide:map-pin" class="text-xs"></iconify-icon> Lacak Pesanan
+        </a>
+        <a href="#" class="hover:text-white transition-colors">Bantuan &amp; CS</a>
+        <a href="#" class="text-amber-400 font-extrabold hover:underline">Gabung Tusko Club</a>
+        <span class="text-neutral-500 font-bold">ID | IDR</span>
       </div>
     </div>
+  </div>
 
-    <!-- 2. Primary Header Navigation (Benchmark: adidas.co.id Header) -->
-    <header data-node-id="pdp-header" style="background-color: #ffffff; border-bottom: 1px solid #e5e5e5; position: sticky; top: 0; z-index: 50; padding: 0 24px;">
-      <div style="max-width: 1360px; margin: 0 auto; height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
-        <!-- Logo -->
-        <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #000000;">
-          <div style="width: 44px; height: 38px; background-color: #000000; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #f59e0b; transform: skewX(-8deg); letter-spacing: -0.05em;">
+  <!-- 2. Header Navigation (Benchmark: adidas.co.id) -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Back to Home -->
+      <div class="flex items-center gap-4">
+        <a href="beranda.html" class="flex items-center gap-2 group flex-shrink-0">
+          <div class="w-9 sm:w-11 h-9 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
             T
           </div>
-          <div>
-            <div style="font-size: 22px; font-weight: 900; letter-spacing: -0.05em; font-style: italic; line-height: 1; text-transform: uppercase;">
-              TUSKO<span style="color: #f59e0b;">.</span>
-            </div>
-            <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: #737373; margin-top: 2px;">
-              PERFORMANCE
-            </div>
+          <div class="leading-none">
+            <span class="font-sport font-black text-xl sm:text-2xl tracking-tight uppercase">TUSKO<span class="text-amber-500">.</span></span>
+            <span class="block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">Performance</span>
           </div>
         </a>
-
-        <!-- Category Nav (Men / Pria active) -->
-        <nav aria-label="Kategori Utama" style="display: flex; align-items: center; gap: 28px; height: 100%;">
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #000000; text-decoration: none; padding: 24px 0; border-bottom: 3px solid #000000;">
-            PRIA
-          </a>
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #000000; text-decoration: none; padding: 24px 0; border-bottom: 3px solid transparent;">
-            WANITA
-          </a>
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #000000; text-decoration: none; padding: 24px 0; border-bottom: 3px solid transparent;">
-            ANAK
-          </a>
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #000000; text-decoration: none; padding: 24px 0; border-bottom: 3px solid transparent;">
-            OLAHRAGA
-          </a>
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #000000; text-decoration: none; padding: 24px 0; border-bottom: 3px solid transparent;">
-            KOLEKSI
-          </a>
-          <a href="#" style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #e11d48; text-decoration: none; padding: 24px 0; border-bottom: 3px solid transparent;">
-            OUTLET SALE
-          </a>
-        </nav>
-
-        <!-- Right Utility Icons -->
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="position: relative; width: 240px;">
-            <input 
-              type="text" 
-              placeholder="Cari..." 
-              style="width: 100%; box-sizing: border-box; background-color: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 4px; padding: 8px 36px 8px 12px; font-size: 12px; color: #000000; outline: none;"
-            />
-            <iconify-icon icon="lucide:search" aria-hidden="true" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #000000; font-size: 16px;"></iconify-icon>
-          </div>
-          <button type="button" aria-label="Akun" style="background: none; border: none; color: #000000; cursor: pointer; padding: 6px;">
-            <iconify-icon icon="lucide:user" aria-hidden="true" style="font-size: 20px;"></iconify-icon>
-          </button>
-          <button type="button" aria-label="Favorit" style="background: none; border: none; color: #000000; cursor: pointer; padding: 6px;">
-            <iconify-icon icon="lucide:heart" aria-hidden="true" style="font-size: 20px;"></iconify-icon>
-          </button>
-          <button type="button" aria-label="Tas Belanja" style="background: none; border: none; color: #000000; cursor: pointer; padding: 6px; position: relative;">
-            <iconify-icon icon="lucide:shopping-bag" aria-hidden="true" style="font-size: 20px;"></iconify-icon>
-            <span style="position: absolute; top: 0; right: 0; background-color: #f59e0b; color: #000000; font-size: 10px; font-weight: 900; border-radius: 9999px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">2</span>
-          </button>
-        </div>
+        <span class="hidden sm:inline text-neutral-300">|</span>
+        <a href="beranda.html" class="hidden sm:flex items-center gap-1 text-xs font-bold text-neutral-600 hover:text-black uppercase">
+          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+          <span>Etalase Toko</span>
+        </a>
       </div>
-    </header>
 
-    <!-- 3. Breadcrumb & Back Navigation -->
-    <div data-node-id="breadcrumb-bar" style="background-color: #ffffff; border-bottom: 1px solid #eeeeee; padding: 12px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
-      <div style="max-width: 1360px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 8px; color: #737373;">
-          <a href="index.html" style="color: inherit; text-decoration: underline;">KEMBALI KE ETALASE</a>
-          <span>/</span>
-          <a href="#" style="color: inherit; text-decoration: none;">PRIA</a>
-          <span>/</span>
-          <a href="#" style="color: inherit; text-decoration: none;">SEPATU</a>
-          <span>/</span>
-          <a href="#" style="color: inherit; text-decoration: none;">LARI</a>
-          <span>/</span>
-          <span style="color: #000000; font-weight: 900;">SEPATU ULTIMASHOW FX3632</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px; color: #000000;">
-          <iconify-icon icon="lucide:share-2" aria-hidden="true"></iconify-icon>
-          <button type="button" style="background: none; border: none; font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; color: inherit; padding: 0;">
-            Bagikan
-          </button>
-        </div>
-      </div>
-    </div>
+      <!-- Category Nav (Desktop Only) -->
+      <nav class="hidden md:flex items-center gap-6 lg:gap-8 font-sport font-black text-xs lg:text-sm uppercase tracking-wider">
+        <a href="beranda.html#product-catalog" class="text-black border-b-2 border-black pb-1">Pria</a>
+        <a href="beranda.html#product-catalog" class="text-neutral-700 hover:text-black pb-1">Wanita</a>
+        <a href="beranda.html#sport-categories" class="text-neutral-700 hover:text-black pb-1">Olahraga</a>
+        <a href="beranda.html#product-catalog" class="text-red-600 hover:text-red-700 pb-1">Outlet Sale</a>
+      </nav>
 
-    <!-- 4. Main Product Presentation: Two-Column Split (Benchmark adidas.co.id PDP) -->
-    <section data-node-id="product-pdp-main" style="max-width: 1360px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 1.4fr 0.9fr; gap: 48px; align-items: start;">
-      
-      <!-- LEFT COLUMN: Multi-Angle High-Resolution Product Gallery -->
-      <div data-node-id="pdp-gallery" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <!-- Photo 1: Lateral Side View -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden; position: relative;">
-          <img 
-            src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Tampak Samping Lateral" 
-            style="width: 100%; height: 100%; object-fit: cover;"
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="relative hidden sm:block w-48 lg:w-56">
+          <input 
+            type="text" 
+            placeholder="Cari di Tusko..." 
+            class="w-full bg-neutral-100 border border-neutral-200 px-3 py-1.5 pl-8 text-xs focus:outline-none focus:border-black font-medium"
           />
-          <span style="position: absolute; top: 12px; left: 12px; background-color: #000000; color: #ffffff; font-size: 10px; font-weight: 900; padding: 4px 8px; text-transform: uppercase;">
+          <iconify-icon icon="lucide:search" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-sm"></iconify-icon>
+        </div>
+
+        <button class="text-neutral-800 hover:text-black p-1.5" title="Wishlist">
+          <iconify-icon icon="lucide:heart" class="text-xl"></iconify-icon>
+        </button>
+
+        <a href="cart.html" class="text-black p-1.5 flex items-center relative" title="Tas Belanja">
+          <iconify-icon icon="lucide:shopping-bag" class="text-2xl"></iconify-icon>
+          <span class="bg-black text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center -ml-2 -mt-3">2</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 3. Breadcrumb Bar -->
+  <div class="bg-neutral-50 border-b border-neutral-200 px-4 sm:px-6 lg:px-8 py-2.5 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-1.5 whitespace-nowrap">
+        <a href="beranda.html" class="hover:text-black underline">Beranda</a>
+        <span>/</span>
+        <a href="beranda.html#product-catalog" class="hover:text-black">Pria</a>
+        <span>/</span>
+        <a href="beranda.html#sport-categories" class="hover:text-black">Sepatu Lari</a>
+        <span>/</span>
+        <span class="text-black font-black">Ultimashow FX3632</span>
+      </div>
+      <button class="flex items-center gap-1 text-neutral-600 hover:text-black whitespace-nowrap flex-shrink-0">
+        <iconify-icon icon="lucide:share-2" class="text-xs"></iconify-icon>
+        <span>Bagikan</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Main Product PDP Container (Responsive Layout) -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      
+      <!-- ================= LEFT: PRODUCT SHOWCASE GALLERY (7 Cols Desktop, Full-Width Mobile) ================= -->
+      <div class="lg:col-span-7 space-y-3">
+        
+        <!-- Mobile & Desktop Hero Showcase Image -->
+        <div class="relative aspect-square sm:aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden group">
+          <img 
+            id="main-showcase-img" 
+            src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80" 
+            alt="Sepatu Ultimashow FX3632 Core Black" 
+            class="w-full h-full object-cover object-center transition-all duration-300 group-hover:scale-105"
+          />
+          
+          <!-- Badges -->
+          <span class="absolute top-3 left-3 bg-black text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-1">
             OFFICIAL PRODUCT
           </span>
+          <span class="absolute top-3 left-24 sm:left-28 bg-amber-500 text-black text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-1">
+            BEST SELLER
+          </span>
+
+          <!-- Wishlist floating button -->
+          <button class="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-neutral-800 hover:text-red-500 shadow-md transition-colors">
+            <iconify-icon icon="lucide:heart" class="text-lg"></iconify-icon>
+          </button>
+
+          <!-- Photo angle indicator badge -->
+          <div id="photo-label" class="absolute bottom-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider">
+            1/6 &bull; Samping Luar (Lateral)
+          </div>
         </div>
 
-        <!-- Photo 2: Medial Side View -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden;">
-          <img 
-            src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Tampak Samping Medial" 
-            style="width: 100%; height: 100%; object-fit: cover;"
-          />
+        <!-- Thumbnails Selector Row (Swipeable on Mobile, Grid on Desktop) -->
+        <div class="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1">
+          <!-- Thumb 1 -->
+          <button onclick="selectPhoto(0, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80', '1/6 &bull; Samping Luar (Lateral)')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-black overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 1">
+          </button>
+          <!-- Thumb 2 -->
+          <button onclick="selectPhoto(1, 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80', '2/6 &bull; Samping Dalam (Medial)')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 2">
+          </button>
+          <!-- Thumb 3 -->
+          <button onclick="selectPhoto(2, 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1200&q=80', '3/6 &bull; Tampak Atas & Tali Mesh')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 3">
+          </button>
+          <!-- Thumb 4 -->
+          <button onclick="selectPhoto(3, 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=1200&q=80', '4/6 &bull; Outsole & Heel Counter')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 4">
+          </button>
+          <!-- Thumb 5 -->
+          <button onclick="selectPhoto(4, 'https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&w=1200&q=80', '5/6 &bull; Detail Midsole EVA')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 5">
+          </button>
+          <!-- Thumb 6 -->
+          <button onclick="selectPhoto(5, 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=1200&q=80', '6/6 &bull; Penggunaan Lari di Lintasan')" class="thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100">
+            <img src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover" alt="Thumb 6">
+          </button>
         </div>
 
-        <!-- Photo 3: Top Overhead Angle (Lace & Upper Mesh) -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden;">
-          <img 
-            src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Tampak Atas Tali &amp; Upper" 
-            style="width: 100%; height: 100%; object-fit: cover;"
-          />
+        <!-- Extra Desktop 2x2 Gallery Grid (Visible on Large Screens) -->
+        <div class="hidden sm:grid grid-cols-2 gap-3 pt-4">
+          <div class="aspect-square bg-neutral-100 border border-neutral-200 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Detail 2">
+          </div>
+          <div class="aspect-square bg-neutral-100 border border-neutral-200 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Detail 3">
+          </div>
         </div>
 
-        <!-- Photo 4: Outsole & Heel TPU Counter -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden;">
-          <img 
-            src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Outsole Karet &amp; TPU Fit Counter" 
-            style="width: 100%; height: 100%; object-fit: cover;"
-          />
-        </div>
-
-        <!-- Photo 5: Close-up Texture & Midsole EVA -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden;">
-          <img 
-            src="https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Detail Midsole EVA Empuk" 
-            style="width: 100%; height: 100%; object-fit: cover;"
-          />
-        </div>
-
-        <!-- Photo 6: Lifestyle Athletic On-Feet -->
-        <div style="background-color: #f5f5f5; aspect-ratio: 1; overflow: hidden;">
-          <img 
-            src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&amp;fit=crop&amp;w=900&amp;q=80" 
-            alt="Sepatu Ultimashow FX3632 - Penggunaan Berlari di Lintasan" 
-            style="width: 100%; height: 100%; object-fit: cover;"
-          />
-        </div>
       </div>
 
-      <!-- RIGHT COLUMN: Sticky Product Purchase Panel (Exact adidas.co.id PDP Anatomy) -->
-      <div data-node-id="pdp-purchase-card" style="position: sticky; top: 96px; display: flex; flex-direction: column; gap: 20px;">
+      <!-- ================= RIGHT: PRODUCT BUY BOX (5 Cols Desktop, Full-Width Mobile) ================= -->
+      <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-5">
         
-        <!-- Category & Rating Header -->
+        <!-- Category, Rating & Title -->
         <div>
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #737373; margin-bottom: 6px;">
-            <span>PRIA • LARI</span>
-            <div style="display: flex; align-items: center; gap: 4px; color: #000000;">
-              <iconify-icon icon="lucide:star" aria-hidden="true" style="color: #f59e0b;"></iconify-icon>
+          <div class="flex items-center justify-between text-xs font-black uppercase tracking-wider text-neutral-500 mb-1.5">
+            <span>PRIA &bull; RUNNING PERFORMANCE</span>
+            <div class="flex items-center gap-1 text-black font-bold">
+              <iconify-icon icon="lucide:star" class="text-amber-500 text-sm"></iconify-icon>
               <span>4.8 (128 Ulasan)</span>
             </div>
           </div>
 
-          <!-- Product Name (adidas bold all-caps title) -->
-          <h1 style="font-size: 32px; font-weight: 900; line-height: 1.05; text-transform: uppercase; letter-spacing: -0.03em; margin: 0 0 8px 0; font-style: italic;">
+          <h1 class="font-sport font-black text-2xl sm:text-4xl uppercase italic tracking-tight leading-none text-black">
             SEPATU ULTIMASHOW
           </h1>
-
-          <!-- Color Description & SKU -->
-          <div style="font-size: 13px; font-weight: 700; color: #525252;">
+          
+          <div class="text-xs font-bold text-neutral-600 mt-2">
             Warna: Core Black / Core Black / Cloud White
           </div>
-          <div style="font-size: 11px; font-mono; font-weight: 800; color: #a3a3a3; margin-top: 2px;">
-            KODE PRODUK: <strong style="color: #000000;">FX3632</strong>
+          <div class="text-[11px] font-mono font-bold text-neutral-400 mt-0.5">
+            KODE ARTIKEL: <span class="text-black font-extrabold">FX3632</span>
           </div>
         </div>
 
-        <!-- Pricing Block (Official adidas Price Presentation) -->
-        <div style="border-top: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee; padding: 16px 0;">
-          <div style="display: flex; align-items: baseline; gap: 10px;">
-            <span style="font-size: 26px; font-weight: 900; color: #000000; letter-spacing: -0.02em;">
-              Rp 850.000
-            </span>
+        <!-- Price Block -->
+        <div class="py-3.5 border-y border-neutral-200 flex items-baseline justify-between">
+          <div>
+            <div class="flex items-baseline gap-2.5">
+              <span class="font-sport font-black text-2xl sm:text-3xl text-black">Rp 850.000</span>
+              <span class="text-xs sm:text-sm text-neutral-400 line-through font-bold">Rp 1.100.000</span>
+              <span class="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5">HEMAT 23%</span>
+            </div>
+            <p class="text-[10px] text-neutral-500 font-medium mt-1">Termasuk PPN. Bebas biaya pengiriman reguler.</p>
           </div>
-          <div style="font-size: 11px; color: #737373; margin-top: 4px; font-weight: 600;">
-            Harga sudah termasuk PPN. Bebas ongkir ke seluruh Indonesia.
-          </div>
+          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 border border-emerald-200">
+            STOK TERSEDIA
+          </span>
         </div>
 
-        <!-- adiClub / Tusko Club Loyalty Earn Banner -->
-        <div style="background-color: #000000; color: #ffffff; padding: 14px 16px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <iconify-icon icon="lucide:award" aria-hidden="true" style="color: #f59e0b; font-size: 22px; flex-shrink: 0;"></iconify-icon>
-            <div style="font-size: 11px; font-weight: 700; line-height: 1.3;">
-              Dapatkan <strong style="color: #f59e0b;">8.500 Poin Loyalitas</strong> dengan membeli produk ini.
+        <!-- Tusko Club Perks Badge -->
+        <div class="bg-black text-white p-3.5 flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-sm flex-shrink-0 -skew-x-6">
+              ★
+            </div>
+            <div class="text-[11px] leading-tight">
+              Dapatkan <strong class="text-amber-400 font-black">8.500 Poin Member</strong> dari pembelian ini.
             </div>
           </div>
-          <a href="#" style="font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; text-decoration: underline; white-space: nowrap;">
-            GABUNG &rarr;
-          </a>
+          <a href="#" class="font-sport font-black text-[10px] uppercase text-white underline flex-shrink-0">GABUNG &rarr;</a>
         </div>
 
-        <!-- Size Selection (adidas UK / EUR Size Matrix) -->
+        <!-- Size Matrix Selector -->
         <div>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <span style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
-              PILIH UKURAN:
-            </span>
-            <button type="button" style="background: none; border: none; font-size: 12px; font-weight: 800; text-transform: uppercase; text-decoration: underline; color: #000000; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-              <iconify-icon icon="lucide:ruler" aria-hidden="true"></iconify-icon>
-              PANDUAN UKURAN (SIZE GUIDE)
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-sport font-black text-xs uppercase tracking-wider text-black">PILIH UKURAN:</span>
+            <button onclick="alert('Ukuran standar sepatu lari Tusko menggunakan sistem konversi resmi UK/EUR. Disarankan memilih ukuran regular sepatu olahraga Anda.')" class="text-[11px] font-bold underline flex items-center gap-1 text-neutral-700 hover:text-black">
+              <iconify-icon icon="lucide:ruler" class="text-xs"></iconify-icon>
+              <span>Panduan Ukuran</span>
             </button>
           </div>
 
           <!-- Size Grid Boxes -->
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 6 (EU 39⅓)
+          <div id="size-grid" class="grid grid-cols-4 sm:grid-cols-3 gap-2 text-xs font-bold">
+            <button onclick="selectSize(this, 'UK 6 (EU 39⅓)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 6 (39⅓)
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 6.5 (EU 40)
+            <button onclick="selectSize(this, 'UK 6.5 (EU 40)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 6.5 (40)
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 7 (EU 40⅔)
+            <button onclick="selectSize(this, 'UK 7 (EU 40⅔)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 7 (40⅔)
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 7.5 (EU 41⅓)
+            <button onclick="selectSize(this, 'UK 7.5 (EU 41⅓)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 7.5 (41⅓)
             </button>
-            <!-- Selected Size -->
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 900; border: 2px solid #000000; background-color: #000000; color: #ffffff; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              UK 8 (EU 42) ✓
+            
+            <!-- Default Selected: UK 8 -->
+            <button onclick="selectSize(this, 'UK 8 (EU 42)')" class="size-btn border-2 border-black bg-black text-white py-2.5 px-1 text-center font-black transition-colors">
+              UK 8 (42) ✓
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 8.5 (EU 42⅔)
+            
+            <button onclick="selectSize(this, 'UK 8.5 (EU 42⅔)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 8.5 (42⅔)
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center; position: relative;">
-              UK 9 (EU 43⅓)
-              <span style="display: block; font-size: 9px; color: #e11d48; font-weight: 900;">Sisa 2 pasang!</span>
+            <button onclick="selectSize(this, 'UK 9 (EU 43⅓)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors relative">
+              <span>UK 9 (43⅓)</span>
+              <span class="block text-[8px] text-red-600 font-extrabold">Sisa 2</span>
             </button>
-            <button type="button" style="padding: 12px 6px; font-size: 12px; font-weight: 800; border: 1px solid #d4d4d4; background-color: #ffffff; color: #000000; cursor: pointer; text-align: center;">
-              UK 9.5 (EU 44)
+            <button onclick="selectSize(this, 'UK 9.5 (EU 44)')" class="size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors">
+              UK 9.5 (44)
             </button>
+            
             <!-- Disabled Out of Stock -->
-            <button type="button" disabled style="padding: 12px 6px; font-size: 12px; font-weight: 700; border: 1px solid #eeeeee; background-color: #f9f9f9; color: #a3a3a3; cursor: not-allowed; text-decoration: line-through; text-align: center;">
+            <button disabled class="border border-neutral-200 bg-neutral-100 text-neutral-400 py-2.5 px-1 text-center cursor-not-allowed line-through">
               UK 10 (Habis)
             </button>
           </div>
 
-          <!-- Fit advisory -->
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 11px; color: #525252; font-weight: 600;">
-            <iconify-icon icon="lucide:info" aria-hidden="true" style="color: #000000;"></iconify-icon>
+          <p class="text-[10px] text-neutral-500 font-medium mt-2 flex items-center gap-1">
+            <iconify-icon icon="lucide:info" class="text-xs text-neutral-700"></iconify-icon>
             <span>Ukuran pas biasa (Regular Fit). Disarankan memilih ukuran standar Anda.</span>
-          </div>
+          </p>
         </div>
 
-        <!-- Primary Action Buttons (Add to Bag & Wishlist) -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button type="button" style="width: 100%; background-color: #000000; color: #ffffff; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 16px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+        <!-- Action CTA Buttons -->
+        <div class="space-y-2.5 pt-2">
+          <a href="cart.html" class="w-full bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider py-4 px-6 flex items-center justify-between transition-colors shadow-sm">
             <span>TAMBAH KE TAS BELANJA</span>
-            <span style="font-size: 18px;">&rarr;</span>
-          </button>
+            <span class="text-base">&rarr;</span>
+          </a>
 
-          <button type="button" style="width: 100%; background-color: #ffffff; color: #000000; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 14px; border: 1px solid #000000; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <iconify-icon icon="lucide:heart" aria-hidden="true" style="font-size: 18px;"></iconify-icon>
+          <button class="w-full border border-black hover:bg-neutral-50 text-black font-sport font-bold text-xs uppercase tracking-wider py-3.5 px-6 flex items-center justify-center gap-2 transition-colors">
+            <iconify-icon icon="lucide:heart" class="text-base"></iconify-icon>
             <span>SIMPAN KE DAFTAR KEINGINAN</span>
           </button>
         </div>
 
-        <!-- Delivery & Return Perks Box -->
-        <div style="border: 1px solid #e5e5e5; padding: 18px; display: flex; flex-direction: column; gap: 14px; font-size: 12px;">
-          <div style="display: flex; align-items: flex-start; gap: 12px;">
-            <iconify-icon icon="lucide:truck" aria-hidden="true" style="font-size: 20px; color: #000000; flex-shrink: 0;"></iconify-icon>
+        <!-- Delivery & Return Badges -->
+        <div class="border border-neutral-200 p-4 space-y-3 text-xs">
+          <div class="flex items-start gap-3">
+            <iconify-icon icon="lucide:truck" class="text-lg text-black flex-shrink-0 mt-0.5"></iconify-icon>
             <div>
-              <strong style="text-transform: uppercase;">GRATIS PENGIRIMAN STANDAR</strong>
-              <div style="color: #737373; margin-top: 2px;">Estimasi pengiriman 2 - 4 hari kerja via ekspedisi KiriminAja.</div>
+              <strong class="font-bold uppercase block">GRATIS PENGIRIMAN STANDAR</strong>
+              <span class="text-neutral-500 text-[11px]">Estimasi tiba 2 - 4 hari kerja via ekspedisi partner KiriminAja.</span>
             </div>
           </div>
-          <div style="display: flex; align-items: flex-start; gap: 12px; border-top: 1px solid #f0f0f0; padding-top: 12px;">
-            <iconify-icon icon="lucide:refresh-cw" aria-hidden="true" style="font-size: 20px; color: #000000; flex-shrink: 0;"></iconify-icon>
+          <div class="flex items-start gap-3 border-t border-neutral-100 pt-3">
+            <iconify-icon icon="lucide:refresh-cw" class="text-lg text-black flex-shrink-0 mt-0.5"></iconify-icon>
             <div>
-              <strong style="text-transform: uppercase;">GARANSI PENGEMBALIAN 14 HARI</strong>
-              <div style="color: #737373; margin-top: 2px;">Ukuran tidak pas? Pengembalian &amp; penukaran mudah tanpa dipungut biaya tambahan.</div>
+              <strong class="font-bold uppercase block">GARANSI RETUR & TUKAR UKURAN 14 HARI</strong>
+              <span class="text-neutral-500 text-[11px]">Ukuran tidak pas? Kami ganti gratis tanpa biaya tambahan.</span>
             </div>
           </div>
         </div>
+
       </div>
-    </section>
 
-    <!-- 5. Editorial Narrative & Technology Overview (Benchmark adidas FX3632 Spec) -->
-    <section data-node-id="product-description" style="background-color: #f8f8f8; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; padding: 60px 24px;">
-      <div style="max-width: 1360px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
-        <div>
-          <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.1em; margin-bottom: 10px;">
-            INSPIRASI &amp; PERFORMA
-          </div>
-          <h2 style="font-size: 36px; font-weight: 900; line-height: 1.05; text-transform: uppercase; font-style: italic; letter-spacing: -0.03em; margin: 0 0 20px 0;">
-            SEPATU LARI STABIL UNTUK PERFORMA SETIAP HARI
-          </h2>
-          <p style="font-size: 15px; color: #404040; line-height: 1.7; margin: 0 0 16px 0;">
-            Ketika kecepatan memanggil, jawab tantangan dengan Sepatu adidas Ultimashow. Tidak peduli seberapa jauh atau seberapa cepat Anda melangkah, bantalan empuk midsole EVA memberikan kenyamanan superior dari langkah pertama hingga garis finis.
-          </p>
-          <p style="font-size: 15px; color: #404040; line-height: 1.7; margin: 0;">
-            Dilengkapi dengan outsole karet berdaya cengkeram tinggi serta TPU fit counter di bagian tumit yang mengunci posisi kaki secara stabil di berbagai medan lintasan jogging perkotaan.
-          </p>
-        </div>
-
-        <!-- Key Feature Callouts Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <iconify-icon icon="lucide:wind" aria-hidden="true" style="font-size: 28px; color: #000000; margin-bottom: 12px;"></iconify-icon>
-            <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin: 0 0 6px 0;">Upper Tekstil Berventilasi</h3>
-            <p style="font-size: 12px; color: #737373; margin: 0; line-height: 1.5;">Aliran sirkulasi udara maksimal untuk menjaga kaki tetap kering dan sejuk.</p>
-          </div>
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <iconify-icon icon="lucide:feather" aria-hidden="true" style="font-size: 28px; color: #000000; margin-bottom: 12px;"></iconify-icon>
-            <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin: 0 0 6px 0;">Bantalan Ringan EVA</h3>
-            <p style="font-size: 12px; color: #737373; margin: 0; line-height: 1.5;">Meredam hentakan langkah kaki dengan lembut untuk kenyamanan harian.</p>
-          </div>
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <iconify-icon icon="lucide:shield" aria-hidden="true" style="font-size: 28px; color: #000000; margin-bottom: 12px;"></iconify-icon>
-            <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin: 0 0 6px 0;">TPU Fit Counter</h3>
-            <p style="font-size: 12px; color: #737373; margin: 0; line-height: 1.5;">Pengunci stabilitas tumit untuk mencegah selip saat akselerasi cepat.</p>
-          </div>
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <iconify-icon icon="lucide:activity" aria-hidden="true" style="font-size: 28px; color: #000000; margin-bottom: 12px;"></iconify-icon>
-            <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin: 0 0 6px 0;">Outsole Karet Tangguh</h3>
-            <p style="font-size: 12px; color: #737373; margin: 0; line-height: 1.5;">Traksi kuat di aspal dan permukaan jalan basah maupun kering.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. Technical Specifications Accordion & Table (Exact FX3632 Details) -->
-    <section data-node-id="product-specifications" style="padding: 60px 24px; background-color: #ffffff;">
-      <div style="max-width: 1360px; margin: 0 auto;">
-        <h2 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; margin: 0 0 32px 0; font-style: italic;">
-          SPESIFIKASI TEKNIS PRODUK
-        </h2>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
-          <!-- Specifications List -->
-          <div>
-            <ul style="list-style: square; padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 14px; font-size: 14px; color: #262626; line-height: 1.6;">
-              <li><strong>Fit:</strong> Regular fit (potongan standar ergonomis)</li>
-              <li><strong>Sistem Penutup:</strong> Menggunakan tali sepatu (Lace closure)</li>
-              <li><strong>Material Upper:</strong> Upper tekstil mesh fleksibel berongga sirkulasi udara</li>
-              <li><strong>Sensasi:</strong> Bantalan empuk dan stabilitas responsif</li>
-              <li><strong>Tipe Penggunaan:</strong> Sepatu lari untuk aktivitas harian dan jogging santai</li>
-              <li><strong>Midsole:</strong> Busa EVA berbobot ringan untuk peredam getaran</li>
-              <li><strong>Outsole:</strong> Outsole berbahan karet tahan abrasi dengan TPU fit counter</li>
-              <li><strong>Lining:</strong> Furing tekstil lembut di bagian dalam</li>
-              <li><strong>Warna Resmi:</strong> Core Black / Core Black / Cloud White</li>
-              <li><strong>Kode Produk:</strong> <span style="font-family: monospace; font-weight: 800;">FX3632</span></li>
-            </ul>
-          </div>
-
-          <!-- Size Chart Comparison Table (UK / EU / CM) -->
-          <div style="background-color: #fafafa; border: 1px solid #e5e5e5; padding: 24px;">
-            <div style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 14px;">
-              TABEL KONVERSI UKURAN SEPATU PRIA
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
-              <thead>
-                <tr style="background-color: #000000; color: #ffffff;">
-                  <th style="padding: 8px 12px; border: 1px solid #262626;">UK</th>
-                  <th style="padding: 8px 12px; border: 1px solid #262626;">EUR</th>
-                  <th style="padding: 8px 12px; border: 1px solid #262626;">US</th>
-                  <th style="padding: 8px 12px; border: 1px solid #262626;">PANJANG KAKI (CM)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">6</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">39 ⅓</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">6.5</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">24.5 cm</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">7</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">40 ⅔</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">7.5</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">25.5 cm</td>
-                </tr>
-                <tr style="background-color: rgba(245, 158, 11, 0.1);">
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 900; color: #000000;">8 (Pilihan Anda)</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">42</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">8.5</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">26.5 cm</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">9</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">43 ⅓</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">9.5</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">27.5 cm</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5; font-weight: 800;">10</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">44 ⅔</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">10.5</td>
-                  <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">28.5 cm</td>
-                </tr>
-              </tbody>
-            </table>
-            <div style="font-size: 11px; color: #737373; margin-top: 10px; font-style: italic;">
-              * Ukur panjang tumit hingga ujung jari kaki Anda pada permukaan lantai datar.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. Customer Reviews Summary (Benchmark: adidas Review Rating) -->
-    <section data-node-id="customer-reviews" style="background-color: #fbfbfb; border-top: 1px solid #eeeeee; padding: 60px 24px;">
-      <div style="max-width: 1360px; margin: 0 auto;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
-          <div>
-            <h2 style="font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; margin: 0; font-style: italic;">
-              ULASAN PELANGGAN &amp; ATLET
-            </h2>
-            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-              <div style="color: #f59e0b; font-size: 18px; display: flex; gap: 2px;">
-                <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
-                <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
-                <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
-                <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
-                <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
-              </div>
-              <span style="font-weight: 900; font-size: 16px;">4.8 DARI 5.0</span>
-              <span style="color: #737373; font-size: 12px;">(128 ulasan terverifikasi)</span>
-            </div>
-          </div>
-          <button type="button" style="background-color: #000000; color: #ffffff; font-size: 12px; font-weight: 900; text-transform: uppercase; padding: 12px 24px; border: none; cursor: pointer;">
-            TULIS ULASAN PRODUK
-          </button>
-        </div>
-
-        <!-- Sample Reviews Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <div style="font-weight: 900; font-size: 13px;">Bambang S. (Pelari 10K)</div>
-              <span style="font-size: 11px; color: #a3a3a3;">3 hari yang lalu</span>
-            </div>
-            <div style="color: #f59e0b; font-size: 14px; margin-bottom: 8px;">★★★★★</div>
-            <div style="font-weight: 800; font-size: 13px; margin-bottom: 6px;">Sangat empuk dan stabil untuk jogging harian</div>
-            <p style="font-size: 12px; color: #525252; line-height: 1.6; margin: 0;">
-              Sepatu Ultimashow ini melebihi ekspektasi saya untuk harga 800 ribuan. Busa EVA-nya empuk tidak bikin tumit pegal, dan bagian tumit TPU counter-nya benar-benar mengunci kaki agar tidak goyang saat belok cepat.
-            </p>
-            <div style="font-size: 11px; color: #737373; margin-top: 12px; font-weight: 700;">
-              Ukuran yang dibeli: UK 8 (EU 42) • Sesuai ukuran kaki
-            </div>
-          </div>
-
-          <div style="background-color: #ffffff; border: 1px solid #e5e5e5; padding: 24px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <div style="font-weight: 900; font-size: 13px;">Dimas Anggoro (Verified Buyer)</div>
-              <span style="font-size: 11px; color: #a3a3a3;">1 minggu yang lalu</span>
-            </div>
-            <div style="color: #f59e0b; font-size: 14px; margin-bottom: 8px;">★★★★★</div>
-            <div style="font-weight: 800; font-size: 13px; margin-bottom: 6px;">Desain Triple Black elegan &amp; gampang dipadukan</div>
-            <p style="font-size: 12px; color: #525252; line-height: 1.6; margin: 0;">
-              Dipakai lari pagi nyaman, dipakai kerja harian juga masuk banget karena warnanya Core Black yang sleek dan maskulin. Material mesh-nya bikin kaki dingin dan tidak gampang lembap.
-            </p>
-            <div style="font-size: 11px; color: #737373; margin-top: 12px; font-weight: 700;">
-              Ukuran yang dibeli: UK 8.5 (EU 42⅔) • Sesuai ukuran kaki
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. Official Footer Sitemap (Benchmark: adidas.co.id Footer) -->
-    <footer data-node-id="pdp-footer" style="background-color: #000000; color: #ffffff; padding: 60px 24px 24px; border-top: 1px solid #262626;">
-      <div style="max-width: 1360px; margin: 0 auto;">
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 32px; margin-bottom: 48px; font-size: 12px;">
-          <div>
-            <div style="font-weight: 900; text-transform: uppercase; margin-bottom: 16px; font-size: 13px;">PRODUK</div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: #a3a3a3;">
-              <li><a href="#" style="color: inherit; text-decoration: none;">Sepatu Lari</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Sepatu Sepakbola</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Pakaian Olahraga</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Aksesoris</a></li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-weight: 900; text-transform: uppercase; margin-bottom: 16px; font-size: 13px;">OLAHRAGA</div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: #a3a3a3;">
-              <li><a href="#" style="color: inherit; text-decoration: none;">Lari &amp; Marathon</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Sepakbola &amp; Futsal</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Gym &amp; Fitness</a></li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-weight: 900; text-transform: uppercase; margin-bottom: 16px; font-size: 13px;">KOLEKSI</div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: #a3a3a3;">
-              <li><a href="#" style="color: inherit; text-decoration: none;">Ultimashow Series</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">AeroTech Pro</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">HyperPace Carbon</a></li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-weight: 900; text-transform: uppercase; margin-bottom: 16px; font-size: 13px;">BANTUAN</div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: #a3a3a3;">
-              <li><a href="#" style="color: inherit; text-decoration: none;">Lacak Pesanan</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Panduan Ukuran Sepatu</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Konfirmasi Pengembalian</a></li>
-            </ul>
-          </div>
-          <div>
-            <div style="font-weight: 900; text-transform: uppercase; margin-bottom: 16px; font-size: 13px;">TENTANG TUSKO</div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: #a3a3a3;">
-              <li><a href="#" style="color: inherit; text-decoration: none;">Tentang Tusko Performance</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Tusko Run Club</a></li>
-              <li><a href="#" style="color: inherit; text-decoration: none;">Kemitraan Atlet</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid #262626; padding-top: 24px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #737373;">
-          <div>&copy; 2026 Tusko Performance Indonesia. Direferensikan dari benchmark adidas Ultimashow FX3632.</div>
-          <div style="display: flex; gap: 16px;">
-            <a href="#" style="color: inherit; text-decoration: none;">Kebijakan Privasi</a>
-            <a href="#" style="color: inherit; text-decoration: none;">Syarat &amp; Ketentuan</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <!-- agent:page-sections -->
+    </div>
   </main>
+
+  <!-- 5. Editorial Narrative & Technology Overview (Benchmark: adidas Ultimashow Spec) -->
+  <section class="bg-neutral-50 border-t border-b border-neutral-200 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+      
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 block mb-2">
+          INSPIRASI &amp; PERFORMA TEKNIS
+        </span>
+        <h2 class="font-sport font-black text-2xl sm:text-4xl uppercase italic tracking-tight leading-tight text-black mb-4">
+          SEPATU LARI STABIL UNTUK PERFORMA SETIAP HARI
+        </h2>
+        <p class="text-xs sm:text-sm text-neutral-700 leading-relaxed mb-4">
+          Ketika kecepatan memanggil, jawab tantangan dengan Sepatu Tusko Ultimashow. Tidak peduli seberapa jauh atau seberapa cepat Anda melangkah, bantalan empuk midsole EVA memberikan kenyamanan superior dari langkah pertama hingga garis finis.
+        </p>
+        <p class="text-xs sm:text-sm text-neutral-700 leading-relaxed">
+          Dilengkapi dengan outsole karet berdaya cengkeram tinggi serta TPU fit counter di bagian tumit yang mengunci posisi kaki secara stabil di berbagai medan lintasan jogging perkotaan.
+        </p>
+      </div>
+
+      <!-- Feature Highlight Grid (2x2) -->
+      <div class="grid grid-cols-2 gap-3 sm:gap-4">
+        <div class="bg-white border border-neutral-200 p-3.5 sm:p-5">
+          <iconify-icon icon="lucide:wind" class="text-2xl text-black mb-2"></iconify-icon>
+          <h3 class="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">UPPER MESH SIRKULASI</h3>
+          <p class="text-[11px] text-neutral-500 leading-relaxed">Ventilasi mikro untuk sirkulasi udara maksimal.</p>
+        </div>
+
+        <div class="bg-white border border-neutral-200 p-3.5 sm:p-5">
+          <iconify-icon icon="lucide:feather" class="text-2xl text-black mb-2"></iconify-icon>
+          <h3 class="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">BANTALAN EVA RINGAN</h3>
+          <p class="text-[11px] text-neutral-500 leading-relaxed">Meredam hentakan langkah kaki dengan lembut.</p>
+        </div>
+
+        <div class="bg-white border border-neutral-200 p-3.5 sm:p-5">
+          <iconify-icon icon="lucide:shield" class="text-2xl text-black mb-2"></iconify-icon>
+          <h3 class="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">TPU FIT COUNTER</h3>
+          <p class="text-[11px] text-neutral-500 leading-relaxed">Pengunci stabilitas tumit agar bebas selip.</p>
+        </div>
+
+        <div class="bg-white border border-neutral-200 p-3.5 sm:p-5">
+          <iconify-icon icon="lucide:activity" class="text-2xl text-black mb-2"></iconify-icon>
+          <h3 class="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">OUTSOLE KARET TANGGUH</h3>
+          <p class="text-[11px] text-neutral-500 leading-relaxed">Traksi kuat di aspal basah maupun permukaan kering.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. Technical Specifications & Size Conversion Table -->
+  <section class="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <h2 class="font-sport font-black text-xl sm:text-3xl uppercase italic tracking-tight mb-6">
+      SPESIFIKASI TEKNIS &amp; PANDUAN UKURAN
+    </h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <!-- Specs List -->
+      <div class="space-y-2 text-xs sm:text-sm text-neutral-800">
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Fit</span>
+          <span class="font-extrabold">Regular fit (potongan standar ergonomis)</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Penutup</span>
+          <span class="font-extrabold">Lace closure (Tali sepatu standar)</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Material Upper</span>
+          <span class="font-extrabold">Tekstil mesh fleksibel berventilasi</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Midsole</span>
+          <span class="font-extrabold">Busa EVA peredam benturan</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Outsole</span>
+          <span class="font-extrabold">Karet tahan aus dengan TPU heel clip</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-neutral-200">
+          <span class="text-neutral-500 font-bold uppercase">Kode Produk</span>
+          <span class="font-mono font-black text-black">FX3632</span>
+        </div>
+      </div>
+
+      <!-- Size Table -->
+      <div class="bg-neutral-50 border border-neutral-200 p-4 sm:p-5">
+        <h3 class="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-black">
+          TABEL KONVERSI UKURAN SEPATU PRIA
+        </h3>
+        <div class="overflow-x-auto no-scrollbar">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-black text-white font-bold">
+                <th class="p-2 border border-neutral-800">UK</th>
+                <th class="p-2 border border-neutral-800">EUR</th>
+                <th class="p-2 border border-neutral-800">US</th>
+                <th class="p-2 border border-neutral-800">PANJANG (CM)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-200 font-medium text-neutral-700">
+              <tr class="hover:bg-white"><td class="p-2 font-bold">6</td><td class="p-2">39⅓</td><td class="p-2">6.5</td><td class="p-2">24.5 cm</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">6.5</td><td class="p-2">40</td><td class="p-2">7</td><td class="p-2">25.0 cm</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">7</td><td class="p-2">40⅔</td><td class="p-2">7.5</td><td class="p-2">25.5 cm</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">7.5</td><td class="p-2">41⅓</td><td class="p-2">8</td><td class="p-2">26.0 cm</td></tr>
+              <tr class="bg-amber-100/60 font-bold text-black"><td class="p-2 font-black">8</td><td class="p-2">42</td><td class="p-2">8.5</td><td class="p-2">26.5 cm (Aktif)</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">8.5</td><td class="p-2">42⅔</td><td class="p-2">9</td><td class="p-2">27.0 cm</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">9</td><td class="p-2">43⅓</td><td class="p-2">9.5</td><td class="p-2">27.5 cm</td></tr>
+              <tr class="hover:bg-white"><td class="p-2 font-bold">9.5</td><td class="p-2">44</td><td class="p-2">10</td><td class="p-2">28.0 cm</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 7. Tusko Club Banner -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+    <div class="bg-black text-white p-5 sm:p-10 border border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-5">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 sm:w-14 h-10 sm:h-14 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-xl sm:text-2xl flex-shrink-0 -skew-x-6">
+          ★
+        </div>
+        <div>
+          <span class="text-[9px] sm:text-[10px] font-bold text-amber-400 uppercase tracking-widest block">PROGRAM LOYALITAS RESMI</span>
+          <h3 class="font-sport font-black text-base sm:text-xl uppercase tracking-tight text-white leading-tight mt-0.5">
+            GABUNG TUSKO CLUB. DISKON 15% &amp; POIN SEUMUR HIDUP.
+          </h3>
+          <p class="text-[11px] sm:text-xs text-neutral-400 mt-1">Dapatkan akses rilis sepatu edisi terbatas &amp; gratis ongkir tanpa syarat.</p>
+        </div>
+      </div>
+      <button class="w-full sm:w-auto bg-white text-black hover:bg-neutral-200 font-sport font-bold text-xs uppercase tracking-wider px-5 py-3 transition-colors flex-shrink-0">
+        DAFTAR MEMBER GRATIS &rarr;
+      </button>
+    </div>
+  </section>
+
+  <!-- 8. Footer Standar E-Commerce Adidas -->
+  <footer class="bg-black text-white pt-10 sm:pt-16 pb-10 border-t border-neutral-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-neutral-800 text-xs">
+        <div>
+          <h4 class="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">PRODUK</h4>
+          <ul class="space-y-2 text-neutral-400">
+            <li><a href="#" class="hover:text-white">Sepatu Lari</a></li>
+            <li><a href="#" class="hover:text-white">Jersey Timnas</a></li>
+            <li><a href="#" class="hover:text-white">Celana Kompresi</a></li>
+            <li><a href="#" class="hover:text-white">Aksesoris Olahraga</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">OLAHRAGA</h4>
+          <ul class="space-y-2 text-neutral-400">
+            <li><a href="#" class="hover:text-white">Running</a></li>
+            <li><a href="#" class="hover:text-white">Football</a></li>
+            <li><a href="#" class="hover:text-white">Training &amp; Gym</a></li>
+            <li><a href="#" class="hover:text-white">Basketball</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">BANTUAN</h4>
+          <ul class="space-y-2 text-neutral-400">
+            <li><a href="#" class="hover:text-white">Status Pesanan</a></li>
+            <li><a href="#" class="hover:text-white">Tarif Pengiriman</a></li>
+            <li><a href="#" class="hover:text-white">Kebijakan Retur 14 Hari</a></li>
+            <li><a href="#" class="hover:text-white">WhatsApp CS</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">TENTANG TUSKO</h4>
+          <p class="text-neutral-400 leading-relaxed mb-3">
+            Brand olahraga performa tinggi buatan Indonesia dengan standar kelas dunia.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-neutral-500 gap-4 text-center sm:text-left">
+        <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+        <div class="flex gap-4">
+          <a href="#" class="hover:underline">Privasi</a>
+          <a href="#" class="hover:underline">Syarat &amp; Ketentuan</a>
+          <a href="#" class="hover:underline">Panduan Ukuran</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= 9. STICKY MOBILE ACTION BAR (SIGNATURE ADIDAS UX) ================= -->
+  <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-200 p-3 sm:hidden shadow-[0_-5px_15px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 object-cover bg-neutral-100 border border-neutral-200" alt="Thumb">
+      <div>
+        <div class="font-sport font-black text-sm text-black leading-none">Rp 850.000</div>
+        <div id="selected-size-mobile" class="text-[10px] text-neutral-500 font-bold mt-0.5">Ukuran: UK 8 (42)</div>
+      </div>
+    </div>
+    <a href="cart.html" class="bg-black hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase tracking-wider py-2.5 px-4 flex items-center gap-1.5 transition-colors">
+      <iconify-icon icon="lucide:shopping-bag" class="text-sm"></iconify-icon>
+      <span>+ KERANJANG</span>
+    </a>
+  </div>
+
+  <!-- Interactive Gallery & Size Selection Script -->
+  <script>
+    function selectPhoto(index, url, label) {
+      const mainImg = document.getElementById('main-showcase-img');
+      const photoLabel = document.getElementById('photo-label');
+      if (mainImg) mainImg.src = url;
+      if (photoLabel) photoLabel.innerHTML = label;
+
+      // Update active thumbnail border
+      const btns = document.querySelectorAll('.thumb-btn');
+      btns.forEach((b, i) => {
+        if (i === index) {
+          b.className = 'thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-black overflow-hidden bg-neutral-100';
+        } else {
+          b.className = 'thumb-btn w-16 sm:w-20 aspect-square flex-shrink-0 border-2 border-transparent hover:border-neutral-400 overflow-hidden bg-neutral-100';
+        }
+      });
+    }
+
+    function selectSize(btn, sizeText) {
+      const allBtns = document.querySelectorAll('.size-btn');
+      allBtns.forEach(b => {
+        b.className = 'size-btn border border-neutral-300 hover:border-black py-2.5 px-1 text-center transition-colors';
+        b.innerHTML = b.innerHTML.replace(' ✓', '');
+      });
+      btn.className = 'size-btn border-2 border-black bg-black text-white py-2.5 px-1 text-center font-black transition-colors';
+      if (!btn.innerHTML.includes('✓')) {
+        btn.innerHTML += ' ✓';
+      }
+      const mobileLabel = document.getElementById('selected-size-mobile');
+      if (mobileLabel) {
+        mobileLabel.textContent = 'Ukuran: ' + sizeText;
+      }
+    }
+  </script>
+
   <!-- Live Auto-Reload Engine on GitHub Push -->
   <script src="auto-updater.js"></script>
 </body>
