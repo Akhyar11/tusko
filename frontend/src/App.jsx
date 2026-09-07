@@ -236,24 +236,31 @@ export default function App() {
 
   // Cart operations
   const handleAddToCart = (product, quantity = 1, notes = '') => {
+    const itemKey = product.selected_variant?.id 
+      ? `${product.id}-${product.selected_variant.id}` 
+      : product.id;
+
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find((item) => item.id === itemKey);
+      const maxStock = Number(product.stock ?? 99);
+
       if (existing) {
-        const updatedQty = Math.min(itemStock(product), existing.quantity + quantity);
+        const updatedQty = Math.min(maxStock, existing.quantity + quantity);
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: updatedQty, notes: notes || item.notes } : item
+          item.id === itemKey 
+            ? { ...item, quantity: updatedQty, notes: notes || item.notes } 
+            : item
         );
       }
-      return [...prev, { ...product, quantity, notes }];
+      return [...prev, { ...product, id: itemKey, product_id: product.id, quantity, notes }];
     });
 
-    setToastMessage(`"${product.name.slice(0, 24)}..." (${quantity}x) berhasil masuk keranjang!`);
+    const variantLabel = product.variant_name ? ` [${product.variant_name}]` : '';
+    setToastMessage(`"${product.name.slice(0, 18)}..."${variantLabel} (${quantity}x) masuk keranjang!`);
     setTimeout(() => {
       setToastMessage(null);
     }, 4000);
   };
-
-  const itemStock = (p) => Number(p.stock ?? 99);
 
   const handleBuyNow = (product, quantity = 1, notes = '') => {
     handleAddToCart(product, quantity, notes);

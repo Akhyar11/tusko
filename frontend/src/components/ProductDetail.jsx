@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Star, 
   MapPin, 
   BadgeCheck, 
   Truck, 
-  ShieldCheck, 
   ArrowLeft, 
   Minus, 
   Plus, 
   Heart, 
   Share2, 
   MessageCircle, 
-  Flame,
-  AlertCircle,
-  Zap,
-  RotateCcw,
-  Maximize2,
-  X,
-  Check,
-  Award,
-  Ruler
+  Flame, 
+  AlertCircle, 
+  Zap, 
+  RotateCcw, 
+  Maximize2, 
+  X, 
+  Check, 
+  Award, 
+  Ruler,
+  CheckCircle2
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
@@ -42,15 +42,61 @@ export default function ProductDetail({
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // Initialize selectedOptions from the first variant if available
+  const [selectedOptions, setSelectedOptions] = useState(() => {
+    if (product?.variants && product.variants.length > 0) {
+      const first = product.variants[0];
+      const initial = {};
+      (product.variant_levels || []).forEach((lvl) => {
+        if (first[lvl.code] !== undefined) {
+          initial[lvl.code] = first[lvl.code];
+        }
+      });
+      return initial;
+    }
+    return {};
+  });
+
+  // Find exact matching variant based on all selected options
+  const selectedVariant = useMemo(() => {
+    if (!product?.variants || product.variants.length === 0) return null;
+    return product.variants.find((v) => {
+      return Object.entries(selectedOptions).every(([code, val]) => v[code] === val);
+    }) || null;
+  }, [product, selectedOptions]);
+
+  // Check if every defined level has a selection
+  const allLevelsSelected = useMemo(() => {
+    if (!product?.variant_levels || product.variant_levels.length === 0) return true;
+    return product.variant_levels.every((lvl) => Boolean(selectedOptions[lvl.code]));
+  }, [product, selectedOptions]);
+
   if (!product) return null;
 
-  const stock = Number(product.stock ?? 0);
+  // Dynamic price, stock, and SKU
+  const currentPrice = selectedVariant?.price ?? product.price;
+  const currentStock = selectedVariant ? Number(selectedVariant.stock ?? 0) : Number(product.stock ?? 0);
   const minStock = Number(product.stock_minimum ?? 5);
-  const isOutOfStock = stock <= 0;
-  const isLowStock = !isOutOfStock && stock <= minStock;
+  const isOutOfStock = currentStock <= 0;
+  const isLowStock = !isOutOfStock && currentStock <= minStock;
 
   // Calculate estimated loyalty points earned (1% from purchase)
-  const loyaltyPointsEarned = Math.floor(product.price * 0.01);
+  const loyaltyPointsEarned = Math.floor(currentPrice * 0.01);
+
+  const handleSelectOption = (levelCode, optionValue) => {
+    setSelectedOptions((prev) => ({
+      ...prev,
+      [levelCode]: optionValue
+    }));
+  };
+
+  const getVariantTitle = () => {
+    if (!product?.variant_levels || product.variant_levels.length === 0) return null;
+    return product.variant_levels
+      .map((lvl) => selectedOptions[lvl.code])
+      .filter(Boolean)
+      .join(' / ');
+  };
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -59,19 +105,39 @@ export default function ProductDetail({
   };
 
   const handleIncrease = () => {
-    if (quantity < stock) {
+    if (quantity < currentStock) {
       setQuantity((prev) => prev + 1);
     }
   };
 
   const handleAddWithQuantity = () => {
-    if (isOutOfStock) return;
-    onAddToCart(product, quantity, notes);
+    if (!allLevelsSelected || isOutOfStock) return;
+    const variantTitle = getVariantTitle();
+    const itemToAdd = {
+      ...product,
+      selected_variant: selectedVariant,
+      variant_id: selectedVariant?.id,
+      variant_sku: selectedVariant?.sku,
+      variant_name: variantTitle,
+      price: currentPrice,
+      stock: currentStock
+    };
+    onAddToCart(itemToAdd, quantity, notes);
   };
 
   const handleBuyNowAction = () => {
-    if (isOutOfStock) return;
-    onBuyNow(product, quantity, notes);
+    if (!allLevelsSelected || isOutOfStock) return;
+    const variantTitle = getVariantTitle();
+    const itemToAdd = {
+      ...product,
+      selected_variant: selectedVariant,
+      variant_id: selectedVariant?.id,
+      variant_sku: selectedVariant?.sku,
+      variant_name: variantTitle,
+      price: currentPrice,
+      stock: currentStock
+    };
+    onBuyNow(itemToAdd, quantity, notes);
   };
 
   const handleShare = () => {
@@ -82,9 +148,9 @@ export default function ProductDetail({
     }
   };
 
-  const subtotal = product.price * quantity;
+  const subtotal = currentPrice * quantity;
 
-  // Mock sample reviews for sporty gear
+  // Mock reviews
   const mockReviews = [
     {
       id: 1,
@@ -101,7 +167,7 @@ export default function ProductDetail({
       rating: 5,
       date: '1 minggu yang lalu',
       variant: 'Triple Black / XL',
-      comment: 'Kualitas fitting pas banget ala jersey pro eropa. Jahitan rapi dan sablon logo kokoh tidak gampang rontok.',
+      comment: 'Kualitas fitting pas banget ala apparel pro. Jahitan rapi dan sablon logo kokoh tidak gampang rontok.',
       helpfulCount: 16
     }
   ];
@@ -223,7 +289,7 @@ export default function ProductDetail({
               </div>
               <div className="text-xs">
                 <p className="font-extrabold text-neutral-900">
-                  Dapatkan <span className="text-amber-700">+{loyaltyPointsEarned.toLocaleString('id-ID')} Poin Loyalitas</span>
+                  Dapatkan <span className="text-amber-700 font-black">+{loyaltyPointsEarned.toLocaleString('id-ID')} Poin Loyalitas</span>
                 </p>
                 <p className="text-neutral-600 text-[11px] mt-0.5">
                   Poin berlaku seumur hidup & dapat langsung dipakai sebagai potongan belanja berikutnya.
@@ -267,7 +333,7 @@ export default function ProductDetail({
           </div>
         </div>
 
-        {/* Center Column: Product Specs & Description (4 cols) */}
+        {/* Center Column: Product Specs, Variants & Description (4 cols) */}
         <div className="lg:col-span-4 space-y-5">
           {/* Title and Rating */}
           <div>
@@ -301,7 +367,7 @@ export default function ProductDetail({
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-xs">
             <div className="flex items-baseline gap-2.5">
               <span className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight">
-                {formatRupiah(product.price)}
+                {formatRupiah(currentPrice)}
               </span>
               {product.discount_percentage > 0 && (
                 <>
@@ -314,7 +380,80 @@ export default function ProductDetail({
                 </>
               )}
             </div>
+            {selectedVariant && selectedVariant.price !== product.price && (
+              <p className="text-[11px] text-amber-600 font-bold mt-1.5 flex items-center gap-1">
+                <Zap size={13} />
+                Harga khusus varian terpilih ({formatRupiah(currentPrice)})
+              </p>
+            )}
           </div>
+
+          {/* Pemilih Varian Lengkap (Variant Selector) */}
+          {product.variant_levels && product.variant_levels.length > 0 && (
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200/90 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-4 bg-amber-500 rounded-full" />
+                  <h3 className="font-black text-neutral-900 text-xs uppercase tracking-wider">
+                    Pilih Varian Produk
+                  </h3>
+                </div>
+                {selectedVariant && (
+                  <span className="text-[10px] font-mono text-neutral-400 font-bold bg-neutral-100 px-2 py-0.5 rounded">
+                    SKU: {selectedVariant.sku}
+                  </span>
+                )}
+              </div>
+
+              {product.variant_levels.map((level) => {
+                const currentVal = selectedOptions[level.code];
+                return (
+                  <div key={level.code} className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-extrabold text-neutral-800">
+                        {level.name}: <strong className="text-amber-600">{currentVal || 'Pilih...'}</strong>
+                      </span>
+                      {!currentVal && (
+                        <span className="text-[10px] text-rose-500 font-black uppercase tracking-wider">
+                          Wajib dipilih
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {level.options.map((opt) => {
+                        const isChosen = currentVal === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleSelectOption(level.code, opt)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                              isChosen
+                                ? 'bg-neutral-950 text-amber-400 border-neutral-950 shadow-sm ring-2 ring-amber-400/40'
+                                : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-400 hover:bg-white'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Selected Variant Summary */}
+              <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
+                <span className="text-neutral-500 font-medium">
+                  Varian Terpilih: <strong className="text-neutral-900">{getVariantTitle() || 'Belum Lengkap'}</strong>
+                </span>
+                <span className={`text-[11px] font-black uppercase tracking-wider ${currentStock > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {currentStock > 0 ? `Tersedia ${currentStock} unit` : 'Stok Kosong'}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Trust & Guarantee Box */}
           <div className="grid grid-cols-2 gap-2.5 text-xs">
@@ -509,7 +648,7 @@ export default function ProductDetail({
               Atur Jumlah Pembelian
             </h3>
 
-            {/* Snapshot item */}
+            {/* Snapshot item with variant title */}
             <div className="flex items-center gap-3 pb-3 border-b border-neutral-100">
               <img
                 src={product.image_url}
@@ -518,7 +657,12 @@ export default function ProductDetail({
               />
               <div className="truncate">
                 <p className="text-xs font-bold text-neutral-900 truncate">{product.name}</p>
-                <p className="text-xs font-black text-amber-600 mt-0.5">{formatRupiah(product.price)}</p>
+                {getVariantTitle() && (
+                  <p className="text-[10px] font-bold text-amber-600 truncate mt-0.5">
+                    {getVariantTitle()}
+                  </p>
+                )}
+                <p className="text-xs font-black text-neutral-950 mt-0.5">{formatRupiah(currentPrice)}</p>
               </div>
             </div>
 
@@ -529,7 +673,7 @@ export default function ProductDetail({
                 <div className="flex items-center border border-neutral-300 rounded-xl overflow-hidden bg-neutral-50">
                   <button
                     type="button"
-                    disabled={quantity <= 1 || isOutOfStock}
+                    disabled={quantity <= 1 || isOutOfStock || !allLevelsSelected}
                     onClick={handleDecrease}
                     className="p-2 text-neutral-700 hover:bg-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
                   >
@@ -540,7 +684,7 @@ export default function ProductDetail({
                   </span>
                   <button
                     type="button"
-                    disabled={quantity >= stock || isOutOfStock}
+                    disabled={quantity >= currentStock || isOutOfStock || !allLevelsSelected}
                     onClick={handleIncrease}
                     className="p-2 text-neutral-700 hover:bg-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
                   >
@@ -554,16 +698,16 @@ export default function ProductDetail({
                 {isOutOfStock ? (
                   <span className="text-[11px] font-bold text-rose-600 flex items-center justify-end gap-1">
                     <AlertCircle size={12} />
-                    Stok Habis
+                    Stok Varian Habis
                   </span>
                 ) : isLowStock ? (
                   <span className="text-[11px] font-black text-rose-600 flex items-center justify-end gap-1 uppercase tracking-wider animate-pulse">
                     <Flame size={12} className="fill-rose-500" />
-                    Sisa {stock} buah!
+                    Sisa {currentStock} unit!
                   </span>
                 ) : (
                   <span className="text-[11px] text-neutral-500 font-medium">
-                    Total Stok: <strong className="text-neutral-800">{stock} unit</strong>
+                    Stok Varian: <strong className="text-neutral-800">{currentStock} unit</strong>
                   </span>
                 )}
               </div>
@@ -595,20 +739,20 @@ export default function ProductDetail({
             <div className="space-y-2 pt-1">
               <button
                 type="button"
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || !allLevelsSelected}
                 onClick={handleAddWithQuantity}
-                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs tracking-wider rounded-xl shadow-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 px-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-98"
               >
-                + Keranjang
+                {!allLevelsSelected ? 'Pilih Varian Dahulu' : isOutOfStock ? 'Stok Habis' : '+ Keranjang'}
               </button>
 
               <button
                 type="button"
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || !allLevelsSelected}
                 onClick={handleBuyNowAction}
-                className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 px-4 bg-neutral-900 hover:bg-neutral-800 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-98"
               >
-                Beli Langsung
+                {!allLevelsSelected ? 'Pilih Varian Dahulu' : 'Beli Langsung'}
               </button>
             </div>
 
@@ -626,7 +770,7 @@ export default function ProductDetail({
                 type="button"
                 className="flex items-center gap-1 hover:text-amber-600 cursor-pointer transition-colors"
               >
-                <ShieldCheck size={14} />
+                <CheckCircle2 size={14} className="text-emerald-600" />
                 <span>Garansi Tusko</span>
               </button>
             </div>
@@ -637,13 +781,15 @@ export default function ProductDetail({
       {/* Mobile Fixed Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 border-t border-neutral-800 p-3 backdrop-blur-md flex items-center justify-between gap-3 shadow-2xl">
         <div className="min-w-0">
-          <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold">Total Harga</p>
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold truncate">
+            {getVariantTitle() || 'Total Harga'}
+          </p>
           <p className="text-sm font-black text-amber-400 truncate">{formatRupiah(subtotal)}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || !allLevelsSelected}
             onClick={handleAddWithQuantity}
             className="px-4 py-2.5 bg-neutral-800 text-white font-black uppercase tracking-wider text-xs rounded-xl border border-neutral-700 disabled:opacity-40 cursor-pointer"
           >
@@ -651,7 +797,7 @@ export default function ProductDetail({
           </button>
           <button
             type="button"
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || !allLevelsSelected}
             onClick={handleBuyNowAction}
             className="px-4 py-2.5 bg-amber-500 text-neutral-950 font-black uppercase tracking-wider text-xs rounded-xl disabled:opacity-40 cursor-pointer shadow-md"
           >

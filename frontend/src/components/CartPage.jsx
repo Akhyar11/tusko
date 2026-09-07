@@ -257,6 +257,20 @@ export default function CartPage({
                             {item.name}
                           </h4>
 
+                          {/* Variant Badge if selected */}
+                          {item.variant_name && (
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                                Varian: {item.variant_name}
+                              </span>
+                              {item.variant_sku && (
+                                <span className="text-[9px] font-mono text-neutral-400">
+                                  ({item.variant_sku})
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {/* Price & Discount */}
                           <div className="mt-1 flex items-baseline gap-2">
                             <span className="font-extrabold text-xs sm:text-sm text-gray-900">
