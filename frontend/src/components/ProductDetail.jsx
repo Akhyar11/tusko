@@ -11,9 +11,15 @@ import {
   Heart, 
   Share2, 
   MessageCircle, 
-  Store,
   Flame,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  RotateCcw,
+  Maximize2,
+  X,
+  Check,
+  Award,
+  Ruler
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
@@ -21,7 +27,8 @@ export default function ProductDetail({
   product, 
   onBack = () => {},
   onAddToCart = () => {},
-  onBuyNow = () => {}
+  onBuyNow = () => {},
+  onSelectCategory = () => {}
 }) {
   const galleryImages = product?.gallery && product.gallery.length > 0 
     ? product.gallery 
@@ -31,7 +38,9 @@ export default function ProductDetail({
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [isWishlist, setIsWishlist] = useState(false);
-  const [activeTab, setActiveTab] = useState('detail');
+  const [activeTab, setActiveTab] = useState('detail'); // 'detail' | 'spec' | 'size_chart' | 'reviews'
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   if (!product) return null;
 
@@ -39,6 +48,9 @@ export default function ProductDetail({
   const minStock = Number(product.stock_minimum ?? 5);
   const isOutOfStock = stock <= 0;
   const isLowStock = !isOutOfStock && stock <= minStock;
+
+  // Calculate estimated loyalty points earned (1% from purchase)
+  const loyaltyPointsEarned = Math.floor(product.price * 0.01);
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -62,58 +74,126 @@ export default function ProductDetail({
     onBuyNow(product, quantity, notes);
   };
 
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
   const subtotal = product.price * quantity;
 
+  // Mock sample reviews for sporty gear
+  const mockReviews = [
+    {
+      id: 1,
+      author: 'Bambang S.',
+      rating: 5,
+      date: '3 hari yang lalu',
+      variant: 'Deep Navy / L',
+      comment: 'Bahan sangat adem dan nyaman dipakai tanding 90 menit penuh. Sirkulasi udaranya jempolan, keringat langsung cepat kering!',
+      helpfulCount: 24
+    },
+    {
+      id: 2,
+      author: 'Rian Pratama',
+      rating: 5,
+      date: '1 minggu yang lalu',
+      variant: 'Triple Black / XL',
+      comment: 'Kualitas fitting pas banget ala jersey pro eropa. Jahitan rapi dan sablon logo kokoh tidak gampang rontok.',
+      helpfulCount: 16
+    }
+  ];
+
   return (
-    <div className="py-4">
-      {/* Breadcrumb & Back Button */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="py-4 pb-24 lg:pb-12">
+      {/* Breadcrumb & Navigation Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-neutral-200">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 bg-white hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-900 hover:text-amber-600 bg-white hover:bg-neutral-100 px-3.5 py-2 rounded-xl border border-neutral-300 transition-all cursor-pointer shadow-2xs w-fit"
         >
           <ArrowLeft size={16} />
           <span>Kembali ke Katalog</span>
         </button>
 
-        <nav className="hidden md:flex items-center gap-2 text-xs text-gray-500">
-          <span className="hover:text-emerald-600 cursor-pointer" onClick={onBack}>Beranda</span>
-          <span>/</span>
-          <span className="text-gray-400">Katalog Produk</span>
-          <span>/</span>
-          <span className="text-gray-800 font-medium truncate max-w-xs">{product.name}</span>
+        <nav className="flex items-center gap-2 text-xs text-neutral-500 overflow-x-auto whitespace-nowrap">
+          <button 
+            type="button"
+            onClick={onBack} 
+            className="hover:text-amber-600 font-bold transition-colors cursor-pointer"
+          >
+            Beranda
+          </button>
+          <span className="text-neutral-300">/</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (product.category_id) {
+                onSelectCategory(product.category_id);
+              }
+              onBack();
+            }}
+            className="hover:text-amber-600 font-bold transition-colors cursor-pointer text-neutral-600"
+          >
+            Katalog Olahraga
+          </button>
+          <span className="text-neutral-300">/</span>
+          <span className="text-neutral-900 font-extrabold truncate max-w-xs sm:max-w-md">
+            {product.name}
+          </span>
         </nav>
       </div>
 
       {/* Main Grid: Gallery | Details | Action Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Gallery (4 cols) */}
-        <div className="lg:col-span-4">
-          <div className="sticky top-20 space-y-3">
-            {/* Main Image */}
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-xs">
+        {/* Left Column: Gallery (5 cols) */}
+        <div className="lg:col-span-5">
+          <div className="sticky top-20 space-y-4">
+            {/* Main Image Viewer */}
+            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white border border-neutral-200 shadow-md group">
               <img
                 src={activeImage}
                 alt={product.name}
-                className="w-full h-full object-cover object-center transition-all duration-300"
+                className="w-full h-full object-cover object-center transition-all duration-300 group-hover:scale-105"
               />
 
-              {/* Badges */}
+              {/* Badges Overlay */}
               <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                 {product.is_official && (
-                  <span className="bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
-                    <BadgeCheck size={14} />
-                    Official Store
+                  <span className="bg-neutral-950 text-amber-400 text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                    <BadgeCheck size={14} className="fill-current text-neutral-950" />
+                    Tusko Pro Official
                   </span>
                 )}
                 {product.free_shipping && (
-                  <span className="bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
+                  <span className="bg-emerald-600 text-white text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-sm uppercase tracking-wide flex items-center gap-1">
                     <Truck size={14} />
                     Bebas Ongkir
                   </span>
                 )}
               </div>
+
+              {/* Zoom Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsZoomOpen(true)}
+                className="absolute bottom-3 right-3 p-2 bg-neutral-950/70 hover:bg-neutral-950 text-white rounded-xl backdrop-blur-xs transition-colors cursor-pointer shadow-md"
+                title="Perbesar Foto"
+              >
+                <Maximize2 size={16} />
+              </button>
+
+              {/* Stock Warning Overlay if Out of Stock */}
+              {isOutOfStock && (
+                <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-2xs flex items-center justify-center">
+                  <span className="bg-neutral-900 text-white font-black text-sm px-4 py-2 rounded-xl border border-neutral-700 shadow-lg uppercase tracking-wider">
+                    Stok Habis
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Thumbnail Strip */}
@@ -122,11 +202,12 @@ export default function ProductDetail({
                 {galleryImages.map((img, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => setActiveImage(img)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                    className={`w-18 h-18 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
                       activeImage === img
-                        ? 'border-emerald-600 ring-2 ring-emerald-100'
-                        : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
+                        ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-sm'
+                        : 'border-neutral-200 hover:border-neutral-400 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
@@ -135,67 +216,99 @@ export default function ProductDetail({
               </div>
             )}
 
-            {/* Wishlist & Share */}
-            <div className="flex items-center justify-center gap-4 pt-2">
+            {/* Loyalty Points Reward Highlight */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-neutral-950 font-black shrink-0">
+                <Zap size={20} className="fill-current" />
+              </div>
+              <div className="text-xs">
+                <p className="font-extrabold text-neutral-900">
+                  Dapatkan <span className="text-amber-700">+{loyaltyPointsEarned.toLocaleString('id-ID')} Poin Loyalitas</span>
+                </p>
+                <p className="text-neutral-600 text-[11px] mt-0.5">
+                  Poin berlaku seumur hidup & dapat langsung dipakai sebagai potongan belanja berikutnya.
+                </p>
+              </div>
+            </div>
+
+            {/* Wishlist, Share, and Guarantee Badges */}
+            <div className="flex items-center justify-between gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => setIsWishlist(!isWishlist)}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl border transition-colors cursor-pointer ${
                   isWishlist 
-                    ? 'border-rose-200 bg-rose-50 text-rose-600' 
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'border-rose-300 bg-rose-50 text-rose-600' 
+                    : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
                 }`}
               >
-                <Heart size={16} className={isWishlist ? 'fill-rose-500 text-rose-500' : ''} />
-                <span>{isWishlist ? 'Favorit' : 'Tambah Favorit'}</span>
+                <Heart size={15} className={isWishlist ? 'fill-rose-500 text-rose-500' : ''} />
+                <span>{isWishlist ? 'Disukai' : 'Favorit'}</span>
               </button>
 
               <button
-                onClick={() => navigator.clipboard?.writeText(window.location.href)}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+                type="button"
+                onClick={handleShare}
+                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 transition-colors cursor-pointer"
               >
-                <Share2 size={16} />
-                <span>Bagikan</span>
+                {copiedLink ? (
+                  <>
+                    <Check size={15} className="text-emerald-600" />
+                    <span className="text-emerald-600">Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={15} />
+                    <span>Bagikan</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Center Column: Product Specs & Description (5 cols) */}
-        <div className="lg:col-span-5 space-y-5">
+        {/* Center Column: Product Specs & Description (4 cols) */}
+        <div className="lg:col-span-4 space-y-5">
           {/* Title and Rating */}
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-amber-600 mb-1.5">
+              <span>{product.seller_name || 'Tusko Official'}</span>
+              <span>•</span>
+              <span className="text-neutral-400">Authentic Gear</span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-900 leading-tight uppercase tracking-tight">
               {product.name}
             </h1>
 
-            <div className="flex items-center gap-3 mt-2.5 text-xs text-gray-600 flex-wrap">
+            <div className="flex items-center gap-3 mt-3 text-xs text-neutral-600 flex-wrap">
               <div className="flex items-center text-amber-500 font-bold">
                 <Star size={15} className="fill-current" />
-                <span className="ml-1 text-gray-900">{product.rating}</span>
-                <span className="text-gray-400 font-normal ml-1">({product.rating_count} ulasan)</span>
+                <span className="ml-1 text-neutral-900">{product.rating}</span>
+                <span className="text-neutral-400 font-normal ml-1">({product.rating_count} ulasan)</span>
               </div>
-              <span className="text-gray-300">•</span>
-              <span>Terjual <strong className="text-gray-900">{product.sold_count}+</strong></span>
-              <span className="text-gray-300">•</span>
-              <span className="flex items-center gap-1 text-gray-500">
-                <MapPin size={13} className="text-gray-400" />
-                Dikirim dari {product.location}
+              <span className="text-neutral-300">•</span>
+              <span>Terjual <strong className="text-neutral-900">{product.sold_count}+</strong></span>
+              <span className="text-neutral-300">•</span>
+              <span className="flex items-center gap-1 text-neutral-500">
+                <MapPin size={13} className="text-neutral-400" />
+                Gudang {product.location}
               </span>
             </div>
           </div>
 
           {/* Pricing Box */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-2xs">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-xs">
             <div className="flex items-baseline gap-2.5">
-              <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">
+              <span className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight">
                 {formatRupiah(product.price)}
               </span>
               {product.discount_percentage > 0 && (
                 <>
-                  <span className="text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
-                    {product.discount_percentage}% OFF
+                  <span className="text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                    -{product.discount_percentage}%
                   </span>
-                  <span className="text-sm text-gray-400 line-through">
+                  <span className="text-sm text-neutral-400 line-through font-medium">
                     {formatRupiah(product.original_price)}
                   </span>
                 </>
@@ -203,87 +316,186 @@ export default function ProductDetail({
             </div>
           </div>
 
-          {/* Seller / Store Banner */}
-          <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-2xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-base shrink-0">
-                <Store size={22} />
-              </div>
+          {/* Trust & Guarantee Box */}
+          <div className="grid grid-cols-2 gap-2.5 text-xs">
+            <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-start gap-2">
+              <RotateCcw size={16} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-gray-900 text-sm">{product.seller_name}</h4>
-                  {product.is_official && (
-                    <BadgeCheck size={16} className="text-emerald-600" />
-                  )}
-                </div>
-                <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                  Online • Kota {product.location}
-                </p>
+                <p className="font-bold text-neutral-900">Garansi Tukar Ukuran</p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">Ukuran tidak pas? Tukar dalam 7 hari kerja.</p>
               </div>
             </div>
-
-            <button className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-600 text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer">
-              Ikuti Toko
-            </button>
+            <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-start gap-2">
+              <Award size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-neutral-900">100% Produk Asli</p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">Jaminan orisinal langsung dari pabrik Tusko.</p>
+              </div>
+            </div>
           </div>
 
-          {/* Shipping & Protection Banner */}
-          <div className="bg-emerald-50/50 rounded-xl p-3.5 border border-emerald-100 text-xs space-y-2">
-            <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-              <Truck size={16} className="text-emerald-600" />
-              <span>Ongkos Kirim Gratis ke Seluruh Indonesia</span>
+          {/* Shipping Info Card */}
+          <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-200 text-xs space-y-2">
+            <div className="flex items-center gap-2 text-neutral-900 font-extrabold uppercase tracking-wide">
+              <Truck size={16} className="text-amber-500" />
+              <span>Logistik & Pengiriman KiriminAja</span>
             </div>
-            <p className="text-gray-600 text-[11px] pl-6">
-              Mendukung kurir JNE, TIKI, SiCepat, Pos Indonesia dengan asuransi pengiriman terjamin.
+            <p className="text-neutral-600 text-[11px] leading-relaxed">
+              Mendukung multi-kurir (JNE, SiCepat, J&T, Anteraja) dengan pelacakan nomor resi otomatis secara real-time.
             </p>
           </div>
 
-          {/* Tabs: Detail & Spesifikasi */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden">
-            <div className="flex border-b border-gray-200">
+          {/* Interactive Tabs: Detail | Spesifikasi | Size Chart | Ulasan */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-xs overflow-hidden">
+            <div className="flex border-b border-neutral-200 overflow-x-auto bg-neutral-50">
               <button
+                type="button"
                 onClick={() => setActiveTab('detail')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
                   activeTab === 'detail'
-                    ? 'border-emerald-600 text-emerald-600 bg-emerald-50/20'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-amber-500 text-neutral-950 bg-white'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
                 }`}
               >
-                Detail Produk
+                Detail
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('spec')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
                   activeTab === 'spec'
-                    ? 'border-emerald-600 text-emerald-600 bg-emerald-50/20'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-amber-500 text-neutral-950 bg-white'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
                 }`}
               >
                 Spesifikasi
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('size_chart')}
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'size_chart'
+                    ? 'border-amber-500 text-neutral-950 bg-white'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <Ruler size={13} />
+                <span>Panduan Ukuran</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('reviews')}
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                  activeTab === 'reviews'
+                    ? 'border-amber-500 text-neutral-950 bg-white'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Ulasan ({product.rating_count})
+              </button>
             </div>
 
-            <div className="p-4">
-              {activeTab === 'detail' ? (
-                <div className="prose prose-sm text-gray-700 leading-relaxed text-xs sm:text-sm space-y-3">
+            <div className="p-4 sm:p-5">
+              {activeTab === 'detail' && (
+                <div className="text-neutral-700 leading-relaxed text-xs sm:text-sm space-y-3 font-medium">
                   <p>{product.description}</p>
-                  <p className="text-gray-500 text-xs">
-                    Catatan Toko: Mohon lakukan video unboxing saat paket diterima untuk mempermudah klaim asuransi bila ada kendala saat pengiriman.
-                  </p>
+                  <div className="pt-2 border-t border-neutral-100 text-neutral-500 text-xs">
+                    <p className="font-bold text-neutral-800">Petunjuk Pemakaian & Perawatan:</p>
+                    <p className="mt-1">
+                      Cuci dengan air dingin dan hindari pemutih atau setrika pada suhu tinggi agar serat kain teknis serta elastisitasnya tetap awet.
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <div className="divide-y divide-gray-100 text-xs sm:text-sm">
+              )}
+
+              {activeTab === 'spec' && (
+                <div className="divide-y divide-neutral-100 text-xs sm:text-sm">
                   {product.specifications ? (
                     Object.entries(product.specifications).map(([key, val], idx) => (
                       <div key={idx} className="py-2.5 flex">
-                        <span className="w-1/3 text-gray-400 font-medium">{key}</span>
-                        <span className="w-2/3 text-gray-800 font-semibold">{val}</span>
+                        <span className="w-1/3 text-neutral-400 font-semibold">{key}</span>
+                        <span className="w-2/3 text-neutral-800 font-bold">{val}</span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-500 py-2">Spesifikasi standar pabrik.</p>
+                    <p className="text-neutral-500 py-2">Spesifikasi standar pabrik Tusko.</p>
                   )}
+                </div>
+              )}
+
+              {activeTab === 'size_chart' && (
+                <div className="space-y-3 text-xs">
+                  <p className="text-neutral-600 font-medium">
+                    Tabel acuan ukuran standar Asian Fit untuk produk <strong>{product.name}</strong>:
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse border border-neutral-200">
+                      <thead>
+                        <tr className="bg-neutral-100 text-neutral-900 font-bold text-[11px]">
+                          <th className="p-2 border border-neutral-200">Ukuran</th>
+                          <th className="p-2 border border-neutral-200">Panjang (cm)</th>
+                          <th className="p-2 border border-neutral-200">Lebar Dada (cm)</th>
+                          <th className="p-2 border border-neutral-200">Tinggi Atlet (cm)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-200 text-neutral-700">
+                        <tr>
+                          <td className="p-2 border border-neutral-200 font-bold">S</td>
+                          <td className="p-2 border border-neutral-200">68</td>
+                          <td className="p-2 border border-neutral-200">48</td>
+                          <td className="p-2 border border-neutral-200">160 - 168</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border border-neutral-200 font-bold">M</td>
+                          <td className="p-2 border border-neutral-200">70</td>
+                          <td className="p-2 border border-neutral-200">50</td>
+                          <td className="p-2 border border-neutral-200">168 - 175</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border border-neutral-200 font-bold">L</td>
+                          <td className="p-2 border border-neutral-200">72</td>
+                          <td className="p-2 border border-neutral-200">52</td>
+                          <td className="p-2 border border-neutral-200">175 - 182</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border border-neutral-200 font-bold">XL</td>
+                          <td className="p-2 border border-neutral-200">74</td>
+                          <td className="p-2 border border-neutral-200">54</td>
+                          <td className="p-2 border border-neutral-200">180 - 188</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border border-neutral-200 font-bold">XXL</td>
+                          <td className="p-2 border border-neutral-200">76</td>
+                          <td className="p-2 border border-neutral-200">56</td>
+                          <td className="p-2 border border-neutral-200">185 - 195</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 italic">
+                    * Toleransi selisih ukuran jahitan konveksi 1 - 2 cm.
+                  </p>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="space-y-4">
+                  {mockReviews.map((rev) => (
+                    <div key={rev.id} className="pb-3 border-b border-neutral-100 last:border-0 last:pb-0 text-xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-neutral-900">{rev.author}</span>
+                          <span className="text-[10px] text-neutral-400">• {rev.date}</span>
+                        </div>
+                        <div className="flex items-center text-amber-500 font-bold">
+                          <Star size={12} className="fill-current" />
+                          <span className="ml-1 text-neutral-800">{rev.rating}.0</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-neutral-500 mt-0.5">Varian: {rev.variant}</p>
+                      <p className="text-neutral-700 mt-2 leading-relaxed">{rev.comment}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -292,45 +504,45 @@ export default function ProductDetail({
 
         {/* Right Column: Sticky Purchase Action Card (3 cols) */}
         <div className="lg:col-span-3">
-          <div className="sticky top-20 bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm space-y-4">
-            <h3 className="font-bold text-gray-900 text-sm">
-              Atur Jumlah dan Catatan
+          <div className="sticky top-20 bg-white rounded-2xl border border-neutral-200/90 p-4 sm:p-5 shadow-md space-y-4">
+            <h3 className="font-black text-neutral-900 text-xs uppercase tracking-wider">
+              Atur Jumlah Pembelian
             </h3>
 
             {/* Snapshot item */}
-            <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-3 pb-3 border-b border-neutral-100">
               <img
                 src={product.image_url}
                 alt=""
-                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                className="w-12 h-12 rounded-xl object-cover border border-neutral-200 shrink-0"
               />
               <div className="truncate">
-                <p className="text-xs font-medium text-gray-800 truncate">{product.name}</p>
-                <p className="text-xs font-bold text-emerald-600 mt-0.5">{formatRupiah(product.price)}</p>
+                <p className="text-xs font-bold text-neutral-900 truncate">{product.name}</p>
+                <p className="text-xs font-black text-amber-600 mt-0.5">{formatRupiah(product.price)}</p>
               </div>
             </div>
 
             {/* Quantity Controller */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 font-medium">Jumlah:</span>
-                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                <span className="text-xs text-neutral-600 font-bold">Jumlah:</span>
+                <div className="flex items-center border border-neutral-300 rounded-xl overflow-hidden bg-neutral-50">
                   <button
                     type="button"
                     disabled={quantity <= 1 || isOutOfStock}
                     onClick={handleDecrease}
-                    className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                    className="p-2 text-neutral-700 hover:bg-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="px-3 text-xs font-bold text-gray-800 min-w-8 text-center">
+                  <span className="px-3 text-xs font-black text-neutral-900 min-w-8 text-center">
                     {quantity}
                   </span>
                   <button
                     type="button"
                     disabled={quantity >= stock || isOutOfStock}
                     onClick={handleIncrease}
-                    className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                    className="p-2 text-neutral-700 hover:bg-neutral-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
                   >
                     <Plus size={14} />
                   </button>
@@ -338,20 +550,20 @@ export default function ProductDetail({
               </div>
 
               {/* Stock info */}
-              <div className="mt-2 text-right">
+              <div className="mt-2.5 text-right">
                 {isOutOfStock ? (
                   <span className="text-[11px] font-bold text-rose-600 flex items-center justify-end gap-1">
                     <AlertCircle size={12} />
                     Stok Habis
                   </span>
                 ) : isLowStock ? (
-                  <span className="text-[11px] font-bold text-rose-500 flex items-center justify-end gap-1">
+                  <span className="text-[11px] font-black text-rose-600 flex items-center justify-end gap-1 uppercase tracking-wider animate-pulse">
                     <Flame size={12} className="fill-rose-500" />
                     Sisa {stock} buah!
                   </span>
                 ) : (
-                  <span className="text-[11px] text-gray-500">
-                    Total Stok: <strong className="text-gray-700">{stock}</strong>
+                  <span className="text-[11px] text-neutral-500 font-medium">
+                    Total Stok: <strong className="text-neutral-800">{stock} unit</strong>
                   </span>
                 )}
               </div>
@@ -359,19 +571,22 @@ export default function ProductDetail({
 
             {/* Optional note */}
             <div>
+              <label className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider block mb-1">
+                Catatan Pesanan
+              </label>
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tambah catatan (warna, ukuran, dll)..."
-                className="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                placeholder="Contoh: Titip di pos satpam, dll..."
+                className="w-full text-xs px-3 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
               />
             </div>
 
             {/* Subtotal */}
-            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-xs text-gray-500">Subtotal:</span>
-              <span className="text-base sm:text-lg font-extrabold text-gray-900">
+            <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
+              <span className="text-xs text-neutral-500 font-bold">Subtotal:</span>
+              <span className="text-base sm:text-lg font-black text-neutral-950">
                 {formatRupiah(subtotal)}
               </span>
             </div>
@@ -382,7 +597,7 @@ export default function ProductDetail({
                 type="button"
                 disabled={isOutOfStock}
                 onClick={handleAddWithQuantity}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs tracking-wider rounded-xl shadow-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 + Keranjang
               </button>
@@ -391,26 +606,82 @@ export default function ProductDetail({
                 type="button"
                 disabled={isOutOfStock}
                 onClick={handleBuyNowAction}
-                className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs sm:text-sm rounded-xl border border-emerald-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Beli Langsung
               </button>
             </div>
 
             {/* Secondary features */}
-            <div className="pt-2 flex items-center justify-around text-xs text-gray-500 border-t border-gray-100">
-              <button className="flex items-center gap-1 hover:text-emerald-600 cursor-pointer">
+            <div className="pt-2 flex items-center justify-around text-xs text-neutral-500 border-t border-neutral-100 font-medium">
+              <button 
+                type="button"
+                className="flex items-center gap-1 hover:text-amber-600 cursor-pointer transition-colors"
+              >
                 <MessageCircle size={14} />
-                <span>Chat Penjual</span>
+                <span>Chat Admin</span>
               </button>
-              <button className="flex items-center gap-1 hover:text-emerald-600 cursor-pointer">
+              <span className="text-neutral-300">•</span>
+              <button 
+                type="button"
+                className="flex items-center gap-1 hover:text-amber-600 cursor-pointer transition-colors"
+              >
                 <ShieldCheck size={14} />
-                <span>Garansi Resmi</span>
+                <span>Garansi Tusko</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Fixed Bottom Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 border-t border-neutral-800 p-3 backdrop-blur-md flex items-center justify-between gap-3 shadow-2xl">
+        <div className="min-w-0">
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-bold">Total Harga</p>
+          <p className="text-sm font-black text-amber-400 truncate">{formatRupiah(subtotal)}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={isOutOfStock}
+            onClick={handleAddWithQuantity}
+            className="px-4 py-2.5 bg-neutral-800 text-white font-black uppercase tracking-wider text-xs rounded-xl border border-neutral-700 disabled:opacity-40 cursor-pointer"
+          >
+            + Keranjang
+          </button>
+          <button
+            type="button"
+            disabled={isOutOfStock}
+            onClick={handleBuyNowAction}
+            className="px-4 py-2.5 bg-amber-500 text-neutral-950 font-black uppercase tracking-wider text-xs rounded-xl disabled:opacity-40 cursor-pointer shadow-md"
+          >
+            Beli Sekarang
+          </button>
+        </div>
+      </div>
+
+      {/* High-Resolution Zoom Lightbox Modal */}
+      {isZoomOpen && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
+            <button
+              type="button"
+              onClick={() => setIsZoomOpen(false)}
+              className="absolute -top-12 right-0 p-2 text-white hover:text-amber-400 cursor-pointer transition-colors"
+            >
+              <X size={28} />
+            </button>
+            <img
+              src={activeImage}
+              alt={product.name}
+              className="max-h-[80vh] w-auto object-contain rounded-2xl shadow-2xl"
+            />
+            <p className="text-white text-xs mt-3 font-semibold uppercase tracking-wider">
+              {product.name}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

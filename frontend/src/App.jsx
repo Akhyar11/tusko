@@ -531,6 +531,7 @@ export default function App() {
             onBack={() => setCurrentView('catalog')}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
+            onSelectCategory={handleSelectCategory}
           />
         ) : (
           <>
