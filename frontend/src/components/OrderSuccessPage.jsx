@@ -23,7 +23,8 @@ import { formatRupiah } from '../utils/formatters';
 export default function OrderSuccessPage({
   orderData = null,
   onContinueShopping = () => {},
-  onViewInstruction = () => {}
+  onViewInstruction = () => {},
+  onViewOrdersList = () => {}
 }) {
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
@@ -318,6 +319,15 @@ export default function OrderSuccessPage({
               >
                 <span>Lihat Instruksi Pembayaran</span>
                 <ExternalLink size={13} />
+              </button>
+
+              <button
+                type="button"
+                onClick={onViewOrdersList}
+                className="w-full py-2.5 px-4 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-600 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+              >
+                <ShoppingBag size={14} />
+                <span>Lihat Daftar Transaksi</span>
               </button>
 
               <button

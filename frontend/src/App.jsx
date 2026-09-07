@@ -8,16 +8,19 @@ import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
 import OrderSuccessPage from './components/OrderSuccessPage';
+import OrderListPage from './components/OrderListPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
+import { mockOrders } from './data/mockOrders';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success'
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
+  const [orders, setOrders] = useState(mockOrders);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -306,17 +309,53 @@ export default function App() {
         onSelectProduct={handleSelectProduct}
         onResetHome={handleResetHome}
         onOpenCart={() => setCurrentView('cart')}
+        onOpenOrders={() => setCurrentView('orders')}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {currentView === 'order-success' ? (
+        {currentView === 'orders' ? (
+          <OrderListPage
+            orders={orders}
+            onBackToShopping={() => setCurrentView('catalog')}
+            onViewOrderDetail={(order) => {
+              setLastCompletedOrder(order);
+              setCurrentView('order-success');
+            }}
+            onPayOrder={(order) => {
+              setLastCompletedOrder(order);
+              setCurrentView('order-success');
+            }}
+            onBuyAgain={(item) => {
+              const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
+              handleAddToCart(foundProd, 1);
+              setCurrentView('cart');
+            }}
+            onCancelOrder={(order) => {
+              setOrders(prev => prev.map(o => 
+                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
+                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
+                  : o
+              ));
+              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
+            }}
+            onCompleteOrder={(order) => {
+              setOrders(prev => prev.map(o => 
+                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
+                  ? { ...o, status: 'completed' } 
+                  : o
+              ));
+              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
+            }}
+          />
+        ) : currentView === 'order-success' ? (
           <OrderSuccessPage
             orderData={lastCompletedOrder}
             onContinueShopping={() => {
               setCurrentView('catalog');
               handleResetHome();
             }}
+            onViewOrdersList={() => setCurrentView('orders')}
           />
         ) : currentView === 'checkout' ? (
           <CheckoutPage
@@ -326,6 +365,41 @@ export default function App() {
               // Remove checked out items from cart
               setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
               setLastCompletedOrder(order);
+
+              // Add to orders list
+              const newFormattedOrder = {
+                id: Date.now(),
+                order_number: order.invoiceNumber,
+                invoice_number: order.invoiceNumber,
+                created_at: new Date().toISOString(),
+                status: 'pending',
+                payment_status: 'pending',
+                payment_method: order.paymentMethod?.id || 'midtrans',
+                payment_channel: order.paymentMethod?.name || 'Virtual Account',
+                va_number: order.vaNumber,
+                address: order.address,
+                expedition: order.expedition,
+                items: (order.items || []).map(item => ({
+                  id: item.id,
+                  product_id: item.id,
+                  product_name: item.name,
+                  product_image: item.image_url,
+                  product_price: item.price,
+                  quantity: item.quantity,
+                  subtotal: item.price * item.quantity,
+                  notes: item.notes
+                })),
+                totals: {
+                  subtotal: (order.items || []).reduce((s, i) => s + (i.price * i.quantity), 0),
+                  shipping_cost: order.expedition?.cost || 0,
+                  insurance_cost: 1000,
+                  service_fee: 1000,
+                  discount_amount: order.totalSavings || 0,
+                  grand_total: order.totalAmount
+                }
+              };
+              setOrders(prev => [newFormattedOrder, ...prev]);
+
               setCurrentView('order-success');
               setToastMessage(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);
             }}

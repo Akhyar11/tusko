@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
   ShoppingCart, 
+  ShoppingBag,
   Bell, 
   Mail, 
   Smartphone, 
@@ -24,7 +25,8 @@ export default function Navbar({
   products = [],
   onSelectProduct = () => {},
   onResetHome = () => {},
-  onOpenCart = () => {}
+  onOpenCart = () => {},
+  onOpenOrders = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const searchContainerRef = useRef(null);
@@ -231,6 +233,7 @@ export default function Navbar({
             <div 
               onClick={onOpenCart}
               className="relative cursor-pointer p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-emerald-600 transition-colors"
+              title="Keranjang Belanja"
             >
               <ShoppingCart size={22} />
               {cartCount > 0 && (
@@ -238,6 +241,16 @@ export default function Navbar({
                   {cartCount}
                 </span>
               )}
+            </div>
+
+            {/* Orders / Transactions shortcut */}
+            <div 
+              onClick={onOpenOrders}
+              className="relative cursor-pointer p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-emerald-600 transition-colors flex items-center gap-1.5"
+              title="Daftar Transaksi"
+            >
+              <ShoppingBag size={21} />
+              <span className="hidden md:inline text-xs font-semibold">Transaksi</span>
             </div>
 
             {/* Notifications & Messages */}
