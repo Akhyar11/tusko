@@ -7,6 +7,7 @@ import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
+import OrderSuccessPage from './components/OrderSuccessPage';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { CheckCircle2, Filter } from 'lucide-react';
@@ -14,8 +15,9 @@ import { CheckCircle2, Filter } from 'lucide-react';
 export default function App() {
   const [products] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout'
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success'
   const [checkoutItems, setCheckoutItems] = useState([]);
+  const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -308,13 +310,23 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {currentView === 'checkout' ? (
+        {currentView === 'order-success' ? (
+          <OrderSuccessPage
+            orderData={lastCompletedOrder}
+            onContinueShopping={() => {
+              setCurrentView('catalog');
+              handleResetHome();
+            }}
+          />
+        ) : currentView === 'checkout' ? (
           <CheckoutPage
             checkoutItems={checkoutItems}
             onBackToCart={() => setCurrentView('cart')}
             onFinishOrder={(order) => {
               // Remove checked out items from cart
               setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
+              setLastCompletedOrder(order);
+              setCurrentView('order-success');
               setToastMessage(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);
             }}
           />

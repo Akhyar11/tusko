@@ -723,13 +723,15 @@ export default function CheckoutPage({
       <PaymentInstructionModal
         isOpen={Boolean(orderSuccessData)}
         onClose={() => {
+          const completed = orderSuccessData;
           setOrderSuccessData(null);
-          onBackToCart();
+          if (completed) onFinishOrder(completed);
         }}
         orderData={orderSuccessData}
         onPaymentConfirmed={(order) => {
+          const completed = order || orderSuccessData;
           setOrderSuccessData(null);
-          onBackToCart();
+          if (completed) onFinishOrder(completed);
         }}
       />
     </div>
