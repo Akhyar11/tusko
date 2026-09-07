@@ -17,9 +17,10 @@ import {
   Plus
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { mockAddresses, mockExpeditions, mockPaymentMethods } from '../data/mockCheckoutData';
+import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import AddressModal from './AddressModal';
 import ExpeditionModal from './ExpeditionModal';
+import PaymentInstructionModal from './PaymentInstructionModal';
 
 export default function CheckoutPage({
   checkoutItems = [],
@@ -79,6 +80,7 @@ export default function CheckoutPage({
   
   // Selected payment method
   const [selectedPayment, setSelectedPayment] = useState(mockPaymentMethods[0].methods[0]);
+  const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');
 
   // Shipping protection
   const [withInsurance, setWithInsurance] = useState(true);
@@ -353,44 +355,92 @@ export default function CheckoutPage({
 
           {/* 3. Metode Pembayaran */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-100">
-              <CreditCard size={16} className="text-emerald-600" />
-              <span>Metode Pembayaran</span>
-            </h3>
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <CreditCard size={16} className="text-emerald-600" />
+                <span>Pilih Metode Pembayaran</span>
+              </h3>
+              <span className="text-[11px] text-gray-400">Didukung Midtrans & Bank Terpercaya</span>
+            </div>
 
-            {mockPaymentMethods.map((cat, catIdx) => (
-              <div key={catIdx} className="space-y-2">
-                <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
-                  {cat.category}
-                </span>
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {mockPaymentCategories.map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedPaymentCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+                    selectedPaymentCategory === cat
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {cat.methods.map((method) => {
-                    const isSelected = selectedPayment.id === method.id;
-                    return (
-                      <div
-                        key={method.id}
-                        onClick={() => setSelectedPayment(method)}
-                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          isSelected
-                            ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500 shadow-2xs'
-                            : 'border-gray-200 bg-white hover:border-emerald-300'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg ${isSelected ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                          {method.icon === 'QrCode' ? <QrCode size={16} /> : method.icon === 'Building2' ? <Building2 size={16} /> : <CreditCard size={16} />}
+            {/* Payment Methods List */}
+            {mockPaymentMethods
+              .filter(cat => selectedPaymentCategory === 'Semua' || cat.subCategory === selectedPaymentCategory)
+              .map((cat, catIdx) => (
+                <div key={catIdx} className="space-y-2 pt-1">
+                  <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">
+                    {cat.category}
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {cat.methods.map((method) => {
+                      const isSelected = selectedPayment.id === method.id;
+                      return (
+                        <div
+                          key={method.id}
+                          onClick={() => setSelectedPayment(method)}
+                          className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2.5 ${
+                            isSelected
+                              ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500 shadow-2xs'
+                              : 'border-gray-200 bg-white hover:border-emerald-300'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`p-2 rounded-xl shrink-0 ${isSelected ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                                {method.icon === 'QrCode' ? <QrCode size={16} /> : method.icon === 'Building2' ? <Building2 size={16} /> : <CreditCard size={16} />}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-gray-900 leading-snug">{method.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  {method.badge && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded">
+                                      {method.badge}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] text-gray-400">
+                                    {method.fee > 0 ? `Biaya: ${formatRupiah(method.fee)}` : 'Bebas Biaya'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Radio check indicator */}
+                            <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 border ${
+                              isSelected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-300 bg-white'
+                            }`}>
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                          </div>
+
+                          {method.description && (
+                            <p className="text-[10px] text-gray-500 leading-relaxed border-t border-gray-100/80 pt-1.5">
+                              {method.description}
+                            </p>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-800 truncate">{method.name}</p>
-                          <span className="text-[10px] text-gray-400">
-                            {method.type === 'midtrans' ? 'Verifikasi Otomatis (Midtrans)' : 'Verifikasi Manual Admin'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
             ))}
           </div>
 
@@ -500,75 +550,18 @@ export default function CheckoutPage({
       />
 
       {/* Order Success / Payment Instructions Modal */}
-      {orderSuccessData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-            
-            <div className="text-center">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-xs">
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 className="text-lg font-extrabold text-gray-900">
-                Pesanan Berhasil Dibuat!
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Nomor Tagihan: <strong className="text-gray-800">{orderSuccessData.invoiceNumber}</strong>
-              </p>
-            </div>
-
-            {/* Payment Details Box */}
-            <div className="my-5 p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>Metode Pembayaran</span>
-                <span className="font-bold text-gray-800">{orderSuccessData.paymentMethod.name}</span>
-              </div>
-
-              {/* Virtual account number display */}
-              <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-gray-400 block font-medium">Nomor Pembayaran (VA)</span>
-                  <span className="font-mono text-sm sm:text-base font-extrabold text-emerald-700 tracking-wider">
-                    {orderSuccessData.vaNumber}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopyVa(orderSuccessData.vaNumber)}
-                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Copy size={12} />
-                  <span>{copiedVa ? 'Disalin!' : 'Salin'}</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200">
-                <span className="text-gray-500">Total Pembayaran</span>
-                <span className="font-black text-base text-gray-900">{formatRupiah(orderSuccessData.totalAmount)}</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg">
-                <Clock size={14} className="shrink-0" />
-                <span>Selesaikan pembayaran dalam <strong>23 jam 59 menit</strong></span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setOrderSuccessData(null);
-                  onBackToCart();
-                }}
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-              >
-                Kembali ke Beranda Belanja
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      <PaymentInstructionModal
+        isOpen={Boolean(orderSuccessData)}
+        onClose={() => {
+          setOrderSuccessData(null);
+          onBackToCart();
+        }}
+        orderData={orderSuccessData}
+        onPaymentConfirmed={(order) => {
+          setOrderSuccessData(null);
+          onBackToCart();
+        }}
+      />
     </div>
   );
 }
