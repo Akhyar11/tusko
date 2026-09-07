@@ -19,6 +19,7 @@ import {
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods } from '../data/mockCheckoutData';
 import AddressModal from './AddressModal';
+import ExpeditionModal from './ExpeditionModal';
 
 export default function CheckoutPage({
   checkoutItems = [],
@@ -69,6 +70,12 @@ export default function CheckoutPage({
 
   // Selected courier per store
   const [selectedExpedition, setSelectedExpedition] = useState(mockExpeditions[0]);
+  const [isExpeditionModalOpen, setIsExpeditionModalOpen] = useState(false);
+
+  const totalWeight = useMemo(() => {
+    const count = checkoutItems.reduce((acc, item) => acc + item.quantity, 0);
+    return Number((count * 0.4).toFixed(1)) || 0.4;
+  }, [checkoutItems]);
   
   // Selected payment method
   const [selectedPayment, setSelectedPayment] = useState(mockPaymentMethods[0].methods[0]);
@@ -267,43 +274,78 @@ export default function CheckoutPage({
               </div>
 
               {/* Courier Selection */}
-              <div className="pt-3 border-t border-gray-100 bg-gray-50/70 p-3 rounded-xl">
-                <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5 mb-2">
-                  <Truck size={14} className="text-emerald-600" />
-                  <span>Pilih Jasa Pengiriman (Ekspedisi)</span>
-                </label>
+              <div className="pt-3 border-t border-gray-100 bg-gray-50/70 p-3.5 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                    <Truck size={15} className="text-emerald-600" />
+                    <span>Opsi Pengiriman (Ekspedisi)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsExpeditionModalOpen(true)}
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5 hover:underline"
+                  >
+                    <span>Lihat Semua Ekspedisi</span>
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {mockExpeditions.map(exp => {
-                    const isSelected = selectedExpedition.id === exp.id;
-                    return (
-                      <div
-                        key={exp.id}
-                        onClick={() => setSelectedExpedition(exp)}
-                        className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                          isSelected
-                            ? 'border-emerald-600 bg-white shadow-xs ring-1 ring-emerald-500'
-                            : 'border-gray-200 bg-white hover:border-emerald-300'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-gray-800">{exp.name}</span>
-                            <span className="text-[11px] text-gray-500">({exp.service})</span>
-                          </div>
-                          <span className="text-[10px] text-gray-400 block mt-0.5">Estimasi {exp.etd}</span>
-                        </div>
-
-                        <div className="text-right">
-                          {exp.is_free ? (
-                            <span className="text-xs font-bold text-emerald-600">Gratis (Bebas Ongkir)</span>
-                          ) : (
-                            <span className="text-xs font-bold text-gray-900">{formatRupiah(exp.cost)}</span>
-                          )}
-                        </div>
+                {/* Selected Expedition Card */}
+                <div 
+                  onClick={() => setIsExpeditionModalOpen(true)}
+                  className="p-3 bg-white border border-emerald-500 ring-1 ring-emerald-400/30 rounded-xl cursor-pointer hover:border-emerald-600 transition-all flex items-center justify-between shadow-2xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-extrabold flex items-center justify-center text-xs border border-emerald-200 shrink-0">
+                      {selectedExpedition.name.slice(0, 3).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-gray-900">{selectedExpedition.name} - {selectedExpedition.service}</span>
+                        {selectedExpedition.badge && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                            selectedExpedition.is_free ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {selectedExpedition.badge}
+                          </span>
+                        )}
                       </div>
-                    );
-                  })}
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Estimasi tiba: <strong>{selectedExpedition.etd}</strong> • {selectedExpedition.category}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    {selectedExpedition.is_free ? (
+                      <div>
+                        <span className="text-xs sm:text-sm font-extrabold text-emerald-600 block">Gratis</span>
+                        <span className="text-[10px] text-gray-400 line-through">{formatRupiah(selectedExpedition.baseCost)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs sm:text-sm font-extrabold text-gray-900">{formatRupiah(selectedExpedition.cost)}</span>
+                    )}
+                    <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">Ubah</span>
+                  </div>
+                </div>
+
+                {/* Quick Selection Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs no-scrollbar">
+                  <span className="text-[10px] text-gray-400 shrink-0 mr-0.5">Pilihan Populer:</span>
+                  {mockExpeditions.slice(0, 4).map(exp => (
+                    <button
+                      key={exp.id}
+                      type="button"
+                      onClick={() => setSelectedExpedition(exp)}
+                      className={`px-2.5 py-1 rounded-lg border text-[11px] shrink-0 cursor-pointer transition-colors ${
+                        selectedExpedition.id === exp.id
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-700 font-bold shadow-2xs'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {exp.name} {exp.is_free ? '(Gratis)' : `(${formatRupiah(exp.cost)})`}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -446,6 +488,15 @@ export default function CheckoutPage({
         onSelectAddress={(id) => setSelectedAddressId(id)}
         onSaveAddress={handleSaveAddress}
         onDeleteAddress={handleDeleteAddress}
+      />
+
+      {/* Expedition Selection Modal */}
+      <ExpeditionModal
+        isOpen={isExpeditionModalOpen}
+        onClose={() => setIsExpeditionModalOpen(false)}
+        selectedExpedition={selectedExpedition}
+        onSelectExpedition={(exp) => setSelectedExpedition(exp)}
+        totalWeight={totalWeight}
       />
 
       {/* Order Success / Payment Instructions Modal */}
