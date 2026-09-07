@@ -21,3 +21,11 @@ Route::prefix('cart')->group(function () {
     Route::delete('/items/{id}', [CartController::class, 'removeItem']);
     Route::delete('/clear', [CartController::class, 'clear']);
 });
+
+Route::prefix('addresses')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ShippingAddressController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\ShippingAddressController::class, 'store']);
+    Route::put('/{id}', [\App\Http\Controllers\Api\ShippingAddressController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\ShippingAddressController::class, 'destroy']);
+    Route::post('/{id}/set-default', [\App\Http\Controllers\Api\ShippingAddressController::class, 'setDefault']);
+});
