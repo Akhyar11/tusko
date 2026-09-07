@@ -1,6 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
-import { SlidersHorizontal, PackageSearch, X, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, PackageSearch, X, RotateCcw } from 'lucide-react';
+import { formatRupiah } from '../utils/formatters';
 
 export default function ProductGrid({
   products = [],
@@ -10,33 +11,45 @@ export default function ProductGrid({
   onSelectProduct = () => {},
   categoryTitle = null,
   searchQuery = '',
-  onClearSearch = () => {}
+  onClearSearch = () => {},
+  activeFilters = {},
+  onClearFilter = () => {},
+  onResetFilters = () => {}
 }) {
+  const {
+    minPrice,
+    maxPrice,
+    onlyOfficial,
+    onlyFreeShipping,
+    onlyDiscount,
+    minRating,
+    selectedLocation
+  } = activeFilters;
+
+  const hasAnyFilter = 
+    Boolean(categoryTitle) ||
+    Boolean(searchQuery) ||
+    Boolean(minPrice) ||
+    Boolean(maxPrice) ||
+    onlyOfficial ||
+    onlyFreeShipping ||
+    onlyDiscount ||
+    (minRating > 0) ||
+    Boolean(selectedLocation);
+
   return (
     <section className="my-6">
       {/* Grid Header & Sort */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-neutral-200">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-black text-neutral-900 tracking-tight uppercase">
               {searchQuery 
                 ? `Hasil Pencarian "${searchQuery}"`
                 : categoryTitle 
                   ? `Kategori: ${categoryTitle}` 
-                  : 'Rekomendasi Untukmu'}
+                  : 'Koleksi Perlengkapan Olahraga'}
             </h2>
-
-            {/* Clear search chip if searching */}
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={onClearSearch}
-                className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 px-2.5 py-0.5 rounded-full font-bold transition-colors cursor-pointer"
-              >
-                <span>Hapus filter pencarian</span>
-                <X size={12} />
-              </button>
-            )}
           </div>
           
           <p className="text-xs text-neutral-500 mt-0.5 font-medium">
@@ -66,6 +79,132 @@ export default function ProductGrid({
         </div>
       </div>
 
+      {/* Active Filter Chips Bar */}
+      {hasAnyFilter && (
+        <div className="flex items-center flex-wrap gap-2 mb-4 p-2.5 bg-neutral-100 rounded-xl">
+          <span className="text-[11px] font-black uppercase tracking-wider text-neutral-500 mr-1">
+            Filter Aktif:
+          </span>
+
+          {searchQuery && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Cari: "{searchQuery}"</span>
+              <button 
+                type="button" 
+                onClick={onClearSearch}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+                title="Hapus pencarian"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {categoryTitle && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Kategori: {categoryTitle}</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('category')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+                title="Hapus filter kategori"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {onlyOfficial && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Tusko Pro Official</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('onlyOfficial')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {onlyFreeShipping && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Bebas Ongkir</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('onlyFreeShipping')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {onlyDiscount && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Diskon</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('onlyDiscount')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {(minPrice || maxPrice) && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>
+                Harga: {minPrice ? formatRupiah(Number(minPrice)) : 'Rp 0'} - {maxPrice ? formatRupiah(Number(maxPrice)) : 'Tak Terbatas'}
+              </span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('price')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {minRating > 0 && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>★ {minRating}+ ke atas</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('minRating')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {selectedLocation && (
+            <span className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+              <span>Lokasi: {selectedLocation}</span>
+              <button 
+                type="button" 
+                onClick={() => onClearFilter('location')}
+                className="hover:text-rose-600 cursor-pointer ml-0.5"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={onResetFilters}
+            className="text-[11px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 hover:underline cursor-pointer ml-auto flex items-center gap-1"
+          >
+            <RotateCcw size={11} />
+            <span>Reset Semua</span>
+          </button>
+        </div>
+      )}
+
       {/* Grid Content */}
       {products.length === 0 ? (
         <div className="bg-white rounded-2xl border border-neutral-200 p-10 sm:p-12 text-center my-6 shadow-2xs">
@@ -78,13 +217,13 @@ export default function ProductGrid({
           <p className="text-xs text-neutral-500 mt-1.5 max-w-md mx-auto leading-relaxed">
             Coba periksa kata kunci Anda, gunakan kata umum seperti "jersey", "sepatu", atau reset filter untuk melihat semua koleksi Tusko.
           </p>
-          {searchQuery && (
+          {hasAnyFilter && (
             <button
               type="button"
-              onClick={onClearSearch}
+              onClick={onResetFilters}
               className="mt-4 px-4 py-2 bg-neutral-900 hover:bg-amber-500 hover:text-neutral-950 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-colors cursor-pointer"
             >
-              Lihat Semua Produk
+              Reset Semua Filter
             </button>
           )}
         </div>

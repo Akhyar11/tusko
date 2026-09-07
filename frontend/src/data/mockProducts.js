@@ -1,12 +1,12 @@
 export const categories = [
-  { id: 1, name: 'Jersey & Apparel', slug: 'jersey-apparel', icon: 'Shirt' },
-  { id: 2, name: 'Sepatu Olahraga', slug: 'sepatu-olahraga', icon: 'Footprints' },
-  { id: 3, name: 'Peralatan & Gym', slug: 'peralatan-gym', icon: 'Dumbbell' },
-  { id: 4, name: 'Aksesoris & Deker', slug: 'aksesoris-deker', icon: 'Shield' },
-  { id: 5, name: 'Running & Marathon', slug: 'running-marathon', icon: 'Zap' },
-  { id: 6, name: 'Futsal & Sepakbola', slug: 'futsal-sepakbola', icon: 'Trophy' },
-  { id: 7, name: 'Training & Fitness', slug: 'training-fitness', icon: 'Activity' },
-  { id: 8, name: 'Koleksi Pro Player', slug: 'koleksi-pro-player', icon: 'Sparkles' },
+  { id: 1, name: 'Jersey & Apparel', slug: 'jersey-apparel', icon: 'Shirt', badge: 'POPULER', featured: true },
+  { id: 2, name: 'Sepatu Olahraga', slug: 'sepatu-olahraga', icon: 'Footprints', badge: 'HOT', featured: true },
+  { id: 3, name: 'Peralatan & Gym', slug: 'peralatan-gym', icon: 'Dumbbell', featured: true },
+  { id: 4, name: 'Aksesoris & Deker', slug: 'aksesoris-deker', icon: 'Shield', featured: false },
+  { id: 5, name: 'Running & Marathon', slug: 'running-marathon', icon: 'Zap', badge: 'PRO', featured: true },
+  { id: 6, name: 'Futsal & Sepakbola', slug: 'futsal-sepakbola', icon: 'Trophy', featured: true },
+  { id: 7, name: 'Training & Fitness', slug: 'training-fitness', icon: 'Activity', featured: false },
+  { id: 8, name: 'Koleksi Pro Player', slug: 'koleksi-pro-player', icon: 'Sparkles', badge: 'NEW', featured: true },
 ];
 
 export const mockProducts = [

@@ -116,6 +116,36 @@ export default function App() {
     setSelectedLocation('');
   };
 
+  // Clear single active filter
+  const handleClearSingleFilter = (filterKey) => {
+    switch (filterKey) {
+      case 'category':
+        setSelectedCategoryId(null);
+        break;
+      case 'onlyOfficial':
+        setOnlyOfficial(false);
+        break;
+      case 'onlyFreeShipping':
+        setOnlyFreeShipping(false);
+        break;
+      case 'onlyDiscount':
+        setOnlyDiscount(false);
+        break;
+      case 'price':
+        setMinPrice('');
+        setMaxPrice('');
+        break;
+      case 'minRating':
+        setMinRating(0);
+        break;
+      case 'location':
+        setSelectedLocation('');
+        break;
+      default:
+        break;
+    }
+  };
+
   // Price change handler
   const handlePriceChange = (type, val) => {
     if (type === 'min') setMinPrice(val);
@@ -572,6 +602,17 @@ export default function App() {
                   categoryTitle={activeCategory ? activeCategory.name : null}
                   searchQuery={searchQuery}
                   onClearSearch={() => setSearchQuery('')}
+                  activeFilters={{
+                    minPrice,
+                    maxPrice,
+                    onlyOfficial,
+                    onlyFreeShipping,
+                    onlyDiscount,
+                    minRating,
+                    selectedLocation
+                  }}
+                  onClearFilter={handleClearSingleFilter}
+                  onResetFilters={handleResetFilters}
                 />
               </div>
             </div>
