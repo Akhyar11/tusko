@@ -37,9 +37,13 @@ class ExpeditionResource extends JsonResource
             'cost' => $calculatedCost,
             'is_free' => (bool) $this->is_free,
             'is_active' => (bool) $this->is_active,
+            'is_default' => (bool) $this->is_default,
+            'rate_type' => $this->rate_type ?: 'per_kg',
+            'service_grade' => $this->service_grade,
             'badge' => $this->badge,
             'description' => $this->description,
             'tracking_support' => (bool) $this->tracking_support,
+            'cod_support' => (bool) $this->cod_support,
             'weight_calculated_kg' => $chargedWeight,
         ];
     }

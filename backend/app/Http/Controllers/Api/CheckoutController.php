@@ -256,14 +256,10 @@ class CheckoutController extends Controller
 
         $order->load(['items', 'shippingAddress', 'expedition']);
 
-        // Send order confirmation email
+        // Send order confirmation email via OrderEmailService
         $recipientEmail = $order->user?->email ?: $request->input('email');
         if ($recipientEmail) {
-            try {
-                \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(new \App\Mail\OrderConfirmationMail($order));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Gagal mengirim email konfirmasi pesanan: ' . $e->getMessage());
-            }
+            app(\App\Services\OrderEmailService::class)->sendOrderConfirmation($order, $recipientEmail);
         }
 
         return response()->json([
@@ -359,7 +355,13 @@ class CheckoutController extends Controller
             ], 422);
         }
 
-        \Illuminate\Support\Facades\Mail::to($recipientEmail)->send(new \App\Mail\OrderConfirmationMail($order));
+        $sent = app(\App\Services\OrderEmailService::class)->sendOrderConfirmation($order, $recipientEmail);
+
+        if (! $sent) {
+            return response()->json([
+                'message' => 'Gagal mengirim email konfirmasi pesanan.',
+            ], 500);
+        }
 
         return response()->json([
             'message' => "Email konfirmasi pesanan berhasil dikirim ke {$recipientEmail}.",

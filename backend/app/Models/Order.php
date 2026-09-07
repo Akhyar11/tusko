@@ -215,4 +215,18 @@ class Order extends Model
         $random = mt_rand(100000, 999999);
         return $prefix . $random;
     }
+
+    /**
+     * Helper to generate unique tracking number for shipping.
+     */
+    public static function generateTrackingNumber(string $expeditionCode = 'TRK'): string
+    {
+        $cleanCode = strtoupper(preg_replace('/[^A-Z0-9]/', '', $expeditionCode));
+        $prefix = !empty($cleanCode) ? substr($cleanCode, 0, 4) : 'TRK';
+        $datePart = date('Ymd');
+        $randomPart = strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+
+        return "{$prefix}-{$datePart}-{$randomPart}";
+    }
 }
+

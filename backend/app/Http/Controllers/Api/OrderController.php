@@ -229,11 +229,197 @@ class OrderController extends Controller
             $updateData['notes'] = $validated['notes'];
         }
 
+        $previousStatus = $order->status;
         $order->update($updateData);
+
+        // Send status change notification email if status changed
+        if ($previousStatus !== $newStatus) {
+            app(\App\Services\OrderEmailService::class)->sendStatusNotification($order, $previousStatus);
+        }
 
         return response()->json([
             'message' => "Status pesanan {$order->order_number} berhasil diperbarui menjadi {$newStatus}.",
             'data' => new OrderResource($order->fresh(['items', 'shippingAddress', 'expedition', 'transactions'])),
         ]);
     }
+
+    /**
+     * Send or re-send status update notification email.
+     */
+    public function sendStatusEmail(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'user', 'shippingAddress', 'expedition'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $recipientEmail = $request->input('email');
+        $sent = app(\App\Services\OrderEmailService::class)->sendStatusNotification($order, null, $recipientEmail);
+
+        if (! $sent) {
+            return response()->json([
+                'message' => 'Gagal mengirim email notifikasi status. Pastikan alamat email tersedia dan valid.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => "Email notifikasi status pesanan berhasil dikirim.",
+            'data' => [
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+            ],
+        ]);
+    }
+
+    /**
+     * Generate or update tracking number and return shipping receipt payload.
+     */
+    public function generateReceipt(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'shippingAddress', 'expedition'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'tracking_number' => 'nullable|string|max:100',
+            'shipper_name' => 'nullable|string|max:100',
+            'shipper_phone' => 'nullable|string|max:30',
+            'shipper_address' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:500',
+            'auto_ship' => 'nullable|boolean',
+        ]);
+
+        // Determine tracking number
+        $trackingNumber = $validated['tracking_number'] ?? null;
+        if (empty($trackingNumber)) {
+            if (!empty($order->tracking_number)) {
+                $trackingNumber = $order->tracking_number;
+            } else {
+                $expName = $order->expedition_name ?: ($order->expedition?->name ?? 'JNE');
+                $code = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $expName), 0, 4)) ?: 'TRK';
+                $trackingNumber = Order::generateTrackingNumber($code);
+            }
+        }
+
+        $updateData = [
+            'tracking_number' => $trackingNumber,
+        ];
+
+        if (!empty($validated['auto_ship']) && $validated['auto_ship'] === true) {
+            $updateData['status'] = 'shipped';
+            if (!$order->shipped_at) {
+                $updateData['shipped_at'] = Carbon::now();
+            }
+        }
+
+        if (!empty($validated['notes'])) {
+            $updateData['notes'] = $validated['notes'];
+        }
+
+        $order->update($updateData);
+        $order->refresh();
+
+        $receipt = $this->buildReceiptPayload($order, $validated);
+
+        return response()->json([
+            'message' => 'Resi pengiriman berhasil dibuat.',
+            'data' => [
+                'order' => new OrderResource($order),
+                'receipt' => $receipt,
+            ],
+        ]);
+    }
+
+    /**
+     * Retrieve shipping receipt data for thermal printing or PDF export.
+     */
+    public function getReceipt(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'shippingAddress', 'expedition'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $receipt = $this->buildReceiptPayload($order, []);
+
+        return response()->json([
+            'data' => [
+                'order' => new OrderResource($order),
+                'receipt' => $receipt,
+            ],
+        ]);
+    }
+
+    /**
+     * Build standard structured receipt payload.
+     */
+    protected function buildReceiptPayload(Order $order, array $options = []): array
+    {
+        $city = $order->city ?: ($order->shippingAddress?->city ?? 'Jakarta Selatan');
+        $cleanCity = preg_replace('/[^A-Za-z]/', '', $city);
+        $sortCode = !empty($cleanCity) ? strtoupper(substr($cleanCity, 0, 3)) : 'CGK';
+
+        $totalWeight = (float) $order->total_weight;
+        if ($totalWeight <= 0) {
+            $totalWeight = $order->items->reduce(function ($carry, $item) {
+                return $carry + (($item->quantity ?: 1) * 0.5);
+            }, 0.5);
+        }
+
+        $itemsList = $order->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->product_name,
+                'quantity' => (int) $item->quantity,
+                'price' => (float) ($item->product_price ?? $item->price ?? 0),
+                'subtotal' => (float) $item->subtotal,
+                'notes' => $item->notes ?? null,
+            ];
+        })->values()->all();
+
+        return [
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'tracking_number' => $order->tracking_number,
+            'barcode_data' => $order->tracking_number ?: $order->order_number,
+            'qrcode_data' => url("/api/orders/{$order->id}/receipt"),
+            'sort_code' => $sortCode,
+            'expedition' => [
+                'id' => $order->expedition_id,
+                'name' => $order->expedition_name ?: 'J&T Express',
+                'service' => $order->expedition_service ?: 'EZ (Reguler)',
+                'etd' => $order->expedition_etd ?: '1-3 hari',
+            ],
+            'sender' => [
+                'store_name' => $options['shipper_name'] ?? 'Tusko Official Store',
+                'phone' => $options['shipper_phone'] ?? '0812-3456-7890',
+                'address' => $options['shipper_address'] ?? 'Jl. Kemang Raya No. 12, Jakarta Selatan, 12730',
+                'city' => 'Jakarta Selatan',
+                'sort_code' => 'CGK',
+            ],
+            'recipient' => [
+                'name' => $order->recipient_name ?: ($order->shippingAddress?->recipient_name ?? 'Pembeli Tusko'),
+                'phone' => $order->phone ?: $order->phone_number ?: ($order->shippingAddress?->phone ?? '-'),
+                'address' => $order->full_address ?: ($order->shippingAddress?->full_address ?? '-'),
+                'city' => $order->city ?: ($order->shippingAddress?->city ?? '-'),
+                'province' => $order->province ?: ($order->shippingAddress?->province ?? '-'),
+                'postal_code' => $order->postal_code ?: ($order->shippingAddress?->postal_code ?? '-'),
+            ],
+            'package_info' => [
+                'total_weight_kg' => round($totalWeight, 2),
+                'total_items' => (int) ($order->items->sum('quantity') ?: 1),
+                'shipping_cost' => (float) $order->shipping_cost,
+                'insurance_cost' => (float) $order->insurance_cost,
+                'payment_method' => $order->payment_method,
+                'payment_status' => $order->payment_status,
+                'is_cod' => false,
+                'notes' => $order->notes ?: ($options['notes'] ?? 'Fragile - Jangan Dibanting'),
+            ],
+            'items' => $itemsList,
+            'created_at' => $order->created_at?->toISOString(),
+            'generated_at' => Carbon::now()->toISOString(),
+        ];
+    }
 }
+

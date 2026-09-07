@@ -32,21 +32,32 @@ Route::prefix('addresses')->group(function () {
 
 Route::prefix('expeditions')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ExpeditionController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\ExpeditionController::class, 'store']);
     Route::get('/categories', [\App\Http\Controllers\Api\ExpeditionController::class, 'categories']);
     Route::get('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'destroy']);
+    Route::post('/{id}/set-default', [\App\Http\Controllers\Api\ExpeditionController::class, 'setDefault']);
+    Route::post('/{id}/default', [\App\Http\Controllers\Api\ExpeditionController::class, 'setDefault']);
 });
+
 
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout']);
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
-    Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'show'])->where('idOrOrderNumber', '.*');
+    Route::post('/{idOrOrderNumber}/generate-receipt', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
+    Route::post('/{idOrOrderNumber}/generate-tracking', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
+    Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
     Route::match(['put', 'patch'], '/{idOrOrderNumber}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/confirm-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'confirm'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/approve-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'approve'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/reject-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'reject'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/send-confirmation-email', [\App\Http\Controllers\Api\CheckoutController::class, 'sendConfirmationEmail'])->where('idOrOrderNumber', '.*');
+    Route::post('/{idOrOrderNumber}/send-status-email', [\App\Http\Controllers\Api\OrderController::class, 'sendStatusEmail'])->where('idOrOrderNumber', '.*');
+    Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'show'])->where('idOrOrderNumber', '.*');
 });
+
 
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
@@ -84,5 +95,22 @@ Route::prefix('stock')->group(function () {
 });
 
 Route::get('/dashboard/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
+
+Route::prefix('templates/emails')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\EmailTemplateController::class, 'index']);
+    Route::post('/reset', [\App\Http\Controllers\Api\EmailTemplateController::class, 'reset']);
+    Route::post('/', [\App\Http\Controllers\Api\EmailTemplateController::class, 'store']);
+    Route::get('/{idOrKey}', [\App\Http\Controllers\Api\EmailTemplateController::class, 'show']);
+    Route::match(['put', 'patch'], '/{idOrKey}', [\App\Http\Controllers\Api\EmailTemplateController::class, 'update']);
+});
+
+Route::prefix('templates/receipt')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'show']);
+    Route::post('/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'store']);
+    Route::match(['put', 'patch'], '/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'store']);
+    Route::post('/reset', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'reset']);
+});
+
+
 
 
