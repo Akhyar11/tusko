@@ -232,6 +232,11 @@ class CheckoutController extends Controller
                 $cartToClear->items()->delete();
             }
 
+            // 9. Generate Midtrans Snap Token if payment method is midtrans
+            if ($order->payment_method === 'midtrans') {
+                app(\App\Services\MidtransService::class)->createSnapToken($order);
+            }
+
             return $order;
         });
 
@@ -285,6 +290,29 @@ class CheckoutController extends Controller
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Generate or re-fetch Midtrans Snap Token for an order.
+     */
+    public function getSnapToken(string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with('items')
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $midtransService = app(\App\Services\MidtransService::class);
+        $result = $midtransService->createSnapToken($order);
+
+        return response()->json([
+            'message' => 'Snap Token berhasil dibuat.',
+            'data' => [
+                'order_number' => $order->order_number,
+                'snap_token' => $result['token'],
+                'redirect_url' => $result['redirect_url'],
             ],
         ]);
     }

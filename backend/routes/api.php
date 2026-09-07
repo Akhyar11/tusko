@@ -40,5 +40,6 @@ Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, '
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\CheckoutController::class, 'index']);
     Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\CheckoutController::class, 'show'])->where('idOrOrderNumber', '.*');
+    Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
 });
 
