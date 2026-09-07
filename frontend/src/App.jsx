@@ -196,21 +196,29 @@ export default function App() {
   ]);
 
   // Cart operations
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product, quantity = 1, notes = '') => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
+        const updatedQty = Math.min(itemStock(product), existing.quantity + quantity);
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id ? { ...item, quantity: updatedQty, notes: notes || item.notes } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity, notes }];
     });
 
-    setToastMessage(`"${product.name.slice(0, 28)}..." ditambahkan ke keranjang!`);
+    setToastMessage(`"${product.name.slice(0, 24)}..." (${quantity}x) berhasil masuk keranjang!`);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3000);
+    }, 4000);
+  };
+
+  const itemStock = (p) => Number(p.stock ?? 99);
+
+  const handleBuyNow = (product, quantity = 1, notes = '') => {
+    handleAddToCart(product, quantity, notes);
+    setCurrentView('cart');
   };
 
   const handleUpdateQuantity = (productId, newQuantity) => {
@@ -265,11 +273,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f6f8]">
-      {/* Toast Notification */}
+      {/* Toast Notification with Cart Shortcut */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/95 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900/95 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs sm:text-sm animate-bounce">
           <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentView('cart');
+              setToastMessage(null);
+            }}
+            className="ml-2 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer shrink-0"
+          >
+            Lihat Keranjang
+          </button>
         </div>
       )}
 
@@ -304,6 +322,7 @@ export default function App() {
             product={selectedProduct}
             onBack={() => setCurrentView('catalog')}
             onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
           />
         ) : (
           <>

@@ -20,7 +20,8 @@ import { formatRupiah } from '../utils/formatters';
 export default function ProductDetail({ 
   product, 
   onBack = () => {},
-  onAddToCart = () => {} 
+  onAddToCart = () => {},
+  onBuyNow = () => {}
 }) {
   if (!product) return null;
 
@@ -53,9 +54,12 @@ export default function ProductDetail({
 
   const handleAddWithQuantity = () => {
     if (isOutOfStock) return;
-    for (let i = 0; i < quantity; i++) {
-      onAddToCart(product);
-    }
+    onAddToCart(product, quantity, notes);
+  };
+
+  const handleBuyNowAction = () => {
+    if (isOutOfStock) return;
+    onBuyNow(product, quantity, notes);
   };
 
   const subtotal = product.price * quantity;
@@ -386,7 +390,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 disabled={isOutOfStock}
-                onClick={handleAddWithQuantity}
+                onClick={handleBuyNowAction}
                 className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs sm:text-sm rounded-xl border border-emerald-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Beli Langsung
