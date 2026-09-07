@@ -14,18 +14,52 @@ import FinancialTransactionsPage from './components/FinancialTransactionsPage';
 import StockManagementPage from './components/StockManagementPage';
 import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
+import ProfilePage from './components/ProfilePage';
+import ProductListPage from './components/ProductListPage';
+import ProductCreateForm from './components/ProductCreateForm';
+import ProductEditForm from './components/ProductEditForm';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
+import { mockDemoUsers } from './data/mockAuthData';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 export default function App() {
-  const [products] = useState(mockProducts);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tusko_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleUpdateUser = (user) => {
+    setCurrentUser(user);
+    if (user) {
+      try {
+        localStorage.setItem('tusko_current_user', JSON.stringify(user));
+      } catch {
+        // ignore
+      }
+    } else {
+      try {
+        localStorage.removeItem('tusko_current_user');
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const [products, setProducts] = useState(mockProducts);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock'
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
@@ -61,6 +95,24 @@ export default function App() {
   ]);
   
   const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleSwitchUser = (demoUser) => {
+    handleUpdateUser(demoUser);
+    showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'})`);
+  };
+
+  const handleLogout = () => {
+    handleUpdateUser(null);
+    showToast('Anda telah keluar dari akun (Logout).');
+    if (currentView === 'profile') {
+      setCurrentView('catalog');
+    }
+  };
 
   // Scroll to top when view changes
   useEffect(() => {
@@ -165,7 +217,8 @@ export default function App() {
 
   // Filter & sort logic
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    // Hanya produk yang aktif yang tampil di etalase publik pembeli
+    let result = products.filter((p) => p.status === 'active' || (p.status !== 'inactive' && p.active !== false));
 
     // Filter by category
     if (selectedCategoryId) {
@@ -371,6 +424,34 @@ export default function App() {
     setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
   };
 
+  if (currentView === 'login') {
+    return (
+      <LoginPage
+        onLoginSuccess={(user) => {
+          handleUpdateUser(user);
+          showToast(`Berhasil masuk sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member'})`);
+          setCurrentView('catalog');
+        }}
+        onNavigateRegister={() => setCurrentView('register')}
+        onBackToHome={() => setCurrentView('catalog')}
+      />
+    );
+  }
+
+  if (currentView === 'register') {
+    return (
+      <RegisterPage
+        onRegisterSuccess={(user) => {
+          handleUpdateUser(user);
+          showToast(`Selamat datang, ${user.name}! Akun baru Anda telah aktif.`);
+          setCurrentView('catalog');
+        }}
+        onNavigateLogin={() => setCurrentView('login')}
+        onBackToHome={() => setCurrentView('catalog')}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f6f8]">
       {/* Toast Notification with Cart Shortcut */}
@@ -404,14 +485,81 @@ export default function App() {
         onOpenCart={() => setCurrentView('cart')}
         onOpenOrders={() => setCurrentView('orders')}
         onOpenTransactions={() => setCurrentView('transactions')}
+        onOpenProductsAdmin={() => setCurrentView('products-admin')}
         onOpenStock={() => setCurrentView('stock')}
         onOpenTemplates={() => setCurrentView('templates')}
         onOpenExpeditions={() => setCurrentView('expeditions')}
+        currentUser={currentUser}
+        onOpenLogin={() => setCurrentView('login')}
+        onOpenRegister={() => setCurrentView('register')}
+        onOpenProfile={() => setCurrentView('profile')}
+        onLogout={handleLogout}
+        onSwitchUser={handleSwitchUser}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
-        {currentView === 'order-detail' ? (
+        {currentView === 'product-edit' && editingProduct ? (
+          <ProductEditForm
+            product={editingProduct}
+            categories={categories}
+            onUpdateProduct={(updatedProduct) => {
+              setProducts(prev => prev.map(item => item.id === updatedProduct.id ? updatedProduct : item));
+              if (selectedProduct && selectedProduct.id === updatedProduct.id) {
+                setSelectedProduct(updatedProduct);
+              }
+              showToast(`Produk "${updatedProduct.name}" berhasil diperbarui!`);
+              setCurrentView('products-admin');
+            }}
+            onCancel={() => setCurrentView('products-admin')}
+          />
+        ) : currentView === 'product-create' ? (
+          <ProductCreateForm
+            categories={categories}
+            onSaveProduct={(newProduct) => {
+              setProducts(prev => [newProduct, ...prev]);
+              showToast(`Produk "${newProduct.name}" berhasil ditambahkan!`);
+              setCurrentView('products-admin');
+            }}
+            onCancel={() => setCurrentView('products-admin')}
+          />
+        ) : currentView === 'products-admin' ? (
+          <ProductListPage
+            products={products}
+            categories={categories}
+            onAddNewProduct={() => {
+              setCurrentView('product-create');
+            }}
+            onEditProduct={(p) => {
+              setEditingProduct(p);
+              setCurrentView('product-edit');
+            }}
+            onDeleteProduct={(p) => {
+              setProducts(prev => prev.filter(item => item.id !== p.id));
+              showToast(`Produk "${p.name}" berhasil dihapus.`);
+            }}
+            onToggleStatus={(p) => {
+              const currentActive = p.status === 'active' || p.active;
+              const nextStatus = currentActive ? 'inactive' : 'active';
+              setProducts(prev => prev.map(item => item.id === p.id ? { ...item, status: nextStatus, active: !currentActive } : item));
+              showToast(`Status "${p.name}" diubah menjadi ${!currentActive ? 'Aktif' : 'Nonaktif'}.`);
+            }}
+            onViewProductDetail={(p) => {
+              setSelectedProduct(p);
+              setCurrentView('detail');
+            }}
+            onBackToShopping={() => setCurrentView('catalog')}
+          />
+        ) : currentView === 'profile' ? (
+          <ProfilePage
+            currentUser={currentUser || mockDemoUsers[0]}
+            onUpdateProfile={(updatedUser) => {
+              handleUpdateUser(updatedUser);
+              showToast('Profil akun berhasil diperbarui!');
+            }}
+            onBack={() => setCurrentView('catalog')}
+          />
+        ) : currentView === 'order-detail' ? (
           <OrderDetailPage
             order={selectedOrderForDetail}
             onBack={() => setCurrentView('orders')}

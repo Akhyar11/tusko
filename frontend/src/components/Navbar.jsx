@@ -13,9 +13,11 @@ import {
   TrendingUp, 
   Zap, 
   ShieldCheck,
-  Truck
+  Truck,
+  Package
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import UserMenuDropdown from './UserMenuDropdown';
 
 export default function Navbar({ 
   cartCount = 0, 
@@ -29,9 +31,16 @@ export default function Navbar({
   onOpenCart = () => {},
   onOpenOrders = () => {},
   onOpenTransactions = () => {},
+  onOpenProductsAdmin = () => {},
   onOpenStock = () => {},
   onOpenTemplates = () => {},
-  onOpenExpeditions = () => {}
+  onOpenExpeditions = () => {},
+  currentUser = null,
+  onOpenLogin = () => {},
+  onOpenRegister = () => {},
+  onOpenProfile = () => {},
+  onLogout = () => {},
+  onSwitchUser = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const desktopSearchRef = useRef(null);
@@ -258,6 +267,16 @@ export default function Navbar({
               )}
             </div>
 
+            {/* Products shortcut */}
+            <div 
+              onClick={onOpenProductsAdmin}
+              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
+              title="Kelola & Daftar Produk"
+            >
+              <Package size={20} />
+              <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Produk</span>
+            </div>
+
             {/* Orders shortcut */}
             <div 
               onClick={onOpenOrders}
@@ -321,15 +340,21 @@ export default function Navbar({
 
             <div className="h-6 w-px bg-neutral-800 hidden sm:block"></div>
 
-            {/* Auth buttons */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button className="px-2.5 sm:px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neutral-200 border border-neutral-700 rounded-xl hover:bg-neutral-800 hover:border-neutral-600 transition-colors cursor-pointer">
-                Masuk
-              </button>
-              <button className="hidden sm:block px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-xs transition-colors cursor-pointer">
-                Daftar
-              </button>
-            </div>
+            {/* User Profile / Auth Navigation Menu */}
+            <UserMenuDropdown
+              currentUser={currentUser}
+              onOpenLogin={onOpenLogin}
+              onOpenRegister={onOpenRegister}
+              onOpenProfile={onOpenProfile}
+              onOpenOrders={onOpenOrders}
+              onOpenTransactions={onOpenTransactions}
+              onOpenProductsAdmin={onOpenProductsAdmin}
+              onOpenStock={onOpenStock}
+              onOpenTemplates={onOpenTemplates}
+              onOpenExpeditions={onOpenExpeditions}
+              onLogout={onLogout}
+              onSwitchUser={onSwitchUser}
+            />
           </div>
         </div>
 

@@ -13,14 +13,18 @@ export const mockProducts = [
   {
     id: 1,
     category_id: 1,
+    sku: 'TSK-JRS-001',
     name: 'Tusko Pro Matchday Football Jersey 2026 AeroTech',
     slug: 'tusko-pro-matchday-jersey-2026',
     description: 'Jersey pertandingan pro grade dengan teknologi sirkulasi udara AeroTech™ yang cepat menyerap keringat dan menjaga tubuh tetap sejuk saat intensitas tinggi. Jahitan elastis 4-way stretch ergonomis dan panel ventilasi laser-cut di area punggung untuk mobilitas optimal atlet.',
     price: 389000,
     original_price: 499000,
+    cost_price: 210000,
     discount_percentage: 22,
+    weight: 180, // gram
     stock: 48,
     stock_minimum: 10,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
@@ -83,14 +87,18 @@ export const mockProducts = [
   {
     id: 2,
     category_id: 2,
+    sku: 'TSK-SH-002',
     name: 'Tusko HyperPace Carbon Carbon-Plate Running Shoes',
     slug: 'tusko-hyperpace-carbon-running-shoes',
     description: 'Sepatu lari jarak jauh kelas kompetisi dengan pelat karbon lengkung penuh (Full-Length Curved Carbon Plate) dan busa PEBA superkritis NitroFoam™. Menghasilkan energy return hingga 88% untuk memangkas catatan waktu half dan full marathon Anda.',
     price: 1299000,
     original_price: 1699000,
+    cost_price: 780000,
     discount_percentage: 23,
+    weight: 420, // gram
     stock: 32,
     stock_minimum: 6,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
@@ -144,14 +152,18 @@ export const mockProducts = [
   {
     id: 3,
     category_id: 1,
+    sku: 'TSK-PNT-003',
     name: 'Tusko AeroDry Athletic Track Training Pants',
     slug: 'tusko-aerodry-training-pants',
     description: 'Celana training slim-fit tapered dengan bahan stretch elastis yang nyaman untuk pemanasan, lari, maupun latihan di gym. Dilengkapi saku ritsleting anti-air untuk ponsel dan kunci, serta ritsleting pergelangan kaki untuk kemudahan memakai sepatu.',
     price: 249000,
     original_price: 329000,
+    cost_price: 135000,
     discount_percentage: 24,
+    weight: 290, // gram
     stock: 55,
     stock_minimum: 12,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
@@ -197,14 +209,18 @@ export const mockProducts = [
   {
     id: 4,
     category_id: 3,
+    sku: 'TSK-BAG-004',
     name: 'Tusko Apex Gym & Travel Duffle Bag 48L Compartment',
     slug: 'tusko-apex-gym-duffle-bag-48l',
     description: 'Tas olahraga multifungsi dengan kompartemen sepatu terpisah berventilasi udara dan saku tahan basah untuk pakaian berkeringat. Dibuat dari kain Cordura 600D water-repellent tahan gesekan, tali bahu empuk berteknologi air-cushion.',
     price: 349000,
     original_price: 450000,
+    cost_price: 195000,
     discount_percentage: 22,
+    weight: 650, // gram
     stock: 40,
     stock_minimum: 8,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
@@ -242,14 +258,18 @@ export const mockProducts = [
   {
     id: 5,
     category_id: 2,
+    sku: 'TSK-FTS-005',
     name: 'Tusko StrikePrecision Pro Futsal Shoes Indoor Non-Marking',
     slug: 'tusko-strikeprecision-futsal-shoes',
     description: 'Sepatu futsal profesional indoor court dengan sol karet alam anti-slip Non-Marking. Bagian upper terbuat dari kulit sintetis mikro-fiber bertekstur kontrol bola yang presisi dan bantalan EVA responsif di tumit untuk meredam benturan lantai semen/lapangan vinyl.',
     price: 479000,
     original_price: 599000,
+    cost_price: 275000,
     discount_percentage: 20,
+    weight: 520, // gram
     stock: 28,
     stock_minimum: 5,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&q=80',
@@ -295,14 +315,18 @@ export const mockProducts = [
   {
     id: 6,
     category_id: 4,
+    sku: 'TSK-SCK-006',
     name: 'Tusko ProGrip Anti-Slip Performance Sports Socks',
     slug: 'tusko-progrip-anti-slip-socks',
     description: 'Kaos kaki olahraga dengan bantalan karet silikon anti-slip grade medis di telapak kaki. Mengunci kaki di dalam sepatu saat akselerasi dan manuver tajam, mencegah lecet dan cedera pergelangan pada olahraga futsal, sepakbola, basket, dan lari.',
     price: 49000,
     original_price: 75000,
+    cost_price: 22000,
     discount_percentage: 35,
+    weight: 90, // gram
     stock: 150,
     stock_minimum: 25,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=800&q=80'
@@ -345,14 +369,18 @@ export const mockProducts = [
   {
     id: 7,
     category_id: 1,
+    sku: 'TSK-JKT-007',
     name: 'Tusko StormShield Ultralight Windbreaker Running Jacket',
     slug: 'tusko-stormshield-windbreaker-jacket',
     description: 'Jaket lari tahan angin dan percikan gerimis (DWR water-resistant) dengan bobot super ringan hanya 115 gram. Dapat dilipat masuk ke dalam sakunya sendiri (packable pocket). Dilengkapi reflektor 360 derajat bercahaya terang saat tersorot lampu kendaraan malam hari.',
     price: 359000,
     original_price: 459000,
+    cost_price: 190000,
     discount_percentage: 22,
+    weight: 120, // gram
     stock: 35,
     stock_minimum: 7,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80',
@@ -397,14 +425,18 @@ export const mockProducts = [
   {
     id: 8,
     category_id: 3,
+    sku: 'TSK-BTL-008',
     name: 'Tusko HydroLock Insulated Stainless Steel Sports Bottle 850ml',
     slug: 'tusko-hydrolock-insulated-bottle-850ml',
     description: 'Botol minum olahraga vakum berdinding ganda (Double-wall vacuum insulation) dari baja tahan karat 18/8 food-grade. Menjaga air es tetap dingin hingga 24 jam dan minuman hangat hingga 12 jam tanpa embun di bagian luar botol.',
     price: 189000,
     original_price: 249000,
+    cost_price: 95000,
     discount_percentage: 24,
+    weight: 380, // gram
     stock: 65,
     stock_minimum: 15,
+    status: 'active',
     image_url: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80'
@@ -438,5 +470,255 @@ export const mockProducts = [
     is_official: true,
     free_shipping: true,
     created_at: '2026-02-25T15:00:00Z',
+  },
+  {
+    id: 9,
+    category_id: 4,
+    sku: 'TSK-SHN-009',
+    name: 'Tusko CarbonSpeed Pro Shin Guard Deker Pelindung Tulang Kering',
+    slug: 'tusko-carbonspeed-pro-shin-guard',
+    description: 'Pelindung tulang kering anatomis dengan pelat serat karbon komposit ultra-ringan dan lapisan dalam busa EVA peredam benturan tinggi. Dilengkapi compression sleeve berpori agar tidak bergeser saat bertanding.',
+    price: 139000,
+    original_price: 179000,
+    cost_price: 65000,
+    discount_percentage: 22,
+    weight: 150, // gram
+    stock: 75,
+    stock_minimum: 15,
+    status: 'active',
+    image_url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80'
+    ],
+    specifications: {
+      'Material Pelat': '100% Carbon Fiber Composite Plate',
+      'Busa Dalam': 'High-density Shock Absorbing EVA Foam',
+      'Aksesoris': 'Sleeve Kompresi Elastis Anti-Slip',
+      'Standar Keselamatan': 'CE Approved Protective Gear'
+    },
+    variant_levels: [
+      {
+        name: 'Ukuran',
+        code: 'size',
+        options: ['S (Anak / Remaja)', 'M (Dewasa Medium)', 'L (Dewasa Pro)']
+      }
+    ],
+    variants: [
+      { id: 'v901', sku: 'TSK-SHN-S', size: 'S (Anak / Remaja)', price: 139000, stock: 20 },
+      { id: 'v902', sku: 'TSK-SHN-M', size: 'M (Dewasa Medium)', price: 139000, stock: 35 },
+      { id: 'v903', sku: 'TSK-SHN-L', size: 'L (Dewasa Pro)', price: 149000, stock: 20 }
+    ],
+    active: true,
+    rating: 4.88,
+    rating_count: 85,
+    sold_count: 210,
+    location: 'Bandung',
+    seller_name: 'Tusko Official Flagship',
+    is_official: true,
+    free_shipping: true,
+    created_at: '2026-03-01T10:00:00Z',
+  },
+  {
+    id: 10,
+    category_id: 1,
+    sku: 'TSK-BSL-010',
+    name: 'Tusko Elite Thermal Compression Long Sleeve Base Layer',
+    slug: 'tusko-elite-thermal-base-layer',
+    description: 'Pakaian dalam kompresi lengan panjang dengan isolasi termal mikro dan jahitan flatlock anti-gesekan. Menjaga suhu otot tetap hangat dan mempercepat pemulihan sirkulasi darah saat berolahraga di cuaca dingin atau malam hari.',
+    price: 219000,
+    original_price: 289000,
+    cost_price: 110000,
+    discount_percentage: 24,
+    weight: 220, // gram
+    stock: 0,
+    stock_minimum: 10,
+    status: 'inactive', // Produk Draft / Nonaktif untuk simulasi toggle status admin
+    image_url: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80'
+    ],
+    specifications: {
+      'Bahan': '85% Micro Thermal Polyester, 15% Elastane',
+      'Fungsi': 'Graduated Compression & Moisture Wicking',
+      'Jahitan': 'Flatlock Seamless Anti-Chafing',
+      'Musim': 'All Season / Cold Climate'
+    },
+    variant_levels: [
+      {
+        name: 'Warna',
+        code: 'color',
+        options: ['Jet Black', 'Steel Grey']
+      },
+      {
+        name: 'Ukuran',
+        code: 'size',
+        options: ['M', 'L', 'XL']
+      }
+    ],
+    variants: [
+      { id: 'v1001', sku: 'TSK-BSL-BLK-M', color: 'Jet Black', size: 'M', price: 219000, stock: 0 },
+      { id: 'v1002', sku: 'TSK-BSL-BLK-L', color: 'Jet Black', size: 'L', price: 219000, stock: 0 },
+      { id: 'v1003', sku: 'TSK-BSL-GRY-L', color: 'Steel Grey', size: 'L', price: 219000, stock: 0 }
+    ],
+    active: false,
+    rating: 0,
+    rating_count: 0,
+    sold_count: 0,
+    location: 'Jakarta Pusat',
+    seller_name: 'Tusko Official Flagship',
+    is_official: true,
+    free_shipping: false,
+    created_at: '2026-03-05T08:00:00Z',
   }
 ];
+
+/**
+ * Helper: Generate unique product SKU
+ */
+export function generateProductSku(categorySlug = 'gen', name = '') {
+  const catCode = categorySlug.slice(0, 3).toUpperCase();
+  const nameCode = name.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'ITM';
+  const randomNum = Math.floor(100 + Math.random() * 900);
+  return `TSK-${catCode}-${nameCode}-${randomNum}`;
+}
+
+/**
+ * Helper: Add new mock product to state list
+ */
+export function createMockProduct(productData) {
+  const newId = Date.now();
+  const sku = productData.sku || generateProductSku(productData.slug || 'prd', productData.name);
+  const slug = productData.slug || (productData.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  // Calculate total stock from variants if provided
+  let calculatedStock = productData.stock || 0;
+  if (Array.isArray(productData.variants) && productData.variants.length > 0) {
+    calculatedStock = productData.variants.reduce((total, v) => total + (Number(v.stock) || 0), 0);
+  }
+
+  return {
+    id: newId,
+    category_id: Number(productData.category_id) || 1,
+    sku,
+    name: productData.name || 'Produk Baru Tanpa Nama',
+    slug,
+    description: productData.description || 'Deskripsi produk belum diisi.',
+    price: Number(productData.price) || 0,
+    original_price: Number(productData.original_price) || Number(productData.price) || 0,
+    cost_price: Number(productData.cost_price) || Math.round((Number(productData.price) || 0) * 0.6),
+    discount_percentage: productData.original_price > productData.price
+      ? Math.round(((productData.original_price - productData.price) / productData.original_price) * 100)
+      : 0,
+    weight: Number(productData.weight) || 250,
+    stock: calculatedStock,
+    stock_minimum: Number(productData.stock_minimum) || 5,
+    status: productData.status || 'active',
+    active: productData.status !== 'inactive',
+    image_url: productData.image_url || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    gallery: productData.gallery?.length ? productData.gallery : [
+      productData.image_url || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
+    ],
+    specifications: productData.specifications || {},
+    variant_levels: productData.variant_levels || [],
+    variants: productData.variants || [],
+    rating: 5.0,
+    rating_count: 0,
+    sold_count: 0,
+    location: productData.location || 'Jakarta Barat',
+    seller_name: 'Tusko Official Flagship',
+    is_official: true,
+    free_shipping: Boolean(productData.free_shipping),
+    created_at: new Date().toISOString()
+  };
+}
+
+/**
+ * Helper: Update mock product
+ */
+export function updateMockProduct(productList, id, updatedData) {
+  return productList.map((item) => {
+    if (item.id === id) {
+      const merged = { ...item, ...updatedData };
+      if (updatedData.variants) {
+        merged.stock = updatedData.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      }
+      if (updatedData.status) {
+        merged.active = updatedData.status === 'active';
+      }
+      return merged;
+    }
+    return item;
+  });
+}
+
+/**
+ * Helper: Delete mock product
+ */
+export function deleteMockProduct(productList, id) {
+  return productList.filter((item) => item.id !== id);
+}
+
+/**
+ * Helper: Toggle mock product active status
+ */
+export function toggleMockProductStatus(productList, id) {
+  return productList.map((item) => {
+    if (item.id === id) {
+      const nextStatus = item.status === 'active' ? 'inactive' : 'active';
+      return {
+        ...item,
+        status: nextStatus,
+        active: nextStatus === 'active'
+      };
+    }
+    return item;
+  });
+}
+
+/**
+ * Helper: Filter mock products
+ */
+export function filterMockProducts(productList, {
+  query = '',
+  categoryId = null,
+  status = 'all', // 'all' | 'active' | 'inactive'
+  minPrice = null,
+  maxPrice = null,
+  sortBy = 'relevant'
+} = {}) {
+  return productList.filter((prod) => {
+    // Search query
+    if (query) {
+      const q = query.toLowerCase();
+      const matchName = prod.name.toLowerCase().includes(q);
+      const matchSku = prod.sku?.toLowerCase().includes(q);
+      const matchDesc = prod.description?.toLowerCase().includes(q);
+      if (!matchName && !matchSku && !matchDesc) return false;
+    }
+
+    // Category
+    if (categoryId && prod.category_id !== Number(categoryId)) {
+      return false;
+    }
+
+    // Status
+    if (status !== 'all') {
+      if (status === 'active' && prod.status !== 'active') return false;
+      if (status === 'inactive' && prod.status !== 'inactive') return false;
+    }
+
+    // Price range
+    if (minPrice && prod.price < Number(minPrice)) return false;
+    if (maxPrice && prod.price > Number(maxPrice)) return false;
+
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === 'lowest_price') return a.price - b.price;
+    if (sortBy === 'highest_price') return b.price - a.price;
+    if (sortBy === 'highest_rating') return (b.rating || 0) - (a.rating || 0);
+    if (sortBy === 'most_sold') return (b.sold_count || 0) - (a.sold_count || 0);
+    if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    return 0; // relevant
+  });
+}
+
