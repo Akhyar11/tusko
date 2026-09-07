@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tusko Performance - Interactive Prototype</title>
+  <title>Tusko Performance - Interactive Resizable Canvas Studio</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Iconify Icons -->
@@ -16,384 +16,523 @@
     body { font-family: 'Inter', sans-serif; }
     .font-sport { font-family: 'Outfit', sans-serif; }
     
-    /* Dot Matrix Background (Desktop Canvas Only) */
+    /* Dot Matrix Background */
     .canvas-bg {
       background-color: #121214;
       background-image: radial-gradient(#2c2c30 1.5px, transparent 1.5px);
       background-size: 26px 26px;
     }
 
-    /* Artboard shadow di desktop */
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    /* Artboard shadow */
     .artboard-shadow {
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.12);
     }
 
-    /* ================= MOBILE VIEW RULES ================= */
-    @media (max-width: 768px) {
-      /* Sembunyikan canvas desktop di HP */
-      #desktop-canvas-wrapper {
-        display: none !important;
-      }
-      
-      /* Tampilkan Mobile Fullscreen Container di HP */
-      #mobile-fullscreen-wrapper {
-        display: flex !important;
-      }
+    /* Resizer handles */
+    .resize-handle-right {
+      position: absolute;
+      right: -10px;
+      top: 36px;
+      bottom: 0;
+      width: 14px;
+      cursor: ew-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      user-select: none;
+    }
+    .resize-handle-right::after {
+      content: '';
+      width: 4px;
+      height: 48px;
+      background-color: #52525b;
+      border-radius: 9999px;
+      transition: background-color 0.15s, height 0.15s;
+    }
+    .resize-handle-right:hover::after,
+    .is-resizing .resize-handle-right::after {
+      background-color: #f59e0b;
+      height: 72px;
+      width: 5px;
     }
 
-    @media (min-width: 769px) {
-      /* Di Laptop/Desktop, sembunyikan mobile wrapper */
-      #mobile-fullscreen-wrapper {
-        display: none !important;
-      }
-      #desktop-canvas-wrapper {
-        display: flex !important;
-      }
+    /* While resizing, disable pointer events on iframe so mouse drag never gets stuck */
+    body.is-resizing iframe,
+    body.is-panning iframe {
+      pointer-events: none !important;
+    }
+
+    body.is-resizing {
+      cursor: ew-resize !important;
     }
   </style>
 </head>
-<body class="bg-[#121214] text-white antialiased h-screen overflow-hidden">
+<body class="bg-[#121214] text-white antialiased h-screen flex flex-col overflow-hidden select-none">
 
-  <!-- ========================================================================= -->
-  <!-- 1. MOBILE NATIVE VIEWPORT (KHUSUS DI SMARTPHONE / HP: LAYAR < 768px)       -->
-  <!-- ========================================================================= -->
-  <div id="mobile-fullscreen-wrapper" class="flex-col h-screen w-screen bg-white text-black overflow-hidden relative">
-    
-    <!-- Mobile Header Bar -->
-    <header class="h-12 bg-black text-white px-3 flex items-center justify-between z-40 flex-shrink-0 border-b border-neutral-800">
-      <div class="flex items-center gap-2">
-        <div class="w-6 h-6 bg-amber-500 text-black font-sport font-black text-sm flex items-center justify-center -skew-x-6">
-          T
+  <!-- ================= TOP TOOLBAR CONTROLLER ================= -->
+  <header class="h-14 bg-[#18181b]/98 backdrop-blur border-b border-zinc-800 px-4 flex items-center justify-between z-50 flex-shrink-0">
+    <!-- Brand & Project Info -->
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-amber-500 text-black font-sport font-black text-lg flex items-center justify-center -skew-x-6">
+        T
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-sport font-black text-sm tracking-wide uppercase text-white">TUSKO RESIZABLE CANVAS</span>
+          <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30 uppercase">DRAG TO RESIZE</span>
         </div>
-        <span class="font-sport font-black text-xs tracking-wider uppercase text-white">TUSKO PROTOTYPE</span>
+        <p class="text-[10px] text-zinc-400">Tarik gagang samping atau klik tombol Mobile / Tablet / Desktop</p>
       </div>
-
-      <!-- Current Page Badge -->
-      <div id="mobile-page-badge" class="bg-neutral-800 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-neutral-700 uppercase">
-        Tas Belanja (Cart)
-      </div>
-
-      <!-- Direct Fullscreen link -->
-      <button onclick="mobileOpenDirect()" class="text-xs text-neutral-300 hover:text-white flex items-center gap-1 font-semibold">
-        <iconify-icon icon="lucide:external-link" class="text-sm"></iconify-icon>
-      </button>
-    </header>
-
-    <!-- Mobile Full-Width Interactive Frame (100% Layar HP, Scroll Normal) -->
-    <div class="flex-1 w-full relative overflow-hidden bg-white">
-      <iframe 
-        id="mobile-main-frame" 
-        src="cart.html?v=2026_m4" 
-        class="w-full h-full border-0 bg-white"
-        style="overflow-y: auto; -webkit-overflow-scrolling: touch;"
-      ></iframe>
     </div>
 
-    <!-- Mobile Bottom Navigation Bar (Mudah Disentuh Jempol) -->
-    <nav class="h-16 bg-[#161619] border-t border-zinc-800 flex items-center justify-around z-50 flex-shrink-0 px-2 text-white">
-      <button onclick="mobileNavigate('beranda.html', '1. Beranda')" id="mob-nav-beranda" class="flex flex-col items-center gap-1 text-zinc-400 py-1 px-3">
-        <iconify-icon icon="lucide:home" class="text-xl"></iconify-icon>
-        <span class="text-[10px] font-bold">Beranda</span>
+    <!-- Quick Global Device Presets -->
+    <div class="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg text-xs font-semibold gap-1">
+      <span class="text-[10px] text-zinc-400 uppercase font-bold px-2">Ubah Semua:</span>
+      <button onclick="setAllArtboardsWidth(390, 'Mobile')" class="px-2.5 py-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" title="Ubah semua ke ukuran Mobile (390px)">
+        <iconify-icon icon="lucide:smartphone" class="text-amber-400 text-sm"></iconify-icon>
+        <span>📱 Mobile (390px)</span>
       </button>
-
-      <button onclick="mobileNavigate('detail-produk.html', '2. Detail Produk')" id="mob-nav-detail" class="flex flex-col items-center gap-1 text-zinc-400 py-1 px-3">
-        <iconify-icon icon="lucide:footprints" class="text-xl"></iconify-icon>
-        <span class="text-[10px] font-bold">Detail</span>
+      <button onclick="setAllArtboardsWidth(768, 'Tablet')" class="px-2.5 py-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" title="Ubah semua ke ukuran Tablet (768px)">
+        <iconify-icon icon="lucide:tablet" class="text-blue-400 text-sm"></iconify-icon>
+        <span>📱 Tablet (768px)</span>
       </button>
-
-      <button onclick="mobileNavigate('cart.html', '3. Tas Belanja')" id="mob-nav-cart" class="flex flex-col items-center gap-1 text-amber-400 py-1 px-3 relative">
-        <iconify-icon icon="lucide:shopping-bag" class="text-xl"></iconify-icon>
-        <span class="text-[10px] font-bold">Cart (2)</span>
-        <span class="absolute top-1 right-2 w-2 h-2 bg-amber-400 rounded-full animate-ping"></span>
+      <button onclick="setAllArtboardsWidth(1024, 'Laptop')" class="px-2.5 py-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" title="Ubah semua ke ukuran Laptop (1024px)">
+        <iconify-icon icon="lucide:laptop" class="text-purple-400 text-sm"></iconify-icon>
+        <span>💻 Laptop (1024px)</span>
       </button>
-
-      <button onclick="mobileSwitchToCanvas()" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-white py-1 px-3">
-        <iconify-icon icon="lucide:monitor" class="text-xl"></iconify-icon>
-        <span class="text-[10px] font-bold">Mode Canvas</span>
+      <button onclick="setAllArtboardsWidth(1440, 'Desktop')" class="px-2.5 py-1 rounded bg-zinc-800 text-white flex items-center gap-1.5 transition-colors" title="Ubah semua ke ukuran Desktop (1440px)">
+        <iconify-icon icon="lucide:monitor" class="text-emerald-400 text-sm"></iconify-icon>
+        <span>🖥️ Desktop (1440px)</span>
       </button>
-    </nav>
-  </div>
-
-
-  <!-- ========================================================================= -->
-  <!-- 2. DESKTOP CANVAS STUDIO (KHUSUS DI LAPTOP / KOMPUTER: LAYAR >= 769px)     -->
-  <!-- ========================================================================= -->
-  <div id="desktop-canvas-wrapper" class="flex-col h-screen w-screen overflow-hidden select-none">
-    
-    <!-- Top Toolbar -->
-    <header class="h-14 bg-[#18181b]/98 backdrop-blur border-b border-zinc-800 px-4 flex items-center justify-between z-50 flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-amber-500 text-black font-sport font-black text-lg flex items-center justify-center -skew-x-6">
-          T
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-sport font-black text-sm tracking-wide uppercase text-white">TUSKO DESIGN CANVAS</span>
-            <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">LIVE CANVAS</span>
-          </div>
-          <p class="text-[10px] text-zinc-400">Inspirasi: adidas.co.id &bull; 3 Artboards</p>
-        </div>
-      </div>
-
-      <!-- Mode & Artboards Tabs -->
-      <div class="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg text-xs font-semibold">
-        <button onclick="dSetView('all')" id="d-btn-all" class="px-3 py-1.5 rounded-md bg-zinc-700 text-white flex items-center gap-1.5">
-          <iconify-icon icon="lucide:layout-grid" class="text-sm"></iconify-icon>
-          <span>Semua Artboards</span>
-        </button>
-        <button onclick="dFocus('artboard-beranda')" id="d-btn-beranda" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white flex items-center gap-1.5">
-          <iconify-icon icon="lucide:home" class="text-sm"></iconify-icon>
-          <span>1. Beranda</span>
-        </button>
-        <button onclick="dFocus('artboard-detail')" id="d-btn-detail" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white flex items-center gap-1.5">
-          <iconify-icon icon="lucide:footprints" class="text-sm"></iconify-icon>
-          <span>2. Detail Produk</span>
-        </button>
-        <button onclick="dFocus('artboard-cart')" id="d-btn-cart" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white flex items-center gap-1.5">
-          <iconify-icon icon="lucide:shopping-bag" class="text-sm"></iconify-icon>
-          <span>3. Tas Belanja (Cart)</span>
-        </button>
-      </div>
-
-      <!-- Quick Pan & Zoom Controls -->
-      <div class="flex items-center gap-3">
-        <!-- Directional Pan Buttons -->
-        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1 text-xs">
-          <button onclick="dPan(350, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold" title="Geser ke Kiri">
-            <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
-          </button>
-          <button onclick="dPan(-350, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold" title="Geser ke Kanan">
-            <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
-          </button>
-        </div>
-
-        <!-- Zoom Buttons -->
-        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg text-xs">
-          <button onclick="dZoom(-0.1)" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold">-</button>
-          <span id="d-zoom-text" class="px-2 py-1.5 font-mono text-[11px] text-zinc-200 font-bold min-w-[55px] text-center">60%</span>
-          <button onclick="dZoom(0.1)" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold">+</button>
-          <button onclick="dFit()" class="px-2.5 py-1.5 text-zinc-300 hover:text-white border-l border-zinc-800 text-[10px] font-bold">FIT</button>
-        </div>
-
-        <a href="cart.html" target="_blank" class="bg-white text-black hover:bg-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors">
-          <iconify-icon icon="lucide:external-link" class="text-xs"></iconify-icon>
-          <span>Buka Penuh</span>
-        </a>
-      </div>
-    </header>
-
-    <!-- Desktop Canvas Workspace -->
-    <div class="flex-1 flex overflow-hidden relative">
-      <!-- Left Sidebar (Desktop Only) -->
-      <aside class="w-64 bg-[#161619] border-r border-zinc-800 flex flex-col z-40 hidden lg:flex flex-shrink-0 p-4 space-y-4">
-        <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Daftar Artboard</div>
-        <div class="space-y-1.5 text-xs">
-          <div onclick="dFocus('artboard-beranda')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white">
-            <span>1. Beranda &amp; Etalase</span>
-            <span class="text-[10px] text-zinc-500 font-mono">1440x900</span>
-          </div>
-          <div onclick="dFocus('artboard-detail')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white">
-            <span>2. Detail: Ultimashow</span>
-            <span class="text-[10px] text-zinc-500 font-mono">1440x900</span>
-          </div>
-          <div onclick="dFocus('artboard-cart')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-amber-300 bg-zinc-800/80 border border-amber-500/20 font-bold">
-            <span>3. Tas Belanja (Cart)</span>
-            <span class="text-[10px] text-amber-400 font-mono">1440x900</span>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Pannable Canvas Stage -->
-      <main id="d-canvas-viewport" class="flex-1 canvas-bg overflow-hidden relative cursor-grab">
-        <div id="d-canvas-stage" class="absolute top-0 left-0 flex items-start gap-16 p-16 origin-top-left transition-transform duration-100 ease-out">
-          
-          <!-- Artboard 1: Beranda -->
-          <div id="artboard-beranda" class="flex-shrink-0">
-            <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
-              <span class="font-sport font-black uppercase text-white">01. BERANDA &amp; ETALASE</span>
-              <a href="beranda.html" target="_blank" class="hover:text-white text-[11px] flex items-center gap-1">Buka Penuh <iconify-icon icon="lucide:maximize-2"></iconify-icon></a>
-            </div>
-            <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800">
-              <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center text-[10px] text-zinc-400 font-mono">tusko.co.id/</div>
-              <iframe src="beranda.html?v=2026_d4" class="w-[1440px] h-[900px] bg-white border-0"></iframe>
-            </div>
-          </div>
-
-          <!-- Artboard 2: Detail Produk -->
-          <div id="artboard-detail" class="flex-shrink-0">
-            <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
-              <span class="font-sport font-black uppercase text-white">02. DETAIL PRODUK (FX3632)</span>
-              <a href="detail-produk.html" target="_blank" class="hover:text-white text-[11px] flex items-center gap-1">Buka Penuh <iconify-icon icon="lucide:maximize-2"></iconify-icon></a>
-            </div>
-            <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800">
-              <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center text-[10px] text-zinc-400 font-mono">tusko.co.id/sepatu-ultimashow/FX3632</div>
-              <iframe src="detail-produk.html?v=2026_d4" class="w-[1440px] h-[900px] bg-white border-0"></iframe>
-            </div>
-          </div>
-
-          <!-- Artboard 3: Cart -->
-          <div id="artboard-cart" class="flex-shrink-0">
-            <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
-              <span class="font-sport font-black uppercase text-amber-300">03. TAS BELANJA (CART)</span>
-              <a href="cart.html" target="_blank" class="hover:text-white text-[11px] flex items-center gap-1">Buka Penuh <iconify-icon icon="lucide:maximize-2"></iconify-icon></a>
-            </div>
-            <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-amber-500/40">
-              <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center text-[10px] text-amber-300 font-mono">tusko.co.id/cart</div>
-              <iframe src="cart.html?v=2026_d4" class="w-[1440px] h-[900px] bg-white border-0"></iframe>
-            </div>
-          </div>
-
-        </div>
-      </main>
     </div>
+
+    <!-- Pan, Zoom & External Link Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Directional Pan -->
+      <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1 text-xs">
+        <button onclick="panOffset(350, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold" title="Geser ke Kiri">
+          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+        </button>
+        <button onclick="panOffset(-350, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold" title="Geser ke Kanan">
+          <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
+        </button>
+      </div>
+
+      <!-- Zoom -->
+      <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg text-xs">
+        <button onclick="zoomOut()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold">-</button>
+        <span id="zoom-text" class="px-2 py-1.5 font-mono text-[11px] text-zinc-200 font-bold min-w-[55px] text-center">60%</span>
+        <button onclick="zoomIn()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold">+</button>
+        <button onclick="fitAllArtboards()" class="px-2.5 py-1.5 text-zinc-300 hover:text-white border-l border-zinc-800 text-[10px] font-bold">FIT</button>
+      </div>
+
+      <!-- Quick Fullscreen link -->
+      <a href="cart.html" target="_blank" class="bg-white text-black hover:bg-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors">
+        <iconify-icon icon="lucide:external-link" class="text-xs"></iconify-icon>
+        <span>Buka Mandiri</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= CANVAS WORKSPACE ================= -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDEBAR: ARTBOARD TREE & GUIDES -->
+    <aside class="w-64 bg-[#161619] border-r border-zinc-800 flex flex-col z-40 hidden lg:flex flex-shrink-0 p-4 space-y-4">
+      <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+        <span>Artboard &amp; Resolusi</span>
+        <span class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded text-[10px]">3 Live</span>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <!-- Card Nav Beranda -->
+        <div onclick="focusArtboard('artboard-beranda')" class="p-2.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-white">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              1. Beranda &amp; Etalase
+            </span>
+            <span id="badge-beranda" class="text-[10px] text-zinc-400 font-mono">1440px</span>
+          </div>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-beranda', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-beranda', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-beranda', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
+          </div>
+        </div>
+
+        <!-- Card Nav Detail -->
+        <div onclick="focusArtboard('artboard-detail')" class="p-2.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-white">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              2. Detail: Ultimashow
+            </span>
+            <span id="badge-detail" class="text-[10px] text-zinc-400 font-mono">1440px</span>
+          </div>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-detail', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-detail', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-detail', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
+          </div>
+        </div>
+
+        <!-- Card Nav Cart -->
+        <div onclick="focusArtboard('artboard-cart')" class="p-2.5 rounded bg-zinc-900 border border-amber-500/40 hover:border-amber-400 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-amber-300">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              3. Tas Belanja (Cart)
+            </span>
+            <span id="badge-cart" class="text-[10px] text-amber-400 font-mono">1440px</span>
+          </div>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-zinc-900/90 rounded border border-zinc-800 text-[11px] text-zinc-400 space-y-2">
+        <div class="font-bold text-white flex items-center gap-1">
+          <iconify-icon icon="lucide:info" class="text-amber-400"></iconify-icon>
+          <span>Cara Mengubah Ukuran:</span>
+        </div>
+        <p class="leading-relaxed">
+          1. <strong>Tarik Gagang Samping</strong>: Tarik garis abu-abu di pinggir kanan tiap bingkai artboard.<br>
+          2. <strong>Tombol Cepat</strong>: Klik tombol <em>Mobile / Tablet / Desktop</em> di toolbar atas.
+        </p>
+      </div>
+    </aside>
+
+    <!-- MAIN PANNABLE CANVAS VIEWPORT -->
+    <main id="canvas-viewport" class="flex-1 canvas-bg overflow-hidden relative cursor-grab">
+      
+      <!-- STAGE THAT TRANSFORMS VIA CSS -->
+      <div id="canvas-stage" class="absolute top-0 left-0 flex items-start gap-16 p-16 origin-top-left transition-transform duration-100 ease-out">
+
+        <!-- ================= ARTBOARD 1: BERANDA ================= -->
+        <div id="artboard-beranda" class="artboard-card flex-shrink-0 relative">
+          <!-- Artboard Header With Device Presets -->
+          <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span class="font-sport font-black uppercase text-white tracking-wider">01. BERANDA &amp; ETALASE</span>
+              <span id="label-dim-beranda" class="text-[10px] text-zinc-400 font-mono bg-zinc-800 px-1.5 py-0.5 rounded">1440 × 900 px</span>
+            </div>
+            
+            <!-- Quick Preset for this Artboard -->
+            <div class="flex items-center gap-1 text-[10px] font-bold">
+              <button onclick="setArtboardWidth('artboard-beranda', 390)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-300" title="Ubah ke Mobile 390px">📱 390</button>
+              <button onclick="setArtboardWidth('artboard-beranda', 768)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300" title="Ubah ke Tablet 768px">📱 768</button>
+              <button onclick="setArtboardWidth('artboard-beranda', 1440)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-emerald-300" title="Ubah ke Desktop 1440px">🖥️ 1440</button>
+            </div>
+          </div>
+
+          <!-- Browser Window Frame -->
+          <div class="artboard-frame bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800 relative transition-[width] duration-150 ease-out" style="width: 1440px;">
+            <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="truncate px-2">tusko.co.id/</span>
+              <div class="w-8"></div>
+            </div>
+            
+            <iframe 
+              id="frame-beranda" 
+              src="beranda.html?v=2026_r5" 
+              class="w-full h-[900px] bg-white border-0"
+            ></iframe>
+
+            <!-- Drag Handle to Resize Width -->
+            <div class="resize-handle-right" data-target="artboard-beranda" title="Tarik untuk memperbesar / memperkecil lebar artboard"></div>
+          </div>
+        </div>
+
+        <!-- ================= ARTBOARD 2: DETAIL PRODUK ================= -->
+        <div id="artboard-detail" class="artboard-card flex-shrink-0 relative">
+          <!-- Artboard Header With Device Presets -->
+          <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span class="font-sport font-black uppercase text-white tracking-wider">02. DETAIL PRODUK (FX3632)</span>
+              <span id="label-dim-detail" class="text-[10px] text-zinc-400 font-mono bg-zinc-800 px-1.5 py-0.5 rounded">1440 × 900 px</span>
+            </div>
+            
+            <!-- Quick Preset -->
+            <div class="flex items-center gap-1 text-[10px] font-bold">
+              <button onclick="setArtboardWidth('artboard-detail', 390)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-300" title="Ubah ke Mobile 390px">📱 390</button>
+              <button onclick="setArtboardWidth('artboard-detail', 768)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300" title="Ubah ke Tablet 768px">📱 768</button>
+              <button onclick="setArtboardWidth('artboard-detail', 1440)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-emerald-300" title="Ubah ke Desktop 1440px">🖥️ 1440</button>
+            </div>
+          </div>
+
+          <!-- Browser Window Frame -->
+          <div class="artboard-frame bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800 relative transition-[width] duration-150 ease-out" style="width: 1440px;">
+            <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="truncate px-2">tusko.co.id/sepatu-ultimashow/FX3632</span>
+              <div class="w-8"></div>
+            </div>
+
+            <iframe 
+              id="frame-detail" 
+              src="detail-produk.html?v=2026_r5" 
+              class="w-full h-[900px] bg-white border-0"
+            ></iframe>
+
+            <!-- Drag Handle to Resize Width -->
+            <div class="resize-handle-right" data-target="artboard-detail" title="Tarik untuk memperbesar / memperkecil lebar artboard"></div>
+          </div>
+        </div>
+
+        <!-- ================= ARTBOARD 3: TAS BELANJA (CART) ================= -->
+        <div id="artboard-cart" class="artboard-card flex-shrink-0 relative">
+          <!-- Artboard Header With Device Presets -->
+          <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span class="font-sport font-black uppercase text-amber-300 tracking-wider">03. TAS BELANJA (CART)</span>
+              <span id="label-dim-cart" class="text-[10px] text-amber-400 font-mono bg-zinc-800 px-1.5 py-0.5 rounded border border-amber-500/30">1440 × 900 px</span>
+            </div>
+            
+            <!-- Quick Preset -->
+            <div class="flex items-center gap-1 text-[10px] font-bold">
+              <button onclick="setArtboardWidth('artboard-cart', 390)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-black" title="Ubah ke Mobile 390px">📱 390</button>
+              <button onclick="setArtboardWidth('artboard-cart', 768)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300" title="Ubah ke Tablet 768px">📱 768</button>
+              <button onclick="setArtboardWidth('artboard-cart', 1440)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-emerald-300" title="Ubah ke Desktop 1440px">🖥️ 1440</button>
+            </div>
+          </div>
+
+          <!-- Browser Window Frame -->
+          <div class="artboard-frame bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-amber-500/40 relative transition-[width] duration-150 ease-out" style="width: 1440px;">
+            <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between text-[10px] text-amber-300 font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="truncate px-2">tusko.co.id/cart</span>
+              <div class="w-8"></div>
+            </div>
+
+            <iframe 
+              id="frame-cart" 
+              src="cart.html?v=2026_r5" 
+              class="w-full h-[900px] bg-white border-0"
+            ></iframe>
+
+            <!-- Drag Handle to Resize Width -->
+            <div class="resize-handle-right" data-target="artboard-cart" title="Tarik untuk memperbesar / memperkecil lebar artboard"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
   </div>
 
-  <!-- ================= LOGIKA JAVASCRIPT ================= -->
-  <script>
-    // -------------------------------------------------------------
-    // LOGIKA MOBILE VIEWPORT
-    // -------------------------------------------------------------
-    let mobileCurrentUrl = 'cart.html';
-
-    function mobileNavigate(url, title) {
-      mobileCurrentUrl = url;
-      const iframe = document.getElementById('mobile-main-frame');
-      const badge = document.getElementById('mobile-page-badge');
-      if (iframe) iframe.src = url + '?v=' + Date.now();
-      if (badge) badge.textContent = title;
-
-      // Update Tab Styles
-      ['beranda', 'detail', 'cart'].forEach(p => {
-        const btn = document.getElementById('mob-nav-' + p);
-        if (btn) {
-          if (url.includes(p)) {
-            btn.className = 'flex flex-col items-center gap-1 text-amber-400 py-1 px-3';
-          } else {
-            btn.className = 'flex flex-col items-center gap-1 text-zinc-400 py-1 px-3';
-          }
-        }
-      });
-    }
-
-    function mobileOpenDirect() {
-      window.location.href = mobileCurrentUrl;
-    }
-
-    function mobileSwitchToCanvas() {
-      document.getElementById('mobile-fullscreen-wrapper').style.display = 'none';
-      document.getElementById('desktop-canvas-wrapper').style.display = 'flex';
-      dFit();
-    }
-
-    // -------------------------------------------------------------
-    // LOGIKA DESKTOP CANVAS
-    // -------------------------------------------------------------
-    let dScale = 0.55;
-    let dPanX = 40;
-    let dPanY = 40;
-    let isDragging = false;
-    let dStartX = 0;
-    let dStartY = 0;
-
-    const dStage = document.getElementById('d-canvas-stage');
-    const dViewport = document.getElementById('d-canvas-viewport');
-    const dZoomText = document.getElementById('d-zoom-text');
-
-    function dRender() {
-      if (dStage) dStage.style.transform = `translate(${dPanX}px, ${dPanY}px) scale(${dScale})`;
-      if (dZoomText) dZoomText.textContent = `${Math.round(dScale * 100)}%`;
-    }
-
-    function dPan(dx, dy) {
-      dPanX += dx;
-      dPanY += dy;
-      dRender();
-    }
-
-    function dZoom(delta) {
-      dScale = Math.min(Math.max(0.2, dScale + delta), 2.0);
-      dRender();
-    }
-
-    function dFit() {
-      dScale = 0.32;
-      dPanX = 20;
-      dPanY = 20;
-      dRender();
-    }
-
-    function dFocus(id) {
-      const target = document.getElementById(id);
-      if (!target) return;
-      
-      ['all', 'beranda', 'detail', 'cart'].forEach(m => {
-        const b = document.getElementById('d-btn-' + m);
-        if (b) b.className = 'px-3 py-1.5 rounded-md text-zinc-400 hover:text-white flex items-center gap-1.5';
-      });
-      const activeBtn = document.getElementById('d-btn-' + id.replace('artboard-', ''));
-      if (activeBtn) activeBtn.className = 'px-3 py-1.5 rounded-md bg-zinc-700 text-white flex items-center gap-1.5';
-
-      dScale = 0.65;
-      const targetRect = target.getBoundingClientRect();
-      const stageRect = dStage.getBoundingClientRect();
-      const targetOffsetLeft = (targetRect.left - stageRect.left) / (dStage.style.transform ? dScale : 1);
-      
-      dPanX = (dViewport.clientWidth / 2) - (targetOffsetLeft * dScale) - (target.clientWidth * dScale / 2);
-      dPanY = 40;
-      dRender();
-    }
-
-    function dSetView(mode) {
-      if (mode === 'all') {
-        dFit();
-        ['all', 'beranda', 'detail', 'cart'].forEach(m => {
-          const b = document.getElementById('d-btn-' + m);
-          if (b) b.className = 'px-3 py-1.5 rounded-md text-zinc-400 hover:text-white flex items-center gap-1.5';
-        });
-        document.getElementById('d-btn-all').className = 'px-3 py-1.5 rounded-md bg-zinc-700 text-white flex items-center gap-1.5';
-      }
-    }
-
-    // Drag Canvas Desktop
-    if (dViewport) {
-      dViewport.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        dStartX = e.clientX - dPanX;
-        dStartY = e.clientY - dPanY;
-        dViewport.style.cursor = 'grabbing';
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        dPanX = e.clientX - dStartX;
-        dPanY = e.clientY - dStartY;
-        dRender();
-      });
-
-      window.addEventListener('mouseup', () => {
-        if (isDragging) {
-          isDragging = false;
-          dViewport.style.cursor = 'grab';
-        }
-      });
-
-      dViewport.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          dScale = Math.min(Math.max(0.15, dScale * (e.deltaY < 0 ? 1.1 : 0.9)), 2.5);
-          dRender();
-        } else {
-          dPanX -= e.deltaX;
-          dPanY -= e.deltaY;
-          dRender();
-        }
-      }, { passive: false });
-    }
-
-    // Initial render
-    dRender();
-  </script>
   <!-- Live Auto-Reload Engine on GitHub Push -->
   <script src="auto-updater.js"></script>
+
+  <!-- ================= JAVASCRIPT RESIZER & PAN ENGINE ================= -->
+  <script>
+    // State Transformasi Kanvas
+    let scale = 0.55;
+    let panX = 40;
+    let panY = 40;
+    let isPanning = false;
+    let startPanX = 0;
+    let startPanY = 0;
+
+    // Resizing State
+    let isResizing = false;
+    let currentResizingFrame = null;
+    let currentTargetId = null;
+    let startMouseX = 0;
+    let startFrameWidth = 0;
+
+    const stage = document.getElementById('canvas-stage');
+    const viewport = document.getElementById('canvas-viewport');
+    const zoomText = document.getElementById('zoom-text');
+
+    function renderTransform() {
+      stage.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      if (zoomText) zoomText.textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function panOffset(dx, dy) {
+      panX += dx;
+      panY += dy;
+      renderTransform();
+    }
+
+    function zoomIn() {
+      scale = Math.min(2.0, scale * 1.15);
+      renderTransform();
+    }
+
+    function zoomOut() {
+      scale = Math.max(0.2, scale * 0.85);
+      renderTransform();
+    }
+
+    function resetZoom() {
+      scale = 0.55;
+      renderTransform();
+    }
+
+    function fitAllArtboards() {
+      scale = 0.32;
+      panX = 30;
+      panY = 30;
+      renderTransform();
+    }
+
+    function focusArtboard(id) {
+      const target = document.getElementById(id);
+      if (!target) return;
+      scale = 0.65;
+      const targetRect = target.getBoundingClientRect();
+      const stageRect = stage.getBoundingClientRect();
+      const targetOffsetLeft = (targetRect.left - stageRect.left) / (stage.style.transform ? scale : 1);
+      
+      panX = (viewport.clientWidth / 2) - (targetOffsetLeft * scale) - (target.clientWidth * scale / 2);
+      panY = 40;
+      renderTransform();
+    }
+
+    // ================= RESIZING LOGIC =================
+    function setArtboardWidth(artboardId, widthPx) {
+      const artboard = document.getElementById(artboardId);
+      if (!artboard) return;
+      const frame = artboard.querySelector('.artboard-frame');
+      if (frame) {
+        frame.style.width = widthPx + 'px';
+      }
+
+      // Update Labels
+      const key = artboardId.replace('artboard-', '');
+      const dimLabel = document.getElementById(`label-dim-${key}`);
+      const badgeLabel = document.getElementById(`badge-${key}`);
+      const text = `${widthPx} × 900 px`;
+      if (dimLabel) dimLabel.textContent = text;
+      if (badgeLabel) badgeLabel.textContent = widthPx + 'px';
+    }
+
+    function setAllArtboardsWidth(widthPx, label) {
+      ['artboard-beranda', 'artboard-detail', 'artboard-cart'].forEach(id => {
+        setArtboardWidth(id, widthPx);
+      });
+
+      // Sesuaikan zoom agar pas di viewport
+      if (widthPx <= 480) {
+        scale = 0.85;
+      } else if (widthPx <= 768) {
+        scale = 0.65;
+      } else {
+        scale = 0.55;
+      }
+      renderTransform();
+    }
+
+    // Interactive Drag-to-Resize Handler
+    document.querySelectorAll('.resize-handle-right').forEach(handle => {
+      handle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        isResizing = true;
+        currentTargetId = handle.getAttribute('data-target');
+        const artboard = document.getElementById(currentTargetId);
+        currentResizingFrame = artboard.querySelector('.artboard-frame');
+        
+        startMouseX = e.clientX;
+        startFrameWidth = currentResizingFrame.offsetWidth;
+        
+        document.body.classList.add('is-resizing');
+      });
+    });
+
+    // Pan Canvas Mouse Event
+    viewport.addEventListener('mousedown', (e) => {
+      if (isResizing) return;
+      // Jangan pan jika mengklik langsung di dalam iframe atau resize handle
+      if (e.target.closest('.resize-handle-right') || e.target.closest('button')) return;
+
+      isPanning = true;
+      startPanX = e.clientX - panX;
+      startPanY = e.clientY - panY;
+      document.body.classList.add('is-panning');
+      viewport.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      // Handle Resizing Frame
+      if (isResizing && currentResizingFrame) {
+        const deltaX = (e.clientX - startMouseX) / scale;
+        const newWidth = Math.min(Math.max(320, Math.round(startFrameWidth + deltaX)), 1920);
+        currentResizingFrame.style.width = newWidth + 'px';
+        
+        // Update label
+        const key = currentTargetId.replace('artboard-', '');
+        const dimLabel = document.getElementById(`label-dim-${key}`);
+        const badgeLabel = document.getElementById(`badge-${key}`);
+        if (dimLabel) dimLabel.textContent = `${newWidth} × 900 px`;
+        if (badgeLabel) badgeLabel.textContent = `${newWidth}px`;
+        return;
+      }
+
+      // Handle Pan Canvas
+      if (isPanning) {
+        panX = e.clientX - startPanX;
+        panY = e.clientY - startPanY;
+        renderTransform();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        currentResizingFrame = null;
+        document.body.classList.remove('is-resizing');
+      }
+      if (isPanning) {
+        isPanning = false;
+        document.body.classList.remove('is-panning');
+        viewport.style.cursor = 'grab';
+      }
+    });
+
+    // Wheel zoom
+    viewport.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.08 : 0.92;
+        scale = Math.min(Math.max(0.2, scale * factor), 2.0);
+        renderTransform();
+      } else {
+        panX -= e.deltaX;
+        panY -= e.deltaY;
+        renderTransform();
+      }
+    }, { passive: false });
+
+    // Initial render
+    renderTransform();
+  </script>
 </body>
 </html>
