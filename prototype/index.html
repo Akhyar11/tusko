@@ -19,46 +19,39 @@
     /* Dot Matrix Canvas Background */
     .canvas-bg {
       background-color: #121214;
-      background-image: radial-gradient(#27272a 1.2px, transparent 1.2px);
-      background-size: 24px 24px;
+      background-image: radial-gradient(#2c2c30 1.5px, transparent 1.5px);
+      background-size: 26px 26px;
     }
 
     /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #18181b;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #3f3f46;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #52525b;
-    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
     /* Artboard shadows */
     .artboard-shadow {
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
     }
 
-    /* When dragging or hand mode is active, disable iframe pointer events so drag is silky smooth */
-    body.is-panning iframe,
-    body.hand-mode iframe {
-      pointer-events: none !important;
+    /* Glass overlay on iframe for silky smooth drag pan */
+    .iframe-drag-shield {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: transparent;
+      cursor: grab;
     }
-
-    body.hand-mode #canvas-viewport {
-      cursor: grab !important;
-    }
-    body.hand-mode.is-panning #canvas-viewport {
+    body.is-panning .iframe-drag-shield,
+    body.is-panning #canvas-viewport {
       cursor: grabbing !important;
+    }
+    body.interactive-mode .iframe-drag-shield {
+      display: none !important;
     }
   </style>
 </head>
-<body class="bg-[#121214] text-white antialiased h-screen flex flex-col overflow-hidden select-none hand-mode">
+<body class="bg-[#121214] text-white antialiased h-screen flex flex-col overflow-hidden select-none">
 
   <!-- ================= TOP TOOLBAR (CANVAS STUDIO CONTROLS) ================= -->
   <header class="h-14 bg-[#18181b]/95 backdrop-blur border-b border-zinc-800 px-4 flex items-center justify-between z-50 flex-shrink-0">
@@ -70,13 +63,13 @@
       <div>
         <div class="flex items-center gap-2">
           <span class="font-sport font-black text-sm tracking-wide uppercase text-white">TUSKO DESIGN CANVAS</span>
-          <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase tracking-wider">LIVE HTML CANVAS</span>
+          <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase tracking-wider">LIVE CANVAS</span>
         </div>
         <p class="text-[10px] text-zinc-400">Inspirasi: adidas.co.id &bull; 3 Artboards</p>
       </div>
     </div>
 
-    <!-- Mode & Artboard Selector (Center Tabs) -->
+    <!-- Center Mode Tabs (Quick Fly to Artboards) -->
     <div class="hidden md:flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg text-xs font-semibold">
       <button onclick="setViewMode('all')" id="btn-all" class="px-3 py-1.5 rounded-md bg-zinc-700 text-white transition-all flex items-center gap-1.5">
         <iconify-icon icon="lucide:layout-grid" class="text-sm"></iconify-icon>
@@ -96,46 +89,43 @@
       </button>
     </div>
 
-    <!-- Right Controls: Tool Mode, Viewport, Zoom, & External Open -->
-    <div class="flex items-center gap-3">
+    <!-- Right Controls: Mode Geser vs Interaksi, Panah Geser, Zoom, & Buka Mandiri -->
+    <div class="flex items-center gap-2.5">
       
-      <!-- Interaction Mode Toggle (Hand Pan vs Interactive Click) -->
+      <!-- Interaction Mode Toggle -->
       <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1 text-xs">
-        <button onclick="setToolMode('hand')" id="tool-hand" class="px-2.5 py-1.5 rounded bg-amber-500 text-black font-bold flex items-center gap-1" title="Mode Geser Kanvas (Drag/Pan kapan saja)">
+        <button onclick="setToolMode('hand')" id="tool-hand" class="px-2.5 py-1.5 rounded bg-amber-500 text-black font-bold flex items-center gap-1" title="Mode Geser: Klik & Drag kanvas bebas ke mana saja">
           <iconify-icon icon="lucide:hand" class="text-sm"></iconify-icon>
-          <span class="hidden xl:inline">Geser (Hand)</span>
+          <span class="hidden lg:inline">Mode Geser (Pan)</span>
         </button>
-        <button onclick="setToolMode('interactive')" id="tool-interactive" class="px-2.5 py-1.5 rounded text-zinc-400 hover:text-white font-semibold flex items-center gap-1" title="Mode Interaksi (Klik & Scroll isi halaman)">
+        <button onclick="setToolMode('interactive')" id="tool-interactive" class="px-2.5 py-1.5 rounded text-zinc-400 hover:text-white font-semibold flex items-center gap-1" title="Mode Klik Halaman: Interaksi langsung dengan tombol & form di dalam halaman web">
           <iconify-icon icon="lucide:mouse-pointer-2" class="text-sm"></iconify-icon>
-          <span class="hidden xl:inline">Klik Halaman</span>
+          <span class="hidden lg:inline">Klik Halaman</span>
         </button>
       </div>
 
-      <!-- Device Viewport Switcher -->
+      <!-- Quick Directional Pan Buttons in Header -->
       <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1 text-xs">
-        <button onclick="setViewport(1440, 900, 'desktop')" id="vp-desktop" class="p-1.5 rounded bg-zinc-800 text-white" title="Desktop 1440px">
-          <iconify-icon icon="lucide:monitor" class="text-sm"></iconify-icon>
+        <button onclick="panOffset(300, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white" title="Geser ke Kiri (Lihat konten kanan)">
+          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
         </button>
-        <button onclick="setViewport(768, 1024, 'tablet')" id="vp-tablet" class="p-1.5 rounded text-zinc-400 hover:text-white" title="Tablet 768px">
-          <iconify-icon icon="lucide:tablet" class="text-sm"></iconify-icon>
-        </button>
-        <button onclick="setViewport(390, 844, 'mobile')" id="vp-mobile" class="p-1.5 rounded text-zinc-400 hover:text-white" title="Mobile 390px">
-          <iconify-icon icon="lucide:smartphone" class="text-sm"></iconify-icon>
+        <button onclick="panOffset(-300, 0)" class="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white" title="Geser ke Kanan (Lihat konten kiri)">
+          <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
         </button>
       </div>
 
       <!-- Zoom Controls -->
       <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg text-xs">
-        <button onclick="zoomOut()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold" title="Zoom Out (Ctrl -)">-</button>
-        <button onclick="resetZoom()" id="zoom-text" class="px-2 py-1.5 font-mono text-[11px] text-zinc-300 font-bold min-w-[55px] text-center hover:text-white" title="Klik untuk Reset Zoom">60%</button>
-        <button onclick="zoomIn()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold" title="Zoom In (Ctrl +)">+</button>
-        <button onclick="fitAllArtboards()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white border-l border-zinc-800 text-[10px] font-bold" title="Fit to Screen">FIT</button>
+        <button onclick="zoomOut()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold text-sm" title="Perkecil Zoom">-</button>
+        <button onclick="resetZoom()" id="zoom-text" class="px-2 py-1.5 font-mono text-[11px] text-zinc-200 font-bold min-w-[55px] text-center hover:text-amber-400" title="Reset Zoom">55%</button>
+        <button onclick="zoomIn()" class="px-2.5 py-1.5 text-zinc-400 hover:text-white font-bold text-sm" title="Perbesar Zoom">+</button>
+        <button onclick="fitAllArtboards()" class="px-2.5 py-1.5 text-zinc-300 hover:text-white border-l border-zinc-800 text-[10px] font-bold" title="Fit Semua Artboard">FIT</button>
       </div>
 
       <!-- Open Active Page in New Tab -->
       <button onclick="openActiveTab()" class="bg-white text-black hover:bg-zinc-200 font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors" title="Buka halaman aktif langsung di tab baru">
         <iconify-icon icon="lucide:external-link" class="text-xs"></iconify-icon>
-        <span class="hidden sm:inline">Buka Halaman</span>
+        <span class="hidden sm:inline">Buka Mandiri</span>
       </button>
     </div>
   </header>
@@ -152,7 +142,7 @@
           <span class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded text-[10px]">3</span>
         </div>
         <div class="space-y-1.5 text-xs">
-          <div onclick="focusArtboard('artboard-beranda')" class="p-2 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors">
+          <div onclick="focusArtboard('artboard-beranda')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span class="font-medium">1. Beranda &amp; Etalase</span>
@@ -160,7 +150,7 @@
             <span class="text-[10px] text-zinc-500 font-mono">1440x900</span>
           </div>
 
-          <div onclick="focusArtboard('artboard-detail')" class="p-2 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors">
+          <div onclick="focusArtboard('artboard-detail')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span class="font-medium">2. Detail: Ultimashow</span>
@@ -168,7 +158,7 @@
             <span class="text-[10px] text-zinc-500 font-mono">1440x900</span>
           </div>
 
-          <div onclick="focusArtboard('artboard-cart')" class="p-2 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors bg-zinc-800/60 border border-amber-500/20">
+          <div onclick="focusArtboard('artboard-cart')" class="p-2.5 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-zinc-300 hover:text-white group transition-colors bg-zinc-800/60 border border-amber-500/20">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
               <span class="font-bold text-amber-300">3. Tas Belanja (Cart)</span>
@@ -179,23 +169,19 @@
       </div>
 
       <!-- Navigation & Pan Guide -->
-      <div class="p-4 border-b border-zinc-800 text-xs text-zinc-400 space-y-2">
-        <div class="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">Kontrol Navigasi Kanvas</div>
+      <div class="p-4 border-b border-zinc-800 text-xs text-zinc-400 space-y-2.5">
+        <div class="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">Kontrol Gestur Kanvas</div>
         <div class="flex items-center gap-2 text-[11px]">
           <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Drag Mouse</kbd>
-          <span>Geser Kanvas Kiri/Kanan/Atas/Bawah</span>
+          <span>Geser Kanvas Bebas</span>
         </div>
         <div class="flex items-center gap-2 text-[11px]">
-          <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Wheel / Scroll</kbd>
+          <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Scroll Wheel</kbd>
           <span>Geser Cepat (Pan)</span>
         </div>
         <div class="flex items-center gap-2 text-[11px]">
-          <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Ctrl + Wheel</kbd>
-          <span>Zoom In / Out</span>
-        </div>
-        <div class="flex items-center gap-2 text-[11px]">
-          <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Space + Drag</kbd>
-          <span>Geser saat mode interaktif</span>
+          <kbd class="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-zinc-300 font-mono">Ctrl + Scroll</kbd>
+          <span>Perbesar / Perkecil</span>
         </div>
       </div>
 
@@ -228,10 +214,10 @@
     </aside>
 
     <!-- MAIN CANVAS VIEWPORT (PAN & ZOOM CONTAINER) -->
-    <main id="canvas-viewport" class="flex-1 canvas-bg overflow-hidden relative select-none">
+    <main id="canvas-viewport" class="flex-1 canvas-bg overflow-hidden relative select-none cursor-grab">
       
       <!-- STAGE THAT TRANSFORMS VIA CSS (TRANSLATE & SCALE) -->
-      <div id="canvas-stage" class="absolute top-0 left-0 flex items-start gap-20 p-24 origin-top-left transition-transform duration-75 ease-out">
+      <div id="canvas-stage" class="absolute top-0 left-0 flex items-start gap-20 p-20 origin-top-left transition-transform duration-75 ease-out">
 
         <!-- ================= ARTBOARD 1: BERANDA ================= -->
         <div id="artboard-beranda" class="artboard-card flex-shrink-0">
@@ -249,7 +235,7 @@
           </div>
 
           <!-- Browser Chrome Window Frame -->
-          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800">
+          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800 relative">
             <div class="h-9 bg-zinc-900 border-b border-zinc-800 px-4 flex items-center justify-between">
               <div class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
@@ -261,10 +247,14 @@
               </div>
               <div class="w-10"></div>
             </div>
+            
+            <!-- Drag Shield Overlay (Allows smooth canvas pan over iframe) -->
+            <div class="iframe-drag-shield"></div>
+
             <!-- Interactive Iframe -->
             <iframe 
               id="frame-beranda" 
-              src="beranda.html" 
+              src="beranda.html?v=20260907" 
               class="w-[1440px] h-[900px] bg-white border-0"
             ></iframe>
           </div>
@@ -286,7 +276,7 @@
           </div>
 
           <!-- Browser Chrome Window Frame -->
-          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800">
+          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-zinc-800 relative">
             <div class="h-9 bg-zinc-900 border-b border-zinc-800 px-4 flex items-center justify-between">
               <div class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
@@ -298,10 +288,14 @@
               </div>
               <div class="w-10"></div>
             </div>
+
+            <!-- Drag Shield Overlay -->
+            <div class="iframe-drag-shield"></div>
+
             <!-- Interactive Iframe -->
             <iframe 
               id="frame-detail" 
-              src="detail-produk.html" 
+              src="detail-produk.html?v=20260907" 
               class="w-[1440px] h-[900px] bg-white border-0"
             ></iframe>
           </div>
@@ -323,7 +317,7 @@
           </div>
 
           <!-- Browser Chrome Window Frame -->
-          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-amber-500/40">
+          <div class="bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-amber-500/40 relative">
             <div class="h-9 bg-zinc-900 border-b border-zinc-800 px-4 flex items-center justify-between">
               <div class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
@@ -336,10 +330,14 @@
               </div>
               <div class="w-10"></div>
             </div>
+
+            <!-- Drag Shield Overlay -->
+            <div class="iframe-drag-shield"></div>
+
             <!-- Interactive Iframe -->
             <iframe 
               id="frame-cart" 
-              src="cart.html" 
+              src="cart.html?v=20260907" 
               class="w-[1440px] h-[900px] bg-white border-0"
             ></iframe>
           </div>
@@ -348,21 +346,22 @@
       </div>
 
       <!-- Quick Floating Mini Navigator (Bottom Right) -->
-      <div class="absolute bottom-6 right-6 bg-zinc-900/90 backdrop-blur border border-zinc-700/80 rounded-lg p-2 shadow-2xl flex items-center gap-2 z-40">
-        <button onclick="panDirection(-250, 0)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center" title="Geser Kiri">
-          <iconify-icon icon="lucide:chevron-left"></iconify-icon>
+      <div class="absolute bottom-6 right-6 bg-zinc-900/95 backdrop-blur border border-zinc-700/80 rounded-xl p-2.5 shadow-2xl flex items-center gap-2 z-40">
+        <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Geser:</span>
+        <button onclick="panOffset(300, 0)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 flex items-center justify-center font-bold" title="Geser Kiri">
+          <iconify-icon icon="lucide:chevron-left" class="text-base"></iconify-icon>
         </button>
-        <button onclick="panDirection(0, -200)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center" title="Geser Atas">
-          <iconify-icon icon="lucide:chevron-up"></iconify-icon>
+        <button onclick="panOffset(0, 200)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 flex items-center justify-center font-bold" title="Geser Atas">
+          <iconify-icon icon="lucide:chevron-up" class="text-base"></iconify-icon>
         </button>
-        <button onclick="panDirection(0, 200)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center" title="Geser Bawah">
-          <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+        <button onclick="panOffset(0, -200)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 flex items-center justify-center font-bold" title="Geser Bawah">
+          <iconify-icon icon="lucide:chevron-down" class="text-base"></iconify-icon>
         </button>
-        <button onclick="panDirection(250, 0)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center" title="Geser Kanan">
-          <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+        <button onclick="panOffset(-300, 0)" class="w-8 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 flex items-center justify-center font-bold" title="Geser Kanan">
+          <iconify-icon icon="lucide:chevron-right" class="text-base"></iconify-icon>
         </button>
         <div class="h-5 w-px bg-zinc-700"></div>
-        <button onclick="resetPosition()" class="px-2 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 flex items-center gap-1" title="Pusatkan Kanvas">
+        <button onclick="resetPosition()" class="px-2.5 h-8 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 flex items-center gap-1" title="Pusatkan Kanvas">
           <iconify-icon icon="lucide:locate-fixed"></iconify-icon>
           <span>Pusat</span>
         </button>
@@ -376,27 +375,19 @@
   <script>
     // State Transformasi Kanvas
     let scale = 0.55;
-    let panX = 60;
-    let panY = 60;
+    let panX = 40;
+    let panY = 40;
 
     let isPanning = false;
     let startX = 0;
     let startY = 0;
-    let spacePressed = false;
     let toolMode = 'hand'; // 'hand' or 'interactive'
     let activeArtboardId = 'artboard-cart';
 
     const viewport = document.getElementById('canvas-viewport');
     const stage = document.getElementById('canvas-stage');
     const zoomText = document.getElementById('zoom-text');
-    const iframes = [
-      document.getElementById('frame-beranda'),
-      document.getElementById('frame-detail'),
-      document.getElementById('frame-cart')
-    ];
-    const dimTexts = document.querySelectorAll('.artboard-dims');
 
-    // Fungsi Render Transformasi Kanvas
     function renderTransform() {
       stage.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
       zoomText.textContent = `${Math.round(scale * 100)}%`;
@@ -412,9 +403,7 @@
     }
 
     function resetZoom() {
-      scale = 0.6;
-      panX = 60;
-      panY = 60;
+      scale = 0.55;
       renderTransform();
     }
 
@@ -434,30 +423,33 @@
       renderTransform();
     }
 
-    function panDirection(dx, dy) {
+    function panOffset(dx, dy) {
       panX += dx;
       panY += dy;
       renderTransform();
     }
 
     function resetPosition() {
-      panX = 60;
-      panY = 60;
+      panX = 40;
+      panY = 40;
+      scale = 0.55;
       renderTransform();
     }
 
-    // Tool Mode: Hand Pan vs Interactive Click
+    // Mode Sakelar: Hand vs Interactive
     function setToolMode(mode) {
       toolMode = mode;
       const handBtn = document.getElementById('tool-hand');
       const interactiveBtn = document.getElementById('tool-interactive');
 
       if (mode === 'hand') {
-        document.body.classList.add('hand-mode');
+        document.body.classList.remove('interactive-mode');
+        viewport.style.cursor = 'grab';
         handBtn.className = "px-2.5 py-1.5 rounded bg-amber-500 text-black font-bold flex items-center gap-1";
         interactiveBtn.className = "px-2.5 py-1.5 rounded text-zinc-400 hover:text-white font-semibold flex items-center gap-1";
       } else {
-        document.body.classList.remove('hand-mode');
+        document.body.classList.add('interactive-mode');
+        viewport.style.cursor = 'default';
         interactiveBtn.className = "px-2.5 py-1.5 rounded bg-amber-500 text-black font-bold flex items-center gap-1";
         handBtn.className = "px-2.5 py-1.5 rounded text-zinc-400 hover:text-white font-semibold flex items-center gap-1";
       }
@@ -465,8 +457,8 @@
 
     // ================= MOUSE & TOUCH PAN ENGINE =================
     viewport.addEventListener('mousedown', (e) => {
-      // Izinkan drag jika di mode Hand, atau jika tombol Space sedang ditekan, atau klik tombol tengah mouse (wheel button)
-      if (toolMode === 'hand' || spacePressed || e.button === 1) {
+      // Izinkan drag jika di mode Hand atau klik tombol tengah mouse
+      if (toolMode === 'hand' || e.button === 1) {
         isPanning = true;
         startX = e.clientX - panX;
         startY = e.clientY - panY;
@@ -505,24 +497,7 @@
       }
     }, { passive: false });
 
-    // KEYBOARD SHORTCUTS (Spacebar untuk Hand Pan)
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !spacePressed) {
-        spacePressed = true;
-        document.body.classList.add('hand-mode');
-      }
-    });
-
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space') {
-        spacePressed = false;
-        if (toolMode !== 'hand') {
-          document.body.classList.remove('hand-mode');
-        }
-      }
-    });
-
-    // ================= NAVIGATION & ARTBOARDS =================
+    // NAVIGATION & FOCUS ARTBOARD
     function focusArtboard(id) {
       activeArtboardId = id;
       const target = document.getElementById(id);
@@ -542,7 +517,6 @@
       const targetRect = target.getBoundingClientRect();
       const stageRect = stage.getBoundingClientRect();
 
-      // Hitung offset target terhadap stage
       const targetOffsetLeft = (targetRect.left - stageRect.left) / (stage.style.transform ? scale : 1);
       
       panX = (viewport.clientWidth / 2) - (targetOffsetLeft * scale) - (target.clientWidth * scale / 2);
@@ -562,40 +536,9 @@
     }
 
     function fitAllArtboards() {
-      scale = 0.35;
-      panX = 40;
-      panY = 40;
-      renderTransform();
-    }
-
-    // VIEWPORT RESIZER (DESKTOP / TABLET / MOBILE)
-    function setViewport(w, h, name) {
-      ['desktop', 'tablet', 'mobile'].forEach(dev => {
-        const btn = document.getElementById(`vp-${dev}`);
-        if (btn) {
-          if (dev === name) {
-            btn.className = "p-1.5 rounded bg-zinc-800 text-white";
-          } else {
-            btn.className = "p-1.5 rounded text-zinc-400 hover:text-white";
-          }
-        }
-      });
-
-      iframes.forEach(frame => {
-        if (frame) {
-          frame.style.width = `${w}px`;
-          frame.style.height = `${h}px`;
-        }
-      });
-
-      dimTexts.forEach(dim => {
-        dim.textContent = `(${w} x ${h})`;
-      });
-
-      // Sesuaikan zoom jika berpindah ke mobile
-      if (name === 'mobile') {
-        scale = 0.85;
-      }
+      scale = 0.32;
+      panX = 30;
+      panY = 30;
       renderTransform();
     }
 
@@ -609,8 +552,8 @@
       }
     }
 
-    // Inisialisasi awal: pusatkan ke Artboard Cart gaya Adidas
-    focusArtboard('artboard-cart');
+    // Inisialisasi awal
+    renderTransform();
   </script>
 </body>
 </html>
