@@ -38,4 +38,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Cart::class);
     }
+
+    /**
+     * User's shipping addresses.
+     */
+    public function shippingAddresses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ShippingAddress::class);
+    }
+
+    /**
+     * User's default shipping address.
+     */
+    public function defaultShippingAddress(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ShippingAddress::class)->where('is_default', true);
+    }
 }
