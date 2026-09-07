@@ -15,6 +15,21 @@ export default function ProductCard({
   // Percentage for stock bar (low stock warning)
   const stockRatioPercent = Math.min(100, Math.max(10, Math.round((stock / (minStock * 2)) * 100)));
 
+  // Calculate price range from variants if available
+  const variantPriceInfo = React.useMemo(() => {
+    if (product.variants && product.variants.length > 0) {
+      const prices = product.variants.map((v) => Number(v.price) || 0).filter((p) => p > 0);
+      if (prices.length > 0) {
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        if (min !== max) {
+          return { isRange: true, min, max, label: `${formatRupiah(min)} - ${formatRupiah(max)}` };
+        }
+      }
+    }
+    return { isRange: false, min: product.price, max: product.price, label: formatRupiah(product.price) };
+  }, [product]);
+
   return (
     <div 
       onClick={() => onSelectProduct(product)}
@@ -88,9 +103,9 @@ export default function ProductCard({
 
           {/* Price */}
           <div className="mt-2.5">
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
-                {formatRupiah(product.price)}
+                {variantPriceInfo.label}
               </span>
             </div>
             

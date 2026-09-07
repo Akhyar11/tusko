@@ -74,14 +74,53 @@ export default function ProductDetail({
   if (!product) return null;
 
   // Dynamic price, stock, and SKU
-  const currentPrice = selectedVariant?.price ?? product.price;
+  const basePrice = Number(product.price || 0);
+  const currentPrice = selectedVariant ? Number(selectedVariant.price) : basePrice;
+  const priceDifference = selectedVariant ? currentPrice - basePrice : 0;
   const currentStock = selectedVariant ? Number(selectedVariant.stock ?? 0) : Number(product.stock ?? 0);
   const minStock = Number(product.stock_minimum ?? 5);
   const isOutOfStock = currentStock <= 0;
   const isLowStock = !isOutOfStock && currentStock <= minStock;
 
+  // Variant discount and original price calculation
+  const currentOriginalPrice = useMemo(() => {
+    if (selectedVariant?.original_price) return Number(selectedVariant.original_price);
+    if (product.original_price && product.price) {
+      const diff = Number(product.original_price) - Number(product.price);
+      return currentPrice + diff;
+    }
+    return currentPrice;
+  }, [selectedVariant, currentPrice, product]);
+
+  const currentDiscountPercentage = useMemo(() => {
+    if (currentOriginalPrice > currentPrice) {
+      return Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100);
+    }
+    return 0;
+  }, [currentOriginalPrice, currentPrice]);
+
   // Calculate estimated loyalty points earned (1% from purchase)
   const loyaltyPointsEarned = Math.floor(currentPrice * 0.01);
+
+  // Helper to calculate price difference for a specific option given other selections
+  const getOptionPriceDelta = (levelCode, optionVal) => {
+    if (!product?.variants || product.variants.length === 0) return null;
+    const matches = product.variants.filter((v) => {
+      if (v[levelCode] !== optionVal) return false;
+      for (const [code, val] of Object.entries(selectedOptions)) {
+        if (code !== levelCode && val && v[code] !== val) return false;
+      }
+      return true;
+    });
+    if (matches.length === 0) return null;
+    const deltas = matches.map((m) => (Number(m.price) || basePrice) - basePrice);
+    const minDelta = Math.min(...deltas);
+    const maxDelta = Math.max(...deltas);
+    if (minDelta === maxDelta && minDelta !== 0) {
+      return minDelta;
+    }
+    return null;
+  };
 
   // Check hierarchical availability of an option based on preceding selections
   const getOptionAvailability = (levelIndex, levelCode, optionVal) => {
@@ -432,28 +471,38 @@ export default function ProductDetail({
             </div>
           </div>
 
-          {/* Pricing Box */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-xs">
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight">
+          {/* Pricing Box with Real-Time Variant Price Tracking */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-xs space-y-2">
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <span className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight transition-all">
                 {formatRupiah(currentPrice)}
               </span>
-              {product.discount_percentage > 0 && (
+              {currentDiscountPercentage > 0 && (
                 <>
                   <span className="text-xs font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                    -{product.discount_percentage}%
+                    -{currentDiscountPercentage}%
                   </span>
                   <span className="text-sm text-neutral-400 line-through font-medium">
-                    {formatRupiah(product.original_price)}
+                    {formatRupiah(currentOriginalPrice)}
                   </span>
                 </>
               )}
             </div>
-            {selectedVariant && selectedVariant.price !== product.price && (
-              <p className="text-[11px] text-amber-600 font-bold mt-1.5 flex items-center gap-1">
-                <Zap size={13} />
-                Harga khusus varian terpilih ({formatRupiah(currentPrice)})
-              </p>
+
+            {/* Variant Price Difference Banner */}
+            {selectedVariant && priceDifference !== 0 && (
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                priceDifference > 0
+                  ? 'bg-amber-50 text-amber-900 border border-amber-200/80'
+                  : 'bg-emerald-50 text-emerald-900 border border-emerald-200/80'
+              }`}>
+                <Zap size={13} className={priceDifference > 0 ? 'text-amber-600' : 'text-emerald-600'} />
+                <span>
+                  {priceDifference > 0
+                    ? `Harga varian terpilih (+${formatRupiah(priceDifference)} dari harga dasar)`
+                    : `Harga varian terpilih (-${formatRupiah(Math.abs(priceDifference))} hemat)`}
+                </span>
+              </div>
             )}
           </div>
 
@@ -494,6 +543,7 @@ export default function ProductDetail({
                         const isChosen = currentVal === opt;
                         const availability = getOptionAvailability(levelIdx, level.code, opt);
                         const isAvailable = availability.available;
+                        const priceDelta = getOptionPriceDelta(level.code, opt);
 
                         return (
                           <button
@@ -503,7 +553,7 @@ export default function ProductDetail({
                             onClick={() => handleSelectOption(levelIdx, level.code, opt)}
                             title={
                               isAvailable
-                                ? `${opt} - Stok tersedia: ${availability.stock}`
+                                ? `${opt} - Stok: ${availability.stock}${priceDelta ? ` (${priceDelta > 0 ? '+' : ''}${formatRupiah(priceDelta)})` : ''}`
                                 : `${opt} - ${availability.reason}`
                             }
                             className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 ${
@@ -515,6 +565,15 @@ export default function ProductDetail({
                             }`}
                           >
                             <span>{opt}</span>
+                            {priceDelta && isAvailable && (
+                              <span className={`text-[9px] font-bold px-1 rounded ${
+                                isChosen 
+                                  ? 'bg-amber-400/20 text-amber-300' 
+                                  : 'bg-neutral-200/70 text-neutral-600'
+                              }`}>
+                                {priceDelta > 0 ? `+${priceDelta / 1000}rb` : `${priceDelta / 1000}rb`}
+                              </span>
+                            )}
                             {!isAvailable && (
                               <span className="text-[9px] font-semibold text-rose-500 normal-case no-underline">
                                 ({availability.reason || 'Habis'})
