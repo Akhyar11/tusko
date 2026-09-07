@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk Akun - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+  </style>
+</head>
+<body class="bg-neutral-50 text-black antialiased selection:bg-black selection:text-white min-h-screen flex flex-col justify-between">
+
+  <!-- 1. Top Announcement Bar -->
+  <div class="bg-black text-white text-[11px] font-bold py-2 px-4 text-center tracking-wider uppercase">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+      <iconify-icon icon="lucide:shield-check" class="text-sm text-amber-400"></iconify-icon>
+      <span>LOGIN RESMI MEMBER TUSKO CLUB &bull; DISKON 15% UNTUK AKUN BARU</span>
+    </div>
+  </div>
+
+  <!-- 2. Header Navigation -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="beranda.html" class="flex items-center gap-2 group flex-shrink-0">
+        <div class="w-9 sm:w-11 h-9 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+          T
+        </div>
+        <div class="leading-none">
+          <span class="font-sport font-black text-xl sm:text-2xl tracking-tight uppercase">TUSKO<span class="text-amber-500">.</span></span>
+          <span class="block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">Performance</span>
+        </div>
+      </a>
+
+      <!-- Back to Store Link -->
+      <a href="beranda.html" class="flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-black uppercase tracking-wider transition-colors">
+        <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+        <span>Kembali ke Toko</span>
+      </a>
+
+    </div>
+  </header>
+
+  <!-- 3. Main Login Form Container -->
+  <main class="max-w-md w-full mx-auto px-4 py-8 sm:py-12 flex-1 flex flex-col justify-center">
+    
+    <div class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm">
+      
+      <!-- Heading & Badge -->
+      <div class="mb-6">
+        <span class="inline-flex items-center gap-1.5 bg-black text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 mb-2.5 -skew-x-6">
+          <span class="text-amber-400 font-black">★</span> TUSKO CLUB MEMBER
+        </span>
+        <h1 class="font-sport font-black text-2xl sm:text-3xl uppercase italic tracking-tight text-black">
+          MASUK KE AKUN ANDA
+        </h1>
+        <p class="text-xs text-neutral-500 mt-1 leading-relaxed">
+          Nikmati akses instan ke riwayat transaksi, poin loyalitas, serta promo khusus member.
+        </p>
+      </div>
+
+      <!-- Social Logins (Google & Apple SSO) -->
+      <div class="space-y-2.5 mb-5">
+        <button onclick="demoLogin('budi.pratama@gmail.com', 'Google SSO')" class="w-full bg-white hover:bg-neutral-50 border border-neutral-300 text-neutral-800 font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors">
+          <iconify-icon icon="logos:google-icon" class="text-base"></iconify-icon>
+          <span>Masuk dengan Google</span>
+        </button>
+        <button onclick="demoLogin('budi.apple@icloud.com', 'Apple ID')" class="w-full bg-black hover:bg-neutral-800 text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors">
+          <iconify-icon icon="simple-icons:apple" class="text-base text-white"></iconify-icon>
+          <span>Masuk dengan Apple</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="relative flex items-center justify-center my-6">
+        <div class="border-t border-neutral-200 w-full"></div>
+        <span class="bg-white px-3 text-[10px] font-bold text-neutral-400 uppercase tracking-widest absolute">
+          ATAU DENGAN EMAIL
+        </span>
+      </div>
+
+      <!-- Form Credentials -->
+      <form onsubmit="event.preventDefault(); handleLoginSubmit();" class="space-y-4">
+        
+        <div>
+          <label for="login-email" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+            ALAMAT EMAIL / NO. WHATSAPP *
+          </label>
+          <input 
+            type="text" 
+            id="login-email" 
+            required 
+            placeholder="nama@email.com atau 0812xxxx" 
+            value="budi.pratama@gmail.com"
+            class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+          />
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="login-password" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700">
+              KATA SANDI *
+            </label>
+            <a href="#" onclick="alert('Tautan pemulihan kata sandi telah dikirimkan ke email terdaftar Anda.')" class="text-[11px] font-bold text-neutral-500 hover:text-black underline">
+              Lupa Password?
+            </a>
+          </div>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="login-password" 
+              required 
+              placeholder="••••••••" 
+              value="TuskoSport2026!"
+              class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+            />
+            <button 
+              type="button" 
+              onclick="togglePasswordVisibility()" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-base p-1"
+            >
+              <iconify-icon id="eye-icon" icon="lucide:eye"></iconify-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-neutral-600">
+            <input type="checkbox" checked class="accent-black w-4 h-4 rounded-none cursor-pointer">
+            <span>Ingat saya di perangkat ini</span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="w-full bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider py-3.5 px-6 flex items-center justify-between transition-colors shadow-sm mt-2"
+        >
+          <span>MASUK SEKARANG</span>
+          <span class="text-base">&rarr;</span>
+        </button>
+
+      </form>
+
+      <!-- Quick Demo Login Helper Badge -->
+      <div class="mt-5 p-3 bg-amber-50 border border-amber-200 text-xs text-amber-900">
+        <div class="font-bold flex items-center gap-1.5 mb-1">
+          <iconify-icon icon="lucide:info" class="text-amber-600 text-sm"></iconify-icon>
+          <span>Mode Uji Coba Prototipe:</span>
+        </div>
+        <p class="text-[11px] text-amber-800 leading-relaxed">
+          Klik tombol <em>Masuk Sekarang</em> di atas untuk simulasi login instan dengan akun demo member.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Registration CTA Box -->
+    <div class="mt-6 bg-black text-white p-5 sm:p-6 border border-neutral-800 text-center space-y-3">
+      <div class="w-8 h-8 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-base mx-auto -skew-x-6">
+        ★
+      </div>
+      <div>
+        <h3 class="font-sport font-black text-base uppercase tracking-wide text-white">
+          BELUM MEMILIKI AKUN?
+        </h3>
+        <p class="text-xs text-neutral-400 mt-1 max-w-xs mx-auto leading-relaxed">
+          Gabung Tusko Club gratis. Dapatkan <span class="text-amber-400 font-bold">voucher diskon 15%</span> untuk pesanan perdana Anda.
+        </p>
+      </div>
+      <a 
+        href="register.html" 
+        class="inline-block w-full sm:w-auto bg-white hover:bg-neutral-200 text-black font-sport font-bold text-xs uppercase tracking-wider py-3 px-6 transition-colors"
+      >
+        DAFTAR MEMBER GRATIS &rarr;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- 4. Minimal Footer -->
+  <footer class="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+      <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+      <div class="flex gap-4">
+        <a href="#" class="hover:underline">Kebijakan Privasi</a>
+        <a href="#" class="hover:underline">Syarat Ketentuan Akun</a>
+        <a href="#" class="hover:underline">Bantuan</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notification Toast & Interactions -->
+  <script>
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('login-password');
+      const icon = document.getElementById('eye-icon');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.setAttribute('icon', 'lucide:eye-off');
+      } else {
+        pwdInput.type = 'password';
+        icon.setAttribute('icon', 'lucide:eye');
+      }
+    }
+
+    function demoLogin(email, provider) {
+      document.getElementById('login-email').value = email;
+      showToast('✓ Berhasil terautentikasi melalui ' + provider + '! Mengalihkan ke Beranda...');
+      setTimeout(() => {
+        window.location.href = 'beranda.html';
+      }, 1500);
+    }
+
+    function handleLoginSubmit() {
+      const email = document.getElementById('login-email').value;
+      showToast('✓ Login Berhasil! Selamat datang kembali, ' + email.split('@')[0]);
+      setTimeout(() => {
+        window.location.href = 'beranda.html';
+      }, 1400);
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-3 text-xs font-bold shadow-2xl z-50 flex items-center gap-2 border border-neutral-700 animate-bounce';
+      toast.innerHTML = '<iconify-icon icon="lucide:check-circle" class="text-emerald-400 text-base"></iconify-icon><span>' + msg + '</span>';
+      document.body.appendChild(toast);
+    }
+  </script>
+
+  <!-- Live Auto-Reload Engine on GitHub Push -->
+  <script src="auto-updater.js"></script>
+</body>
+</html>

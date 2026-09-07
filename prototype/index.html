@@ -153,10 +153,10 @@
     <aside class="w-64 bg-[#161619] border-r border-zinc-800 flex flex-col z-40 hidden lg:flex flex-shrink-0 p-4 space-y-4">
       <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
         <span>Artboard &amp; Resolusi</span>
-        <span class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded text-[10px]">3 Live</span>
+        <span class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded text-[10px]">5 Live</span>
       </div>
 
-      <div class="space-y-2 text-xs">
+      <div class="space-y-2 text-xs overflow-y-auto pr-1">
         <!-- Card Nav Beranda -->
         <div onclick="focusArtboard('artboard-beranda')" class="p-2.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer space-y-1 transition-colors">
           <div class="flex items-center justify-between font-bold text-white">
@@ -190,18 +190,50 @@
         </div>
 
         <!-- Card Nav Cart -->
-        <div onclick="focusArtboard('artboard-cart')" class="p-2.5 rounded bg-zinc-900 border border-amber-500/40 hover:border-amber-400 cursor-pointer space-y-1 transition-colors">
-          <div class="flex items-center justify-between font-bold text-amber-300">
+        <div onclick="focusArtboard('artboard-cart')" class="p-2.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-white">
             <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
               3. Tas Belanja (Cart)
             </span>
-            <span id="badge-cart" class="text-[10px] text-amber-400 font-mono">1440px</span>
+            <span id="badge-cart" class="text-[10px] text-zinc-400 font-mono">1440px</span>
           </div>
           <div class="flex gap-1 text-[10px]">
             <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
             <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
             <button onclick="event.stopPropagation(); setArtboardWidth('artboard-cart', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
+          </div>
+        </div>
+
+        <!-- Card Nav Login -->
+        <div onclick="focusArtboard('artboard-login')" class="p-2.5 rounded bg-zinc-900 border border-purple-500/40 hover:border-purple-400 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-purple-300">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+              4. Masuk Akun (Login)
+            </span>
+            <span id="badge-login" class="text-[10px] text-purple-400 font-mono">1440px</span>
+          </div>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-login', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-login', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-login', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
+          </div>
+        </div>
+
+        <!-- Card Nav Register -->
+        <div onclick="focusArtboard('artboard-register')" class="p-2.5 rounded bg-zinc-900 border border-pink-500/40 hover:border-pink-400 cursor-pointer space-y-1 transition-colors">
+          <div class="flex items-center justify-between font-bold text-pink-300">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+              5. Tusko Club (Daftar)
+            </span>
+            <span id="badge-register" class="text-[10px] text-pink-400 font-mono">1440px</span>
+          </div>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-register', 390)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-300">Mobile</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-register', 768)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-blue-300">Tablet</button>
+            <button onclick="event.stopPropagation(); setArtboardWidth('artboard-register', 1440)" class="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-emerald-300">Desktop</button>
           </div>
         </div>
       </div>
@@ -347,6 +379,88 @@
           </div>
         </div>
 
+        <!-- ================= ARTBOARD 4: MASUK AKUN (LOGIN) ================= -->
+        <div id="artboard-login" class="artboard-card flex-shrink-0 relative">
+          <!-- Artboard Header With Device Presets -->
+          <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+              <span class="font-sport font-black uppercase text-purple-300 tracking-wider">04. MASUK AKUN (LOGIN)</span>
+              <span id="label-dim-login" class="text-[10px] text-purple-300 font-mono bg-zinc-800 px-1.5 py-0.5 rounded border border-purple-500/30">1440 × 900 px</span>
+            </div>
+            
+            <!-- Quick Preset -->
+            <div class="flex items-center gap-1 text-[10px] font-bold">
+              <button onclick="setArtboardWidth('artboard-login', 390)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-black" title="Ubah ke Mobile 390px">📱 390</button>
+              <button onclick="setArtboardWidth('artboard-login', 768)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300" title="Ubah ke Tablet 768px">📱 768</button>
+              <button onclick="setArtboardWidth('artboard-login', 1440)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-emerald-300" title="Ubah ke Desktop 1440px">🖥️ 1440</button>
+            </div>
+          </div>
+
+          <!-- Browser Window Frame -->
+          <div class="artboard-frame bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-purple-500/40 relative transition-[width] duration-150 ease-out" style="width: 1440px;">
+            <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between text-[10px] text-purple-300 font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="truncate px-2">tusko.co.id/login</span>
+              <div class="w-8"></div>
+            </div>
+
+            <iframe 
+              id="frame-login" 
+              src="login.html" 
+              class="w-full h-[900px] bg-white border-0"
+            ></iframe>
+
+            <!-- Drag Handle to Resize Width -->
+            <div class="resize-handle-right" data-target="artboard-login" title="Tarik untuk memperbesar / memperkecil lebar artboard"></div>
+          </div>
+        </div>
+
+        <!-- ================= ARTBOARD 5: DAFTAR MEMBER (REGISTER) ================= -->
+        <div id="artboard-register" class="artboard-card flex-shrink-0 relative">
+          <!-- Artboard Header With Device Presets -->
+          <div class="flex items-center justify-between mb-2 text-zinc-400 px-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-pink-400"></span>
+              <span class="font-sport font-black uppercase text-pink-300 tracking-wider">05. DAFTAR MEMBER (REGISTER)</span>
+              <span id="label-dim-register" class="text-[10px] text-pink-300 font-mono bg-zinc-800 px-1.5 py-0.5 rounded border border-pink-500/30">1440 × 900 px</span>
+            </div>
+            
+            <!-- Quick Preset -->
+            <div class="flex items-center gap-1 text-[10px] font-bold">
+              <button onclick="setArtboardWidth('artboard-register', 390)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-black" title="Ubah ke Mobile 390px">📱 390</button>
+              <button onclick="setArtboardWidth('artboard-register', 768)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300" title="Ubah ke Tablet 768px">📱 768</button>
+              <button onclick="setArtboardWidth('artboard-register', 1440)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-emerald-300" title="Ubah ke Desktop 1440px">🖥️ 1440</button>
+            </div>
+          </div>
+
+          <!-- Browser Window Frame -->
+          <div class="artboard-frame bg-[#18181b] rounded-xl overflow-hidden artboard-shadow border border-pink-500/40 relative transition-[width] duration-150 ease-out" style="width: 1440px;">
+            <div class="h-8 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between text-[10px] text-pink-300 font-mono">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="truncate px-2">tusko.co.id/register</span>
+              <div class="w-8"></div>
+            </div>
+
+            <iframe 
+              id="frame-register" 
+              src="register.html" 
+              class="w-full h-[900px] bg-white border-0"
+            ></iframe>
+
+            <!-- Drag Handle to Resize Width -->
+            <div class="resize-handle-right" data-target="artboard-register" title="Tarik untuk memperbesar / memperkecil lebar artboard"></div>
+          </div>
+        </div>
+
       </div>
 
     </main>
@@ -403,7 +517,7 @@
     }
 
     function fitAllArtboards() {
-      scale = 0.32;
+      scale = 0.22;
       panX = 30;
       panY = 30;
       renderTransform();
@@ -441,7 +555,7 @@
     }
 
     function setAllArtboardsWidth(widthPx, label) {
-      ['artboard-beranda', 'artboard-detail', 'artboard-cart'].forEach(id => {
+      ['artboard-beranda', 'artboard-detail', 'artboard-cart', 'artboard-login', 'artboard-register'].forEach(id => {
         setArtboardWidth(id, widthPx);
       });
 
@@ -451,7 +565,7 @@
       } else if (widthPx <= 768) {
         scale = 0.65;
       } else {
-        scale = 0.55;
+        scale = 0.45;
       }
       renderTransform();
     }
@@ -542,7 +656,9 @@
       const frames = [
         { id: 'frame-beranda', file: 'beranda.html' },
         { id: 'frame-detail', file: 'detail-produk.html' },
-        { id: 'frame-cart', file: 'cart.html' }
+        { id: 'frame-cart', file: 'cart.html' },
+        { id: 'frame-login', file: 'login.html' },
+        { id: 'frame-register', file: 'register.html' }
       ];
       frames.forEach(f => {
         const el = document.getElementById(f.id);

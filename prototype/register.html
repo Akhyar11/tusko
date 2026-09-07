@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Member Tusko Club - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+  </style>
+</head>
+<body class="bg-neutral-50 text-black antialiased selection:bg-black selection:text-white min-h-screen flex flex-col justify-between">
+
+  <!-- 1. Top Announcement Bar -->
+  <div class="bg-black text-white text-[11px] font-bold py-2 px-4 text-center tracking-wider uppercase">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+      <iconify-icon icon="lucide:gift" class="text-sm text-amber-400"></iconify-icon>
+      <span>DAPATKAN VOUCHER DISKON 15% DENGAN MENDAFTAR MEMBER TUSKO CLUB HARI INI</span>
+    </div>
+  </div>
+
+  <!-- 2. Header Navigation -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="beranda.html" class="flex items-center gap-2 group flex-shrink-0">
+        <div class="w-9 sm:w-11 h-9 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+          T
+        </div>
+        <div class="leading-none">
+          <span class="font-sport font-black text-xl sm:text-2xl tracking-tight uppercase">TUSKO<span class="text-amber-500">.</span></span>
+          <span class="block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">Performance</span>
+        </div>
+      </a>
+
+      <!-- Link to Login -->
+      <a href="login.html" class="flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-black uppercase tracking-wider transition-colors">
+        <span>Sudah Member? Masuk</span>
+        <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
+      </a>
+
+    </div>
+  </header>
+
+  <!-- 3. Main Registration Container -->
+  <main class="max-w-lg w-full mx-auto px-4 py-8 sm:py-12 flex-1">
+    
+    <!-- Member Benefit Highlight Card -->
+    <div class="bg-black text-white p-5 sm:p-6 mb-6 border border-neutral-800 relative overflow-hidden">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-lg flex-shrink-0 -skew-x-6">
+          ★
+        </div>
+        <div>
+          <span class="text-[9px] font-bold text-amber-400 uppercase tracking-widest block">PROGRAM KEANGGOTAAN RESMI</span>
+          <h2 class="font-sport font-black text-base sm:text-lg uppercase tracking-tight text-white leading-tight">
+            KEUNTUNGAN MEMBER TUSKO CLUB
+          </h2>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 text-[11px] text-neutral-300 pt-2 border-t border-neutral-800">
+        <div class="flex items-center gap-1.5">
+          <iconify-icon icon="lucide:check-circle-2" class="text-amber-400 text-xs flex-shrink-0"></iconify-icon>
+          <span>Diskon 15% Pesanan 1</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <iconify-icon icon="lucide:check-circle-2" class="text-amber-400 text-xs flex-shrink-0"></iconify-icon>
+          <span>Poin Belanja Seumur Hidup</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <iconify-icon icon="lucide:check-circle-2" class="text-amber-400 text-xs flex-shrink-0"></iconify-icon>
+          <span>Akses Awal Rilis Sepatu</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <iconify-icon icon="lucide:check-circle-2" class="text-amber-400 text-xs flex-shrink-0"></iconify-icon>
+          <span>Gratis Ongkir & Retur 14 Hari</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Form Box -->
+    <div class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm">
+      
+      <div class="mb-6">
+        <h1 class="font-sport font-black text-2xl sm:text-3xl uppercase italic tracking-tight text-black">
+          BUAT AKUN BARU
+        </h1>
+        <p class="text-xs text-neutral-500 mt-1">
+          Lengkapi data diri Anda dalam waktu kurang dari 1 menit.
+        </p>
+      </div>
+
+      <!-- Quick SSO Buttons -->
+      <div class="space-y-2.5 mb-5">
+        <button onclick="demoRegister('Budi Pratama (Google)', 'budi.pratama@gmail.com')" class="w-full bg-white hover:bg-neutral-50 border border-neutral-300 text-neutral-800 font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors">
+          <iconify-icon icon="logos:google-icon" class="text-base"></iconify-icon>
+          <span>Daftar Cepat dengan Google</span>
+        </button>
+        <button onclick="demoRegister('Budi Pratama (Apple)', 'budi.apple@icloud.com')" class="w-full bg-black hover:bg-neutral-800 text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors">
+          <iconify-icon icon="simple-icons:apple" class="text-base text-white"></iconify-icon>
+          <span>Daftar Cepat dengan Apple</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="relative flex items-center justify-center my-6">
+        <div class="border-t border-neutral-200 w-full"></div>
+        <span class="bg-white px-3 text-[10px] font-bold text-neutral-400 uppercase tracking-widest absolute">
+          ATAU DAFTAR DENGAN EMAIL
+        </span>
+      </div>
+
+      <!-- Form Inputs -->
+      <form onsubmit="event.preventDefault(); handleRegisterSubmit();" class="space-y-4">
+        
+        <!-- Full Name -->
+        <div>
+          <label for="reg-name" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+            NAMA LENGKAP *
+          </label>
+          <input 
+            type="text" 
+            id="reg-name" 
+            required 
+            placeholder="Contoh: Budi Pratama" 
+            class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+          />
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="reg-email" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+            ALAMAT EMAIL RESMI *
+          </label>
+          <input 
+            type="email" 
+            id="reg-email" 
+            required 
+            placeholder="nama@email.com" 
+            class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+          />
+        </div>
+
+        <!-- WhatsApp Phone Number -->
+        <div>
+          <label for="reg-phone" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+            NOMOR HANDPHONE / WHATSAPP *
+          </label>
+          <div class="flex">
+            <span class="inline-flex items-center px-3 border border-r-0 border-neutral-300 bg-neutral-100 text-neutral-600 font-bold text-xs">
+              +62
+            </span>
+            <input 
+              type="tel" 
+              id="reg-phone" 
+              required 
+              placeholder="812-3456-7890" 
+              class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+            />
+          </div>
+          <p class="text-[10px] text-neutral-400 mt-1">Digunakan untuk pengiriman notifikasi resi dan kode voucher.</p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="reg-password" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+            KATA SANDI *
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="reg-password" 
+              required 
+              oninput="checkPasswordStrength(this.value)"
+              placeholder="Minimal 8 karakter kombinasi huruf & angka" 
+              class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+            />
+            <button 
+              type="button" 
+              onclick="toggleRegPassword()" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black text-base p-1"
+            >
+              <iconify-icon id="reg-eye-icon" icon="lucide:eye"></iconify-icon>
+            </button>
+          </div>
+          
+          <!-- Password Strength Indicator -->
+          <div class="mt-2 flex items-center gap-1.5">
+            <div id="strength-bar-1" class="h-1 flex-1 bg-neutral-200 transition-colors"></div>
+            <div id="strength-bar-2" class="h-1 flex-1 bg-neutral-200 transition-colors"></div>
+            <div id="strength-bar-3" class="h-1 flex-1 bg-neutral-200 transition-colors"></div>
+            <span id="strength-text" class="text-[10px] font-bold text-neutral-400 ml-1">Kekuatan: -</span>
+          </div>
+        </div>
+
+        <!-- Shopping Preferences (Benchmark: adidas Onboarding) -->
+        <div class="pt-1">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+            PREFERENSI KOLEKSI BELANJA
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="selectPref(this, 'Pria')" class="pref-btn border-2 border-black bg-black text-white font-bold text-xs py-2 px-1 text-center transition-colors">
+              PRIA
+            </button>
+            <button type="button" onclick="selectPref(this, 'Wanita')" class="pref-btn border border-neutral-300 hover:border-black bg-white text-neutral-800 font-bold text-xs py-2 px-1 text-center transition-colors">
+              WANITA
+            </button>
+            <button type="button" onclick="selectPref(this, 'Semua')" class="pref-btn border border-neutral-300 hover:border-black bg-white text-neutral-800 font-bold text-xs py-2 px-1 text-center transition-colors">
+              SEMUA
+            </button>
+          </div>
+        </div>
+
+        <!-- Checkboxes Agreements -->
+        <div class="space-y-2.5 pt-2 text-xs text-neutral-600">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" required checked class="accent-black w-4 h-4 rounded-none cursor-pointer flex-shrink-0 mt-0.5">
+            <span class="leading-relaxed text-[11px]">
+              Saya berusia di atas 17 tahun dan setuju dengan <a href="#" class="underline text-black font-bold">Syarat &amp; Ketentuan</a> serta <a href="#" class="underline text-black font-bold">Kebijakan Privasi</a> Tusko.
+            </span>
+          </label>
+          
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked class="accent-black w-4 h-4 rounded-none cursor-pointer flex-shrink-0 mt-0.5">
+            <span class="leading-relaxed text-[11px]">
+              Kirimkan saya voucher diskon 15% dan info rilis produk terbaru via WhatsApp &amp; Email.
+            </span>
+          </label>
+        </div>
+
+        <!-- Action Submit Button -->
+        <button 
+          type="submit" 
+          class="w-full bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider py-4 px-6 flex items-center justify-between transition-colors shadow-sm mt-3"
+        >
+          <span>BUAT AKUN TUSKO CLUB</span>
+          <span class="text-base">&rarr;</span>
+        </button>
+
+      </form>
+
+      <!-- Auto-fill Demo Button -->
+      <div class="mt-5 pt-4 border-t border-neutral-200 flex justify-between items-center">
+        <button onclick="autofillDemo()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 underline flex items-center gap-1">
+          <iconify-icon icon="lucide:sparkles"></iconify-icon>
+          <span>Isi Form Otomatis (Demo)</span>
+        </button>
+        <span class="text-[10px] text-neutral-400 font-mono">v1.0 Demo</span>
+      </div>
+
+    </div>
+
+    <!-- Login Link Box -->
+    <div class="mt-6 text-center text-xs text-neutral-600 bg-white p-4 border border-neutral-300">
+      Sudah memiliki akun terdaftar? 
+      <a href="login.html" class="font-bold text-black underline uppercase ml-1 hover:text-neutral-700">
+        Masuk di Sini &rarr;
+      </a>
+    </div>
+
+  </main>
+
+  <!-- 4. Minimal Footer -->
+  <footer class="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+      <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+      <div class="flex gap-4">
+        <a href="#" class="hover:underline">Kebijakan Privasi</a>
+        <a href="#" class="hover:underline">Syarat Ketentuan</a>
+        <a href="#" class="hover:underline">Bantuan CS</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script Interactions -->
+  <script>
+    function toggleRegPassword() {
+      const pwdInput = document.getElementById('reg-password');
+      const icon = document.getElementById('reg-eye-icon');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.setAttribute('icon', 'lucide:eye-off');
+      } else {
+        pwdInput.type = 'password';
+        icon.setAttribute('icon', 'lucide:eye');
+      }
+    }
+
+    function checkPasswordStrength(val) {
+      const b1 = document.getElementById('strength-bar-1');
+      const b2 = document.getElementById('strength-bar-2');
+      const b3 = document.getElementById('strength-bar-3');
+      const txt = document.getElementById('strength-text');
+
+      if (!val || val.length === 0) {
+        b1.className = 'h-1 flex-1 bg-neutral-200';
+        b2.className = 'h-1 flex-1 bg-neutral-200';
+        b3.className = 'h-1 flex-1 bg-neutral-200';
+        txt.textContent = 'Kekuatan: -';
+        return;
+      }
+
+      if (val.length < 6) {
+        b1.className = 'h-1 flex-1 bg-red-500';
+        b2.className = 'h-1 flex-1 bg-neutral-200';
+        b3.className = 'h-1 flex-1 bg-neutral-200';
+        txt.textContent = 'Kekuatan: Lemah';
+        txt.className = 'text-[10px] font-bold text-red-600 ml-1';
+      } else if (val.length < 10) {
+        b1.className = 'h-1 flex-1 bg-amber-500';
+        b2.className = 'h-1 flex-1 bg-amber-500';
+        b3.className = 'h-1 flex-1 bg-neutral-200';
+        txt.textContent = 'Kekuatan: Sedang';
+        txt.className = 'text-[10px] font-bold text-amber-600 ml-1';
+      } else {
+        b1.className = 'h-1 flex-1 bg-emerald-500';
+        b2.className = 'h-1 flex-1 bg-emerald-500';
+        b3.className = 'h-1 flex-1 bg-emerald-500';
+        txt.textContent = 'Kekuatan: Sangat Kuat';
+        txt.className = 'text-[10px] font-bold text-emerald-600 ml-1';
+      }
+    }
+
+    function selectPref(btn, val) {
+      document.querySelectorAll('.pref-btn').forEach(b => {
+        b.className = 'pref-btn border border-neutral-300 hover:border-black bg-white text-neutral-800 font-bold text-xs py-2 px-1 text-center transition-colors';
+      });
+      btn.className = 'pref-btn border-2 border-black bg-black text-white font-bold text-xs py-2 px-1 text-center transition-colors';
+    }
+
+    function autofillDemo() {
+      document.getElementById('reg-name').value = 'Rian Hidayat';
+      document.getElementById('reg-email').value = 'rian.hidayat@gmail.com';
+      document.getElementById('reg-phone').value = '813-8822-1920';
+      const pwd = document.getElementById('reg-password');
+      pwd.value = 'TuskoSpeed2026!';
+      checkPasswordStrength(pwd.value);
+    }
+
+    function handleRegisterSubmit() {
+      const name = document.getElementById('reg-name').value || 'Member';
+      showToast('🎉 Akun ' + name + ' Berhasil Dibuat! Voucher Diskon 15% telah ditambahkan.');
+      setTimeout(() => {
+        window.location.href = 'beranda.html';
+      }, 1600);
+    }
+
+    function demoRegister(name, email) {
+      showToast('🎉 Pendaftaran ' + name + ' Berhasil via SSO!');
+      setTimeout(() => {
+        window.location.href = 'beranda.html';
+      }, 1500);
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-5 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-3 text-xs font-bold shadow-2xl z-50 flex items-center gap-2 border border-neutral-700 animate-bounce';
+      toast.innerHTML = '<iconify-icon icon="lucide:check-circle" class="text-emerald-400 text-base"></iconify-icon><span>' + msg + '</span>';
+      document.body.appendChild(toast);
+    }
+  </script>
+
+  <!-- Live Auto-Reload Engine on GitHub Push -->
+  <script src="auto-updater.js"></script>
+</body>
+</html>
