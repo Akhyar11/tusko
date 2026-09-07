@@ -634,7 +634,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 onClick={() => setActiveTab('detail')}
-                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'detail'
                     ? 'border-amber-500 text-neutral-950 bg-white'
                     : 'border-transparent text-neutral-500 hover:text-neutral-900'
@@ -645,7 +645,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 onClick={() => setActiveTab('spec')}
-                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'spec'
                     ? 'border-amber-500 text-neutral-950 bg-white'
                     : 'border-transparent text-neutral-500 hover:text-neutral-900'
@@ -656,7 +656,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 onClick={() => setActiveTab('size_chart')}
-                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                   activeTab === 'size_chart'
                     ? 'border-amber-500 text-neutral-950 bg-white'
                     : 'border-transparent text-neutral-500 hover:text-neutral-900'
@@ -668,7 +668,7 @@ export default function ProductDetail({
               <button
                 type="button"
                 onClick={() => setActiveTab('reviews')}
-                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                className={`py-3 px-4 text-xs font-extrabold uppercase tracking-wider border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'reviews'
                     ? 'border-amber-500 text-neutral-950 bg-white'
                     : 'border-transparent text-neutral-500 hover:text-neutral-900'
@@ -787,7 +787,7 @@ export default function ProductDetail({
 
         {/* Right Column: Sticky Purchase Action Card (3 cols) */}
         <div className="lg:col-span-3">
-          <div className="sticky top-20 bg-white rounded-2xl border border-neutral-200/90 p-4 sm:p-5 shadow-md space-y-4">
+          <div className="lg:sticky lg:top-20 bg-white rounded-2xl border border-neutral-200/90 p-4 sm:p-5 shadow-md space-y-4">
             <h3 className="font-black text-neutral-900 text-xs uppercase tracking-wider">
               Atur Jumlah Pembelian
             </h3>
