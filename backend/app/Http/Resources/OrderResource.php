@@ -19,6 +19,7 @@ class OrderResource extends JsonResource
             'order_number' => $this->order_number,
             'invoice_number' => $this->order_number,
             'status' => $this->status,
+            'tracking_number' => $this->tracking_number,
             'payment_status' => $this->payment_status,
             'payment_method' => $this->payment_method,
             'payment_channel' => $this->payment_channel,
@@ -58,6 +59,13 @@ class OrderResource extends JsonResource
             'coupon_code' => $this->coupon_code,
             'notes' => $this->notes,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'transactions' => TransactionResource::collection($this->whenLoaded('transactions')),
+            'flags' => [
+                'can_pay' => $this->status === 'pending' && $this->payment_status === 'pending',
+                'can_cancel' => in_array($this->status, ['pending', 'processing']),
+                'can_confirm_payment' => $this->payment_method === 'manual_transfer' && $this->payment_status === 'pending',
+                'is_completed' => $this->status === 'completed',
+            ],
             'timestamps' => [
                 'created_at' => $this->created_at?->toISOString(),
                 'expires_at' => $this->expires_at?->toISOString(),

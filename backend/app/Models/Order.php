@@ -78,6 +78,14 @@ class Order extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::observe(\App\Observers\OrderObserver::class);
+    }
+
+    /**
      * User relation.
      */
     public function user(): BelongsTo
@@ -107,6 +115,14 @@ class Order extends Model
     public function expedition(): BelongsTo
     {
         return $this->belongsTo(Expedition::class, 'expedition_id');
+    }
+
+    /**
+     * Financial transactions relation.
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     /**

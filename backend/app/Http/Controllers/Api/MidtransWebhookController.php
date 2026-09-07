@@ -88,15 +88,6 @@ class MidtransWebhookController extends Controller
                     'payment_status' => $newPaymentStatus,
                     'cancelled_at' => Carbon::now(),
                 ]);
-
-                // Restore stock if previously deducted and not yet restored
-                if (! $isAlreadyCancelled) {
-                    foreach ($order->items as $item) {
-                        if ($item->product) {
-                            $item->product->increment('stock', $item->quantity);
-                        }
-                    }
-                }
             } else {
                 $order->save();
             }

@@ -223,8 +223,22 @@ class CheckoutController extends Controller
                     'notes' => $itemData['notes'],
                 ]);
 
-                // Stock decrement
+                // Stock decrement and mutation record
+                $stockBefore = (int) $itemData['product']->stock;
                 $itemData['product']->decrement('stock', $itemData['quantity']);
+                $stockAfter = (int) $itemData['product']->fresh()->stock;
+
+                \App\Models\StockMutation::create([
+                    'product_id' => $itemData['product_id'],
+                    'type' => 'out',
+                    'quantity' => $itemData['quantity'],
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'reference_type' => 'order',
+                    'reference_id' => $order->order_number,
+                    'notes' => "Pengurangan stok otomatis untuk pesanan {$order->order_number}",
+                    'created_by' => 'Checkout System',
+                ]);
             }
 
             // 8. If checked out from cart, clear cart items

@@ -38,8 +38,9 @@ Route::prefix('expeditions')->group(function () {
 
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout']);
 Route::prefix('orders')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Api\CheckoutController::class, 'index']);
-    Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\CheckoutController::class, 'show'])->where('idOrOrderNumber', '.*');
+    Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+    Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'show'])->where('idOrOrderNumber', '.*');
+    Route::match(['put', 'patch'], '/{idOrOrderNumber}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/confirm-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'confirm'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/approve-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'approve'])->where('idOrOrderNumber', '.*');
@@ -49,5 +50,39 @@ Route::prefix('orders')->group(function () {
 
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
+
+Route::prefix('transactions')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
+    Route::get('/categories', fn () => response()->json(['data' => \App\Http\Controllers\Api\TransactionController::CATEGORIES]));
+    Route::post('/', [\App\Http\Controllers\Api\TransactionController::class, 'store']);
+    Route::get('/{idOrTransactionNumber}', [\App\Http\Controllers\Api\TransactionController::class, 'show'])->where('idOrTransactionNumber', '.*');
+});
+
+Route::prefix('inventory')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
+    Route::get('/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
+    Route::get('/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
+    Route::post('/add-stock', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
+    Route::post('/{idOrSku}/add-stock', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
+    Route::post('/reduce-stock', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
+    Route::post('/{idOrSku}/reduce-stock', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
+    Route::get('/{idOrSku}/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
+    Route::get('/{idOrSku}', [\App\Http\Controllers\Api\InventoryController::class, 'show']);
+});
+
+Route::prefix('stock')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
+    Route::get('/alerts', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
+    Route::get('/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
+    Route::get('/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
+    Route::post('/add', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
+    Route::post('/{idOrSku}/add', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
+    Route::post('/reduce', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
+    Route::post('/{idOrSku}/reduce', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
+    Route::get('/{idOrSku}/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
+    Route::get('/{idOrSku}', [\App\Http\Controllers\Api\InventoryController::class, 'show']);
+});
+
+Route::get('/dashboard/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
 
 
