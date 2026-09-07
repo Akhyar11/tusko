@@ -14,7 +14,7 @@
     .font-sport { font-family: Outfit, sans-serif; }
   </style>
 </head>
-<body class="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen">
+<body class="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen pb-24 md:pb-0">
   
   <!-- Top Announcement Bar -->
   <div class="bg-black text-white text-xs font-semibold py-2 px-4 text-center tracking-wider uppercase">
@@ -465,6 +465,20 @@
       </div>
     </div>
   </footer>
+
+
+  <!-- Sticky Mobile Checkout Bar (Khusus Layar HP / md:hidden) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-300 p-3.5 md:hidden z-50 flex items-center justify-between gap-4 shadow-[0_-4px_25px_rgba(0,0,0,0.15)]">
+    <div>
+      <div class="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Total (2 Item):</div>
+      <div class="font-sport font-black text-lg text-black leading-none mt-0.5">Rp 1.115.100</div>
+      <div class="text-[9px] text-emerald-600 font-bold mt-0.5">Hemat Rp 373.900</div>
+    </div>
+    <a href="checkout.html" class="flex-1 bg-black text-white hover:bg-neutral-800 font-sport font-black text-xs uppercase tracking-wider py-3.5 px-4 flex items-center justify-between transition-colors shadow-sm">
+      <span>BAYAR SEKARANG</span>
+      <span>&rarr;</span>
+    </a>
+  </div>
 
 </body>
 </html>

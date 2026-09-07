@@ -552,8 +552,95 @@
       }
     }
 
+    
+    // Mobile Responsive Auto-Detection
+    function checkMobileMode() {
+      if (window.innerWidth < 768) {
+        document.body.classList.add("is-mobile-screen");
+        // Di layar HP, buat ukuran frame mengikuti lebar layar
+        const mobW = window.innerWidth - 32;
+        const mobH = window.innerHeight - 150;
+        
+        iframes.forEach(f => {
+          if (f) {
+            f.style.width = mobW + "px";
+            f.style.height = mobH + "px";
+          }
+        });
+        
+        scale = 1.0;
+        panX = 16;
+        panY = 16;
+        
+        // Tampilkan artboard cart sebagai default di mobile
+        mobileSwitchPage("cart");
+      }
+    }
+
+    function mobileSwitchPage(page) {
+      const cards = {
+        "beranda": document.getElementById("artboard-beranda"),
+        "detail": document.getElementById("artboard-detail"),
+        "cart": document.getElementById("artboard-cart")
+      };
+      
+      activeArtboardId = "artboard-" + page;
+      
+      Object.keys(cards).forEach(k => {
+        if (cards[k]) {
+          cards[k].style.display = (k === page) ? "block" : "none";
+        }
+      });
+      
+      // Update Mobile Nav styling
+      ["beranda", "detail", "cart"].forEach(p => {
+        const btn = document.getElementById("mob-btn-" + p);
+        if (btn) {
+          if (p === page) {
+            btn.className = "flex flex-col items-center gap-1 text-amber-400 py-1 px-3";
+          } else {
+            btn.className = "flex flex-col items-center gap-1 text-zinc-400 hover:text-white py-1 px-3";
+          }
+        }
+      });
+      
+      scale = 1.0;
+      panX = (window.innerWidth < 768) ? 16 : 40;
+      panY = 16;
+      renderTransform();
+    }
+
+    window.addEventListener("resize", checkMobileMode);
+    // Jalankan cek awal
+    checkMobileMode();
+
     // Inisialisasi awal
     renderTransform();
   </script>
+
+  <!-- Mobile Bottom Navigation Bar (Khusus di Layar HP / md:hidden) -->
+  <div id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 h-16 bg-[#161619]/98 backdrop-blur border-t border-zinc-800 flex items-center justify-around z-50 md:hidden px-2">
+    <button onclick="mobileSwitchPage('beranda')" id="mob-btn-beranda" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-white py-1 px-3">
+      <iconify-icon icon="lucide:home" class="text-xl"></iconify-icon>
+      <span class="text-[10px] font-bold">Beranda</span>
+    </button>
+    
+    <button onclick="mobileSwitchPage('detail')" id="mob-btn-detail" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-white py-1 px-3">
+      <iconify-icon icon="lucide:footprints" class="text-xl"></iconify-icon>
+      <span class="text-[10px] font-bold">Detail</span>
+    </button>
+    
+    <button onclick="mobileSwitchPage('cart')" id="mob-btn-cart" class="flex flex-col items-center gap-1 text-amber-400 py-1 px-3 relative">
+      <iconify-icon icon="lucide:shopping-bag" class="text-xl"></iconify-icon>
+      <span class="absolute top-1 right-2 w-2 h-2 bg-amber-400 rounded-full animate-ping"></span>
+      <span class="text-[10px] font-bold">Cart (2)</span>
+    </button>
+    
+    <button onclick="openActiveTab()" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-white py-1 px-3">
+      <iconify-icon icon="lucide:maximize-2" class="text-xl"></iconify-icon>
+      <span class="text-[10px] font-bold">Layar Penuh</span>
+    </button>
+  </div>
+
 </body>
 </html>

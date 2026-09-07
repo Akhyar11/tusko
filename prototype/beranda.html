@@ -13,6 +13,34 @@
     body { font-family: "Inter", sans-serif; }
     .font-sport { font-family: "Outfit", sans-serif; }
   </style>
+
+  <style>
+    @media (max-width: 768px) {
+      /* Top bar responsive */
+      [data-node-id="top-utility-bar"] { padding: 6px 12px !important; font-size: 10px !important; }
+      [data-node-id="top-utility-bar"] .gap-16, [data-node-id="top-utility-bar"] > div > div:last-child { display: none !important; }
+      
+      /* Main Header responsive */
+      [data-node-id="main-header"] { padding: 0 12px !important; height: 60px !important; }
+      [data-node-id="main-header"] nav { display: none !important; }
+      [data-node-id="main-header"] input { width: 140px !important; }
+      
+      /* Hero campaign responsive */
+      [data-node-id="campaign-hero"] > div { grid-template-columns: 1fr !important; min-height: auto !important; padding: 24px 16px !important; }
+      [data-node-id="campaign-hero"] h1 { font-size: 28px !important; }
+      [data-node-id="campaign-hero"] img { height: 260px !important; object-fit: cover !important; }
+      
+      /* Product grid 2 cols on mobile */
+      .product-grid-container { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+      
+      /* Categories grid */
+      .category-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      
+      /* Footer */
+      footer > div > div:first-child { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+    }
+  </style>
+
 </head>
 <body class="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen">
   
