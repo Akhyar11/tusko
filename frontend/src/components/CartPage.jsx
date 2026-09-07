@@ -267,37 +267,59 @@ export default function CartPage({
                       </div>
 
                       {/* Quantity Controller & Delete */}
-                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pl-7 sm:pl-0">
-                        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                      <div className="flex flex-col sm:items-end gap-1.5 w-full sm:w-auto pl-7 sm:pl-0">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-gray-50 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                            <button
+                              type="button"
+                              disabled={item.quantity <= 1}
+                              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                              className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                              title="Kurangi 1"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              max={item.stock}
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val)) {
+                                  const clamped = Math.max(1, Math.min(item.stock, val));
+                                  onUpdateQuantity(item.id, clamped);
+                                }
+                              }}
+                              className="w-12 text-center text-xs font-bold text-gray-800 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <button
+                              type="button"
+                              disabled={item.quantity >= item.stock}
+                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                              className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                              title="Tambah 1"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+
                           <button
                             type="button"
-                            disabled={item.quantity <= 1}
-                            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                            className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                            onClick={() => onRemoveItem(item.id)}
+                            className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Hapus dari keranjang"
                           >
-                            <Minus size={14} />
-                          </button>
-                          <span className="px-3 text-xs font-bold text-gray-800 min-w-8 text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={item.quantity >= item.stock}
-                            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="p-1.5 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                          >
-                            <Plus size={14} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => onRemoveItem(item.id)}
-                          className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Hapus barang"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {/* Quantity notes / max stock warning */}
+                        {item.quantity >= item.stock && item.stock > 0 && (
+                          <span className="text-[10px] text-amber-600 font-medium">
+                            Maks. {item.stock} unit (stok terbatas)
+                          </span>
+                        )}
                       </div>
 
                     </div>
