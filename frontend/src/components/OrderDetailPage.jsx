@@ -18,9 +18,11 @@ import {
   ChevronRight,
   Sparkles,
   AlertCircle,
-  FileText
+  FileText,
+  Package
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import OrderStatusModal from './OrderStatusModal';
 
 export default function OrderDetailPage({
   order = null,
@@ -28,12 +30,14 @@ export default function OrderDetailPage({
   onPayOrder = () => {},
   onBuyAgain = () => {},
   onCancelOrder = () => {},
-  onCompleteOrder = () => {}
+  onCompleteOrder = () => {},
+  onUpdateStatus = () => {}
 }) {
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   if (!order) {
     return (
@@ -174,14 +178,26 @@ export default function OrderDetailPage({
           <span>Kembali ke Daftar Transaksi</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer shadow-2xs"
-        >
-          <Printer size={14} />
-          <span>Cetak Bukti Transaksi</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsStatusModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-300 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs"
+            title="Ubah status pesanan"
+          >
+            <Package size={14} />
+            <span>Ubah Status</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer shadow-2xs"
+          >
+            <Printer size={14} />
+            <span>Cetak Bukti Transaksi</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Status Header Card */}
@@ -600,6 +616,14 @@ export default function OrderDetailPage({
           </div>
         </div>
       )}
+
+      {/* Order Status Change Modal */}
+      <OrderStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        order={order}
+        onUpdateStatus={onUpdateStatus}
+      />
 
     </div>
   );

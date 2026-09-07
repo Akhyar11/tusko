@@ -280,6 +280,49 @@ export default function App() {
     setSearchQuery('');
   };
 
+  const handleUpdateOrderStatus = (orderId, newStatus, additionalData = {}) => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id === orderId || (o.order_number && o.order_number === orderId)) {
+          const updated = {
+            ...o,
+            status: newStatus,
+            payment_status: ['completed', 'processing', 'shipped'].includes(newStatus)
+              ? 'paid'
+              : (newStatus === 'cancelled' ? 'cancelled' : o.payment_status),
+            notes: additionalData.notes || o.notes,
+          };
+          if (additionalData.tracking_number) {
+            updated.expedition = {
+              ...(updated.expedition || {}),
+              tracking_number: additionalData.tracking_number,
+            };
+            updated.tracking_number = additionalData.tracking_number;
+          }
+          if (additionalData.cancel_reason) {
+            updated.cancel_reason = additionalData.cancel_reason;
+            updated.notes = (updated.notes ? updated.notes + ' | ' : '') + 'Alasan: ' + additionalData.cancel_reason;
+          }
+          return updated;
+        }
+        return o;
+      })
+    );
+
+    if (selectedOrderForDetail && (selectedOrderForDetail.id === orderId || selectedOrderForDetail.order_number === orderId)) {
+      setSelectedOrderForDetail((prev) => ({
+        ...prev,
+        status: newStatus,
+        payment_status: ['completed', 'processing', 'shipped'].includes(newStatus)
+          ? 'paid'
+          : (newStatus === 'cancelled' ? 'cancelled' : prev.payment_status),
+        ...(additionalData.tracking_number ? { tracking_number: additionalData.tracking_number } : {}),
+      }));
+    }
+
+    setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f6f8]">
       {/* Toast Notification with Cart Shortcut */}
@@ -347,6 +390,7 @@ export default function App() {
               setSelectedOrderForDetail(prev => ({ ...prev, status: 'completed' }));
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
+            onUpdateStatus={handleUpdateOrderStatus}
           />
         ) : currentView === 'orders' ? (
           <OrderListPage
@@ -381,6 +425,7 @@ export default function App() {
               ));
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
+            onUpdateStatus={handleUpdateOrderStatus}
           />
         ) : currentView === 'order-success' ? (
           <OrderSuccessPage

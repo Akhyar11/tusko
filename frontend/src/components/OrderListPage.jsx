@@ -15,10 +15,12 @@ import {
   Calendar,
   AlertCircle,
   FileText,
-  MapPin
+  MapPin,
+  Package
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { orderStatuses, mockOrders } from '../data/mockOrders';
+import OrderStatusModal from './OrderStatusModal';
 
 export default function OrderListPage({
   orders = mockOrders,
@@ -27,13 +29,15 @@ export default function OrderListPage({
   onPayOrder = () => {},
   onBuyAgain = () => {},
   onCancelOrder = () => {},
-  onCompleteOrder = () => {}
+  onCompleteOrder = () => {},
+  onUpdateStatus = () => {}
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | '30days' | '90days'
   const [copiedInvoice, setCopiedInvoice] = useState(null);
   const [trackingModalOrder, setTrackingModalOrder] = useState(null);
+  const [statusModalOrder, setStatusModalOrder] = useState(null);
 
   const handleCopy = (invoice) => {
     navigator.clipboard?.writeText(invoice);
@@ -467,6 +471,17 @@ export default function OrderListPage({
                       </button>
                     )}
 
+                    {/* Change Status Button */}
+                    <button
+                      type="button"
+                      onClick={() => setStatusModalOrder(order)}
+                      className="px-3 py-1.5 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 border border-gray-200 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                      title="Ubah status pesanan"
+                    >
+                      <Package size={13} />
+                      <span>Ubah Status</span>
+                    </button>
+
                     {/* View Details Button */}
                     <button
                       type="button"
@@ -575,6 +590,14 @@ export default function OrderListPage({
           </div>
         </div>
       )}
+
+      {/* Order Status Change Modal */}
+      <OrderStatusModal
+        isOpen={Boolean(statusModalOrder)}
+        onClose={() => setStatusModalOrder(null)}
+        order={statusModalOrder}
+        onUpdateStatus={onUpdateStatus}
+      />
 
     </div>
   );
