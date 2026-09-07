@@ -35,3 +35,10 @@ Route::prefix('expeditions')->group(function () {
     Route::get('/categories', [\App\Http\Controllers\Api\ExpeditionController::class, 'categories']);
     Route::get('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
 });
+
+Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout']);
+Route::prefix('orders')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\CheckoutController::class, 'index']);
+    Route::get('/{idOrOrderNumber}', [\App\Http\Controllers\Api\CheckoutController::class, 'show'])->where('idOrOrderNumber', '.*');
+});
+
