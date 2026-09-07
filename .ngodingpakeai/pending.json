@@ -1,6 +1,6 @@
 {
   "repo": "Toko Online",
-  "generatedForCommit": "b15e885c7dd0fbf87c6a7b35f3e4e0e702871fc4",
+  "generatedForCommit": "50d7265788428e1847fdef414e4c1336ec77fa82",
   "files": [
     {
       "path": ".codex/skills/ngodingpakeai/SKILL.md",
@@ -51,12 +51,6 @@
       "size": 31
     },
     {
-      "path": "backend/.phpunit.result.cache",
-      "reason": "needs_summary",
-      "language": null,
-      "size": 739
-    },
-    {
       "path": "backend/AGENTS.md",
       "reason": "needs_summary",
       "language": "markdown",
@@ -75,16 +69,106 @@
       "size": 3700
     },
     {
+      "path": "backend/app/Http/Controllers/Api/CartController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 5546
+    },
+    {
+      "path": "backend/app/Http/Controllers/Api/CheckoutController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 14650
+    },
+    {
+      "path": "backend/app/Http/Controllers/Api/ExpeditionController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 2131
+    },
+    {
+      "path": "backend/app/Http/Controllers/Api/ManualPaymentController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4624
+    },
+    {
+      "path": "backend/app/Http/Controllers/Api/MidtransWebhookController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4731
+    },
+    {
       "path": "backend/app/Http/Controllers/Api/ProductController.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 3647
     },
     {
+      "path": "backend/app/Http/Controllers/Api/ShippingAddressController.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3960
+    },
+    {
       "path": "backend/app/Http/Controllers/Controller.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 77
+    },
+    {
+      "path": "backend/app/Http/Requests/AddToCartRequest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1122
+    },
+    {
+      "path": "backend/app/Http/Requests/CheckoutRequest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 2866
+    },
+    {
+      "path": "backend/app/Http/Requests/ConfirmManualPaymentRequest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1148
+    },
+    {
+      "path": "backend/app/Http/Requests/StoreShippingAddressRequest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1694
+    },
+    {
+      "path": "backend/app/Http/Resources/CartItemResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1196
+    },
+    {
+      "path": "backend/app/Http/Resources/CartResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 828
+    },
+    {
+      "path": "backend/app/Http/Resources/ExpeditionResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1442
+    },
+    {
+      "path": "backend/app/Http/Resources/OrderItemResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 857
+    },
+    {
+      "path": "backend/app/Http/Resources/OrderResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 2970
     },
     {
       "path": "backend/app/Http/Resources/ProductDetailResource.php",
@@ -99,10 +183,52 @@
       "size": 1434
     },
     {
+      "path": "backend/app/Http/Resources/ShippingAddressResource.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1016
+    },
+    {
+      "path": "backend/app/Mail/OrderConfirmationMail.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1226
+    },
+    {
+      "path": "backend/app/Models/Cart.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1095
+    },
+    {
+      "path": "backend/app/Models/CartItem.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 915
+    },
+    {
       "path": "backend/app/Models/Category.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 704
+    },
+    {
+      "path": "backend/app/Models/Expedition.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1056
+    },
+    {
+      "path": "backend/app/Models/Order.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4757
+    },
+    {
+      "path": "backend/app/Models/OrderItem.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 945
     },
     {
       "path": "backend/app/Models/Product.php",
@@ -117,16 +243,28 @@
       "size": 509
     },
     {
+      "path": "backend/app/Models/ShippingAddress.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1062
+    },
+    {
       "path": "backend/app/Models/User.php",
       "reason": "needs_summary",
       "language": "php",
-      "size": 799
+      "size": 1517
     },
     {
       "path": "backend/app/Providers/AppServiceProvider.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 361
+    },
+    {
+      "path": "backend/app/Services/MidtransService.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 5964
     },
     {
       "path": "backend/artisan",
@@ -145,18 +283,6 @@
       "reason": "needs_summary",
       "language": null,
       "size": 14
-    },
-    {
-      "path": "backend/bootstrap/cache/packages.php",
-      "reason": "needs_summary",
-      "language": "php",
-      "size": 963
-    },
-    {
-      "path": "backend/bootstrap/cache/services.php",
-      "reason": "needs_summary",
-      "language": "php",
-      "size": 22575
     },
     {
       "path": "backend/bootstrap/providers.php",
@@ -219,6 +345,12 @@
       "size": 3631
     },
     {
+      "path": "backend/config/midtrans.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 625
+    },
+    {
       "path": "backend/config/queue.php",
       "reason": "needs_summary",
       "language": "php",
@@ -249,16 +381,52 @@
       "size": 10
     },
     {
+      "path": "backend/database/factories/CartFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 450
+    },
+    {
+      "path": "backend/database/factories/CartItemFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 562
+    },
+    {
       "path": "backend/database/factories/CategoryFactory.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 559
     },
     {
+      "path": "backend/database/factories/ExpeditionFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 827
+    },
+    {
+      "path": "backend/database/factories/OrderFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 2108
+    },
+    {
+      "path": "backend/database/factories/OrderItemFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 905
+    },
+    {
       "path": "backend/database/factories/ProductFactory.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 895
+    },
+    {
+      "path": "backend/database/factories/ShippingAddressFactory.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 871
     },
     {
       "path": "backend/database/factories/UserFactory.php",
@@ -303,6 +471,42 @@
       "size": 730
     },
     {
+      "path": "backend/database/migrations/2026_09_07_000004_create_carts_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 682
+    },
+    {
+      "path": "backend/database/migrations/2026_09_07_000005_create_cart_items_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 873
+    },
+    {
+      "path": "backend/database/migrations/2026_09_07_000006_create_shipping_addresses_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1160
+    },
+    {
+      "path": "backend/database/migrations/2026_09_07_000007_create_expeditions_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1156
+    },
+    {
+      "path": "backend/database/migrations/2026_09_07_000008_create_orders_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3608
+    },
+    {
+      "path": "backend/database/migrations/2026_09_07_000009_create_order_items_table.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 1204
+    },
+    {
       "path": "backend/database/migrations/2026_09_07_042758_create_personal_access_tokens_table.php",
       "reason": "needs_summary",
       "language": "php",
@@ -312,7 +516,13 @@
       "path": "backend/database/seeders/DatabaseSeeder.php",
       "reason": "needs_summary",
       "language": "php",
-      "size": 562
+      "size": 608
+    },
+    {
+      "path": "backend/database/seeders/ExpeditionSeeder.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 6750
     },
     {
       "path": "backend/database/seeders/ProductSeeder.php",
@@ -363,6 +573,12 @@
       "size": 3
     },
     {
+      "path": "backend/resources/views/emails/order_confirmation.blade.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 7980
+    },
+    {
       "path": "backend/resources/views/welcome.blade.php",
       "reason": "needs_summary",
       "language": "php",
@@ -372,7 +588,7 @@
       "path": "backend/routes/api.php",
       "reason": "needs_summary",
       "language": "php",
-      "size": 411
+      "size": 3104
     },
     {
       "path": "backend/routes/console.php",
@@ -441,16 +657,76 @@
       "size": 14
     },
     {
+      "path": "backend/tests/Feature/CartApiTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 8331
+    },
+    {
+      "path": "backend/tests/Feature/CartDatabaseTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4775
+    },
+    {
       "path": "backend/tests/Feature/CategoryTest.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 1129
     },
     {
+      "path": "backend/tests/Feature/CheckoutApiTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 7065
+    },
+    {
       "path": "backend/tests/Feature/ExampleTest.php",
       "reason": "needs_summary",
       "language": "php",
       "size": 359
+    },
+    {
+      "path": "backend/tests/Feature/ExpeditionApiTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4789
+    },
+    {
+      "path": "backend/tests/Feature/ExpeditionSeederTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 2661
+    },
+    {
+      "path": "backend/tests/Feature/ManualPaymentConfirmationTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3868
+    },
+    {
+      "path": "backend/tests/Feature/MidtransIntegrationTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3643
+    },
+    {
+      "path": "backend/tests/Feature/MidtransWebhookTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 5690
+    },
+    {
+      "path": "backend/tests/Feature/OrderConfirmationEmailTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3302
+    },
+    {
+      "path": "backend/tests/Feature/OrderDatabaseTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 4882
     },
     {
       "path": "backend/tests/Feature/ProductApiTest.php",
@@ -463,6 +739,18 @@
       "reason": "needs_summary",
       "language": "php",
       "size": 883
+    },
+    {
+      "path": "backend/tests/Feature/ShippingAddressApiTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 6316
+    },
+    {
+      "path": "backend/tests/Feature/ShippingAddressDatabaseTest.php",
+      "reason": "needs_summary",
+      "language": "php",
+      "size": 3944
     },
     {
       "path": "backend/tests/TestCase.php",
@@ -526,81 +814,129 @@
     },
     {
       "path": "frontend/src/App.jsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "javascript",
-      "size": 14024
+      "size": 22999
+    },
+    {
+      "path": "frontend/src/components/AddressModal.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 25634
     },
     {
       "path": "frontend/src/components/CartPage.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 24039
+      "size": 24814
     },
     {
       "path": "frontend/src/components/CategoryBar.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 2382
+      "size": 3528
     },
     {
       "path": "frontend/src/components/CheckoutPage.jsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
-      "size": 22842
+      "size": 32444
+    },
+    {
+      "path": "frontend/src/components/ExpeditionModal.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 8695
     },
     {
       "path": "frontend/src/components/FilterSidebar.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 13567
+      "size": 14080
     },
     {
       "path": "frontend/src/components/Footer.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 4668
+      "size": 6234
     },
     {
       "path": "frontend/src/components/Navbar.jsx",
+      "reason": "changed",
+      "language": "javascript",
+      "size": 13548
+    },
+    {
+      "path": "frontend/src/components/OrderDetailPage.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 11286
+      "size": 26591
+    },
+    {
+      "path": "frontend/src/components/OrderListPage.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 26421
+    },
+    {
+      "path": "frontend/src/components/OrderStatusModal.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 11939
+    },
+    {
+      "path": "frontend/src/components/OrderSuccessPage.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 15693
+    },
+    {
+      "path": "frontend/src/components/PaymentInstructionModal.jsx",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 17815
     },
     {
       "path": "frontend/src/components/ProductCard.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 7350
+      "size": 8443
     },
     {
       "path": "frontend/src/components/ProductDetail.jsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "javascript",
-      "size": 17748
+      "size": 44855
     },
     {
       "path": "frontend/src/components/ProductGrid.jsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "javascript",
-      "size": 4232
+      "size": 9632
     },
     {
       "path": "frontend/src/components/PromoBanner.jsx",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 4521
+      "size": 5287
     },
     {
       "path": "frontend/src/data/mockCheckoutData.js",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "javascript",
-      "size": 2362
+      "size": 12923
+    },
+    {
+      "path": "frontend/src/data/mockOrders.js",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 7947
     },
     {
       "path": "frontend/src/data/mockProducts.js",
       "reason": "needs_summary",
       "language": "javascript",
-      "size": 10674
+      "size": 20695
     },
     {
       "path": "frontend/src/index.css",
