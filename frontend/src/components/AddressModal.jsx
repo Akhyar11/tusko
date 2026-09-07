@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
-import { MapPin, Plus, Check, X, Search, Edit3, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Plus, Check, X, Search, Edit3, Trash2, AlertCircle, Building2, Home, Briefcase, Compass } from 'lucide-react';
+
+const PROVINCES_AND_CITIES = {
+  'DKI Jakarta': ['Jakarta Selatan', 'Jakarta Pusat', 'Jakarta Barat', 'Jakarta Timur', 'Jakarta Utara', 'Kepulauan Seribu'],
+  'Jawa Barat': ['Bandung', 'Bekasi', 'Bogor', 'Depok', 'Cimahi', 'Cirebon', 'Sukabumi', 'Tasikmalaya', 'Karawang', 'Purwakarta', 'Garut'],
+  'Banten': ['Tangerang', 'Tangerang Selatan', 'Serang', 'Cilegon', 'Lebak', 'Pandeglang'],
+  'Jawa Tengah': ['Semarang', 'Surakarta (Solo)', 'Magelang', 'Pekalongan', 'Salatiga', 'Tegal', 'Banyumas', 'Kudus'],
+  'DI Yogyakarta': ['Yogyakarta', 'Sleman', 'Bantul', 'Kulon Progo', 'Gunungkidul'],
+  'Jawa Timur': ['Surabaya', 'Malang', 'Sidoarjo', 'Gresik', 'Kediri', 'Blitar', 'Madiun', 'Mojokerto', 'Pasuruan', 'Banyuwangi'],
+  'Bali': ['Denpasar', 'Badung', 'Gianyar', 'Buleleng', 'Tabanan'],
+  'Sumatera Utara': ['Medan', 'Binjai', 'Pematangsiantar', 'Deli Serdang'],
+  'Sumatera Barat': ['Padang', 'Bukittinggi', 'Payakumbuh'],
+  'Riau': ['Pekanbaru', 'Dumai'],
+  'Sumatera Selatan': ['Palembang', 'Prabumulih', 'Lubuklinggau'],
+  'Lampung': ['Bandar Lampung', 'Metro'],
+  'Kalimantan Timur': ['Balikpapan', 'Samarinda', 'Bontang'],
+  'Sulawesi Selatan': ['Makassar', 'Parepare', 'Palopo']
+};
 
 export default function AddressModal({
   isOpen = false,
@@ -8,34 +25,50 @@ export default function AddressModal({
   selectedAddressId = null,
   onSelectAddress = () => {},
   onSaveAddress = () => {},
-  onDeleteAddress = () => {}
+  onDeleteAddress = () => {},
+  initialMode = 'list' // 'list' | 'add'
 }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(initialMode === 'add');
   const [editingId, setEditingId] = useState(null);
 
   // Form state
+  const defaultProvince = 'DKI Jakarta';
+  const defaultCity = PROVINCES_AND_CITIES[defaultProvince][0];
+
   const [formData, setFormData] = useState({
     label: 'Rumah',
     recipient_name: '',
     phone: '',
     full_address: '',
-    city: '',
-    province: '',
+    district: '',
+    city: defaultCity,
+    province: defaultProvince,
     postal_code: '',
+    notes: '',
     is_default: false
   });
 
   const [formErrors, setFormErrors] = useState({});
 
+  useEffect(() => {
+    if (isOpen) {
+      if (initialMode === 'add') {
+        handleOpenAddForm();
+      } else {
+        setIsFormOpen(false);
+      }
+    }
+  }, [isOpen, initialMode]);
+
   if (!isOpen) return null;
 
   // Filter addresses
   const filteredAddresses = addresses.filter(addr =>
-    addr.recipient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    addr.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    addr.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    addr.full_address.toLowerCase().includes(searchQuery.toLowerCase())
+    addr.recipient_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    addr.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    addr.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    addr.full_address?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleOpenAddForm = () => {
@@ -45,9 +78,11 @@ export default function AddressModal({
       recipient_name: '',
       phone: '',
       full_address: '',
+      district: '',
       city: 'Jakarta Selatan',
       province: 'DKI Jakarta',
-      postal_code: '12190',
+      postal_code: '',
+      notes: '',
       is_default: addresses.length === 0
     });
     setFormErrors({});
@@ -56,187 +91,372 @@ export default function AddressModal({
 
   const handleOpenEditForm = (addr) => {
     setEditingId(addr.id);
+    const prov = addr.province && PROVINCES_AND_CITIES[addr.province] ? addr.province : 'DKI Jakarta';
     setFormData({
-      label: addr.label,
-      recipient_name: addr.recipient_name,
-      phone: addr.phone,
-      full_address: addr.full_address,
-      city: addr.city,
-      province: addr.province,
-      postal_code: addr.postal_code,
-      is_default: addr.is_default
+      label: addr.label || 'Rumah',
+      recipient_name: addr.recipient_name || '',
+      phone: addr.phone || '',
+      full_address: addr.full_address || '',
+      district: addr.district || '',
+      city: addr.city || PROVINCES_AND_CITIES[prov][0],
+      province: prov,
+      postal_code: addr.postal_code || '',
+      notes: addr.notes || '',
+      is_default: addr.is_default || false
     });
     setFormErrors({});
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errors = {};
-
-    if (!formData.recipient_name.trim()) errors.recipient_name = 'Nama penerima wajib diisi';
-    if (!formData.phone.trim()) errors.phone = 'Nomor telepon wajib diisi';
-    if (!formData.full_address.trim()) errors.full_address = 'Alamat lengkap wajib diisi';
-    if (!formData.city.trim()) errors.city = 'Kota wajib diisi';
-    if (!formData.postal_code.trim()) errors.postal_code = 'Kode pos wajib diisi';
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    onSaveAddress({
-      ...formData,
-      id: editingId || Date.now()
-    });
-
-    setIsFormOpen(false);
-    setEditingId(null);
+  const handleProvinceChange = (newProvince) => {
+    const availableCities = PROVINCES_AND_CITIES[newProvince] || [];
+    setFormData(prev => ({
+      ...prev,
+      province: newProvince,
+      city: availableCities[0] || ''
+    }));
   };
 
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.recipient_name.trim()) {
+      errors.recipient_name = 'Nama penerima wajib diisi';
+    } else if (formData.recipient_name.trim().length < 2) {
+      errors.recipient_name = 'Nama penerima minimal 2 karakter';
+    }
+
+    const cleanPhone = formData.phone.replace(/[\s-]/g, '');
+    if (!cleanPhone) {
+      errors.phone = 'Nomor telepon wajib diisi';
+    } else if (!/^(08|\+?628)[0-9]{7,12}$/.test(cleanPhone)) {
+      errors.phone = 'Format nomor HP tidak valid (contoh: 08123456789)';
+    }
+
+    if (!formData.full_address.trim()) {
+      errors.full_address = 'Alamat lengkap wajib diisi';
+    } else if (formData.full_address.trim().length < 8) {
+      errors.full_address = 'Alamat terlalu singkat (cantumkan nama jalan & nomor)';
+    }
+
+    if (!formData.province) {
+      errors.province = 'Provinsi wajib dipilih';
+    }
+
+    if (!formData.city) {
+      errors.city = 'Kota / Kabupaten wajib dipilih';
+    }
+
+    if (!formData.postal_code.trim()) {
+      errors.postal_code = 'Kode pos wajib diisi';
+    } else if (!/^[0-9]{5}$/.test(formData.postal_code.trim())) {
+      errors.postal_code = 'Kode pos harus 5 digit angka';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const newId = editingId || Date.now();
+    const addressToSave = {
+      ...formData,
+      id: newId,
+      phone: formData.phone.trim(),
+      postal_code: formData.postal_code.trim()
+    };
+
+    onSaveAddress(addressToSave);
+    onSelectAddress(newId);
+    setIsFormOpen(false);
+    setEditingId(null);
+    onClose();
+  };
+
+  const labelPresets = [
+    { name: 'Rumah', icon: Home },
+    { name: 'Kantor', icon: Briefcase },
+    { name: 'Apartemen', icon: Building2 },
+    { name: 'Kos', icon: MapPin }
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-2">
-            <MapPin size={20} className="text-emerald-600" />
-            <h3 className="font-bold text-sm sm:text-base text-gray-900">
-              {isFormOpen 
-                ? (editingId ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Baru')
-                : 'Pilih Alamat Pengiriman'}
-            </h3>
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <MapPin size={18} />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-gray-900">
+                {isFormOpen 
+                  ? (editingId ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Pengiriman Baru')
+                  : 'Pilih Alamat Pengiriman'}
+              </h3>
+              <p className="text-[11px] text-gray-400">
+                {isFormOpen 
+                  ? 'Pastikan rincian alamat akurat untuk kemudahan kurir' 
+                  : 'Pilih alamat tujuan pengiriman pesananmu'}
+              </p>
+            </div>
           </div>
           <button
             onClick={() => {
-              if (isFormOpen) {
+              if (isFormOpen && initialMode !== 'add') {
                 setIsFormOpen(false);
               } else {
                 onClose();
               }
             }}
-            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-1">
+        <div className="flex-1 overflow-y-auto py-3 pr-1 space-y-4">
           {isFormOpen ? (
             /* Add / Edit Form */
-            <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
+              {/* Label Alamat */}
               <div>
-                <label className="font-semibold text-gray-700 block mb-1">Label Alamat</label>
-                <div className="flex gap-2">
-                  {['Rumah', 'Kantor', 'Apartemen', 'Kos'].map((lbl) => (
-                    <button
-                      key={lbl}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, label: lbl }))}
-                      className={`px-3 py-1.5 rounded-lg border font-medium cursor-pointer ${
-                        formData.label === lbl
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {lbl}
-                    </button>
-                  ))}
+                <label className="font-semibold text-gray-700 block mb-1.5">
+                  Label Alamat <span className="text-gray-400 font-normal">(Contoh: Rumah, Kantor)</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {labelPresets.map((preset) => {
+                    const Icon = preset.icon;
+                    const isSelected = formData.label === preset.name;
+                    return (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, label: preset.name }))}
+                        className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border font-semibold text-xs cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Icon size={14} />
+                        <span>{preset.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
+              {/* Penerima & Nomor Telepon */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Nama Penerima *</label>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Nama Penerima <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.recipient_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
-                    placeholder="Contoh: Budi Santoso"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-gray-50"
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, recipient_name: e.target.value }));
+                      if (formErrors.recipient_name) {
+                        setFormErrors(prev => ({ ...prev, recipient_name: undefined }));
+                      }
+                    }}
+                    placeholder="Contoh: Akhyar Ramadan"
+                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                      formErrors.recipient_name 
+                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
+                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                    }`}
                   />
                   {formErrors.recipient_name && (
-                    <span className="text-[10px] text-rose-600">{formErrors.recipient_name}</span>
+                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
+                      <AlertCircle size={10} /> {formErrors.recipient_name}
+                    </span>
                   )}
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Nomor Telepon *</label>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Nomor Telepon / HP <span className="text-rose-500">*</span>
+                  </label>
                   <input
-                    type="text"
+                    type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="0812xxxxxxx"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-gray-50"
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, phone: e.target.value }));
+                      if (formErrors.phone) {
+                        setFormErrors(prev => ({ ...prev, phone: undefined }));
+                      }
+                    }}
+                    placeholder="081234567890"
+                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                      formErrors.phone 
+                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
+                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                    }`}
                   />
                   {formErrors.phone && (
-                    <span className="text-[10px] text-rose-600">{formErrors.phone}</span>
+                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
+                      <AlertCircle size={10} /> {formErrors.phone}
+                    </span>
                   )}
                 </div>
               </div>
 
+              {/* Provinsi & Kota Dropdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Provinsi <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={formData.province}
+                    onChange={(e) => handleProvinceChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white cursor-pointer"
+                  >
+                    {Object.keys(PROVINCES_AND_CITIES).map((prov) => (
+                      <option key={prov} value={prov}>{prov}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Kota / Kabupaten <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={formData.city}
+                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white cursor-pointer"
+                  >
+                    {(PROVINCES_AND_CITIES[formData.province] || []).map((cty) => (
+                      <option key={cty} value={cty}>{cty}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Kecamatan & Kode Pos */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Kecamatan / Kelurahan
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.district}
+                    onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                    placeholder="Contoh: Kebayoran Baru, Senayan"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-gray-700 block mb-1">
+                    Kode Pos <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={5}
+                    value={formData.postal_code}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setFormData(prev => ({ ...prev, postal_code: val }));
+                      if (formErrors.postal_code) {
+                        setFormErrors(prev => ({ ...prev, postal_code: undefined }));
+                      }
+                    }}
+                    placeholder="12190"
+                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                      formErrors.postal_code 
+                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
+                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                    }`}
+                  />
+                  {formErrors.postal_code && (
+                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
+                      <AlertCircle size={10} /> {formErrors.postal_code}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Alamat Lengkap */}
               <div>
-                <label className="font-semibold text-gray-700 block mb-1">Alamat Lengkap *</label>
+                <label className="font-semibold text-gray-700 block mb-1">
+                  Alamat Lengkap <span className="text-rose-500">*</span>
+                </label>
                 <textarea
                   rows={2}
                   value={formData.full_address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, full_address: e.target.value }))}
-                  placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-gray-50 resize-none"
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, full_address: e.target.value }));
+                    if (formErrors.full_address) {
+                      setFormErrors(prev => ({ ...prev, full_address: undefined }));
+                    }
+                  }}
+                  placeholder="Nama jalan, nomor gedung/rumah, RT/RW..."
+                  className={`w-full px-3 py-2 border rounded-xl focus:outline-none resize-none transition-colors ${
+                    formErrors.full_address 
+                      ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
+                      : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                  }`}
                 />
                 {formErrors.full_address && (
-                  <span className="text-[10px] text-rose-600">{formErrors.full_address}</span>
+                  <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
+                    <AlertCircle size={10} /> {formErrors.full_address}
+                  </span>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Kota / Kabupaten *</label>
+              {/* Catatan untuk Kurir / Patokan */}
+              <div>
+                <label className="font-semibold text-gray-700 block mb-1">
+                  Patokan / Catatan Pengiriman <span className="text-gray-400 font-normal">(Opsional)</span>
+                </label>
+                <div className="relative">
                   <input
                     type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                    placeholder="Jakarta Selatan"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-gray-50"
+                    value={formData.notes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Contoh: Pagar hitam samping minimarket, titip di satpam"
+                    className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white"
                   />
-                  {formErrors.city && (
-                    <span className="text-[10px] text-rose-600">{formErrors.city}</span>
-                  )}
-                </div>
-
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Kode Pos *</label>
-                  <input
-                    type="text"
-                    value={formData.postal_code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
-                    placeholder="12190"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-gray-50"
-                  />
-                  {formErrors.postal_code && (
-                    <span className="text-[10px] text-rose-600">{formErrors.postal_code}</span>
-                  )}
+                  <Compass size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
                 </div>
               </div>
 
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+              {/* Checkbox Alamat Utama */}
+              <div className="pt-1">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={formData.is_default}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 cursor-pointer"
                   />
-                  <span className="text-xs text-gray-700">Jadikan sebagai alamat utama</span>
+                  <span className="text-xs text-gray-700 font-medium">Jadikan sebagai alamat utama</span>
                 </label>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => setIsFormOpen(false)}
+                  onClick={() => {
+                    if (initialMode === 'add') {
+                      onClose();
+                    } else {
+                      setIsFormOpen(false);
+                    }
+                  }}
                   className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors cursor-pointer"
                 >
                   Batal
@@ -245,7 +465,7 @@ export default function AddressModal({
                   type="submit"
                   className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition-colors cursor-pointer"
                 >
-                  Simpan Alamat
+                  Simpan & Gunakan
                 </button>
               </div>
             </form>
@@ -268,16 +488,17 @@ export default function AddressModal({
                 <button
                   type="button"
                   onClick={handleOpenAddForm}
-                  className="flex items-center gap-1 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-xl text-xs border border-emerald-200 cursor-pointer shrink-0 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs cursor-pointer shrink-0 transition-colors shadow-xs"
                 >
                   <Plus size={14} />
-                  <span>Tambah</span>
+                  <span>Tambah Alamat</span>
                 </button>
               </div>
 
               {filteredAddresses.length === 0 ? (
-                <div className="p-8 text-center text-gray-500 text-xs">
-                  Tidak ada alamat yang sesuai pencarian.
+                <div className="py-10 text-center text-gray-500 text-xs">
+                  <MapPin size={28} className="mx-auto text-gray-300 mb-2" />
+                  <p>Tidak ada alamat yang sesuai pencarian.</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -322,8 +543,16 @@ export default function AddressModal({
                         </div>
 
                         <p className="text-xs text-gray-600 leading-relaxed">
-                          {addr.full_address}, {addr.city}, {addr.province}, {addr.postal_code}
+                          {addr.full_address}
+                          {addr.district ? `, ${addr.district}` : ''}
+                          {`, ${addr.city}, ${addr.province}, ${addr.postal_code}`}
                         </p>
+
+                        {addr.notes && (
+                          <p className="text-[11px] text-gray-500 italic bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
+                            Patokan: {addr.notes}
+                          </p>
+                        )}
 
                         <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
                           <button

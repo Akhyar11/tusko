@@ -28,6 +28,12 @@ export default function CheckoutPage({
   const [addresses, setAddresses] = useState(mockAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
+
+  const handleOpenAddressModal = (mode = 'list') => {
+    setAddressModalInitialTab(mode);
+    setIsAddressModalOpen(true);
+  };
 
   const handleSaveAddress = (newOrUpdated) => {
     setAddresses(prev => {
@@ -181,13 +187,24 @@ export default function CheckoutPage({
                 <MapPin size={16} className="text-emerald-600" />
                 <span>Alamat Pengiriman</span>
               </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddressModalOpen(true)}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
-              >
-                Pilih Alamat Lain
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddressModal('add')}
+                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-1 hover:underline"
+                >
+                  <Plus size={13} strokeWidth={2.5} />
+                  <span>Tambah Alamat</span>
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddressModal('list')}
+                  className="text-xs font-semibold text-gray-600 hover:text-emerald-700 cursor-pointer hover:underline"
+                >
+                  Pilih Alamat Lain
+                </button>
+              </div>
             </div>
 
             <div className="mt-3 text-xs text-gray-700">
@@ -425,6 +442,7 @@ export default function CheckoutPage({
         onClose={() => setIsAddressModalOpen(false)}
         addresses={addresses}
         selectedAddressId={selectedAddressId}
+        initialMode={addressModalInitialTab}
         onSelectAddress={(id) => setSelectedAddressId(id)}
         onSaveAddress={handleSaveAddress}
         onDeleteAddress={handleDeleteAddress}
