@@ -51,7 +51,8 @@ class CheckoutController extends Controller
                     $qty = (int) $item['quantity'];
                     $itemPrice = (float) $product->price;
                     $itemSubtotal = $itemPrice * $qty;
-                    $weightPerUnit = (float) ($product->weight ?? 1.0);
+                    $rawWeight = (float) ($product->weight ?? 1000);
+                    $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
 
                     $checkoutItemsData[] = [
                         'product' => $product,
@@ -100,7 +101,8 @@ class CheckoutController extends Controller
                     $qty = (int) $cartItem->quantity;
                     $itemPrice = (float) $product->price;
                     $itemSubtotal = $itemPrice * $qty;
-                    $weightPerUnit = (float) ($product->weight ?? 1.0);
+                    $rawWeight = (float) ($product->weight ?? 1000);
+                    $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
 
                     $checkoutItemsData[] = [
                         'product' => $product,

@@ -1,16 +1,34 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::match(['put', 'patch'], '/profile', [AuthController::class, 'updateProfile']);
+    });
+});
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+Route::get('/user', [AuthController::class, 'me'])->middleware('auth:sanctum');
+Route::match(['put', 'patch'], '/user', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
+Route::match(['put', 'patch'], '/profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
+    Route::post('/', [ProductController::class, 'store']);
+    Route::match(['put', 'patch'], '/{idOrSlug}', [ProductController::class, 'update']);
+    Route::delete('/{idOrSlug}', [ProductController::class, 'destroy']);
+    Route::post('/{idOrSlug}/toggle-status', [ProductController::class, 'toggleStatus']);
     Route::get('/{idOrSlug}', [ProductController::class, 'show']);
 });
 
