@@ -1,192 +1,248 @@
-import React from 'react';
-import { Star, MapPin, Plus, Flame, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ShoppingBag, Heart, Check } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
 export default function ProductCard({ 
   product, 
+  currentUser = null,
   onAddToCart = () => {},
   onSelectProduct = () => {}
 }) {
-  const stock = Number(product.stock ?? 0);
-  const minStock = Number(product.stock_minimum ?? 5);
-  const isOutOfStock = stock <= 0;
-  const isLowStock = !isOutOfStock && stock <= minStock;
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
-  // Percentage for stock bar (low stock warning)
-  const stockRatioPercent = Math.min(100, Math.max(10, Math.round((stock / (minStock * 2)) * 100)));
+  // Variant analysis
+  const variants = product.variants || [];
+  const hasVariants = Boolean(
+    (product.variant_levels && product.variant_levels.length > 0) || 
+    (variants && variants.length > 0)
+  );
 
-  // Calculate price range from variants if available
-  const variantPriceInfo = React.useMemo(() => {
-    if (product.variants && product.variants.length > 0) {
-      const prices = product.variants.map((v) => Number(v.price) || 0).filter((p) => p > 0);
-      if (prices.length > 0) {
-        const min = Math.min(...prices);
-        const max = Math.max(...prices);
-        if (min !== max) {
-          return { isRange: true, min, max, label: `${formatRupiah(min)} - ${formatRupiah(max)}` };
-        }
-      }
+  const inStockVariants = useMemo(() => {
+    if (!hasVariants) return [];
+    return variants.filter((v) => Number(v.stock ?? 0) > 0);
+  }, [hasVariants, variants]);
+
+  const totalStock = useMemo(() => {
+    if (hasVariants) {
+      return variants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0);
     }
-    return { isRange: false, min: product.price, max: product.price, label: formatRupiah(product.price) };
+    return Number(product.stock ?? 0);
+  }, [hasVariants, variants, product.stock]);
+
+  // Out of stock if no items available
+  const isOutOfStock = hasVariants ? inStockVariants.length === 0 : totalStock <= 0;
+
+  // Aturan logika variasi:
+  // 1. Jika ada variasinya dan lebih dari 1 variasi yang stoknya masih ada -> masuk ke halaman detail product untuk memilih variasi
+  // 2. Jika ada variasinya tapi semua variasi kosong dan HANYA ADA 1 variasi yang stok masih ada -> langsung masukkan variasi tersebut ke keranjang
+  // 3. Jika tidak ada variasi -> langsung masukkan ke keranjang
+  const hasMultipleVariantsInStock = hasVariants && inStockVariants.length > 1;
+  const hasSingleVariantInStock = hasVariants && inStockVariants.length === 1;
+
+  // Determine badge text and styling matching prototype
+  const badgeInfo = useMemo(() => {
+    if (product.badge) {
+      if (product.badge === 'PELAT KARBON') return { text: 'PELAT KARBON', bg: 'bg-blue-600 text-white' };
+      if (product.badge === 'POPULER') return { text: 'POPULER', bg: 'bg-emerald-700 text-white' };
+      return { text: product.badge, bg: 'bg-black text-white' };
+    }
+    if (product.id === 1) return { text: 'BARU', bg: 'bg-black text-white' };
+    if (product.id === 2) return { text: 'BEST SELLER', bg: 'bg-black text-white' };
+    if (product.id === 3) return { text: 'PELAT KARBON', bg: 'bg-blue-600 text-white' };
+    if (product.id === 4) return { text: 'POPULER', bg: 'bg-emerald-700 text-white' };
+    if (product.is_official) return { text: 'OFFICIAL', bg: 'bg-black text-white' };
+    return null;
   }, [product]);
 
-  return (
-    <div 
-      onClick={() => onSelectProduct(product)}
-      className="group bg-white rounded-2xl border border-neutral-200/90 overflow-hidden hover:shadow-xl hover:border-neutral-900 transition-all duration-300 flex flex-col cursor-pointer relative"
-    >
-      {/* Product Image Container */}
-      <div className="relative aspect-square w-full bg-neutral-100 overflow-hidden">
-        <img
-          src={product.image_url}
-          alt={product.name}
-          loading="lazy"
-          className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ${
-            isOutOfStock ? 'grayscale opacity-75' : ''
-          }`}
-        />
+  // Determine category subtitle line
+  const categorySubtitle = useMemo(() => {
+    if (product.category_subtitle) return product.category_subtitle;
+    if (product.id === 1) return 'Sepak Bola • Matchday';
+    if (product.id === 2) return 'Running • Pria/Wanita';
+    if (product.id === 3) return 'Marathon • Pro';
+    if (product.id === 4) return 'Training • Celana';
+    if (product.id === 10) return 'Equipment • Gym & Travel';
+    return `${product.location || 'Official'} • Performance`;
+  }, [product]);
 
-        {/* Badges Overlay */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
-          {product.is_official && (
-            <span className="bg-neutral-950 text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
-              TUSKO PRO
+  // Determine variant summary line
+  const variantSummary = useMemo(() => {
+    if (hasVariants) {
+      if (inStockVariants.length === 1) {
+        const single = inStockVariants[0];
+        const vText = [single.color, single.size ? `Ukuran ${single.size}` : ''].filter(Boolean).join(' - ') || single.size || '1 Opsi';
+        return `Sisa 1 Varian: ${vText}`;
+      }
+      const sizeLevel = product.variant_levels?.find(l => l.code === 'size');
+      if (sizeLevel && sizeLevel.options?.length > 0) {
+        const opts = sizeLevel.options;
+        return `${opts.length} Pilihan Ukuran (${opts[0]} - ${opts[opts.length - 1]})`;
+      }
+      return `${variants.length} Pilihan Variasi`;
+    }
+    return 'Stok Siap Kirim';
+  }, [hasVariants, inStockVariants, product.variant_levels, variants]);
+
+  const handleCartButtonClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOutOfStock) return;
+
+    // Jika belum login, tombol keranjang wajib meminta login terlebih dahulu
+    if (!currentUser) {
+      onAddToCart(product, 1);
+      return;
+    }
+
+    // Kasus 1: Produk memiliki variasi dan LEBIH DARI 1 variasi masih tersedia stok
+    // Harus masuk ke halaman detail product dulu agar pembeli dapat memilih variasi
+    if (hasMultipleVariantsInStock) {
+      onSelectProduct(product);
+      return;
+    }
+
+    // Kasus 2: Produk memiliki variasi, tetapi semua variasi kosong & HANYA 1 variasi yang masih ada stok
+    // Langsung masukkan produk dengan variasi tunggal yang tersisa ke keranjang
+    if (hasSingleVariantInStock) {
+      const singleVariant = inStockVariants[0];
+      const sizeName = singleVariant.size || singleVariant.name;
+      const colorName = singleVariant.color;
+      const variantParts = [colorName, sizeName ? `Ukuran ${sizeName}` : ''].filter(Boolean);
+      const variantLabel = variantParts.join(' - ') || sizeName || 'Standar';
+
+      const productToAdd = {
+        ...product,
+        price: Number(singleVariant.price) || product.price,
+        selected_variant: singleVariant,
+        variant_name: variantLabel,
+        variant_sku: singleVariant.sku || product.sku
+      };
+
+      onAddToCart(productToAdd, 1);
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
+      return;
+    }
+
+    // Kasus 3: Produk tidak memiliki variasi sama sekali (produk tunggal standar)
+    // Langsung masukkan produk ke keranjang
+    onAddToCart(product, 1);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  return (
+    <div className="bg-white border border-neutral-200 hover:border-black transition-colors p-2.5 sm:p-4 flex flex-col justify-between group select-none">
+      <div>
+        {/* Aspect-square Image Container - Mengklik foto membuka Detail Produk */}
+        <div 
+          onClick={() => onSelectProduct(product)}
+          className="aspect-square bg-neutral-100 relative overflow-hidden mb-2.5 cursor-pointer"
+          title="Klik untuk melihat detail produk"
+        >
+          <img 
+            src={product.image_url} 
+            alt={product.name} 
+            loading="lazy"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+              isOutOfStock ? 'grayscale opacity-75' : ''
+            }`}
+          />
+          
+          {/* Top-Left Badge */}
+          {badgeInfo && (
+            <span className={`absolute top-2 left-2 text-[8px] sm:text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 ${badgeInfo.bg}`}>
+              {badgeInfo.text}
             </span>
           )}
-          {product.free_shipping && (
-            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wide">
-              Bebas Ongkir
-            </span>
-          )}
+
+          {/* Top-Right Wishlist Heart Button */}
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsWishlisted(!isWishlisted);
+            }}
+            className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/90 rounded-full flex items-center justify-center text-neutral-700 hover:text-red-500 shadow-2xs transition-colors cursor-pointer"
+            title="Tambah ke Wishlist"
+          >
+            <Heart 
+              size={13} 
+              className={isWishlisted ? 'fill-red-500 text-red-500' : 'text-neutral-700'} 
+            />
+          </button>
         </div>
 
-        {/* Stock Badge on Top Right */}
-        <div className="absolute top-2.5 right-2.5 z-10">
-          {isOutOfStock ? (
-            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
-              Habis
+        {/* Category Line */}
+        <span className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider block truncate">
+          {categorySubtitle}
+        </span>
+
+        {/* Product Title - Mengklik judul membuka Detail Produk */}
+        <h3 
+          onClick={() => onSelectProduct(product)}
+          className="font-sport font-black text-xs sm:text-sm uppercase tracking-tight line-clamp-2 mt-0.5 sm:mt-1 leading-snug hover:underline h-8 sm:h-10 cursor-pointer text-black"
+          title="Klik untuk melihat detail produk"
+        >
+          {product.name}
+        </h3>
+        
+        {/* Price Row */}
+        <div className="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
+          <span className="font-sport font-black text-xs sm:text-base text-black">
+            {formatRupiah(product.price)}
+          </span>
+          {product.discount_percentage ? (
+            <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1">
+              -{product.discount_percentage}%
             </span>
-          ) : isLowStock ? (
-            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1 animate-pulse uppercase tracking-wider">
-              <Flame size={11} className="fill-current" />
-              Sisa {stock}!
+          ) : null}
+          {product.original_price && product.original_price > product.price && !product.discount_percentage ? (
+            <span className="text-[9px] text-neutral-400 line-through">
+              {formatRupiah(product.original_price)}
             </span>
           ) : null}
         </div>
 
-        {/* Out of Stock Dark Overlay */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-2xs flex items-center justify-center">
-            <span className="bg-neutral-900 text-white font-black text-xs px-3.5 py-1.5 rounded-xl border border-neutral-700 shadow-lg uppercase tracking-wider">
-              Stok Habis
-            </span>
-          </div>
+        {/* Options Info */}
+        <div className="mt-1 text-[9px] sm:text-[10px] font-medium text-neutral-500">
+          {variantSummary}
+        </div>
+      </div>
+
+      {/* Add to Cart Button */}
+      <button
+        type="button"
+        disabled={isOutOfStock}
+        onClick={handleCartButtonClick}
+        className={`mt-3 w-full font-sport font-bold text-[10px] sm:text-[11px] uppercase tracking-wider py-2 sm:py-2.5 px-2 flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+          isOutOfStock 
+            ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+            : isAdded
+              ? 'bg-emerald-600 text-white'
+              : 'bg-black hover:bg-neutral-800 text-white active:scale-98'
+        }`}
+        title={
+          isOutOfStock 
+            ? 'Stok produk habis' 
+            : hasMultipleVariantsInStock 
+              ? 'Pilih variasi produk di halaman detail' 
+              : 'Langsung masukkan ke keranjang'
+        }
+      >
+        {isAdded ? (
+          <>
+            <Check size={13} className="stroke-[3]" />
+            <span>MASUK KERANJANG</span>
+          </>
+        ) : (
+          <>
+            <ShoppingBag size={13} />
+            <span>{isOutOfStock ? 'STOK HABIS' : '+ KERANJANG'}</span>
+          </>
         )}
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <div>
-          {/* Seller / Brand */}
-          <div className="flex items-center justify-between text-[11px] text-neutral-400 mb-1 font-semibold uppercase tracking-wider">
-            <span>{product.seller_name || 'Tusko Official'}</span>
-            <div className="flex items-center gap-0.5 text-neutral-500">
-              <MapPin size={11} className="shrink-0" />
-              <span className="truncate max-w-[100px]">{product.location}</span>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h4 className="text-xs sm:text-sm font-bold text-neutral-900 line-clamp-2 leading-snug group-hover:text-amber-600 transition-colors">
-            {product.name}
-          </h4>
-
-          {/* Price */}
-          <div className="mt-2.5">
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-base sm:text-lg font-black text-neutral-950 tracking-tight">
-                {variantPriceInfo.label}
-              </span>
-            </div>
-            
-            {product.discount_percentage > 0 && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] font-extrabold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded">
-                  -{product.discount_percentage}%
-                </span>
-                <span className="text-[11px] text-neutral-400 line-through font-medium">
-                  {formatRupiah(product.original_price)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Rating & Sold Count */}
-          <div className="flex items-center gap-1.5 text-[11px] text-neutral-600 mt-2">
-            <div className="flex items-center text-amber-500 font-bold">
-              <Star size={12} className="fill-current" />
-              <span className="ml-1 text-neutral-900">{product.rating}</span>
-            </div>
-            <span className="text-neutral-300">•</span>
-            <span className="font-medium text-neutral-500">{product.sold_count}+ terjual</span>
-          </div>
-
-          {/* Stock Indicator */}
-          <div className="mt-3 pt-2 border-t border-neutral-100">
-            {isOutOfStock ? (
-              <div className="flex items-center gap-1 text-[11px] text-rose-600 font-bold">
-                <AlertCircle size={12} />
-                <span>Stok tidak tersedia</span>
-              </div>
-            ) : isLowStock ? (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="font-extrabold text-rose-600 flex items-center gap-0.5 uppercase tracking-wider">
-                    <Flame size={11} className="fill-rose-500" />
-                    Stok Menipis
-                  </span>
-                  <span className="text-neutral-500 font-bold">
-                    Sisa <strong className="text-rose-600">{stock}</strong> unit
-                  </span>
-                </div>
-                <div className="w-full bg-rose-100 rounded-full h-1.5 overflow-hidden">
-                  <div 
-                    className="bg-rose-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${stockRatioPercent}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between text-[10px] text-neutral-500">
-                <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Ready Stock
-                </span>
-                <span className="text-neutral-400 font-medium">
-                  {stock} unit
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="mt-3.5 pt-2 border-t border-neutral-100">
-          <button
-            type="button"
-            disabled={isOutOfStock}
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product);
-            }}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-900 text-white hover:bg-amber-500 hover:text-neutral-950 rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-98"
-            title={isOutOfStock ? "Stok Habis" : "Tambah ke Keranjang"}
-          >
-            <Plus size={14} className="stroke-[3]" />
-            <span>{isOutOfStock ? 'Stok Habis' : '+ Keranjang'}</span>
-          </button>
-        </div>
-      </div>
+      </button>
     </div>
   );
 }

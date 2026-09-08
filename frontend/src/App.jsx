@@ -20,6 +20,10 @@ import ProfilePage from './components/ProfilePage';
 import ProductListPage from './components/ProductListPage';
 import ProductCreateForm from './components/ProductCreateForm';
 import ProductEditForm from './components/ProductEditForm';
+import HeroCampaignBanner from './components/HeroCampaignBanner';
+import PopularChipsBar from './components/PopularChipsBar';
+import SportCategoriesSection from './components/SportCategoriesSection';
+import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
@@ -27,12 +31,13 @@ import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
+import { authService } from './services/authService';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('tusko_current_user');
+      const saved = localStorage.getItem('tusko_current_user') || localStorage.getItem('tusko_auth_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -81,6 +86,7 @@ export default function App() {
   const [minRating, setMinRating] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [pendingCartAction, setPendingCartAction] = useState(null);
 
   // Initial cart with realistic mock items from mockProducts
   const [cart, setCart] = useState(() => [
@@ -106,18 +112,45 @@ export default function App() {
     showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'})`);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // ignore
+    }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    if (currentView === 'profile') {
+    if (currentView === 'profile' || currentView === 'cart') {
       setCurrentView('catalog');
     }
   };
+
+  // Sync / validate user profile from live backend on mount
+  useEffect(() => {
+    authService.getProfile()
+      .then((liveUser) => {
+        if (liveUser) {
+          handleUpdateUser(liveUser);
+        }
+      })
+      .catch(() => {
+        // backend offline or session expired
+      });
+  }, []);
 
   // Scroll to top when view changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView, selectedProduct]);
+
+  // Auth guard: Jika belum login dan mencoba membuka keranjang, alihkan ke login
+  useEffect(() => {
+    if (currentView === 'cart' && !currentUser) {
+      setPendingCartAction(prev => prev || { type: 'open_cart', returnView: 'cart' });
+      showToast('Silakan masuk ke akun (Login) terlebih dahulu untuk mengakses keranjang belanja.');
+      setCurrentView('login');
+    }
+  }, [currentView, currentUser]);
 
   // Total items in cart
   const cartTotalCount = useMemo(() => {
@@ -298,8 +331,44 @@ export default function App() {
     sortBy
   ]);
 
+  // Auth requirement handler for cart actions
+  const handleRequireLogin = (action = null, message = 'Silakan masuk ke akun (Login) terlebih dahulu.') => {
+    if (action) {
+      setPendingCartAction(action);
+    }
+    showToast(message);
+    setCurrentView('login');
+  };
+
+  // Safe cart opener with auth check
+  const handleOpenCart = () => {
+    if (!currentUser) {
+      handleRequireLogin(
+        { type: 'open_cart', returnView: 'cart' },
+        'Silakan masuk ke akun (Login) terlebih dahulu untuk membuka keranjang belanja.'
+      );
+      return;
+    }
+    setCurrentView('cart');
+  };
+
   // Cart operations
   const handleAddToCart = (product, quantity = 1, notes = '') => {
+    // Jika belum login, simpan aksi pending dan arahkan login terlebih dahulu
+    if (!currentUser) {
+      handleRequireLogin(
+        { 
+          type: 'add_to_cart', 
+          product, 
+          quantity, 
+          notes, 
+          returnView: currentView === 'detail' ? 'detail' : 'catalog' 
+        },
+        'Silakan masuk ke akun (Login) terlebih dahulu untuk menambahkan produk ke keranjang.'
+      );
+      return;
+    }
+
     const itemKey = product.selected_variant?.id 
       ? `${product.id}-${product.selected_variant.id}` 
       : product.id;
@@ -327,6 +396,19 @@ export default function App() {
   };
 
   const handleBuyNow = (product, quantity = 1, notes = '') => {
+    if (!currentUser) {
+      handleRequireLogin(
+        { 
+          type: 'buy_now', 
+          product, 
+          quantity, 
+          notes, 
+          returnView: 'cart' 
+        },
+        'Silakan masuk ke akun (Login) terlebih dahulu untuk melakukan pembelian produk.'
+      );
+      return;
+    }
     handleAddToCart(product, quantity, notes);
     setCurrentView('cart');
   };
@@ -424,16 +506,86 @@ export default function App() {
     setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
   };
 
+  const handleAuthSuccess = (user, successPrefix = 'Berhasil masuk') => {
+    handleUpdateUser(user);
+    showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'})`);
+
+    if (pendingCartAction) {
+      const action = pendingCartAction;
+      setPendingCartAction(null);
+
+      if (action.type === 'add_to_cart') {
+        const prod = action.product;
+        const qty = action.quantity || 1;
+        const nts = action.notes || '';
+        const itemKey = prod.selected_variant?.id ? `${prod.id}-${prod.selected_variant.id}` : prod.id;
+
+        setCart((prev) => {
+          const existing = prev.find((item) => item.id === itemKey);
+          const maxStock = Number(prod.stock ?? 99);
+          if (existing) {
+            const updatedQty = Math.min(maxStock, existing.quantity + qty);
+            return prev.map((item) =>
+              item.id === itemKey ? { ...item, quantity: updatedQty, notes: nts || item.notes } : item
+            );
+          }
+          return [...prev, { ...prod, id: itemKey, product_id: prod.id, quantity: qty, notes: nts }];
+        });
+
+        const variantLabel = prod.variant_name ? ` [${prod.variant_name}]` : '';
+        setTimeout(() => {
+          showToast(`"${prod.name.slice(0, 18)}..."${variantLabel} (${qty}x) berhasil masuk keranjang!`);
+        }, 400);
+
+        if (action.returnView === 'detail' && selectedProduct) {
+          setCurrentView('detail');
+        } else {
+          setCurrentView('cart');
+        }
+        return;
+      }
+
+      if (action.type === 'buy_now') {
+        const prod = action.product;
+        const qty = action.quantity || 1;
+        const nts = action.notes || '';
+        const itemKey = prod.selected_variant?.id ? `${prod.id}-${prod.selected_variant.id}` : prod.id;
+
+        setCart((prev) => {
+          const existing = prev.find((item) => item.id === itemKey);
+          const maxStock = Number(prod.stock ?? 99);
+          if (existing) {
+            const updatedQty = Math.min(maxStock, existing.quantity + qty);
+            return prev.map((item) =>
+              item.id === itemKey ? { ...item, quantity: updatedQty, notes: nts || item.notes } : item
+            );
+          }
+          return [...prev, { ...prod, id: itemKey, product_id: prod.id, quantity: qty, notes: nts }];
+        });
+
+        setCurrentView('cart');
+        return;
+      }
+
+      if (action.type === 'open_cart') {
+        setCurrentView('cart');
+        return;
+      }
+    }
+
+    setCurrentView('catalog');
+  };
+
   if (currentView === 'login') {
     return (
       <LoginPage
-        onLoginSuccess={(user) => {
-          handleUpdateUser(user);
-          showToast(`Berhasil masuk sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member'})`);
-          setCurrentView('catalog');
-        }}
+        onLoginSuccess={(user) => handleAuthSuccess(user, 'Berhasil masuk')}
         onNavigateRegister={() => setCurrentView('register')}
-        onBackToHome={() => setCurrentView('catalog')}
+        onBackToHome={() => {
+          const returnView = pendingCartAction?.returnView || 'catalog';
+          setPendingCartAction(null);
+          setCurrentView(returnView);
+        }}
       />
     );
   }
@@ -441,19 +593,19 @@ export default function App() {
   if (currentView === 'register') {
     return (
       <RegisterPage
-        onRegisterSuccess={(user) => {
-          handleUpdateUser(user);
-          showToast(`Selamat datang, ${user.name}! Akun baru Anda telah aktif.`);
-          setCurrentView('catalog');
-        }}
+        onRegisterSuccess={(user) => handleAuthSuccess(user, 'Selamat datang')}
         onNavigateLogin={() => setCurrentView('login')}
-        onBackToHome={() => setCurrentView('catalog')}
+        onBackToHome={() => {
+          const returnView = pendingCartAction?.returnView || 'catalog';
+          setPendingCartAction(null);
+          setCurrentView(returnView);
+        }}
       />
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f6f8]">
+    <div className={`min-h-screen flex flex-col ${currentView === 'catalog' || currentView === 'detail' ? 'bg-white' : 'bg-[#f5f6f8]'}`}>
       {/* Toast Notification with Cart Shortcut */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 text-white border border-neutral-700 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
@@ -462,7 +614,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => {
-              setCurrentView('cart');
+              handleOpenCart();
               setToastMessage(null);
             }}
             className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-xl transition-colors cursor-pointer shrink-0 tracking-wider"
@@ -482,7 +634,7 @@ export default function App() {
         products={products}
         onSelectProduct={handleSelectProduct}
         onResetHome={handleResetHome}
-        onOpenCart={() => setCurrentView('cart')}
+        onOpenCart={handleOpenCart}
         onOpenOrders={() => setCurrentView('orders')}
         onOpenTransactions={() => setCurrentView('transactions')}
         onOpenProductsAdmin={() => setCurrentView('products-admin')}
@@ -498,7 +650,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-2">
+      <main className={`flex-1 w-full ${currentView === 'catalog' || currentView === 'detail' ? '' : 'max-w-7xl mx-auto px-4 py-6'}`}>
         {currentView === 'product-edit' && editingProduct ? (
           <ProductEditForm
             product={editingProduct}
@@ -569,8 +721,7 @@ export default function App() {
             }}
             onBuyAgain={(item) => {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
-              handleAddToCart(foundProd, 1);
-              setCurrentView('cart');
+              handleBuyNow(foundProd, 1);
             }}
             onCancelOrder={(order) => {
               setOrders(prev => prev.map(o => 
@@ -606,8 +757,7 @@ export default function App() {
             }}
             onBuyAgain={(item) => {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
-              handleAddToCart(foundProd, 1);
-              setCurrentView('cart');
+              handleBuyNow(foundProd, 1);
             }}
             onCancelOrder={(order) => {
               setOrders(prev => prev.map(o => 
@@ -814,97 +964,95 @@ export default function App() {
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
             onSelectCategory={handleSelectCategory}
+            onOpenRegister={() => setCurrentView('register')}
+            onOpenCart={handleOpenCart}
           />
         ) : (
           <>
-            {/* Promotional Carousel */}
-            <PromoBanner />
-
-            {/* Quick Category Bar */}
-            <CategoryBar
-              categories={categories}
-              selectedCategoryId={selectedCategoryId}
-              onSelectCategory={handleSelectCategory}
+            {/* 3. Hero Campaign Banner (Benchmark: adidas Editorial Campaign) */}
+            <HeroCampaignBanner
+              onBuyNowClick={() => {
+                const el = document.getElementById('product-catalog');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onExploreClick={() => {
+                const el = document.getElementById('sport-categories');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
             />
 
-            {/* Mobile Filter Button Bar */}
-            <div className="lg:hidden flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200 mb-4 shadow-2xs">
-              <span className="text-xs font-semibold text-gray-700">
-                {filteredProducts.length} Produk Ditemukan
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsMobileFilterOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-amber-400 text-xs font-black uppercase tracking-wider rounded-xl border border-neutral-800 hover:bg-neutral-800 cursor-pointer shadow-xs"
-              >
-                <Filter size={14} />
-                <span>Filter</span>
-                {activeFiltersCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-amber-500 text-neutral-950 text-[10px] flex items-center justify-center font-black">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </button>
-            </div>
+            {/* 4. Populer Sekarang (Horizontal Chips Slider) */}
+            <PopularChipsBar
+              onSelectChip={(query) => {
+                setSearchQuery(query);
+                setSelectedCategoryId(null);
+                const el = document.getElementById('product-catalog');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
-            {/* Two-Column Layout: Filter Sidebar + Product Grid */}
-            <div className="flex gap-6 items-start">
-              {/* Filter Sidebar */}
-              <FilterSidebar
-                categories={categories}
-                selectedCategoryId={selectedCategoryId}
-                onSelectCategory={handleSelectCategory}
-                minPrice={minPrice}
-                maxPrice={maxPrice}
-                onPriceChange={handlePriceChange}
-                onlyOfficial={onlyOfficial}
-                onToggleOfficial={() => setOnlyOfficial(!onlyOfficial)}
-                onlyFreeShipping={onlyFreeShipping}
-                onToggleFreeShipping={() => setOnlyFreeShipping(!onlyFreeShipping)}
-                onlyDiscount={onlyDiscount}
-                onToggleDiscount={() => setOnlyDiscount(!onlyDiscount)}
-                minRating={minRating}
-                onSelectMinRating={setMinRating}
-                selectedLocation={selectedLocation}
-                onSelectLocation={setSelectedLocation}
-                locations={uniqueLocations}
-                productCountsByCategory={productCountsByCategory}
-                onResetFilters={handleResetFilters}
-                isMobileOpen={isMobileFilterOpen}
-                onCloseMobile={() => setIsMobileFilterOpen(false)}
-              />
+            {/* 5. Kategori Pilihan Olahraga (Swipeable di Mobile, 4-Kolom di Desktop) */}
+            <SportCategoriesSection
+              onSelectSport={(sport) => {
+                if (sport.categoryId) {
+                  setSelectedCategoryId(sport.categoryId);
+                } else if (sport.query) {
+                  setSearchQuery(sport.query);
+                }
+                const el = document.getElementById('product-catalog');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onViewAll={() => {
+                setSelectedCategoryId(null);
+                setSearchQuery('');
+                const el = document.getElementById('product-catalog');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
-              {/* Main Catalog Content */}
-              <div className="flex-1 min-w-0">
-                <ProductGrid
-                  products={filteredProducts}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                  onAddToCart={handleAddToCart}
-                  onSelectProduct={handleSelectProduct}
-                  categoryTitle={activeCategory ? activeCategory.name : null}
-                  searchQuery={searchQuery}
-                  onClearSearch={() => setSearchQuery('')}
-                  activeFilters={{
-                    minPrice,
-                    maxPrice,
-                    onlyOfficial,
-                    onlyFreeShipping,
-                    onlyDiscount,
-                    minRating,
-                    selectedLocation
-                  }}
-                  onClearFilter={handleClearSingleFilter}
-                  onResetFilters={handleResetFilters}
-                />
-              </div>
-            </div>
+            {/* 6. Produk Unggulan & Etalase Varian (Benchmark: adidas.co.id Grid) */}
+            <ProductGrid
+              products={filteredProducts}
+              currentUser={currentUser}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              onAddToCart={handleAddToCart}
+              onSelectProduct={handleSelectProduct}
+              categoryTitle={activeCategory ? activeCategory.name : null}
+              searchQuery={searchQuery}
+              onClearSearch={() => setSearchQuery('')}
+              activeFilters={{
+                minPrice,
+                maxPrice,
+                onlyOfficial,
+                onlyFreeShipping,
+                onlyDiscount,
+                minRating,
+                selectedLocation
+              }}
+              onClearFilter={handleClearSingleFilter}
+              onResetFilters={handleResetFilters}
+            />
+
+            {/* 7. Tusko Club Loyalty Banner */}
+            <TuskoClubBanner
+              onJoinClick={() => setCurrentView('register')}
+            />
           </>
         )}
       </main>
 
-      {/* Footer */}
-      <Footer />
+      {/* 8. Footer Standar E-Commerce Adidas */}
+      <Footer
+        onSelectCategory={(term) => {
+          setSearchQuery(term);
+          setSelectedCategoryId(null);
+          setCurrentView('catalog');
+          const el = document.getElementById('product-catalog');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onOpenOrders={() => setCurrentView('orders')}
+      />
     </div>
   );
 }

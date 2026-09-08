@@ -1,20 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
-  ShoppingCart, 
   ShoppingBag, 
-  Wallet,
-  Boxes,
-  Bell, 
-  Mail, 
-  HelpCircle, 
-  ChevronDown, 
+  Heart,
+  Truck, 
+  MapPin, 
   X, 
   TrendingUp, 
-  Zap, 
+  User, 
+  Package, 
+  Boxes, 
+  Wallet,
+  Menu,
+  RotateCcw,
   ShieldCheck,
-  Truck,
-  Package
+  Award,
+  ChevronRight,
+  Sparkles,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import UserMenuDropdown from './UserMenuDropdown';
@@ -23,7 +27,7 @@ export default function Navbar({
   cartCount = 0, 
   searchQuery = '', 
   onSearchChange = () => {},
-  _selectedCategory = null,
+  selectedCategory = null,
   onSelectCategory = () => {},
   products = [],
   onSelectProduct = () => {},
@@ -43,15 +47,18 @@ export default function Navbar({
   onSwitchUser = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeCategoryTab, setActiveCategoryTab] = useState('Semua');
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
 
   const trendingSearches = [
-    'Jersey Matchday 2026', 
-    'Sepatu Marathon Carbon', 
-    'Celana Training Tapered', 
-    'Gym Duffle Bag', 
-    'Kaos Kaki Anti-Slip'
+    'Jersey Timnas AeroTech', 
+    'Sepatu Ultimashow FX3632', 
+    'Sepatu Pelat Karbon', 
+    'Celana Kompresi 2-in-1', 
+    'Tas Duffle 45L'
   ];
 
   // Live matching products for dropdown preview
@@ -77,25 +84,59 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Prevent background scroll when mobile menu drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   const handleSelectSuggestion = (title) => {
     onSearchChange(title);
     setIsFocused(false);
+    setIsMobileSearchOpen(false);
   };
 
   const handleProductClick = (product) => {
     onSelectProduct(product);
     setIsFocused(false);
+    setIsMobileSearchOpen(false);
+  };
+
+  const handleNavCategoryClick = (categoryName) => {
+    setActiveCategoryTab(categoryName);
+    if (categoryName === 'Semua') {
+      onSelectCategory(null);
+      onSearchChange('');
+    } else if (categoryName === 'Olahraga') {
+      const el = document.getElementById('sport-categories');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else if (categoryName === 'Sale') {
+      onSearchChange('');
+      onSelectCategory(null);
+      const el = document.getElementById('product-catalog');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      onSearchChange(categoryName);
+      const el = document.getElementById('product-catalog');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const renderSuggestionsDropdown = () => {
     if (!isFocused) return null;
     return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800 overflow-hidden z-50 text-xs">
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-none shadow-2xl border border-neutral-300 overflow-hidden z-50 text-xs">
         {!searchQuery.trim() ? (
-          <div className="p-3.5">
-            <div className="flex items-center gap-1.5 text-neutral-400 font-bold mb-2.5 uppercase tracking-wider text-[10px]">
-              <TrendingUp size={14} className="text-amber-400" />
-              <span>Paling Dicari Atlet & Komunitas</span>
+          <div className="p-3.5 bg-white">
+            <div className="flex items-center gap-1.5 text-neutral-500 font-bold mb-2.5 uppercase tracking-wider text-[10px]">
+              <TrendingUp size={14} className="text-amber-500" />
+              <span>Paling Dicari Atlet &amp; Komunitas</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {trendingSearches.map((item, idx) => (
@@ -103,7 +144,7 @@ export default function Navbar({
                   key={idx}
                   type="button"
                   onClick={() => handleSelectSuggestion(item)}
-                  className="px-2.5 py-1 bg-neutral-800 hover:bg-amber-500 hover:text-neutral-950 text-neutral-200 rounded-lg font-medium transition-colors cursor-pointer"
+                  className="px-2.5 py-1 bg-neutral-100 hover:bg-black hover:text-white text-neutral-800 text-[11px] font-bold uppercase transition-colors cursor-pointer border border-neutral-200"
                 >
                   {item}
                 </button>
@@ -113,35 +154,35 @@ export default function Navbar({
         ) : (
           <div>
             {liveSuggestions.length > 0 ? (
-              <div className="divide-y divide-neutral-800">
-                <div className="px-3.5 py-2 bg-neutral-950 text-neutral-400 font-bold flex items-center justify-between text-[11px]">
+              <div className="divide-y divide-neutral-100">
+                <div className="px-3.5 py-2 bg-neutral-50 text-neutral-500 font-bold flex items-center justify-between text-[11px] uppercase tracking-wider">
                   <span>Saran Produk Tusko</span>
-                  <span className="text-[10px] text-neutral-500">Tekan untuk melihat detail</span>
+                  <span className="text-[10px] text-neutral-400">Tekan untuk melihat detail</span>
                 </div>
                 {liveSuggestions.map((product) => (
                   <div
                     key={product.id}
                     onClick={() => handleProductClick(product)}
-                    className="p-3 flex items-center gap-3 hover:bg-neutral-800/80 cursor-pointer transition-colors"
+                    className="p-3 flex items-center gap-3 hover:bg-neutral-50 cursor-pointer transition-colors"
                   >
                     <img
                       src={product.image_url}
                       alt=""
-                      className="w-10 h-10 rounded-lg object-cover border border-neutral-700 shrink-0"
+                      className="w-10 h-10 object-cover border border-neutral-200 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-neutral-100 truncate">{product.name}</p>
+                      <p className="font-bold text-neutral-900 truncate font-sport uppercase">{product.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-black text-amber-400">{formatRupiah(product.price)}</span>
-                        <span className="text-neutral-400 text-[10px]">• {product.location}</span>
+                        <span className="font-black text-black">{formatRupiah(product.price)}</span>
+                        <span className="text-neutral-500 text-[10px]">• {product.location}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-neutral-400">
-                <span>Tekan enter untuk mencari "<strong>{searchQuery}</strong>" di seluruh etalase Tusko</span>
+              <div className="p-4 text-center text-neutral-500 text-xs">
+                <span>Tekan enter untuk mencari "<strong>{searchQuery}</strong>" di katalog Tusko</span>
               </div>
             )}
           </div>
@@ -151,240 +192,581 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-neutral-950 border-b border-neutral-800 text-white shadow-md">
-      {/* Top Bar (Hidden on Mobile) */}
-      <div className="bg-neutral-900 border-b border-neutral-800 text-[11px] text-neutral-400 py-1.5 px-4 hidden md:block">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-5">
-            <span className="flex items-center gap-1 text-amber-400 font-bold uppercase tracking-wider">
-              <Zap size={13} className="fill-current" />
-              TUSKO OFFICIAL STORE
+    <>
+      {/* 1. Top Announcement Utility Bar */}
+      <div className="bg-black text-white text-[11px] font-bold py-2 px-3 sm:px-4 tracking-wider uppercase w-full max-w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 mx-auto sm:mx-0 min-w-0">
+            <Truck size={14} className="text-amber-400 shrink-0" />
+            <span className="text-[10px] sm:text-[11px] truncate">
+              <span className="sm:hidden">GRATIS ONGKIR MIN. 500RB • GARANSI 14 HARI</span>
+              <span className="hidden sm:inline">GRATIS ONGKIR SELURUH INDONESIA MIN. RP 500.000</span>
             </span>
-            <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
-              <ShieldCheck size={13} className="text-emerald-400" />
-              Garansi Tukar Ukuran 7 Hari
-            </span>
-            <span className="hover:text-white transition-colors cursor-pointer">
-              Bebas Ongkir Seluruh Indonesia
-            </span>
+            <span className="hidden md:inline text-neutral-600">|</span>
+            <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
-              <HelpCircle size={13} />
-              Bantuan & CS
+          <div className="hidden lg:flex items-center gap-6 text-neutral-400 text-xs shrink-0">
+            <button 
+              onClick={onOpenOrders}
+              className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <MapPin size={12} />
+              <span>Lacak Pesanan</span>
+            </button>
+            <span className="text-neutral-400 hover:text-white cursor-pointer transition-colors">
+              Bantuan &amp; FAQ
             </span>
-            <span className="hover:text-white transition-colors cursor-pointer">
-              Tentang Tusko Performance
-            </span>
+            <button 
+              onClick={currentUser ? onOpenProfile : onOpenRegister}
+              className="text-amber-400 font-extrabold hover:underline cursor-pointer"
+            >
+              {currentUser ? `Halo, ${currentUser.name}` : 'Gabung Tusko Club'}
+            </button>
+            <span className="text-neutral-500 font-bold">ID | IDR</span>
           </div>
         </div>
       </div>
 
-      {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 py-2.5 sm:py-3">
-        <div className="flex items-center justify-between gap-3 sm:gap-4 md:gap-6">
-          {/* Logo */}
-          <div 
-            onClick={onResetHome}
-            className="flex items-center gap-2 cursor-pointer select-none group shrink-0"
-          >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 flex items-center justify-center text-neutral-950 font-black text-xl sm:text-2xl shadow-md group-hover:bg-amber-400 transition-colors transform -skew-x-6">
-              T
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic leading-none text-white">
-                TUSKO<span className="text-amber-400">.</span>
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-neutral-400 mt-0.5 hidden xs:inline">
-                Sport & Performance
-              </span>
+      {/* 2. Main Navigation Header */}
+      <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 w-full max-w-full">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
+          
+          {/* Left: Hamburger Button (Mobile & Tablet) + Brand Logo */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Hamburger Button for Mobile/Tablet */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-1.5 -ml-1 text-black hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+              title="Buka Menu Navigasi"
+              aria-label="Buka Menu"
+            >
+              <Menu size={22} />
+            </button>
+
+            {/* Brand Logo */}
+            <div 
+              onClick={onResetHome}
+              className="flex items-center gap-2 group flex-shrink-0 cursor-pointer select-none"
+            >
+              <div className="w-8 sm:w-11 h-8 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-lg sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+                T
+              </div>
+              <div className="leading-none">
+                <span className="font-sport font-black text-lg sm:text-2xl tracking-tight uppercase">
+                  TUSKO<span className="text-amber-500">.</span>
+                </span>
+                <span className="hidden sm:block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">
+                  Performance
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Category Dropdown Button */}
-          <button 
-            onClick={() => onSelectCategory(null)}
-            className="hidden lg:flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-neutral-300 hover:text-amber-400 px-3 py-2 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
-          >
-            <span>Kategori</span>
-            <ChevronDown size={15} />
-          </button>
+          {/* Center: Desktop Navigation Categories (Desktop Only) */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sport font-black text-xs uppercase tracking-wider">
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Pria')}
+              className={`pb-1 transition-all cursor-pointer ${
+                activeCategoryTab === 'Pria' 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+              }`}
+            >
+              Pria
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Wanita')}
+              className={`pb-1 transition-all cursor-pointer ${
+                activeCategoryTab === 'Wanita' 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+              }`}
+            >
+              Wanita
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Anak')}
+              className={`pb-1 transition-all cursor-pointer ${
+                activeCategoryTab === 'Anak' 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+              }`}
+            >
+              Anak
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Olahraga')}
+              className={`pb-1 transition-all cursor-pointer ${
+                activeCategoryTab === 'Olahraga' 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+              }`}
+            >
+              Olahraga
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Koleksi')}
+              className={`pb-1 transition-all cursor-pointer ${
+                activeCategoryTab === 'Koleksi' 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+              }`}
+            >
+              Koleksi
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavCategoryClick('Sale')}
+              className="text-red-600 hover:text-red-700 border-b-2 border-transparent hover:border-red-600 pb-1 transition-all cursor-pointer"
+            >
+              Outlet / Sale
+            </button>
+          </nav>
 
-          {/* Search Bar Container (Desktop & Tablet: sm and up) */}
-          <div ref={desktopSearchRef} className="hidden sm:block flex-1 max-w-2xl relative">
+          {/* Right: Header Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Search Input (Desktop) */}
+            <div ref={desktopSearchRef} className="relative hidden lg:block w-48 xl:w-60">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onFocus={() => setIsFocused(true)}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Cari produk..." 
+                className="w-full bg-neutral-100 border border-neutral-200 px-3.5 py-1.5 pl-9 pr-7 text-xs focus:outline-none focus:border-black font-medium"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm" size={14} />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              {renderSuggestionsDropdown()}
+            </div>
+
+            {/* Search Icon (Mobile & Tablet) */}
+            <button 
+              type="button"
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+              className="lg:hidden text-neutral-800 hover:text-black p-1.5 cursor-pointer" 
+              title="Cari"
+            >
+              <Search size={20} />
+            </button>
+
+            {/* Desktop User Menu (Hidden on Mobile/Tablet because it's inside the Hamburger Drawer) */}
+            <div className="hidden lg:block">
+              <UserMenuDropdown
+                currentUser={currentUser}
+                onOpenLogin={onOpenLogin}
+                onOpenRegister={onOpenRegister}
+                onOpenProfile={onOpenProfile}
+                onOpenOrders={onOpenOrders}
+                onOpenTransactions={onOpenTransactions}
+                onOpenProductsAdmin={onOpenProductsAdmin}
+                onOpenStock={onOpenStock}
+                onOpenTemplates={onOpenTemplates}
+                onOpenExpeditions={onOpenExpeditions}
+                onLogout={onLogout}
+                onSwitchUser={onSwitchUser}
+              />
+            </div>
+
+            {/* Wishlist Button */}
+            <button 
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('product-catalog');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-neutral-800 hover:text-black p-1.5 cursor-pointer" 
+              title="Wishlist"
+            >
+              <Heart size={20} />
+            </button>
+
+            {/* Shopping Bag Counter */}
+            <button 
+              type="button"
+              onClick={onOpenCart}
+              className="text-black p-1.5 flex items-center relative cursor-pointer group" 
+              title="Tas Belanja"
+            >
+              <ShoppingBag size={22} className="group-hover:scale-105 transition-transform" />
+              {cartCount > 0 && (
+                <span className="bg-black text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center -ml-2 -mt-3 shadow-xs">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+        </div>
+
+        {/* Mobile Search Dropdown Bar */}
+        {isMobileSearchOpen && (
+          <div ref={mobileSearchRef} className="lg:hidden p-3 bg-white border-t border-neutral-200 relative">
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onFocus={() => setIsFocused(true)}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Cari perlengkapan olahraga (jersey, running shoes, gym gear)..."
-                className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-neutral-900 border border-neutral-750 text-white rounded-xl placeholder-neutral-500 focus:outline-none focus:border-amber-500 focus:bg-neutral-900/90 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                placeholder="Cari sepatu, jersey..."
+                className="w-full bg-neutral-100 border border-neutral-300 py-2 pl-9 pr-8 text-xs focus:outline-none focus:border-black font-medium"
+                autoFocus
               />
-              <Search className="absolute left-3.5 top-3 text-neutral-400" size={17} />
-
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={15} />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-3 text-neutral-400 hover:text-white cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               )}
             </div>
-
             {renderSuggestionsDropdown()}
-
-            {/* Popular Searches below search bar */}
-            <div className="hidden md:flex items-center gap-2 mt-1.5 overflow-x-auto text-[11px] text-neutral-400">
-              <span className="text-neutral-500 font-medium">Tren:</span>
-              {trendingSearches.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onSearchChange(item)}
-                  className="hover:text-amber-400 transition-colors whitespace-nowrap cursor-pointer font-medium"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
           </div>
+        )}
+      </header>
 
-          {/* Actions & Icons */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {/* Cart Icon with badge */}
-            <div 
-              onClick={onOpenCart}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors"
-              title="Keranjang Belanja"
-            >
-              <ShoppingCart size={22} />
-              {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-amber-500 text-neutral-950 text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-4 text-center leading-none shadow-sm">
-                  {cartCount}
-                </span>
-              )}
-            </div>
+      {/* ================= 3. HAMBURGER MENU DRAWER (Mobile & Tablet) ================= */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop Blur Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
 
-            {/* Products shortcut */}
-            <div 
-              onClick={onOpenProductsAdmin}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Kelola & Daftar Produk"
-            >
-              <Package size={20} />
-              <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Produk</span>
-            </div>
-
-            {/* Orders shortcut */}
-            <div 
-              onClick={onOpenOrders}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Daftar Pesanan Toko"
-            >
-              <ShoppingBag size={20} />
-              <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Pesanan</span>
-            </div>
-
-            {/* Financial Transactions shortcut */}
-            <div 
-              onClick={onOpenTransactions}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Transaksi Keuangan (Arus Kas)"
-            >
-              <Wallet size={20} />
-              <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Keuangan</span>
-            </div>
-
-            {/* Stock Management shortcut */}
-            <div 
-              onClick={onOpenStock}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Manajemen Stok Inventaris"
-            >
-              <Boxes size={20} />
-              <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">Stok</span>
-            </div>
-
-            {/* Template Email & Resi shortcut */}
-            <div 
-              onClick={onOpenTemplates}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Kelola Template Email & Resi"
-            >
-              <Mail size={20} />
-              <span className="hidden xl:inline text-xs font-bold uppercase tracking-wider">Template</span>
-            </div>
-
-            {/* Expedition Settings shortcut */}
-            <div 
-              onClick={onOpenExpeditions}
-              className="relative cursor-pointer p-2 rounded-xl hover:bg-neutral-800 text-neutral-200 hover:text-amber-400 transition-colors flex items-center gap-1.5"
-              title="Pengaturan Jasa Ekspedisi & Kurir"
-            >
-              <Truck size={20} />
-              <span className="hidden xl:inline text-xs font-bold uppercase tracking-wider">Ekspedisi</span>
-            </div>
-
-            {/* Notifications */}
-            <div className="hidden md:flex items-center gap-1 text-neutral-300">
-              <button 
-                onClick={onOpenTemplates}
-                className="p-2 rounded-xl hover:bg-neutral-800 hover:text-amber-400 transition-colors cursor-pointer"
-                title="Kelola Template Email & Resi"
+          {/* Off-Canvas Drawer Panel */}
+          <div className="fixed inset-y-0 left-0 w-full max-w-xs sm:max-w-sm bg-white shadow-2xl z-50 flex flex-col h-full max-h-screen animate-in slide-in-from-left duration-200">
+            
+            {/* Drawer Top Header (Fixed at top) */}
+            <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50 shrink-0">
+              <div 
+                onClick={() => {
+                  onResetHome();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-2 cursor-pointer select-none"
               >
-                <Bell size={20} />
-              </button>
-            </div>
+                <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-sport font-black text-lg -skew-x-6">
+                  T
+                </div>
+                <div className="leading-none">
+                  <span className="font-sport font-black text-lg tracking-tight uppercase">
+                    TUSKO<span className="text-amber-500">.</span>
+                  </span>
+                  <span className="block text-[8px] font-bold tracking-widest text-neutral-400 uppercase">
+                    Performance
+                  </span>
+                </div>
+              </div>
 
-            <div className="h-6 w-px bg-neutral-800 hidden sm:block"></div>
-
-            {/* User Profile / Auth Navigation Menu */}
-            <UserMenuDropdown
-              currentUser={currentUser}
-              onOpenLogin={onOpenLogin}
-              onOpenRegister={onOpenRegister}
-              onOpenProfile={onOpenProfile}
-              onOpenOrders={onOpenOrders}
-              onOpenTransactions={onOpenTransactions}
-              onOpenProductsAdmin={onOpenProductsAdmin}
-              onOpenStock={onOpenStock}
-              onOpenTemplates={onOpenTemplates}
-              onOpenExpeditions={onOpenExpeditions}
-              onLogout={onLogout}
-              onSwitchUser={onSwitchUser}
-            />
-          </div>
-        </div>
-
-        {/* Dedicated Mobile Search Bar (< sm) */}
-        <div ref={mobileSearchRef} className="sm:hidden mt-2.5 relative">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onFocus={() => setIsFocused(true)}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Cari jersey, sepatu, perlengkapan gym..."
-              className="w-full pl-9 pr-9 py-2 text-xs bg-neutral-900 border border-neutral-800 text-white rounded-xl placeholder-neutral-500 focus:outline-none focus:border-amber-500 focus:bg-neutral-900 focus:ring-2 focus:ring-amber-500/20 transition-all"
-            />
-            <Search className="absolute left-3 top-2.5 text-neutral-400" size={15} />
-
-            {searchQuery && (
               <button
                 type="button"
-                onClick={() => onSearchChange('')}
-                className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-white cursor-pointer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 text-neutral-600 hover:text-black rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer"
+                title="Tutup Menu"
               >
-                <X size={15} />
+                <X size={20} />
               </button>
-            )}
-          </div>
+            </div>
 
-          {renderSuggestionsDropdown()}
+            {/* Scrollable Container (Fully scrollable for categories, orders, transactions, admin) */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+              
+              {/* User Account / Authentication Card */}
+              <div className="p-4 bg-neutral-900 text-white border-b border-neutral-800">
+                {currentUser ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {currentUser.avatar ? (
+                        <img 
+                          src={currentUser.avatar} 
+                          alt={currentUser.name} 
+                          className="w-10 h-10 rounded-full object-cover border border-amber-500 shrink-0" 
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-amber-500 text-black font-black text-sm flex items-center justify-center shrink-0">
+                          {currentUser.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-white truncate">{currentUser.name}</div>
+                        <div className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider">
+                          {currentUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP Tusko'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenProfile();
+                        }}
+                        className="py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-lg text-center transition-colors cursor-pointer"
+                      >
+                        Profil Saya
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onLogout();
+                        }}
+                        className="py-1.5 px-3 bg-neutral-800 hover:bg-red-950 text-red-400 hover:text-red-300 font-bold rounded-lg text-center transition-colors cursor-pointer"
+                      >
+                        Keluar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-xs">
+                      <span className="font-extrabold text-amber-400 uppercase tracking-wide block text-[10px]">TUSKO CLUB MEMBER</span>
+                      <span className="text-neutral-300 text-[11px] leading-tight block mt-0.5">
+                        Masuk untuk cek status pesanan &amp; peroleh diskon member seumur hidup.
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenLogin();
+                        }}
+                        className="py-2 px-3 bg-white text-black font-sport font-black uppercase text-center rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer"
+                      >
+                        Masuk
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenRegister();
+                        }}
+                        className="py-2 px-3 bg-amber-500 text-black font-sport font-black uppercase text-center rounded-lg hover:bg-amber-400 transition-colors cursor-pointer"
+                      >
+                        Daftar
+                      </button>
+                    </div>
+
+                    {/* Demo Switcher shortcut */}
+                    <div className="pt-2 border-t border-neutral-800 flex items-center justify-between text-[11px]">
+                      <span className="text-neutral-400">Akun Demo Cepat:</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSwitchUser({ id: 1, name: 'Akhyar Admin', role: 'admin', email: 'admin@tusko.id' });
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="px-2 py-0.5 bg-neutral-800 text-amber-300 rounded font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
+                        >
+                          Admin
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onSwitchUser({ id: 2, name: 'Budi Pembeli', role: 'customer', email: 'budi@gmail.com' });
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="px-2 py-0.5 bg-neutral-800 text-neutral-300 rounded font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
+                        >
+                          Member
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Categories */}
+              <div className="p-4 space-y-4">
+                <div>
+                  <span className="text-[10px] font-black text-neutral-400 tracking-wider uppercase block mb-2">
+                    KATEGORI PRODUK
+                  </span>
+                  <div className="space-y-1">
+                    {[
+                      { name: 'Semua Produk', actionName: 'Semua', isSale: false },
+                      { name: 'Pria', actionName: 'Pria', isSale: false },
+                      { name: 'Wanita', actionName: 'Wanita', isSale: false },
+                      { name: 'Anak', actionName: 'Anak', isSale: false },
+                      { name: 'Sepatu Olahraga', actionName: 'Sepatu', isSale: false },
+                      { name: 'Jersey & Apparel', actionName: 'Jersey', isSale: false },
+                      { name: 'Peralatan & Gym', actionName: 'Gym', isSale: false },
+                      { name: 'Outlet & Sale', actionName: 'Sale', isSale: true, badge: 'HEMAT 50%' }
+                    ].map((item) => (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => {
+                          handleNavCategoryClick(item.actionName);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer ${
+                          item.isSale 
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                            : 'hover:bg-neutral-100 text-neutral-900'
+                        }`}
+                      >
+                        <span>{item.name}</span>
+                        {item.badge ? (
+                          <span className="text-[9px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded">
+                            {item.badge}
+                          </span>
+                        ) : (
+                          <ChevronRight size={15} className="text-neutral-400" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Orders and Transactions (Highlighted and Clickable) */}
+                <div className="pt-3 border-t border-neutral-200">
+                  <span className="text-[10px] font-black text-neutral-900 tracking-wider uppercase block mb-2">
+                    PESANAN &amp; TRANSAKSI
+                  </span>
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        onOpenOrders();
+                      }}
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Package size={16} className="text-black shrink-0" />
+                        <span>Lacak Pesanan Saya</span>
+                      </div>
+                      <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        onOpenTransactions();
+                      }}
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Wallet size={16} className="text-black shrink-0" />
+                        <span>Buku Kas &amp; Transaksi</span>
+                      </div>
+                      <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Admin Management Section (If admin) */}
+                {currentUser?.role === 'admin' && (
+                  <div className="pt-3 border-t border-neutral-200">
+                    <span className="text-[10px] font-black text-amber-700 tracking-wider uppercase block mb-2">
+                      PANEL ADMINISTRATOR
+                    </span>
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenProductsAdmin();
+                        }}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Boxes size={16} className="text-amber-600 shrink-0" />
+                          <span>Katalog Produk Admin</span>
+                        </div>
+                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenStock();
+                        }}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Boxes size={16} className="text-amber-600 shrink-0" />
+                          <span>Manajemen Stok &amp; Varian</span>
+                        </div>
+                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenTemplates();
+                        }}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Boxes size={16} className="text-amber-600 shrink-0" />
+                          <span>Template Master Produk</span>
+                        </div>
+                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenExpeditions();
+                        }}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Truck size={16} className="text-amber-600 shrink-0" />
+                          <span>Partner Ekspedisi (KiriminAja)</span>
+                        </div>
+                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Drawer Bottom Guarantee Badges */}
+                <div className="pt-4 pb-8 border-t border-neutral-200 text-neutral-600 text-[11px] space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <Truck size={15} className="text-black shrink-0" />
+                    <span>Gratis Ongkir min. Rp 500.000</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={15} className="text-black shrink-0" />
+                    <span>Garansi Tukar Ukuran 14 Hari</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 }

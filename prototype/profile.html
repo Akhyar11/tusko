@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil &amp; Akun Member - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-neutral-50 text-black antialiased selection:bg-black selection:text-white min-h-screen flex flex-col justify-between">
+
+  <!-- ================= 1. TOP ANNOUNCEMENT BAR ================= -->
+  <div class="bg-black text-white text-[11px] font-bold py-2 px-4 text-center tracking-wider uppercase">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+      <iconify-icon icon="lucide:shield-check" class="text-sm text-amber-400"></iconify-icon>
+      <span>TUSKO CLUB MEMBER EXCLUSIVE &bull; KELOLA DATA DIRI, ALAMAT, &amp; POIN LOYALITAS</span>
+    </div>
+  </div>
+
+  <!-- ================= 2. HEADER NAVIGASI ================= -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="beranda.html" class="flex items-center gap-2 group flex-shrink-0">
+        <div class="w-9 sm:w-11 h-9 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+          T
+        </div>
+        <div class="leading-none">
+          <span class="font-sport font-black text-xl sm:text-2xl tracking-tight uppercase">TUSKO<span class="text-amber-500">.</span></span>
+          <span class="block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">Performance</span>
+        </div>
+      </a>
+
+      <!-- Quick Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-neutral-600">
+        <a href="beranda.html" class="hover:text-black transition-colors">Beranda</a>
+        <a href="cart.html" class="hover:text-black transition-colors">Tas Belanja</a>
+        <a href="admin-dashboard.html" class="hover:text-black transition-colors">Buku Kas &amp; Transaksi</a>
+      </nav>
+
+      <!-- Right Action Buttons -->
+      <div class="flex items-center gap-3">
+        <a href="beranda.html" class="flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-black uppercase tracking-wider transition-colors">
+          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+          <span class="hidden sm:inline">Kembali ke</span> Toko
+        </a>
+        <button onclick="handleLogout()" class="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-xs font-bold text-neutral-800 uppercase rounded-none transition-colors">
+          Keluar
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= 3. MAIN PROFILE CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full">
+    
+    <!-- Breadcrumbs -->
+    <div class="flex items-center gap-2 text-xs text-neutral-400 mb-6 font-medium">
+      <a href="beranda.html" class="hover:text-black">Beranda</a>
+      <span>/</span>
+      <span class="text-black font-bold">Akun Member &amp; Profil</span>
+    </div>
+
+    <!-- MEMBER BANNER & SUMMARY CARD -->
+    <div class="bg-black text-white p-6 sm:p-8 border border-neutral-800 mb-8 relative overflow-hidden">
+      <!-- Background Graphic Accents -->
+      <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-amber-500/10 to-transparent pointer-events-none"></div>
+      <div class="absolute -right-8 -bottom-10 text-neutral-800 font-sport font-black text-9xl italic select-none pointer-events-none opacity-30">
+        TUSKO
+      </div>
+
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        
+        <!-- Left: User Avatar & Identity -->
+        <div class="flex items-center gap-4 sm:gap-6">
+          <div class="relative group shrink-0">
+            <img 
+              id="user-avatar-img"
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80" 
+              alt="Avatar Budi Pratama"
+              class="w-20 h-20 sm:w-24 sm:h-24 object-cover border-2 border-amber-400 shadow-xl"
+            />
+            <label for="avatar-file-input" class="absolute bottom-0 right-0 bg-black/80 hover:bg-black text-white p-1.5 border border-neutral-700 cursor-pointer transition-colors shadow-md" title="Ganti Foto Profil">
+              <iconify-icon icon="lucide:camera" class="text-sm"></iconify-icon>
+            </label>
+            <input type="file" id="avatar-file-input" class="hidden" accept="image/*" onchange="simulateAvatarChange(event)" />
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="inline-flex items-center gap-1 bg-amber-500 text-black text-[9px] font-sport font-black uppercase tracking-widest px-2 py-0.5 -skew-x-6">
+                ★ GOLD MEMBER VIP
+              </span>
+              <span class="text-[10px] text-neutral-400 font-mono">ID: #TSK-882910</span>
+            </div>
+            <h1 id="user-display-name" class="font-sport font-black text-2xl sm:text-3xl uppercase italic tracking-tight text-white leading-tight">
+              BUDI PRATAMA
+            </h1>
+            <p id="user-display-email" class="text-xs text-neutral-300 mt-0.5 font-medium">
+              budi.pratama@gmail.com &bull; +62 812-3456-7890
+            </p>
+            <p class="text-[11px] text-neutral-400 mt-1">
+              Bergabung sejak 14 Januari 2025 &bull; Terverifikasi Member Resmi Tusko
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Loyalty Tier Meter & Point Balance -->
+        <div class="bg-neutral-900 border border-neutral-800 p-4 sm:p-5 min-w-[280px] shrink-0">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="text-neutral-400 uppercase font-bold text-[10px] tracking-wider">Tusko Loyalty Point:</span>
+            <span class="font-sport font-black text-amber-400 text-base">1.250 PTS</span>
+          </div>
+          <div class="w-full bg-neutral-800 h-2 rounded-none overflow-hidden mb-2">
+            <div class="bg-amber-400 h-full w-[60%] transition-all"></div>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-neutral-400 font-medium">
+            <span>Gold Tier</span>
+            <span>750 poin lagi menuju Platinum &rarr;</span>
+          </div>
+          <div class="mt-3 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs">
+            <span class="text-neutral-300">Setara Diskon:</span>
+            <span class="font-bold text-white font-mono">Rp 125.000</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-neutral-800 text-xs">
+        <div class="bg-neutral-900/80 p-3 border border-neutral-800">
+          <span class="text-[10px] text-neutral-400 uppercase font-bold block mb-0.5">Total Pesanan</span>
+          <span class="font-sport font-black text-lg text-white">14 SELESAI</span>
+        </div>
+        <div class="bg-neutral-900/80 p-3 border border-neutral-800">
+          <span class="text-[10px] text-neutral-400 uppercase font-bold block mb-0.5">Voucher Aktif</span>
+          <span class="font-sport font-black text-lg text-amber-400">3 KUPON</span>
+        </div>
+        <div class="bg-neutral-900/80 p-3 border border-neutral-800">
+          <span class="text-[10px] text-neutral-400 uppercase font-bold block mb-0.5">Alamat Tersimpan</span>
+          <span class="font-sport font-black text-lg text-white">2 LOKASI</span>
+        </div>
+        <div class="bg-neutral-900/80 p-3 border border-neutral-800">
+          <span class="text-[10px] text-neutral-400 uppercase font-bold block mb-0.5">Keamanan Akun</span>
+          <span class="font-sport font-black text-lg text-emerald-400">TERLINDUNGI</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS BAR & CONTENT LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      
+      <!-- Left Column: Navigation Tabs -->
+      <div class="lg:col-span-1 bg-white border border-neutral-300 p-2 space-y-1 shadow-sm sticky top-24">
+        <button 
+          id="tab-btn-biodata"
+          onclick="switchTab('biodata')"
+          class="w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-black bg-neutral-100 text-black transition-all"
+        >
+          <div class="flex items-center gap-2.5">
+            <iconify-icon icon="lucide:user" class="text-base"></iconify-icon>
+            <span>Biodata Diri</span>
+          </div>
+          <iconify-icon icon="lucide:chevron-right" class="text-xs"></iconify-icon>
+        </button>
+
+        <button 
+          id="tab-btn-address"
+          onclick="switchTab('address')"
+          class="w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-transparent hover:bg-neutral-50 text-neutral-600 hover:text-black transition-all"
+        >
+          <div class="flex items-center gap-2.5">
+            <iconify-icon icon="lucide:map-pin" class="text-base"></iconify-icon>
+            <span>Buku Alamat</span>
+          </div>
+          <span class="text-[10px] bg-neutral-200 text-neutral-800 font-bold px-1.5 py-0.5">2</span>
+        </button>
+
+        <button 
+          id="tab-btn-security"
+          onclick="switchTab('security')"
+          class="w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-transparent hover:bg-neutral-50 text-neutral-600 hover:text-black transition-all"
+        >
+          <div class="flex items-center gap-2.5">
+            <iconify-icon icon="lucide:lock" class="text-base"></iconify-icon>
+            <span>Keamanan Akun</span>
+          </div>
+          <iconify-icon icon="lucide:shield-check" class="text-emerald-600 text-sm"></iconify-icon>
+        </button>
+
+        <button 
+          id="tab-btn-vouchers"
+          onclick="switchTab('vouchers')"
+          class="w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-transparent hover:bg-neutral-50 text-neutral-600 hover:text-black transition-all"
+        >
+          <div class="flex items-center gap-2.5">
+            <iconify-icon icon="lucide:ticket" class="text-base"></iconify-icon>
+            <span>Voucher &amp; Kupon</span>
+          </div>
+          <span class="text-[10px] bg-amber-400 text-black font-bold px-1.5 py-0.5">3</span>
+        </button>
+
+        <div class="pt-4 mt-2 border-t border-neutral-200 px-3 pb-2">
+          <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-2">Bantuan &amp; CS</span>
+          <a href="mailto:support@tusko.id" class="text-xs font-bold text-neutral-700 hover:text-black flex items-center gap-1.5">
+            <iconify-icon icon="lucide:help-circle" class="text-amber-500 text-sm"></iconify-icon>
+            <span>Pusat Bantuan Tusko</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Active Tab Panels -->
+      <div class="lg:col-span-3">
+
+        <!-- ================= PANEL 1: BIODATA DIRI ================= -->
+        <div id="panel-biodata" class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm">
+          
+          <div class="border-b border-neutral-200 pb-4 mb-6">
+            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">PENGATURAN INFORMASI UTAMA</span>
+            <h2 class="font-sport font-black text-xl sm:text-2xl uppercase italic text-black">
+              BIODATA PRIBADI
+            </h2>
+            <p class="text-xs text-neutral-500 mt-1">
+              Perbarui nama lengkap, nomor WhatsApp pengiriman, dan preferensi atlet Anda.
+            </p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); handleSaveBiodata();" class="space-y-5">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Full Name -->
+              <div>
+                <label for="bio-name" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  NAMA LENGKAP *
+                </label>
+                <input 
+                  type="text" 
+                  id="bio-name" 
+                  required 
+                  value="Budi Pratama" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                />
+              </div>
+
+              <!-- Official Email -->
+              <div>
+                <label for="bio-email" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  ALAMAT EMAIL RESMI *
+                </label>
+                <input 
+                  type="email" 
+                  id="bio-email" 
+                  required 
+                  value="budi.pratama@gmail.com" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- WhatsApp / Phone -->
+              <div>
+                <label for="bio-phone" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  NOMOR WHATSAPP / HANDPHONE *
+                </label>
+                <div class="flex">
+                  <span class="inline-flex items-center px-3 border border-r-0 border-neutral-300 bg-neutral-100 text-neutral-600 font-bold text-xs">
+                    +62
+                  </span>
+                  <input 
+                    type="tel" 
+                    id="bio-phone" 
+                    required 
+                    value="812-3456-7890" 
+                    class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                  />
+                </div>
+                <p class="text-[10px] text-neutral-400 mt-1">Digunakan untuk update resi instan dan konfirmasi kurir.</p>
+              </div>
+
+              <!-- Gender -->
+              <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  JENIS KELAMIN
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="flex items-center justify-center gap-2 border border-black bg-black text-white py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors" id="label-gender-male">
+                    <input type="radio" name="gender" value="male" checked onchange="updateGenderStyle('male')" class="hidden">
+                    <iconify-icon icon="lucide:user" class="text-sm"></iconify-icon>
+                    <span>LAKI-LAKI</span>
+                  </label>
+                  <label class="flex items-center justify-center gap-2 border border-neutral-300 hover:border-black bg-white text-neutral-800 py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors" id="label-gender-female">
+                    <input type="radio" name="gender" value="female" onchange="updateGenderStyle('female')" class="hidden">
+                    <iconify-icon icon="lucide:user" class="text-sm"></iconify-icon>
+                    <span>PEREMPUAN</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Birthdate -->
+              <div>
+                <label for="bio-birthdate" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  TANGGAL LAHIR
+                </label>
+                <input 
+                  type="date" 
+                  id="bio-birthdate" 
+                  value="1995-08-17" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                />
+                <p class="text-[10px] text-neutral-400 mt-1">Dapatkan voucher kado ulang tahun spesial tiap tahunnya.</p>
+              </div>
+
+              <!-- Category Preference -->
+              <div>
+                <label for="bio-preference" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  PREFERENSI OLAHRAGA UTAMA
+                </label>
+                <select 
+                  id="bio-preference"
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                >
+                  <option value="running" selected>Lari &amp; Marathon (Performance Running)</option>
+                  <option value="football">Sepak Bola &amp; Futsal</option>
+                  <option value="badminton">Bulu Tangkis / Racket Sports</option>
+                  <option value="training">Fitness, Gym &amp; Cross Training</option>
+                  <option value="lifestyle">Sportstyle &amp; Casual Sneakers</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Submit CTA Button -->
+            <div class="pt-4 border-t border-neutral-200 flex items-center justify-between gap-4">
+              <button 
+                type="submit" 
+                class="bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs uppercase tracking-wider py-3.5 px-8 flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+              >
+                <span>SIMPAN PERUBAHAN BIODATA</span>
+                <span class="text-base">&rarr;</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="autofillDemoBiodata()" 
+                class="text-[11px] font-bold text-amber-600 hover:text-amber-700 underline flex items-center gap-1"
+              >
+                <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                <span>Reset ke Demo</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+        <!-- ================= PANEL 2: BUKU ALAMAT ================= -->
+        <div id="panel-address" class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm hidden">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200 pb-4 mb-6 gap-3">
+            <div>
+              <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">DESTINASI PENGIRIMAN</span>
+              <h2 class="font-sport font-black text-xl sm:text-2xl uppercase italic text-black">
+                BUKU ALAMAT SAYA
+              </h2>
+              <p class="text-xs text-neutral-500 mt-1">
+                Kelola alamat pengiriman untuk kemudahan checkout otomatis.
+              </p>
+            </div>
+
+            <button 
+              type="button" 
+              onclick="openAddressModal()"
+              class="bg-black hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase tracking-wider py-2.5 px-4 flex items-center gap-1.5 transition-colors shrink-0"
+            >
+              <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
+              <span>+ Tambah Alamat Baru</span>
+            </button>
+          </div>
+
+          <!-- Address List -->
+          <div id="address-cards-container" class="space-y-4">
+            
+            <!-- Address Card 1 (Default) -->
+            <div class="border-2 border-black p-5 relative bg-white shadow-xs">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-sport font-black text-xs uppercase tracking-wide bg-neutral-100 text-black px-2 py-0.5">
+                    RUMAH UTAMA
+                  </span>
+                  <span class="bg-black text-amber-400 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 -skew-x-6">
+                    ★ ALAMAT UTAMA
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-xs font-bold">
+                  <button onclick="editAddressModal('Rumah Utama', 'Budi Pratama', '0812-3456-7890', 'Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan', 'Jakarta Selatan', '12730')" class="text-neutral-600 hover:text-black underline">
+                    Ubah
+                  </button>
+                </div>
+              </div>
+
+              <h4 class="font-bold text-sm text-black">Budi Pratama</h4>
+              <p class="text-xs text-neutral-500 mt-0.5">0812-3456-7890</p>
+              <p class="text-xs text-neutral-700 mt-2 leading-relaxed">
+                Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan, Kota Jakarta Selatan, DKI Jakarta 12730
+              </p>
+            </div>
+
+            <!-- Address Card 2 (Secondary) -->
+            <div class="border border-neutral-300 p-5 relative bg-neutral-50/60 hover:bg-white transition-colors">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-sport font-black text-xs uppercase tracking-wide bg-neutral-200 text-neutral-800 px-2 py-0.5">
+                    KANTOR / STUDIO
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-bold">
+                  <button onclick="setAsPrimaryAddress(this)" class="text-amber-600 hover:text-amber-700 underline">
+                    Jadikan Utama
+                  </button>
+                  <button onclick="editAddressModal('Kantor / Studio', 'Budi Pratama (Office)', '0811-9988-7766', 'Gedung Tusko Tower Lt. 12, Jl. Jend. Sudirman Kav. 52-53, SCBD', 'Jakarta Selatan', '12190')" class="text-neutral-600 hover:text-black underline">
+                    Ubah
+                  </button>
+                  <button onclick="deleteAddress(this)" class="text-red-600 hover:text-red-700 underline">
+                    Hapus
+                  </button>
+                </div>
+              </div>
+
+              <h4 class="font-bold text-sm text-black">Budi Pratama (Office)</h4>
+              <p class="text-xs text-neutral-500 mt-0.5">0811-9988-7766</p>
+              <p class="text-xs text-neutral-700 mt-2 leading-relaxed">
+                Gedung Tusko Tower Lt. 12, Jl. Jend. Sudirman Kav. 52-53, Kawasan SCBD, Senayan, Kebayoran Baru, Kota Jakarta Selatan, DKI Jakarta 12190
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================= PANEL 3: KEAMANAN AKUN ================= -->
+        <div id="panel-security" class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm hidden">
+          
+          <div class="border-b border-neutral-200 pb-4 mb-6">
+            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block">PROTEKSI KREDENSIAL</span>
+            <h2 class="font-sport font-black text-xl sm:text-2xl uppercase italic text-black">
+              KEAMANAN &amp; KATA SANDI
+            </h2>
+            <p class="text-xs text-neutral-500 mt-1">
+              Perbarui kata sandi secara berkala untuk menjaga akun dan riwayat belanja Anda tetap aman.
+            </p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); handleSavePassword();" class="space-y-4 max-w-lg">
+            
+            <!-- Current Password -->
+            <div>
+              <label for="sec-old-password" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                KATA SANDI SAAT INI *
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="sec-old-password" 
+                  required 
+                  placeholder="Masukkan kata sandi lama Anda" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleInputPassword('sec-old-password', this)" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                >
+                  <iconify-icon icon="lucide:eye"></iconify-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- New Password -->
+            <div>
+              <label for="sec-new-password" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                KATA SANDI BARU *
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="sec-new-password" 
+                  required 
+                  placeholder="Minimal 8 karakter kombinasi huruf & angka" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleInputPassword('sec-new-password', this)" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                >
+                  <iconify-icon icon="lucide:eye"></iconify-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div>
+              <label for="sec-confirm-password" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                KONFIRMASI KATA SANDI BARU *
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="sec-confirm-password" 
+                  required 
+                  placeholder="Ulangi kata sandi baru" 
+                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleInputPassword('sec-confirm-password', this)" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                >
+                  <iconify-icon icon="lucide:eye"></iconify-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button 
+                type="submit" 
+                class="bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs uppercase tracking-wider py-3.5 px-6 transition-colors"
+              >
+                PERBARUI KATA SANDI &rarr;
+              </button>
+            </div>
+
+          </form>
+
+          <!-- Extra Security Options -->
+          <div class="mt-8 pt-6 border-t border-neutral-200 space-y-4">
+            <h4 class="font-sport font-black text-sm uppercase tracking-wide text-black">
+              AUTENTIKASI &amp; SESI AKTIF
+            </h4>
+
+            <div class="flex items-center justify-between p-4 bg-neutral-50 border border-neutral-200 text-xs">
+              <div>
+                <div class="font-bold text-black flex items-center gap-1.5">
+                  <iconify-icon icon="lucide:smartphone" class="text-amber-500 text-sm"></iconify-icon>
+                  <span>Autentikasi Dua Langkah (2FA WhatsApp OTP)</span>
+                </div>
+                <p class="text-[11px] text-neutral-500 mt-0.5">
+                  Setiap login dari perangkat baru akan memerlukan kode verifikasi 6-digit via WhatsApp.
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked onchange="toggleTwoFactor(this)" class="sr-only peer">
+                <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-black"></div>
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-neutral-50 border border-neutral-200 text-xs">
+              <div>
+                <div class="font-bold text-black flex items-center gap-1.5">
+                  <iconify-icon icon="lucide:laptop" class="text-emerald-500 text-sm"></iconify-icon>
+                  <span>Sesi Saat Ini: Browser Chrome di macOS (Jakarta)</span>
+                </div>
+                <p class="text-[10px] text-neutral-400 mt-0.5">IP Terakhir: 182.253.xx.xx &bull; Aktif Sekarang</p>
+              </div>
+              <button onclick="handleRevokeSessions()" class="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-300 text-[11px] font-bold text-neutral-700">
+                Keluar Perangkat Lain
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= PANEL 4: VOUCHER & TUSKO POINTS ================= -->
+        <div id="panel-vouchers" class="bg-white border border-neutral-300 p-6 sm:p-8 shadow-sm hidden">
+          
+          <div class="border-b border-neutral-200 pb-4 mb-6">
+            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">REWARD &amp; BENEFIT</span>
+            <h2 class="font-sport font-black text-xl sm:text-2xl uppercase italic text-black">
+              VOUCHER DISKON MEMBER SAYA
+            </h2>
+            <p class="text-xs text-neutral-500 mt-1">
+              Gunakan kode voucher saat checkout untuk menikmati potongan harga eksklusif.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Voucher 1 -->
+            <div class="border-2 border-dashed border-amber-400 bg-amber-50/50 p-4 relative flex flex-col justify-between">
+              <span class="bg-black text-amber-400 text-[9px] font-black uppercase px-2 py-0.5 tracking-wider w-max -skew-x-6 mb-2">
+                WELCOME VOUCHER
+              </span>
+              <h4 class="font-sport font-black text-lg text-black leading-tight">DISKON 15% MEMBER BARU</h4>
+              <p class="text-[11px] text-neutral-600 mt-1 mb-3">
+                Berlaku untuk semua kategori sepatu dan jersey tanpa minimum belanja.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-amber-200">
+                <span class="font-mono font-bold text-xs bg-white px-2 py-1 border border-neutral-300">TUSKOCLUB15</span>
+                <button onclick="copyVoucher('TUSKOCLUB15')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
+                  Salin Kode
+                </button>
+              </div>
+            </div>
+
+            <!-- Voucher 2 -->
+            <div class="border-2 border-dashed border-neutral-300 bg-white p-4 relative flex flex-col justify-between">
+              <span class="bg-neutral-200 text-black text-[9px] font-black uppercase px-2 py-0.5 tracking-wider w-max mb-2">
+                GRATIS ONGKIR
+              </span>
+              <h4 class="font-sport font-black text-lg text-black leading-tight">FREE ONGKIR EXPEDISI</h4>
+              <p class="text-[11px] text-neutral-600 mt-1 mb-3">
+                Potongan ongkir s.d. Rp 30.000 dengan J&amp;T, SiCepat, atau JNE Express.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-neutral-200">
+                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300">FREESHIPVIP</span>
+                <button onclick="copyVoucher('FREESHIPVIP')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
+                  Salin Kode
+                </button>
+              </div>
+            </div>
+
+            <!-- Voucher 3 -->
+            <div class="border-2 border-dashed border-neutral-300 bg-white p-4 relative flex flex-col justify-between">
+              <span class="bg-neutral-200 text-black text-[9px] font-black uppercase px-2 py-0.5 tracking-wider w-max mb-2">
+                CASHBACK ATLET
+              </span>
+              <h4 class="font-sport font-black text-lg text-black leading-tight">POTONGAN LANGSUNG RP 50.000</h4>
+              <p class="text-[11px] text-neutral-600 mt-1 mb-3">
+                Khusus pemegang kartu Gold Member Tusko dengan minimum belanja Rp 750.000.
+              </p>
+              <div class="flex items-center justify-between pt-2 border-t border-neutral-200">
+                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300">GOLDTIER50K</span>
+                <button onclick="copyVoucher('GOLDTIER50K')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
+                  Salin Kode
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= 4. MODAL TAMBAH / UBAH ALAMAT ================= -->
+  <div id="address-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white border border-neutral-300 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+        <h3 id="modal-address-title" class="font-sport font-black text-lg uppercase tracking-tight text-black">
+          TAMBAH ALAMAT PENGIRIMAN
+        </h3>
+        <button onclick="closeAddressModal()" class="text-neutral-400 hover:text-black text-xl p-1" title="Tutup Modal">
+          &times;
+        </button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); handleSaveNewAddress();" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold uppercase text-neutral-700 mb-1">LABEL ALAMAT (CONTOH: RUMAH / KANTOR / KOST) *</label>
+          <input type="text" id="modal-addr-label" required placeholder="Rumah Utama" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold uppercase text-neutral-700 mb-1">NAMA PENERIMA *</label>
+            <input type="text" id="modal-addr-recipient" required placeholder="Budi Pratama" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white" />
+          </div>
+          <div>
+            <label class="block font-bold uppercase text-neutral-700 mb-1">NO. TELEPON / HP *</label>
+            <input type="tel" id="modal-addr-phone" required placeholder="0812-3456-7890" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold uppercase text-neutral-700 mb-1">KOTA / KABUPATEN *</label>
+            <input type="text" id="modal-addr-city" required placeholder="Jakarta Selatan" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white" />
+          </div>
+          <div>
+            <label class="block font-bold uppercase text-neutral-700 mb-1">KODE POS *</label>
+            <input type="text" id="modal-addr-postal" required placeholder="12730" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold uppercase text-neutral-700 mb-1">ALAMAT LENGKAP &amp; NOMOR RUMAH *</label>
+          <textarea id="modal-addr-full" required rows="3" placeholder="Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan" class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white"></textarea>
+        </div>
+
+        <label class="flex items-center gap-2 pt-1 cursor-pointer">
+          <input type="checkbox" id="modal-addr-default" checked class="accent-black w-4 h-4 rounded-none cursor-pointer">
+          <span class="text-neutral-700 font-medium">Jadikan sebagai alamat pengiriman utama</span>
+        </label>
+
+        <div class="pt-3 border-t border-neutral-200 flex justify-end gap-2">
+          <button type="button" onclick="closeAddressModal()" class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold uppercase">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2 bg-black hover:bg-neutral-800 text-white font-bold uppercase">
+            Simpan Alamat
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 5. MINIMAL FOOTER ================= -->
+  <footer class="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+      <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+      <div class="flex gap-4">
+        <a href="#" class="hover:underline">Kebijakan Privasi</a>
+        <a href="#" class="hover:underline">Syarat Ketentuan Member</a>
+        <a href="#" class="hover:underline">Bantuan Pelanggan</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= 6. INTERACTIVE SCRIPT INTERACTIONS ================= -->
+  <script>
+    // Tab switcher
+    function switchTab(tabId) {
+      const tabs = ['biodata', 'address', 'security', 'vouchers'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const panel = document.getElementById('panel-' + t);
+        if (t === tabId) {
+          btn.className = 'w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-black bg-neutral-100 text-black transition-all';
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = 'w-full text-left px-4 py-3 text-xs font-sport font-black uppercase tracking-wider flex items-center justify-between border-l-4 border-transparent hover:bg-neutral-50 text-neutral-600 hover:text-black transition-all';
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
+    // Gender selection toggle
+    function updateGenderStyle(gender) {
+      const maleLabel = document.getElementById('label-gender-male');
+      const femaleLabel = document.getElementById('label-gender-female');
+      if (gender === 'male') {
+        maleLabel.className = 'flex items-center justify-center gap-2 border border-black bg-black text-white py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors';
+        femaleLabel.className = 'flex items-center justify-center gap-2 border border-neutral-300 hover:border-black bg-white text-neutral-800 py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors';
+      } else {
+        femaleLabel.className = 'flex items-center justify-center gap-2 border border-black bg-black text-white py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors';
+        maleLabel.className = 'flex items-center justify-center gap-2 border border-neutral-300 hover:border-black bg-white text-neutral-800 py-2.5 px-3 text-xs font-bold cursor-pointer transition-colors';
+      }
+    }
+
+    // Toggle password visibility
+    function toggleInputPassword(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      const icon = btn.querySelector('iconify-icon');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.setAttribute('icon', 'lucide:eye-off');
+      } else {
+        inp.type = 'password';
+        icon.setAttribute('icon', 'lucide:eye');
+      }
+    }
+
+    // Avatar preview change simulator
+    function simulateAvatarChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('user-avatar-img').src = evt.target.result;
+          showToast('✓ Foto profil berhasil diperbarui!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Save Biodata
+    function handleSaveBiodata() {
+      const name = document.getElementById('bio-name').value;
+      const email = document.getElementById('bio-email').value;
+      const phone = document.getElementById('bio-phone').value;
+
+      document.getElementById('user-display-name').textContent = name.toUpperCase();
+      document.getElementById('user-display-email').textContent = email + ' • +62 ' + phone;
+
+      showToast('✓ Biodata profil ' + name + ' berhasil diperbarui!');
+    }
+
+    // Autofill Demo Biodata
+    function autofillDemoBiodata() {
+      document.getElementById('bio-name').value = 'Budi Pratama';
+      document.getElementById('bio-email').value = 'budi.pratama@gmail.com';
+      document.getElementById('bio-phone').value = '812-3456-7890';
+      showToast('✓ Biodata direset ke default demo!');
+    }
+
+    // Address Modal Controls
+    function openAddressModal() {
+      document.getElementById('modal-address-title').textContent = 'TAMBAH ALAMAT PENGIRIMAN';
+      document.getElementById('modal-addr-label').value = '';
+      document.getElementById('modal-addr-recipient').value = 'Budi Pratama';
+      document.getElementById('modal-addr-phone').value = '0812-3456-7890';
+      document.getElementById('modal-addr-city').value = '';
+      document.getElementById('modal-addr-postal').value = '';
+      document.getElementById('modal-addr-full').value = '';
+      document.getElementById('address-modal').classList.remove('hidden');
+      document.getElementById('address-modal').classList.add('flex');
+    }
+
+    function editAddressModal(label, recipient, phone, full, city, postal) {
+      document.getElementById('modal-address-title').textContent = 'UBAH ALAMAT PENGIRIMAN';
+      document.getElementById('modal-addr-label').value = label;
+      document.getElementById('modal-addr-recipient').value = recipient;
+      document.getElementById('modal-addr-phone').value = phone;
+      document.getElementById('modal-addr-city').value = city;
+      document.getElementById('modal-addr-postal').value = postal;
+      document.getElementById('modal-addr-full').value = full;
+      document.getElementById('address-modal').classList.remove('hidden');
+      document.getElementById('address-modal').classList.add('flex');
+    }
+
+    function closeAddressModal() {
+      document.getElementById('address-modal').classList.add('hidden');
+      document.getElementById('address-modal').classList.remove('flex');
+    }
+
+    function handleSaveNewAddress() {
+      const label = document.getElementById('modal-addr-label').value;
+      const recipient = document.getElementById('modal-addr-recipient').value;
+      const phone = document.getElementById('modal-addr-phone').value;
+      const city = document.getElementById('modal-addr-city').value;
+      const postal = document.getElementById('modal-addr-postal').value;
+      const full = document.getElementById('modal-addr-full').value;
+
+      const container = document.getElementById('address-cards-container');
+      const newCard = document.createElement('div');
+      newCard.className = 'border border-neutral-300 p-5 relative bg-white shadow-xs animate-in fade-in duration-200';
+      newCard.innerHTML = `
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="font-sport font-black text-xs uppercase tracking-wide bg-neutral-100 text-black px-2 py-0.5">
+              ${label.toUpperCase()}
+            </span>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-bold">
+            <button onclick="setAsPrimaryAddress(this)" class="text-amber-600 hover:text-amber-700 underline">Jadikan Utama</button>
+            <button onclick="deleteAddress(this)" class="text-red-600 hover:text-red-700 underline">Hapus</button>
+          </div>
+        </div>
+        <h4 class="font-bold text-sm text-black">${recipient}</h4>
+        <p class="text-xs text-neutral-500 mt-0.5">${phone}</p>
+        <p class="text-xs text-neutral-700 mt-2 leading-relaxed">
+          ${full}, Kota ${city}, ${postal}
+        </p>
+      `;
+      container.appendChild(newCard);
+      closeAddressModal();
+      showToast('✓ Alamat baru "' + label + '" berhasil ditambahkan!');
+    }
+
+    function setAsPrimaryAddress(btn) {
+      showToast('✓ Alamat utama berhasil diubah!');
+    }
+
+    function deleteAddress(btn) {
+      if (confirm('Hapus alamat pengiriman ini?')) {
+        btn.closest('div.border').remove();
+        showToast('✓ Alamat berhasil dihapus.');
+      }
+    }
+
+    // Save Password
+    function handleSavePassword() {
+      const oldP = document.getElementById('sec-old-password').value;
+      const newP = document.getElementById('sec-new-password').value;
+      const confP = document.getElementById('sec-confirm-password').value;
+
+      if (newP !== confP) {
+        showToast('⚠️ Konfirmasi kata sandi tidak cocok!');
+        return;
+      }
+      document.getElementById('sec-old-password').value = '';
+      document.getElementById('sec-new-password').value = '';
+      document.getElementById('sec-confirm-password').value = '';
+      showToast('✓ Kata sandi berhasil diperbarui!');
+    }
+
+    // Two-factor toggle
+    function toggleTwoFactor(checkbox) {
+      if (checkbox.checked) {
+        showToast('✓ Autentikasi 2FA WhatsApp aktif.');
+      } else {
+        showToast('⚠️ Autentikasi 2FA dinonaktifkan.');
+      }
+    }
+
+    // Revoke sessions
+    function handleRevokeSessions() {
+      showToast('✓ Seluruh sesi di perangkat lain telah ditutup.');
+    }
+
+    // Copy Voucher code
+    function copyVoucher(code) {
+      navigator.clipboard?.writeText(code);
+      showToast('✓ Kode voucher "' + code + '" disalin ke clipboard!');
+    }
+
+    // Logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar dari akun Tusko?')) {
+        showToast('Anda telah keluar dari akun.');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 800);
+      }
+    }
+
+    // Floating Notification Toast
+    function showToast(msg) {
+      const existing = document.getElementById('floating-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'floating-toast';
+      toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-3 text-xs font-bold shadow-2xl z-50 flex items-center gap-2 border border-neutral-700 animate-in fade-in slide-in-from-top-2 duration-150';
+      toast.innerHTML = '<iconify-icon icon="lucide:check-circle" class="text-amber-400 text-base"></iconify-icon><span>' + msg + '</span>';
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  </script>
+
+  <!-- Live Auto-Reload Engine on GitHub Push -->
+  <script src="auto-updater.js"></script>
+</body>
+</html>

@@ -15,14 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Admin Toko',
-            'email' => 'admin@tokoonline.com',
-            'role' => 'admin',
-        ]);
-
+        $this->call(UserSeeder::class);
         $this->call(ProductSeeder::class);
         $this->call(ExpeditionSeeder::class);
     }

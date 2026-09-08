@@ -62,20 +62,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Registrasi berhasil.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'gender' => $user->gender,
-                'birth_date' => $user->birth_date?->format('Y-m-d'),
-                'points' => (int) $user->points,
-                'membership_tier' => $user->membership_tier,
-                'role' => $user->role,
-                'is_active' => (bool) $user->is_active,
-                'created_at' => $user->created_at,
-            ],
+            'user' => $this->formatUserResponse($user),
             'token' => $token,
             'token_type' => 'Bearer',
         ], 201);
@@ -122,20 +109,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login berhasil.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'gender' => $user->gender,
-                'birth_date' => $user->birth_date?->format('Y-m-d'),
-                'points' => (int) $user->points,
-                'membership_tier' => $user->membership_tier,
-                'role' => $user->role,
-                'is_active' => (bool) $user->is_active,
-                'created_at' => $user->created_at,
-            ],
+            'user' => $this->formatUserResponse($user),
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
@@ -171,20 +145,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'gender' => $user->gender,
-                'birth_date' => $user->birth_date?->format('Y-m-d'),
-                'points' => (int) $user->points,
-                'membership_tier' => $user->membership_tier,
-                'role' => $user->role,
-                'is_active' => (bool) $user->is_active,
-                'created_at' => $user->created_at,
-            ],
+            'user' => $this->formatUserResponse($user),
         ]);
     }
 
@@ -280,22 +241,49 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'gender' => $user->gender,
-                'birth_date' => $user->birth_date?->format('Y-m-d'),
-                'points' => (int) $user->points,
-                'membership_tier' => $user->membership_tier,
-                'role' => $user->role,
-                'is_active' => (bool) $user->is_active,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at,
-            ],
+            'user' => $this->formatUserResponse($user),
         ]);
+    }
+
+    /**
+     * Format payload respon pengguna yang konsisten.
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function formatUserResponse(User $user): array
+    {
+        $defaultAddress = $user->defaultShippingAddress()->first() ?? $user->shippingAddresses()->first();
+
+        $formattedAddress = $defaultAddress ? [
+            'id' => $defaultAddress->id,
+            'label' => $defaultAddress->label,
+            'recipient_name' => $defaultAddress->recipient_name,
+            'phone' => $defaultAddress->phone,
+            'full_address' => $defaultAddress->full_address,
+            'city' => $defaultAddress->city,
+            'province' => $defaultAddress->province,
+            'postal_code' => $defaultAddress->postal_code,
+            'is_default' => (bool) $defaultAddress->is_default,
+        ] : null;
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar,
+            'gender' => $user->gender,
+            'birth_date' => $user->birth_date?->format('Y-m-d'),
+            'points' => (int) $user->points,
+            'membership_tier' => $user->membership_tier,
+            'role' => $user->role,
+            'is_active' => (bool) $user->is_active,
+            'default_address' => $formattedAddress,
+            'defaultAddress' => $formattedAddress,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
     }
 }
 

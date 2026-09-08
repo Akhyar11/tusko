@@ -14,8 +14,10 @@ export const mockProducts = [
     id: 1,
     category_id: 1,
     sku: 'TSK-JRS-001',
-    name: 'Tusko Pro Matchday Football Jersey 2026 AeroTech',
-    slug: 'tusko-pro-matchday-jersey-2026',
+    name: 'Jersey Matchday Tusko 2026 AeroTech',
+    slug: 'jersey-matchday-tusko-2026-aerotech',
+    badge: 'BARU',
+    category_subtitle: 'Sepak Bola • Matchday',
     description: 'Jersey pertandingan pro grade dengan teknologi sirkulasi udara AeroTech™ yang cepat menyerap keringat dan menjaga tubuh tetap sejuk saat intensitas tinggi. Jahitan elastis 4-way stretch ergonomis dan panel ventilasi laser-cut di area punggung untuk mobilitas optimal atlet.',
     price: 389000,
     original_price: 499000,
@@ -25,11 +27,11 @@ export const mockProducts = [
     stock: 48,
     stock_minimum: 10,
     status: 'active',
-    image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    image_url: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=600&q=80',
     gallery: [
+      'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1508215885820-4523e431397e?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80'
     ],
     specifications: {
       'Bahan': '100% Recycled AeroTech Jacquard Polyester',
@@ -53,7 +55,7 @@ export const mockProducts = [
       {
         name: 'Ukuran',
         code: 'size',
-        options: ['S', 'M', 'L', 'XL', 'XXL']
+        options: ['S', 'M', 'L', 'XL']
       }
     ],
     variants: [
@@ -61,18 +63,10 @@ export const mockProducts = [
       { id: 'v102', sku: 'TSK-JRS-SHT-NVY-M', sleeve: 'Pendek', color: 'Deep Navy', size: 'M', price: 389000, stock: 12 },
       { id: 'v103', sku: 'TSK-JRS-SHT-NVY-L', sleeve: 'Pendek', color: 'Deep Navy', size: 'L', price: 389000, stock: 10 },
       { id: 'v104', sku: 'TSK-JRS-SHT-NVY-XL', sleeve: 'Pendek', color: 'Deep Navy', size: 'XL', price: 409000, stock: 6 },
-      { id: 'v105', sku: 'TSK-JRS-SHT-NVY-XXL', sleeve: 'Pendek', color: 'Deep Navy', size: 'XXL', price: 424000, stock: 4 },
       { id: 'v106', sku: 'TSK-JRS-SHT-RED-S', sleeve: 'Pendek', color: 'Crimson Red', size: 'S', price: 389000, stock: 5 },
       { id: 'v107', sku: 'TSK-JRS-SHT-RED-M', sleeve: 'Pendek', color: 'Crimson Red', size: 'M', price: 389000, stock: 7 },
       { id: 'v108', sku: 'TSK-JRS-SHT-RED-L', sleeve: 'Pendek', color: 'Crimson Red', size: 'L', price: 389000, stock: 6 },
-      { id: 'v109', sku: 'TSK-JRS-SHT-RED-XL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XL', price: 409000, stock: 4 },
-      { id: 'v110', sku: 'TSK-JRS-SHT-RED-XXL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XXL', price: 424000, stock: 0 },
-      { id: 'v111', sku: 'TSK-JRS-LNG-NVY-M', sleeve: 'Panjang', color: 'Deep Navy', size: 'M', price: 419000, stock: 5 },
-      { id: 'v112', sku: 'TSK-JRS-LNG-NVY-L', sleeve: 'Panjang', color: 'Deep Navy', size: 'L', price: 419000, stock: 6 },
-      { id: 'v113', sku: 'TSK-JRS-LNG-NVY-XL', sleeve: 'Panjang', color: 'Deep Navy', size: 'XL', price: 439000, stock: 3 },
-      { id: 'v114', sku: 'TSK-JRS-LNG-BLK-M', sleeve: 'Panjang', color: 'Triple Black', size: 'M', price: 419000, stock: 8 },
-      { id: 'v115', sku: 'TSK-JRS-LNG-BLK-L', sleeve: 'Panjang', color: 'Triple Black', size: 'L', price: 419000, stock: 5 },
-      { id: 'v116', sku: 'TSK-JRS-LNG-BLK-XL', sleeve: 'Panjang', color: 'Triple Black', size: 'XL', price: 439000, stock: 4 }
+      { id: 'v109', sku: 'TSK-JRS-SHT-RED-XL', sleeve: 'Pendek', color: 'Crimson Red', size: 'XL', price: 409000, stock: 4 }
     ],
     active: true,
     rating: 4.9,
@@ -88,56 +82,50 @@ export const mockProducts = [
     id: 2,
     category_id: 2,
     sku: 'TSK-SH-002',
-    name: 'Tusko HyperPace Carbon Carbon-Plate Running Shoes',
-    slug: 'tusko-hyperpace-carbon-running-shoes',
-    description: 'Sepatu lari jarak jauh kelas kompetisi dengan pelat karbon lengkung penuh (Full-Length Curved Carbon Plate) dan busa PEBA superkritis NitroFoam™. Menghasilkan energy return hingga 88% untuk memangkas catatan waktu half dan full marathon Anda.',
-    price: 1299000,
-    original_price: 1699000,
-    cost_price: 780000,
+    name: 'Sepatu Ultimashow FX3632 Core Black',
+    slug: 'sepatu-ultimashow-fx3632-core-black',
+    badge: 'BEST SELLER',
+    category_subtitle: 'Running • Pria/Wanita',
+    description: 'Sepatu lari harian dengan bantalan Cloudfoam yang empuk dan upper tekstil mesh berventilasi. Sol luar karet tahan gesekan memberikan cengkeraman mantap di aspal maupun treadmill.',
+    price: 850000,
+    original_price: 1100000,
+    cost_price: 520000,
     discount_percentage: 23,
     weight: 420, // gram
     stock: 32,
     stock_minimum: 6,
     status: 'active',
-    image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+    image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80'
     ],
     specifications: {
-      'Tipe Bantalan': 'Supercritical PEBA NitroFoam™',
-      'Pelat': 'Full-length Carbon Fiber Plate',
-      'Drop': '8 mm (Heel: 38mm / Forefoot: 30mm)',
-      'Bobot': '198 gram (Ukuran 42)',
-      'Outsole': 'TuskoGrip High-traction Rubber',
-      'Jarak Ideal': '10K, Half Marathon, Full Marathon'
+      'Tipe Bantalan': 'Responsive Cloudfoam Cushioning',
+      'Upper': 'Breathable Engineered Mesh',
+      'Outsole': 'High-wear Rubber Outsole',
+      'Bobot': '240 gram (Ukuran 42)',
+      'Penggunaan': 'Daily Running, Gym, Casual Sport'
     },
     variant_levels: [
       {
         name: 'Warna',
         code: 'color',
-        options: ['Neon Volt', 'Eclipse Black', 'Arctic White']
+        options: ['Core Black', 'Solar Red', 'Triple White']
       },
       {
         name: 'Ukuran',
         code: 'size',
-        options: ['39', '40', '41', '42', '43', '44', '45']
+        options: ['40', '41', '42', '43', '44']
       }
     ],
     variants: [
-      { id: 'v201', sku: 'TSK-SH-VLT-39', color: 'Neon Volt', size: '39', price: 1299000, stock: 3 },
-      { id: 'v202', sku: 'TSK-SH-VLT-40', color: 'Neon Volt', size: '40', price: 1299000, stock: 5 },
-      { id: 'v203', sku: 'TSK-SH-VLT-41', color: 'Neon Volt', size: '41', price: 1299000, stock: 7 },
-      { id: 'v204', sku: 'TSK-SH-VLT-42', color: 'Neon Volt', size: '42', price: 1299000, stock: 8 },
-      { id: 'v205', sku: 'TSK-SH-VLT-43', color: 'Neon Volt', size: '43', price: 1299000, stock: 6 },
-      { id: 'v206', sku: 'TSK-SH-VLT-44', color: 'Neon Volt', size: '44', price: 1349000, stock: 4 },
-      { id: 'v207', sku: 'TSK-SH-BLK-40', color: 'Eclipse Black', size: '40', price: 1299000, stock: 4 },
-      { id: 'v208', sku: 'TSK-SH-BLK-41', color: 'Eclipse Black', size: '41', price: 1299000, stock: 6 },
-      { id: 'v209', sku: 'TSK-SH-BLK-42', color: 'Eclipse Black', size: '42', price: 1299000, stock: 8 },
-      { id: 'v210', sku: 'TSK-SH-BLK-43', color: 'Eclipse Black', size: '43', price: 1299000, stock: 5 },
-      { id: 'v211', sku: 'TSK-SH-WHT-41', color: 'Arctic White', size: '41', price: 1299000, stock: 4 },
-      { id: 'v212', sku: 'TSK-SH-WHT-42', color: 'Arctic White', size: '42', price: 1299000, stock: 5 }
+      { id: 'v201', sku: 'TSK-SH-BLK-40', color: 'Core Black', size: '40', price: 850000, stock: 6 },
+      { id: 'v202', sku: 'TSK-SH-BLK-41', color: 'Core Black', size: '41', price: 850000, stock: 8 },
+      { id: 'v203', sku: 'TSK-SH-BLK-42', color: 'Core Black', size: '42', price: 850000, stock: 10 },
+      { id: 'v204', sku: 'TSK-SH-BLK-43', color: 'Core Black', size: '43', price: 850000, stock: 5 },
+      { id: 'v205', sku: 'TSK-SH-BLK-44', color: 'Core Black', size: '44', price: 850000, stock: 3 }
     ],
     active: true,
     rating: 4.95,
@@ -151,56 +139,49 @@ export const mockProducts = [
   },
   {
     id: 3,
-    category_id: 1,
-    sku: 'TSK-PNT-003',
-    name: 'Tusko AeroDry Athletic Track Training Pants',
-    slug: 'tusko-aerodry-training-pants',
-    description: 'Celana training slim-fit tapered dengan bahan stretch elastis yang nyaman untuk pemanasan, lari, maupun latihan di gym. Dilengkapi saku ritsleting anti-air untuk ponsel dan kunci, serta ritsleting pergelangan kaki untuk kemudahan memakai sepatu.',
-    price: 249000,
-    original_price: 329000,
-    cost_price: 135000,
+    category_id: 2,
+    sku: 'TSK-SH-003',
+    name: 'Tusko Hyperpace Carbon Marathon',
+    slug: 'tusko-hyperpace-carbon-marathon',
+    badge: 'PELAT KARBON',
+    category_subtitle: 'Marathon • Pro',
+    description: 'Sepatu lari jarak jauh kelas kompetisi dengan pelat karbon lengkung penuh (Full-Length Curved Carbon Plate) dan busa PEBA superkritis NitroFoam™. Menghasilkan energy return hingga 88% untuk memangkas catatan waktu half dan full marathon Anda.',
+    price: 1299000,
+    original_price: 1699000,
+    cost_price: 780000,
     discount_percentage: 24,
-    weight: 290, // gram
-    stock: 55,
-    stock_minimum: 12,
+    weight: 390, // gram
+    stock: 24,
+    stock_minimum: 5,
     status: 'active',
-    image_url: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
+    image_url: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=600&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=800&q=80'
     ],
     specifications: {
-      'Bahan': '88% Polyester, 12% Spandex 4-Way Stretch',
-      'Kantung': '2 kantong samping resleting YKK auto-lock',
-      'Pinggang': 'Elastic waistband dengan tali serut internal',
-      'Fit': 'Tapered Sport Fit',
-      'Fitur': 'Reflective strip di betis untuk keselamatan malam hari'
+      'Tipe Bantalan': 'Supercritical PEBA NitroFoam™',
+      'Pelat': 'Full-length Carbon Fiber Plate',
+      'Bobot': '198 gram (Ukuran 42)',
+      'Jarak Ideal': '10K, Half Marathon, Full Marathon'
     },
     variant_levels: [
       {
-        name: 'Warna',
-        code: 'color',
-        options: ['Stealth Black', 'Charcoal Grey', 'Dark Olive']
-      },
-      {
         name: 'Ukuran',
         code: 'size',
-        options: ['S', 'M', 'L', 'XL']
+        options: ['41', '42', '43', '44']
       }
     ],
     variants: [
-      { id: 'v301', sku: 'TSK-PNT-BLK-S', color: 'Stealth Black', size: 'S', price: 249000, stock: 10 },
-      { id: 'v302', sku: 'TSK-PNT-BLK-M', color: 'Stealth Black', size: 'M', price: 249000, stock: 15 },
-      { id: 'v303', sku: 'TSK-PNT-BLK-L', color: 'Stealth Black', size: 'L', price: 249000, stock: 12 },
-      { id: 'v304', sku: 'TSK-PNT-BLK-XL', color: 'Stealth Black', size: 'XL', price: 269000, stock: 8 },
-      { id: 'v305', sku: 'TSK-PNT-GRY-M', color: 'Charcoal Grey', size: 'M', price: 249000, stock: 9 },
-      { id: 'v306', sku: 'TSK-PNT-GRY-L', color: 'Charcoal Grey', size: 'L', price: 249000, stock: 8 }
+      { id: 'v301', sku: 'TSK-SH-CAR-41', size: '41', price: 1299000, stock: 6 },
+      { id: 'v302', sku: 'TSK-SH-CAR-42', size: '42', price: 1299000, stock: 8 },
+      { id: 'v303', sku: 'TSK-SH-CAR-43', size: '43', price: 1299000, stock: 6 },
+      { id: 'v304', sku: 'TSK-SH-CAR-44', size: '44', price: 1299000, stock: 4 }
     ],
     active: true,
-    rating: 4.85,
-    rating_count: 310,
-    sold_count: 890,
-    location: 'Bandung',
+    rating: 4.98,
+    rating_count: 190,
+    sold_count: 420,
+    location: 'Jakarta Barat',
     seller_name: 'Tusko Official Flagship',
     is_official: true,
     free_shipping: true,
@@ -208,10 +189,62 @@ export const mockProducts = [
   },
   {
     id: 4,
+    category_id: 1,
+    sku: 'TSK-PNT-004',
+    name: 'Celana Lari Kompresi 2-in-1 Pro',
+    slug: 'celana-lari-kompresi-2-in-1-pro',
+    badge: 'POPULER',
+    category_subtitle: 'Training • Celana',
+    description: 'Celana lari 2-in-1 dengan lapisan kompresi internal pencegah gesekan paha dan celana luar ultra-ringan berventilasi. Dilengkapi saku ritsleting anti-keringat untuk ponsel dan gantungan handuk mini di pinggang.',
+    price: 249000,
+    original_price: 329000,
+    cost_price: 135000,
+    discount_percentage: 24,
+    weight: 220, // gram
+    stock: 45,
+    stock_minimum: 8,
+    status: 'active',
+    image_url: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=600&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80'
+    ],
+    specifications: {
+      'Bahan Luar': '100% Recycled Ripstop Polyester',
+      'Bahan Dalam': 'Compression Spandex 4-Way Elastic',
+      'Kantung': '1 saku zipper waterproof + 1 saku HP liner',
+      'Fit': 'Athletic Liner Fit'
+    },
+    variant_levels: [
+      {
+        name: 'Ukuran',
+        code: 'size',
+        options: ['M', 'L', 'XL']
+      }
+    ],
+    variants: [
+      { id: 'v401', sku: 'TSK-PNT-M', size: 'M', price: 249000, stock: 15 },
+      { id: 'v402', sku: 'TSK-PNT-L', size: 'L', price: 249000, stock: 18 },
+      { id: 'v403', sku: 'TSK-PNT-XL', size: 'XL', price: 249000, stock: 12 }
+    ],
+    active: true,
+    rating: 4.88,
+    rating_count: 215,
+    sold_count: 780,
+    location: 'Bandung',
+    seller_name: 'Tusko Official Flagship',
+    is_official: true,
+    free_shipping: true,
+    created_at: '2026-02-12T08:00:00Z',
+  },
+  {
+    id: 10,
     category_id: 3,
     sku: 'TSK-BAG-004',
     name: 'Tusko Apex Gym & Travel Duffle Bag 48L Compartment',
     slug: 'tusko-apex-gym-duffle-bag-48l',
+    badge: 'BEST SELLER',
+    category_subtitle: 'Equipment • Gym & Travel',
     description: 'Tas olahraga multifungsi dengan kompartemen sepatu terpisah berventilasi udara dan saku tahan basah untuk pakaian berkeringat. Dibuat dari kain Cordura 600D water-repellent tahan gesekan, tali bahu empuk berteknologi air-cushion.',
     price: 349000,
     original_price: 450000,
@@ -241,9 +274,9 @@ export const mockProducts = [
       }
     ],
     variants: [
-      { id: 'v401', sku: 'TSK-BAG-BLK', color: 'Matte Black', price: 349000, stock: 20 },
-      { id: 'v402', sku: 'TSK-BAG-GRN', color: 'Tactical Green', price: 349000, stock: 12 },
-      { id: 'v403', sku: 'TSK-BAG-NVY', color: 'Storm Navy', price: 349000, stock: 8 }
+      { id: 'v1001', sku: 'TSK-BAG-BLK', color: 'Matte Black', price: 349000, stock: 20 },
+      { id: 'v1002', sku: 'TSK-BAG-GRN', color: 'Tactical Green', price: 349000, stock: 12 },
+      { id: 'v1003', sku: 'TSK-BAG-NVY', color: 'Storm Navy', price: 349000, stock: 8 }
     ],
     active: true,
     rating: 4.9,
