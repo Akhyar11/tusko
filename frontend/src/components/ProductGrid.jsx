@@ -38,8 +38,8 @@ export default function ProductGrid({
     Boolean(selectedLocation);
 
   return (
-    <section id="product-catalog" className="py-8 sm:py-14 bg-neutral-50 border-t border-neutral-200 px-3 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <section id="product-catalog" className="py-8 sm:py-14 bg-neutral-50 border-t border-neutral-200 px-4 sm:px-8 lg:px-12 w-full">
+      <div className="w-full">
         
         {/* Catalog Header (Benchmark: prototype/beranda.html) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 pb-3 border-b border-neutral-200 gap-3">
@@ -159,9 +159,9 @@ export default function ProductGrid({
           </div>
         )}
 
-        {/* Responsive Product Grid: 2 Kolom di Mobile, 4 Kolom di Desktop */}
+        {/* Responsive Product Grid: 2 Kolom di Mobile, 4 Kolom di Desktop, 5 Kolom di Layar Lebar */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-6">
             {products.map((product) => (
               <ProductCard
                 key={product.id}

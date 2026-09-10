@@ -195,7 +195,7 @@ export default function Navbar({
     <>
       {/* 1. Top Announcement Utility Bar */}
       <div className="bg-black text-white text-[11px] font-bold py-2 px-3 sm:px-4 tracking-wider uppercase w-full max-w-full overflow-hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="w-full px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 mx-auto sm:mx-0 min-w-0">
             <Truck size={14} className="text-amber-400 shrink-0" />
             <span className="text-[10px] sm:text-[11px] truncate">
@@ -229,7 +229,7 @@ export default function Navbar({
 
       {/* 2. Main Navigation Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 w-full max-w-full">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
+        <div className="w-full px-4 sm:px-8 lg:px-12 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
           
           {/* Left: Hamburger Button (Mobile & Tablet) + Brand Logo */}
           <div className="flex items-center gap-2 sm:gap-3">

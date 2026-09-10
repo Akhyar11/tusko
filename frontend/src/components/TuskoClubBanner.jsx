@@ -3,10 +3,10 @@ import { ArrowRight } from 'lucide-react';
 
 export default function TuskoClubBanner({ onJoinClick = () => {} }) {
   return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-14">
-      <div className="bg-black text-white p-5 sm:p-10 border border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-5">
+    <section className="w-full px-4 sm:px-8 lg:px-12 py-8 sm:py-14">
+      <div className="bg-black text-white p-6 sm:p-10 border border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-5 rounded-none">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 sm:w-14 h-10 sm:h-14 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-xl sm:text-2xl flex-shrink-0 -skew-x-6">
+          <div className="w-10 sm:w-14 h-10 sm:h-14 bg-amber-500 text-black flex items-center justify-center font-sport font-black text-xl sm:text-2xl flex-shrink-0 -skew-x-6 rounded-none">
             ★
           </div>
           <div>
@@ -24,7 +24,7 @@ export default function TuskoClubBanner({ onJoinClick = () => {} }) {
         <button 
           type="button"
           onClick={onJoinClick}
-          className="w-full sm:w-auto bg-white text-black hover:bg-neutral-200 font-sport font-bold text-xs uppercase tracking-wider px-5 py-3 transition-colors flex-shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+          className="w-full sm:w-auto bg-white text-black hover:bg-neutral-200 font-sport font-bold text-xs uppercase tracking-wider px-6 py-3.5 transition-colors flex-shrink-0 flex items-center justify-center gap-1.5 cursor-pointer rounded-none"
         >
           <span>DAFTAR MEMBER GRATIS</span>
           <ArrowRight size={14} />

@@ -308,7 +308,7 @@ Repository ini dilengkapi dengan sistem auditor otomatis yang berjalan setiap ka
 1. `01-branch-and-master-protection.sh`: Mencegah commit langsung di branch `master`.
 2. `02-feature-team-ownership.sh`: Memvalidasi boundary file sesuai pembagian tim.
 3. `03-design-system-rounded-none.sh`: Memvalidasi kepatuhan `rounded-none` dan penolakan label "VIP".
-4. `04-zero-secret-and-hardcode.sh`: Mencegah kebocoran file `.env`, token, atau private key.
+4. `04-zero-secret-and-hardcode.sh`: AI Code Auditor (OpenCode) yang menganalisis git diff secara cerdas untuk mencegah kebocoran kredensial rahasia (.env, token, private key) dan **MENOLAK segala bentuk hardcode** (seperti lokasi gudang toko, koordinat GPS statis, biaya penanganan/handling fee, atau URL gateway pihak ketiga yang seharusnya dapat diatur secara dinamis oleh Admin melalui database).
 5. `05-backend-laravel-test-integrity.sh`: Menjalankan PHP syntax check dan `php artisan test` (wajib lolos 100%).
 6. `06-frontend-build-integrity.sh`: Menjalankan `npm run build` (wajib lolos tanpa error kompilasi).
 7. `07-frontend-consistency-auditor.sh`: Memvalidasi konsistensi Frontend (arsitektur sharp, icon library lucide-react, prefix tusko_* pada localStorage, formatter formatRupiah).

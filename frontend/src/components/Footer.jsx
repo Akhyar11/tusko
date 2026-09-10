@@ -5,8 +5,8 @@ export default function Footer({
   onOpenOrders = () => {}
 }) {
   return (
-    <footer className="bg-black text-white pt-12 sm:pt-16 pb-12 border-t border-neutral-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-black text-white pt-12 sm:pt-16 pb-12 border-t border-neutral-800 w-full">
+      <div className="w-full px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-12 border-b border-neutral-800 text-xs">
           <div>
             <h4 className="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">
