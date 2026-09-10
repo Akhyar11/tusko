@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🤖 [Audit 5/9: Backend Laravel Integrity] Memeriksa sintaks PHP & Automated Tests..."
+echo "🤖 [Audit 5/9: Backend Laravel Test Integrity (OpenCode AI)] Memeriksa sintaks PHP & Automated Tests..."
 
 STAGED_PHP=$(git diff --cached --name-only -- "backend/**/*.php")
 
@@ -24,7 +24,48 @@ for file in $STAGED_PHP; do
     fi
 done
 
-# 2. Automated Tests (php artisan test)
+# 2. OpenCode AI Backend Test & Code Integrity Auditor
+STAGED_PHP_DIFF=$(git diff --cached -- "backend/**/*.php")
+if [ -n "$STAGED_PHP_DIFF" ]; then
+    echo "🔍 Menganalisis integritas test & backend logic dengan OpenCode AI..."
+    PROMPT_FILE=$(mktemp)
+    cat << 'EOF' > "$PROMPT_FILE"
+Kamu adalah Backend Test & Code Integrity Auditor untuk aplikasi Laravel 11.
+Tugasmu adalah menganalisis Git Diff berkas PHP yang di-stage berikut:
+
+ATURAN INTEGRITAS BACKEND & TEST:
+1. Integritas Test: Jika ada file pengujian (tests/Feature/ atau tests/Unit/), pastikan test memiliki assertion konkret (seperti assertStatus, assertJson, assertEquals). Dilarang membuat test kosong tanpa assertion atau sengaja melewati test (markTestSkipped).
+2. Integritas Kode: Pastikan struktur method, controller, dan model memiliki penanganan error yang baik dan tidak ada logika fatal yang merusak integritas aplikasi.
+
+Git Diff:
+```diff
+EOF
+    echo "$STAGED_PHP_DIFF" | head -n 120 >> "$PROMPT_FILE"
+    cat << 'EOF' >> "$PROMPT_FILE"
+```
+
+FORMAT JAWABAN:
+- Jika kode backend dan test memenuhi standar: Jawab HANYA kata "PASSED".
+- Jika melanggar:
+  REJECTED: [alasan singkat kegagalan integritas backend/test]
+EOF
+
+    AI_RESULT=""
+    if command -v opencode &> /dev/null; then
+        AI_RESULT=$(timeout 25s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
+    elif command -v agy &> /dev/null; then
+        AI_RESULT=$(timeout 20s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
+    fi
+    rm -f "$PROMPT_FILE"
+
+    if echo "$AI_RESULT" | grep -qi "REJECTED"; then
+        echo "❌ [Audit Backend Test Integrity] DITOLAK OLEH OPENCODE AI:"
+        echo "$AI_RESULT" | grep -i "REJECTED"
+        exit 1
+    fi
+fi
+
+# 3. Automated Tests Execution (php artisan test)
 echo "🔍 Menjalankan Automated Feature & Unit Tests (php artisan test)..."
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 cd "$REPO_ROOT/backend" || exit 1
@@ -43,5 +84,5 @@ if [ $TEST_EXIT -ne 0 ]; then
     exit 1
 fi
 
-echo "✅ [Audit Backend] PASSED (Seluruh backend tests lolos 100%)."
+echo "✅ [Audit Backend] PASSED (Seluruh backend tests lolos 100% & diverifikasi OpenCode AI)."
 exit 0

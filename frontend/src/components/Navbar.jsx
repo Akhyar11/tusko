@@ -194,18 +194,20 @@ export default function Navbar({
   return (
     <>
       {/* 1. Top Announcement Utility Bar */}
-      <div className="bg-black text-white text-[11px] font-bold py-2 px-3 sm:px-4 tracking-wider uppercase w-full max-w-full overflow-hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 mx-auto sm:mx-0 min-w-0">
-            <Truck size={14} className="text-amber-400 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] truncate">
+      <div className="bg-black text-white font-bold tracking-wider uppercase w-full max-w-full overflow-hidden">
+        <div className="relative w-full px-4 sm:px-8 lg:px-12 h-9 flex items-center">
+          {/* Center: Promo text — absolutely centered so it's always symmetrical */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2.5 text-[11px]">
+              <Truck size={13} className="text-amber-400 shrink-0" />
               <span className="sm:hidden">GRATIS ONGKIR MIN. 500RB • GARANSI 14 HARI</span>
               <span className="hidden sm:inline">GRATIS ONGKIR SELURUH INDONESIA MIN. RP 500.000</span>
-            </span>
-            <span className="hidden md:inline text-neutral-600">|</span>
-            <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
+              <span className="hidden md:inline text-neutral-500">|</span>
+              <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
+            </div>
           </div>
-          <div className="hidden lg:flex items-center gap-6 text-neutral-400 text-xs shrink-0">
+          {/* Right: Utility links — pushed to the right */}
+          <div className="hidden lg:flex items-center gap-5 text-[11px] text-neutral-400 ml-auto pointer-events-auto">
             <button 
               onClick={onOpenOrders}
               className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
@@ -213,7 +215,7 @@ export default function Navbar({
               <MapPin size={12} />
               <span>Lacak Pesanan</span>
             </button>
-            <span className="text-neutral-400 hover:text-white cursor-pointer transition-colors">
+            <span className="hover:text-white cursor-pointer transition-colors">
               Bantuan &amp; FAQ
             </span>
             <button 
@@ -229,7 +231,7 @@ export default function Navbar({
 
       {/* 2. Main Navigation Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 w-full max-w-full">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
+        <div className="w-full px-4 sm:px-8 lg:px-12 h-[68px] sm:h-[84px] flex items-center justify-between gap-2 sm:gap-6">
           
           {/* Left: Hamburger Button (Mobile & Tablet) + Brand Logo */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -247,16 +249,16 @@ export default function Navbar({
             {/* Brand Logo */}
             <div 
               onClick={onResetHome}
-              className="flex items-center gap-2 group flex-shrink-0 cursor-pointer select-none"
+              className="flex items-center gap-2.5 group flex-shrink-0 cursor-pointer select-none"
             >
-              <div className="w-8 sm:w-11 h-8 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-lg sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+              <div className="w-9 sm:w-13 h-9 sm:h-12 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-3xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
                 T
               </div>
               <div className="leading-none">
-                <span className="font-sport font-black text-lg sm:text-2xl tracking-tight uppercase">
+                <span className="font-sport font-black text-xl sm:text-3xl tracking-tight uppercase">
                   TUSKO<span className="text-amber-500">.</span>
                 </span>
-                <span className="hidden sm:block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">
+                <span className="hidden sm:block text-[9px] sm:text-[10px] font-bold tracking-widest text-neutral-400 uppercase mt-0.5">
                   Performance
                 </span>
               </div>
@@ -264,7 +266,7 @@ export default function Navbar({
           </div>
 
           {/* Center: Desktop Navigation Categories (Desktop Only) */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sport font-black text-xs uppercase tracking-wider">
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 font-sport font-black text-sm uppercase tracking-wider">
             <button
               type="button"
               onClick={() => handleNavCategoryClick('Pria')}
@@ -330,25 +332,25 @@ export default function Navbar({
           </nav>
 
           {/* Right: Header Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Search Input (Desktop) */}
-            <div ref={desktopSearchRef} className="relative hidden lg:block w-48 xl:w-60">
+            <div ref={desktopSearchRef} className="relative hidden lg:block w-56 xl:w-72">
               <input 
                 type="text" 
                 value={searchQuery}
                 onFocus={() => setIsFocused(true)}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Cari produk..." 
-                className="w-full bg-neutral-100 border border-neutral-200 px-3.5 py-1.5 pl-9 pr-7 text-xs focus:outline-none focus:border-black font-medium"
+                className="w-full bg-neutral-100 border border-neutral-200 px-4 py-2 pl-10 pr-8 text-sm focus:outline-none focus:border-black font-medium"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm" size={14} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black cursor-pointer"
                 >
-                  <X size={14} />
+                  <X size={15} />
                 </button>
               )}
               {renderSuggestionsDropdown()}
@@ -361,7 +363,7 @@ export default function Navbar({
               className="lg:hidden text-neutral-800 hover:text-black p-1.5 cursor-pointer" 
               title="Cari"
             >
-              <Search size={20} />
+              <Search size={22} />
             </button>
 
             {/* Desktop User Menu (Hidden on Mobile/Tablet because it's inside the Hamburger Drawer) */}
@@ -392,7 +394,7 @@ export default function Navbar({
               className="text-neutral-800 hover:text-black p-1.5 cursor-pointer" 
               title="Wishlist"
             >
-              <Heart size={20} />
+              <Heart size={22} />
             </button>
 
             {/* Shopping Bag Counter */}
@@ -402,7 +404,7 @@ export default function Navbar({
               className="text-black p-1.5 flex items-center relative cursor-pointer group" 
               title="Tas Belanja"
             >
-              <ShoppingBag size={22} className="group-hover:scale-105 transition-transform" />
+              <ShoppingBag size={24} className="group-hover:scale-105 transition-transform" />
               {cartCount > 0 && (
                 <span className="bg-black text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center -ml-2 -mt-3 shadow-xs">
                   {cartCount}

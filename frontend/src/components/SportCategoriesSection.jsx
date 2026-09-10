@@ -44,7 +44,7 @@ export default function SportCategoriesSection({
   ];
 
   return (
-    <section id="sport-categories" className="py-8 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="sport-categories" className="py-8 sm:py-14 px-4 sm:px-8 lg:px-12 w-full">
       <div className="flex items-end justify-between mb-4 sm:mb-6">
         <div>
           <h2 className="font-sport font-black text-xl sm:text-3xl uppercase italic tracking-tight">
