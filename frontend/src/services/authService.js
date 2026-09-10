@@ -205,6 +205,202 @@ export const authService = {
   },
 
   /**
+   * Perbarui data biodata profil pengguna.
+   */
+  async updateProfile(profileData) {
+    const payload = {
+      name: profileData.name,
+      email: profileData.email,
+      phone: profileData.phone || null,
+      avatar: profileData.avatar || null,
+      gender: profileData.gender || null,
+      birth_date: profileData.birthDate || profileData.birth_date || null,
+    };
+
+    try {
+      const response = await apiClient.put('/api/auth/profile', payload);
+      if (response.user) {
+        setStoredUser(response.user);
+        return {
+          success: true,
+          user: response.user,
+          message: response.message || 'Profil berhasil diperbarui.',
+          isLiveApi: true,
+        };
+      }
+      return { success: true, message: response.message, isLiveApi: true };
+    } catch (error) {
+      if (error.status === 422 || error.status === 400) {
+        throw error;
+      }
+      // Offline fallback
+      if (error.isNetworkError) {
+        console.warn('Backend server offline. Memperbarui profil di penyimpanan lokal.');
+        const currentUser = getStoredUser() || {};
+        const updatedUser = {
+          ...currentUser,
+          ...profileData,
+        };
+        setStoredUser(updatedUser);
+        return {
+          success: true,
+          user: updatedUser,
+          message: 'Profil berhasil diperbarui (Mode Demo).',
+          isLiveApi: false,
+        };
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Perbarui kata sandi pengguna.
+   */
+  async updatePassword({ oldPassword, newPassword, confirmPassword }) {
+    const payload = {
+      old_password: oldPassword,
+      password: newPassword,
+      password_confirmation: confirmPassword,
+    };
+
+    try {
+      const response = await apiClient.post('/api/auth/password', payload);
+      return {
+        success: true,
+        message: response.message || 'Kata sandi berhasil diperbarui.',
+        isLiveApi: true,
+      };
+    } catch (error) {
+      if (error.status === 422 || error.status === 400) {
+        throw error;
+      }
+      // Offline fallback
+      if (error.isNetworkError) {
+        console.warn('Backend server offline. Simulasi pembaruan kata sandi berhasil.');
+        return {
+          success: true,
+          message: 'Kata sandi akun Anda berhasil diperbarui (Mode Demo).',
+          isLiveApi: false,
+        };
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Ambil daftar alamat pengiriman user dari backend API.
+   */
+  async getAddresses() {
+    try {
+      const response = await apiClient.get('/api/addresses');
+      return response.data || [];
+    } catch (error) {
+      console.warn('Gagal memuat alamat dari server:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Simpan alamat pengiriman baru ke backend API.
+   */
+  async createAddress(addressData) {
+    const payload = {
+      label: addressData.label || 'Rumah',
+      recipient_name: addressData.recipient_name || addressData.recipientName,
+      phone: addressData.phone,
+      full_address: addressData.full_address || addressData.fullAddress,
+      city: addressData.city,
+      province: addressData.province,
+      postal_code: addressData.postal_code || addressData.postalCode,
+      lat: addressData.lat,
+      lng: addressData.lng,
+      is_default: Boolean(addressData.is_default || addressData.isDefault),
+    };
+
+    const response = await apiClient.post('/api/addresses', payload);
+    return response.data || response;
+  },
+
+  /**
+   * Perbarui alamat pengiriman yang ada di backend API.
+   */
+  async updateAddress(id, addressData) {
+    const payload = {
+      label: addressData.label,
+      recipient_name: addressData.recipient_name || addressData.recipientName,
+      phone: addressData.phone,
+      full_address: addressData.full_address || addressData.fullAddress,
+      city: addressData.city,
+      province: addressData.province,
+      postal_code: addressData.postal_code || addressData.postalCode,
+      lat: addressData.lat,
+      lng: addressData.lng,
+      is_default: Boolean(addressData.is_default || addressData.isDefault),
+    };
+
+    const response = await apiClient.put(`/api/addresses/${id}`, payload);
+    return response.data || response;
+  },
+
+  /**
+   * Hapus alamat pengiriman dari backend API.
+   */
+  async deleteAddress(id) {
+    const response = await apiClient.delete(`/api/addresses/${id}`);
+    return response;
+  },
+
+  /**
+   * Jadikan alamat sebagai alamat utama default di backend API.
+   */
+  async setDefaultAddress(id) {
+    const response = await apiClient.post(`/api/addresses/${id}/set-default`);
+    return response.data || response;
+  },
+
+  /**
+   * Ambil daftar kupon diskon dan voucher aktif dari backend API.
+   */
+  async getVouchers() {
+    try {
+      const response = await apiClient.get('/api/vouchers');
+      return response.data || [];
+    } catch (error) {
+      console.warn('Gagal memuat voucher dari server:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Ambil daftar sesi login aktif akun pengguna dari backend API.
+   */
+  async getActiveSessions() {
+    try {
+      const response = await apiClient.get('/api/auth/sessions');
+      return response.data || [];
+    } catch (error) {
+      console.warn('Gagal memuat sesi dari server:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Cabut semua sesi perangkat lain kecuali sesi saat ini.
+   */
+  async revokeOtherSessions() {
+    const response = await apiClient.delete('/api/auth/sessions/other');
+    return response;
+  },
+
+  /**
+   * Cabut sesi perangkat tertentu berdasarkan ID.
+   */
+  async revokeSession(id) {
+    const response = await apiClient.delete(`/api/auth/sessions/${id}`);
+    return response;
+  },
+
+  /**
    * Ambil data user dari cache lokal.
    */
   getCurrentUser() {

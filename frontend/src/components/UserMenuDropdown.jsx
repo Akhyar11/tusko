@@ -12,7 +12,6 @@ import {
   Truck, 
   ChevronDown, 
   Sparkles, 
-  Award, 
   Users,
   Package
 } from 'lucide-react';
@@ -59,11 +58,15 @@ export default function UserMenuDropdown({
   return (
     <div className="relative" ref={dropdownRef}>
       {currentUser ? (
-        /* Logged In Trigger */
+        /* Logged In Trigger - Sharp Angular Tusko Style (rounded-none) */
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+          className={`flex items-center gap-2.5 px-3 py-2 border transition-all cursor-pointer text-left focus:outline-none rounded-none ${
+            isOpen
+              ? 'bg-neutral-100 border-black text-black'
+              : 'bg-white hover:bg-neutral-50 border-neutral-300 hover:border-black text-neutral-800'
+          }`}
           title="Menu Akun Saya"
           aria-expanded={isOpen}
         >
@@ -71,51 +74,48 @@ export default function UserMenuDropdown({
             <img 
               src={currentUser.avatar} 
               alt={currentUser.name} 
-              className="w-7 h-7 rounded-full object-cover border border-amber-500/50 shadow-xs" 
+              className="w-7 h-7 object-cover border border-neutral-300 rounded-none shrink-0" 
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-amber-500 text-neutral-950 font-black text-xs flex items-center justify-center shadow-xs">
+            <div className="w-7 h-7 bg-black text-white font-black text-xs flex items-center justify-center rounded-none shrink-0">
               {currentUser.name.charAt(0)}
             </div>
           )}
           <div className="hidden sm:flex flex-col text-left leading-tight">
-            <span className="text-xs font-bold text-white max-w-[110px] truncate">
+            <span className="text-xs font-black uppercase text-neutral-900 max-w-[120px] truncate font-sport">
               {currentUser.name}
             </span>
-            <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
               {currentUser.role === 'admin' ? (
                 <>
-                  <ShieldCheck size={10} className="text-amber-400 inline" />
-                  <span>Admin</span>
+                  <ShieldCheck size={11} className="text-amber-600 inline" />
+                  <span className="text-amber-700 font-bold">Admin</span>
                 </>
               ) : (
-                <>
-                  <Award size={10} className="text-amber-400 inline" />
-                  <span>Member</span>
-                </>
+                <span>Member</span>
               )}
             </span>
           </div>
           <ChevronDown 
             size={14} 
-            className={`text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-amber-400' : ''}`} 
+            className={`text-neutral-500 transition-transform duration-150 ${isOpen ? 'rotate-180 text-black' : ''}`} 
           />
         </button>
       ) : (
-        /* Guest Trigger (Not Logged In) */
+        /* Guest Trigger (Not Logged In) - Sharp Angular Tusko Style (rounded-none) */
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button 
             type="button"
             onClick={onOpenLogin}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neutral-200 border border-neutral-700 rounded-xl hover:bg-neutral-800 hover:border-neutral-600 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase tracking-wider text-neutral-800 border border-neutral-300 hover:border-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer"
           >
-            <LogIn size={13} className="text-neutral-400" />
+            <LogIn size={13} className="text-neutral-600" />
             <span>Masuk</span>
           </button>
           <button 
             type="button"
             onClick={onOpenRegister}
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-white bg-black hover:bg-neutral-800 rounded-none shadow-xs transition-colors cursor-pointer"
           >
             <UserPlus size={13} />
             <span>Daftar</span>
@@ -125,7 +125,7 @@ export default function UserMenuDropdown({
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer border border-transparent hover:border-neutral-300"
             title="Coba Akun Demo Cepat"
           >
             <Sparkles size={16} />
@@ -133,39 +133,39 @@ export default function UserMenuDropdown({
         </div>
       )}
 
-      {/* DROPDOWN MENU */}
+      {/* DROPDOWN MENU - Sharp Angular Tusko Style (rounded-none) */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden text-xs animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-1 w-72 sm:w-80 bg-white border border-neutral-300 shadow-2xl z-50 text-xs rounded-none animate-in fade-in slide-in-from-top-1 duration-150">
           {currentUser ? (
             /* Logged In Content */
             <div>
               {/* User Header Summary Card */}
-              <div className="p-4 bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 border-b border-neutral-800">
+              <div className="p-4 bg-neutral-50 border-b border-neutral-200 rounded-none">
                 <div className="flex items-center gap-3">
                   {currentUser.avatar ? (
                     <img 
                       src={currentUser.avatar} 
                       alt={currentUser.name} 
-                      className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-500/60 shadow-md shrink-0" 
+                      className="w-11 h-11 object-cover border border-neutral-300 rounded-none shadow-xs shrink-0" 
                     />
                   ) : (
-                    <div className="w-11 h-11 rounded-2xl bg-amber-500 text-neutral-950 font-black text-lg flex items-center justify-center shadow-md shrink-0">
+                    <div className="w-11 h-11 bg-black text-white font-black text-base flex items-center justify-center rounded-none shadow-xs shrink-0">
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-white truncate">{currentUser.name}</h4>
-                    <p className="text-[11px] text-neutral-400 truncate">{currentUser.email}</p>
+                    <h4 className="text-sm font-black uppercase text-neutral-900 truncate font-sport">{currentUser.name}</h4>
+                    <p className="text-[11px] text-neutral-500 truncate mt-0.5">{currentUser.email}</p>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className={`px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider ${
+                      <span className={`px-2 py-0.5 text-[9px] font-black rounded-none uppercase tracking-wider border ${
                         currentUser.role === 'admin' 
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300' 
+                          : 'bg-white text-neutral-800 border-neutral-300'
                       }`}>
-                        {currentUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'}
+                        {currentUser.role === 'admin' ? '🛡️ Admin' : 'Member'}
                       </span>
                       {currentUser.points !== undefined && (
-                        <span className="text-[10px] text-neutral-400 font-medium">
+                        <span className="text-[10px] text-neutral-600 font-bold bg-neutral-200/70 px-2 py-0.5 rounded-none">
                           💎 {currentUser.points.toLocaleString('id-ID')} Poin
                         </span>
                       )}
@@ -175,85 +175,85 @@ export default function UserMenuDropdown({
               </div>
 
               {/* Navigation Items */}
-              <div className="p-2 space-y-0.5">
+              <div className="p-1 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => handleAction(onOpenProfile)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                 >
-                  <User size={16} className="text-amber-400 shrink-0" />
-                  <span>Profil & Informasi Akun</span>
+                  <User size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
+                  <span>Profil &amp; Informasi Akun</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleAction(onOpenOrders)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                 >
-                  <ShoppingBag size={16} className="text-sky-400 shrink-0" />
+                  <ShoppingBag size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
                   <span>Daftar Pesanan Toko</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleAction(onOpenTransactions)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                 >
-                  <Wallet size={16} className="text-emerald-400 shrink-0" />
-                  <span>Catatan Transaksi & Kas</span>
+                  <Wallet size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
+                  <span>Catatan Transaksi &amp; Kas</span>
                 </button>
               </div>
 
               {/* Admin Shortcuts (If admin) */}
               {currentUser.role === 'admin' && (
-                <div className="p-2 border-t border-neutral-900 bg-neutral-900/40">
-                  <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-400">
+                <div className="p-1 border-t border-neutral-200 bg-neutral-50 rounded-none">
+                  <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500">
                     Akses Khusus Administrator
                   </div>
-                  <div className="space-y-0.5 mt-1">
+                  <div className="space-y-0.5 mt-0.5">
                     <button
                       type="button"
                       onClick={() => handleAction(onOpenProductsAdmin)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                     >
-                      <Package size={14} className="text-amber-400 shrink-0" />
-                      <span>Manajemen Produk & Katalog</span>
+                      <Package size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                      <span>Manajemen Produk &amp; Katalog</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAction(onOpenStock)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                     >
-                      <Boxes size={14} className="text-amber-400 shrink-0" />
+                      <Boxes size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
                       <span>Manajemen Stok Gudang</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAction(onOpenTemplates)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                     >
-                      <Mail size={14} className="text-amber-400 shrink-0" />
-                      <span>Template Email & Resi</span>
+                      <Mail size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                      <span>Template Email &amp; Resi</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAction(onOpenExpeditions)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer text-left font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                     >
-                      <Truck size={14} className="text-amber-400 shrink-0" />
-                      <span>Pengaturan Ekspedisi & Ongkir</span>
+                      <Truck size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                      <span>Pengaturan Ekspedisi &amp; Ongkir</span>
                     </button>
                   </div>
                 </div>
               )}
 
               {/* Quick Switch Demo Account */}
-              <div className="p-2 border-t border-neutral-900">
-                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center justify-between">
+              <div className="p-1 border-t border-neutral-200 bg-white rounded-none">
+                <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500 flex items-center justify-between">
                   <span>Ganti Akun Demo</span>
-                  <Users size={12} className="text-neutral-500" />
+                  <Users size={12} className="text-neutral-400" />
                 </div>
-                <div className="space-y-1 mt-1">
+                <div className="space-y-0.5 mt-0.5">
                   {mockDemoUsers.map((demo) => {
                     const isCurrent = currentUser.id === demo.id;
                     return (
@@ -261,22 +261,24 @@ export default function UserMenuDropdown({
                         key={demo.id}
                         type="button"
                         onClick={() => handleQuickLogin(demo)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors cursor-pointer text-left ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-none transition-colors cursor-pointer text-left ${
                           isCurrent 
-                            ? 'bg-amber-500/15 border border-amber-500/30 text-white font-bold' 
-                            : 'hover:bg-neutral-800 text-neutral-300 font-medium'
+                            ? 'bg-neutral-100 border border-neutral-400 text-black font-bold' 
+                            : 'hover:bg-neutral-50 text-neutral-700 border border-transparent font-medium'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <img 
                             src={demo.avatar} 
                             alt={demo.name} 
-                            className="w-5 h-5 rounded-full object-cover shrink-0" 
+                            className="w-5 h-5 object-cover shrink-0 border border-neutral-300 rounded-none" 
                           />
-                          <span className="truncate">{demo.name}</span>
+                          <span className="truncate text-xs font-semibold">{demo.name}</span>
                         </div>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${
-                          demo.role === 'admin' ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-800 text-neutral-300'
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-none font-bold uppercase ${
+                          demo.role === 'admin' 
+                            ? 'bg-amber-100 text-amber-800' 
+                            : 'bg-neutral-200 text-neutral-700'
                         }`}>
                           {demo.role}
                         </span>
@@ -287,13 +289,13 @@ export default function UserMenuDropdown({
               </div>
 
               {/* Logout Button */}
-              <div className="p-2 border-t border-neutral-800 bg-neutral-950">
+              <div className="p-2 border-t border-neutral-200 bg-neutral-50 rounded-none">
                 <button
                   type="button"
                   onClick={() => handleAction(onLogout)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-rose-400 hover:text-white hover:bg-rose-600 rounded-xl transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-wider text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 rounded-none transition-colors cursor-pointer"
                 >
-                  <LogOut size={15} />
+                  <LogOut size={14} />
                   <span>Keluar dari Akun (Logout)</span>
                 </button>
               </div>
@@ -301,58 +303,58 @@ export default function UserMenuDropdown({
           ) : (
             /* Guest / Demo Quick Picker Content */
             <div>
-              <div className="p-4 bg-gradient-to-br from-neutral-900 to-neutral-950 border-b border-neutral-800">
-                <div className="flex items-center gap-2 text-amber-400 font-black text-xs uppercase tracking-wider mb-1">
-                  <Sparkles size={14} />
+              <div className="p-4 bg-neutral-50 border-b border-neutral-200 rounded-none">
+                <div className="flex items-center gap-2 text-neutral-900 font-black text-xs uppercase tracking-wider mb-1 font-sport">
+                  <Sparkles size={14} className="text-amber-500" />
                   <span>Akun Demo Cepat</span>
                 </div>
-                <p className="text-xs text-neutral-300">
+                <p className="text-xs text-neutral-500">
                   Pilih salah satu profil demo di bawah untuk langsung mencoba aplikasi:
                 </p>
               </div>
 
-              <div className="p-2 space-y-1">
+              <div className="p-1 space-y-0.5">
                 {mockDemoUsers.map((demo) => (
                   <button
                     key={demo.id}
                     type="button"
                     onClick={() => handleQuickLogin(demo)}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer text-left group"
+                    className="w-full flex items-center justify-between p-2.5 rounded-none hover:bg-neutral-50 transition-colors cursor-pointer text-left group border border-transparent hover:border-neutral-200"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img 
                         src={demo.avatar} 
                         alt={demo.name} 
-                        className="w-8 h-8 rounded-full object-cover shrink-0 border border-neutral-700 group-hover:border-amber-500 transition-colors" 
+                        className="w-8 h-8 object-cover shrink-0 border border-neutral-300 rounded-none" 
                       />
                       <div className="min-w-0">
-                        <div className="font-bold text-white truncate text-xs">{demo.name}</div>
-                        <div className="text-[10px] text-neutral-400 truncate">{demo.email}</div>
+                        <div className="font-bold text-neutral-900 truncate text-xs">{demo.name}</div>
+                        <div className="text-[10px] text-neutral-500 truncate">{demo.email}</div>
                       </div>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider shrink-0 ${
+                    <span className={`text-[10px] px-2 py-0.5 rounded-none font-bold uppercase tracking-wider shrink-0 ${
                       demo.role === 'admin' 
-                        ? 'bg-amber-500 text-neutral-950' 
-                        : 'bg-neutral-800 text-neutral-200 border border-neutral-700'
+                        ? 'bg-amber-100 text-amber-800' 
+                        : 'bg-neutral-100 text-neutral-700 border border-neutral-300'
                     }`}>
-                      {demo.role === 'admin' ? '🛡️ Admin' : '⭐ Member'}
+                      {demo.role === 'admin' ? '🛡️ Admin' : 'Member'}
                     </span>
                   </button>
                 ))}
               </div>
 
-              <div className="p-2 border-t border-neutral-800 bg-neutral-900/50 flex gap-2">
+              <div className="p-2 border-t border-neutral-200 bg-neutral-50 flex gap-2 rounded-none">
                 <button
                   type="button"
                   onClick={() => handleAction(onOpenLogin)}
-                  className="flex-1 py-2 text-center text-xs font-bold text-neutral-200 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-xl transition-colors cursor-pointer"
+                  className="flex-1 py-2 text-center text-xs font-black uppercase tracking-wider text-neutral-800 hover:text-black bg-white hover:bg-neutral-100 border border-neutral-300 rounded-none transition-colors cursor-pointer"
                 >
                   Form Masuk
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAction(onOpenRegister)}
-                  className="flex-1 py-2 text-center text-xs font-black text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl transition-colors cursor-pointer uppercase tracking-wider"
+                  className="flex-1 py-2 text-center text-xs font-black uppercase tracking-wider text-white bg-black hover:bg-neutral-800 rounded-none transition-colors cursor-pointer"
                 >
                   Daftar Akun
                 </button>

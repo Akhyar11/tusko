@@ -34,6 +34,69 @@ import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { CheckCircle2, Filter } from 'lucide-react';
 
+const VALID_VIEWS = [
+  'catalog',
+  'detail',
+  'cart',
+  'checkout',
+  'order-success',
+  'orders',
+  'order-detail',
+  'transactions',
+  'stock',
+  'templates',
+  'expeditions',
+  'products-admin',
+  'product-create',
+  'product-edit',
+  'login',
+  'register',
+  'profile',
+];
+
+const getViewFromHash = () => {
+  try {
+    const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
+    if (rawHash && VALID_VIEWS.includes(rawHash)) {
+      return rawHash;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
+const getInitialView = () => {
+  const fromHash = getViewFromHash();
+  const rawView = fromHash || (() => {
+    try {
+      return localStorage.getItem('tusko_current_view');
+    } catch {
+      return null;
+    }
+  })();
+
+  if (rawView && VALID_VIEWS.includes(rawView)) {
+    if (rawView === 'detail') {
+      try {
+        const savedProdId = localStorage.getItem('tusko_selected_product_id');
+        if (!savedProdId) return 'catalog';
+      } catch {
+        return 'catalog';
+      }
+    }
+    if (rawView === 'product-edit') {
+      return 'products-admin';
+    }
+    if (rawView === 'order-success') {
+      return 'orders';
+    }
+    return rawView;
+  }
+
+  return 'catalog';
+};
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -62,9 +125,19 @@ export default function App() {
   };
 
   const [products, setProducts] = useState(mockProducts);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(() => {
+    try {
+      const savedId = localStorage.getItem('tusko_selected_product_id');
+      if (savedId) {
+        return mockProducts.find(p => String(p.id) === String(savedId)) || null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  });
   const [editingProduct, setEditingProduct] = useState(null);
-  const [currentView, setCurrentView] = useState('catalog'); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login'
+  const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
@@ -109,7 +182,7 @@ export default function App() {
 
   const handleSwitchUser = (demoUser) => {
     handleUpdateUser(demoUser);
-    showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'})`);
+    showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
   };
 
   const handleLogout = async () => {
@@ -136,6 +209,56 @@ export default function App() {
       .catch(() => {
         // backend offline or session expired
       });
+  }, []);
+
+  // Sinkronisasi selectedProduct ke localStorage
+  useEffect(() => {
+    try {
+      if (selectedProduct?.id) {
+        localStorage.setItem('tusko_selected_product_id', String(selectedProduct.id));
+      } else {
+        localStorage.removeItem('tusko_selected_product_id');
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectedProduct]);
+
+  // Sinkronisasi status tampilan (currentView) ke URL hash & localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('tusko_current_view', currentView);
+    } catch {
+      // ignore
+    }
+
+    const currentHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
+    if (currentView === 'catalog') {
+      if (currentHash) {
+        window.history.pushState(null, '', window.location.pathname + window.location.search);
+      }
+    } else {
+      const targetHash = `#/${currentView}`;
+      if (window.location.hash !== targetHash) {
+        window.history.pushState(null, '', targetHash);
+      }
+    }
+  }, [currentView]);
+
+  // Listener navigasi riwayat browser (Back/Forward) via popstate dan hashchange
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const viewFromHash = getViewFromHash();
+      const targetView = viewFromHash || 'catalog';
+      setCurrentView((prev) => (prev !== targetView ? targetView : prev));
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   // Scroll to top when view changes
@@ -508,7 +631,7 @@ export default function App() {
 
   const handleAuthSuccess = (user, successPrefix = 'Berhasil masuk') => {
     handleUpdateUser(user);
-    showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP'})`);
+    showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
 
     if (pendingCartAction) {
       const action = pendingCartAction;

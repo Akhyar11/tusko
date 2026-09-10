@@ -21,12 +21,32 @@ class ShippingAddress extends Model
         'province',
         'postal_code',
         'notes',
+        'latitude',
+        'longitude',
         'is_default',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
+
+    /**
+     * Virtual attribute alias for latitude (lat).
+     */
+    public function getLatAttribute(): ?float
+    {
+        return $this->latitude ? (float) $this->latitude : null;
+    }
+
+    /**
+     * Virtual attribute alias for longitude (lng).
+     */
+    public function getLngAttribute(): ?float
+    {
+        return $this->longitude ? (float) $this->longitude : null;
+    }
 
     /**
      * User owning this shipping address.

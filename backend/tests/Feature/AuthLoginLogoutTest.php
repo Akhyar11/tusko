@@ -67,7 +67,7 @@ class AuthLoginLogoutTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/auth/login', [
             'email' => '085711223344',
             'password' => 'rahasia123',
         ]);

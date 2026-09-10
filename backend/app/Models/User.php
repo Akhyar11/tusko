@@ -59,6 +59,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Get user profile summary stats.
+     */
+    public function getProfileStats(): array
+    {
+        $totalSpent = (float) $this->orders()
+            ->whereNotIn('status', ['cancelled', 'failed'])
+            ->sum('total_amount');
+
+        $completedOrdersCount = $this->orders()
+            ->whereIn('status', ['delivered', 'completed', 'paid', 'processing'])
+            ->count();
+
+        $savedAddressesCount = $this->shippingAddresses()->count();
+        $activeVouchersCount = Voucher::active()->count();
+
+        return [
+            'total_spent' => $totalSpent,
+            'completed_orders_count' => $completedOrdersCount,
+            'saved_addresses_count' => $savedAddressesCount,
+            'active_vouchers_count' => $activeVouchersCount,
+            'points' => (int) $this->points,
+            'membership_tier' => $this->membership_tier ?: 'Member',
+        ];
+    }
+
+    /**
      * Check if user is admin.
      */
     public function isAdmin(): bool

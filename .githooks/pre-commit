@@ -1,0 +1,33 @@
+#!/bin/bash
+
+echo "🚀 [Tusko Agent Audit Runner] Menjalankan modul-modul pengujian terpisah..."
+
+STAGED_DIFF=$(git diff --cached)
+
+if [ -z "$STAGED_DIFF" ]; then
+    echo "✅ [Tusko Agent Audit] Tidak ada perubahan kode yang di-stage."
+    exit 0
+fi
+
+HOOKS_DIR="$(dirname "$0")/audits"
+
+if [ -d "$HOOKS_DIR" ]; then
+    for script in "$HOOKS_DIR"/*.sh; do
+        if [ -x "$script" ]; then
+            "$script"
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 0 ]; then
+                echo ""
+                echo "❌ ====================================================="
+                echo "❌ COMMIT DITOLAK: Audit $(basename "$script") gagal!"
+                echo "❌ ====================================================="
+                echo "💡 Harap perbaiki masalah pada audit di atas sebelum commit."
+                echo ""
+                exit $EXIT_CODE
+            fi
+        fi
+    done
+fi
+
+echo "🎉 [Tusko Agent Audit Runner] Seluruh modul pengujian independen PASSED! Commit dilanjutkan."
+exit 0

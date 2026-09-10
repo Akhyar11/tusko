@@ -17,7 +17,9 @@ class ShippingAddressController extends Controller
      */
     protected function resolveUser(Request $request): User
     {
-        return $request->user() ?: User::firstOrCreate(
+        $user = auth('sanctum')->user() ?: $request->user();
+
+        return $user ?: User::firstOrCreate(
             ['email' => 'guest@tokoonline.com'],
             ['name' => 'Pengguna Toko', 'password' => bcrypt('password123')]
         );

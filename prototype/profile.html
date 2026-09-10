@@ -12,6 +12,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet Map Assets -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
     .font-sport { font-family: 'Outfit', sans-serif; }
@@ -21,15 +24,7 @@
 </head>
 <body class="bg-neutral-50 text-black antialiased selection:bg-black selection:text-white min-h-screen flex flex-col justify-between">
 
-  <!-- ================= 1. TOP ANNOUNCEMENT BAR ================= -->
-  <div class="bg-black text-white text-[11px] font-bold py-2 px-4 text-center tracking-wider uppercase">
-    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
-      <iconify-icon icon="lucide:shield-check" class="text-sm text-amber-400"></iconify-icon>
-      <span>TUSKO CLUB MEMBER EXCLUSIVE &bull; KELOLA DATA DIRI, ALAMAT, &amp; POIN LOYALITAS</span>
-    </div>
-  </div>
-
-  <!-- ================= 2. HEADER NAVIGASI ================= -->
+  <!-- ================= HEADER NAVIGASI ================= -->
   <header class="bg-white border-b border-neutral-200 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
       
@@ -102,18 +97,15 @@
 
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <span class="inline-flex items-center gap-1 bg-amber-500 text-black text-[9px] font-sport font-black uppercase tracking-widest px-2 py-0.5 -skew-x-6">
-                ★ GOLD MEMBER VIP
-              </span>
               <span class="text-[10px] text-neutral-400 font-mono">ID: #TSK-882910</span>
             </div>
-            <h1 id="user-display-name" class="font-sport font-black text-2xl sm:text-3xl uppercase italic tracking-tight text-white leading-tight">
+            <h1 id="user-display-name" class="font-sport font-black text-xl sm:text-3xl uppercase italic tracking-tight text-white leading-tight truncate max-w-full">
               BUDI PRATAMA
             </h1>
-            <p id="user-display-email" class="text-xs text-neutral-300 mt-0.5 font-medium">
+            <p id="user-display-email" class="text-xs text-neutral-300 mt-0.5 font-medium truncate max-w-[260px] sm:max-w-none">
               budi.pratama@gmail.com &bull; +62 812-3456-7890
             </p>
-            <p class="text-[11px] text-neutral-400 mt-1">
+            <p class="text-[11px] text-neutral-400 mt-1 truncate max-w-[280px] sm:max-w-none">
               Bergabung sejak 14 Januari 2025 &bull; Terverifikasi Member Resmi Tusko
             </p>
           </div>
@@ -123,7 +115,7 @@
         <div class="bg-neutral-900 border border-neutral-800 p-4 sm:p-5 min-w-[280px] shrink-0">
           <div class="flex items-center justify-between text-xs mb-2">
             <span class="text-neutral-400 uppercase font-bold text-[10px] tracking-wider">Tusko Loyalty Point:</span>
-            <span class="font-sport font-black text-amber-400 text-base">1.250 PTS</span>
+            <span class="font-sport font-black text-amber-400 text-base whitespace-nowrap">1.250 PTS</span>
           </div>
           <div class="w-full bg-neutral-800 h-2 rounded-none overflow-hidden mb-2">
             <div class="bg-amber-400 h-full w-[60%] transition-all"></div>
@@ -312,9 +304,9 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
               <!-- Birthdate -->
-              <div>
+              <div class="max-w-sm">
                 <label for="bio-birthdate" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
                   TANGGAL LAHIR
                 </label>
@@ -325,23 +317,6 @@
                   class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
                 />
                 <p class="text-[10px] text-neutral-400 mt-1">Dapatkan voucher kado ulang tahun spesial tiap tahunnya.</p>
-              </div>
-
-              <!-- Category Preference -->
-              <div>
-                <label for="bio-preference" class="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                  PREFERENSI OLAHRAGA UTAMA
-                </label>
-                <select 
-                  id="bio-preference"
-                  class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
-                >
-                  <option value="running" selected>Lari &amp; Marathon (Performance Running)</option>
-                  <option value="football">Sepak Bola &amp; Futsal</option>
-                  <option value="badminton">Bulu Tangkis / Racket Sports</option>
-                  <option value="training">Fitness, Gym &amp; Cross Training</option>
-                  <option value="lifestyle">Sportstyle &amp; Casual Sneakers</option>
-                </select>
               </div>
             </div>
 
@@ -382,14 +357,13 @@
               </p>
             </div>
 
-            <button 
-              type="button" 
-              onclick="openAddressModal()"
+            <a 
+              href="alamat-form.html"
               class="bg-black hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase tracking-wider py-2.5 px-4 flex items-center gap-1.5 transition-colors shrink-0"
             >
               <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
               <span>+ Tambah Alamat Baru</span>
-            </button>
+            </a>
           </div>
 
           <!-- Address List -->
@@ -407,9 +381,9 @@
                   </span>
                 </div>
                 <div class="flex items-center gap-2 text-xs font-bold">
-                  <button onclick="editAddressModal('Rumah Utama', 'Budi Pratama', '0812-3456-7890', 'Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan', 'Jakarta Selatan', '12730')" class="text-neutral-600 hover:text-black underline">
+                  <a href="alamat-form.html?mode=edit&label=Rumah&name=Budi+Pratama&phone=0812-3456-7890&address=Jl.+Kemang+Raya+No.+45,+RT+02+/+RW+04,+Bangka,+Mampang+Prapatan&city=Jakarta+Selatan&postal=12730&lat=-6.2615&lng=106.8106" class="text-neutral-600 hover:text-black underline">
                     Ubah
-                  </button>
+                  </a>
                 </div>
               </div>
 
@@ -418,6 +392,12 @@
               <p class="text-xs text-neutral-700 mt-2 leading-relaxed">
                 Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan, Kota Jakarta Selatan, DKI Jakarta 12730
               </p>
+              <div class="mt-2.5 flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+                  <iconify-icon icon="lucide:map-pin" class="text-emerald-600"></iconify-icon>
+                  Pinpoint Maps: -6.26150, 106.81060
+                </span>
+              </div>
             </div>
 
             <!-- Address Card 2 (Secondary) -->
@@ -432,9 +412,9 @@
                   <button onclick="setAsPrimaryAddress(this)" class="text-amber-600 hover:text-amber-700 underline">
                     Jadikan Utama
                   </button>
-                  <button onclick="editAddressModal('Kantor / Studio', 'Budi Pratama (Office)', '0811-9988-7766', 'Gedung Tusko Tower Lt. 12, Jl. Jend. Sudirman Kav. 52-53, SCBD', 'Jakarta Selatan', '12190')" class="text-neutral-600 hover:text-black underline">
+                  <a href="alamat-form.html?mode=edit&label=Kantor&name=Budi+Pratama+(Office)&phone=0811-9988-7766&address=Gedung+Tusko+Tower+Lt.+12,+Jl.+Jend.+Sudirman+Kav.+52-53,+SCBD&city=Jakarta+Selatan&postal=12190&lat=-6.2289&lng=106.8272" class="text-neutral-600 hover:text-black underline">
                     Ubah
-                  </button>
+                  </a>
                   <button onclick="deleteAddress(this)" class="text-red-600 hover:text-red-700 underline">
                     Hapus
                   </button>
@@ -446,6 +426,12 @@
               <p class="text-xs text-neutral-700 mt-2 leading-relaxed">
                 Gedung Tusko Tower Lt. 12, Jl. Jend. Sudirman Kav. 52-53, Kawasan SCBD, Senayan, Kebayoran Baru, Kota Jakarta Selatan, DKI Jakarta 12190
               </p>
+              <div class="mt-2.5 flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+                  <iconify-icon icon="lucide:map-pin" class="text-emerald-600"></iconify-icon>
+                  Pinpoint Maps: -6.22890, 106.82720
+                </span>
+              </div>
             </div>
 
           </div>
@@ -477,13 +463,13 @@
                   type="password" 
                   id="sec-old-password" 
                   required 
-                  placeholder="Masukkan kata sandi lama Anda" 
+                  placeholder="Kata sandi saat ini..." 
                   class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
                 />
                 <button 
                   type="button" 
                   onclick="toggleInputPassword('sec-old-password', this)" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
                 >
                   <iconify-icon icon="lucide:eye"></iconify-icon>
                 </button>
@@ -500,13 +486,13 @@
                   type="password" 
                   id="sec-new-password" 
                   required 
-                  placeholder="Minimal 8 karakter kombinasi huruf & angka" 
+                  placeholder="Minimal 6 karakter..." 
                   class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
                 />
                 <button 
                   type="button" 
                   onclick="toggleInputPassword('sec-new-password', this)" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
                 >
                   <iconify-icon icon="lucide:eye"></iconify-icon>
                 </button>
@@ -523,13 +509,13 @@
                   type="password" 
                   id="sec-confirm-password" 
                   required 
-                  placeholder="Ulangi kata sandi baru" 
+                  placeholder="Ulangi kata sandi..." 
                   class="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
                 />
                 <button 
                   type="button" 
                   onclick="toggleInputPassword('sec-confirm-password', this)" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black p-1"
                 >
                   <iconify-icon icon="lucide:eye"></iconify-icon>
                 </button>
@@ -539,7 +525,7 @@
             <div class="pt-2">
               <button 
                 type="submit" 
-                class="bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs uppercase tracking-wider py-3.5 px-6 transition-colors"
+                class="w-full sm:w-auto bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs uppercase tracking-wider py-3.5 px-6 transition-colors"
               >
                 PERBARUI KATA SANDI &rarr;
               </button>
@@ -609,10 +595,10 @@
               <p class="text-[11px] text-neutral-600 mt-1 mb-3">
                 Berlaku untuk semua kategori sepatu dan jersey tanpa minimum belanja.
               </p>
-              <div class="flex items-center justify-between pt-2 border-t border-amber-200">
-                <span class="font-mono font-bold text-xs bg-white px-2 py-1 border border-neutral-300">TUSKOCLUB15</span>
-                <button onclick="copyVoucher('TUSKOCLUB15')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
-                  Salin Kode
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-amber-200">
+                <span class="font-mono font-bold text-xs bg-white px-2 py-1 border border-neutral-300 truncate">TUSKOCLUB15</span>
+                <button onclick="copyVoucher('TUSKOCLUB15')" class="shrink-0 px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800 whitespace-nowrap">
+                  Salin
                 </button>
               </div>
             </div>
@@ -626,10 +612,10 @@
               <p class="text-[11px] text-neutral-600 mt-1 mb-3">
                 Potongan ongkir s.d. Rp 30.000 dengan J&amp;T, SiCepat, atau JNE Express.
               </p>
-              <div class="flex items-center justify-between pt-2 border-t border-neutral-200">
-                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300">FREESHIPVIP</span>
-                <button onclick="copyVoucher('FREESHIPVIP')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
-                  Salin Kode
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-neutral-200">
+                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300 truncate">FREESHIPVIP</span>
+                <button onclick="copyVoucher('FREESHIPVIP')" class="shrink-0 px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800 whitespace-nowrap">
+                  Salin
                 </button>
               </div>
             </div>
@@ -643,10 +629,10 @@
               <p class="text-[11px] text-neutral-600 mt-1 mb-3">
                 Khusus pemegang kartu Gold Member Tusko dengan minimum belanja Rp 750.000.
               </p>
-              <div class="flex items-center justify-between pt-2 border-t border-neutral-200">
-                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300">GOLDTIER50K</span>
-                <button onclick="copyVoucher('GOLDTIER50K')" class="px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800">
-                  Salin Kode
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-neutral-200">
+                <span class="font-mono font-bold text-xs bg-neutral-100 px-2 py-1 border border-neutral-300 truncate">GOLDTIER50K</span>
+                <button onclick="copyVoucher('GOLDTIER50K')" class="shrink-0 px-3 py-1 bg-black text-white text-xs font-bold hover:bg-neutral-800 whitespace-nowrap">
+                  Salin
                 </button>
               </div>
             </div>
@@ -690,6 +676,32 @@
           </div>
         </div>
 
+        <!-- Fitur Pinpoint Lokasi Maps -->
+        <div class="bg-neutral-50 border border-neutral-300 p-3">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <span class="font-sport font-black text-xs uppercase tracking-wide text-black flex items-center gap-1.5">
+                <iconify-icon icon="lucide:map-pin" class="text-amber-500"></iconify-icon>
+                <span>Pinpoint Titik Maps</span>
+              </span>
+              <p class="text-[10px] text-neutral-500">Tandai titik koordinat di peta untuk akurasi kurir.</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="getProtoGPS()" class="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 text-[10px] font-bold uppercase flex items-center gap-1 cursor-pointer">
+                <iconify-icon icon="lucide:locate-fixed" class="text-amber-500"></iconify-icon> GPS
+              </button>
+              <button type="button" onclick="openProtoMapPicker()" class="px-2.5 py-1 bg-black hover:bg-neutral-800 text-white font-sport font-bold text-[11px] uppercase flex items-center gap-1 cursor-pointer">
+                <iconify-icon icon="lucide:map" class="text-amber-400"></iconify-icon>
+                <span id="proto-map-btn-text">Pilih di Maps</span>
+              </button>
+            </div>
+          </div>
+          <div id="proto-map-badge" class="hidden pt-2 border-t border-neutral-200 items-center justify-between text-[11px] text-emerald-700 font-bold">
+            <span id="proto-map-coords-text">✓ Pinpoint Terpasang: -6.2615, 106.8106</span>
+            <button type="button" onclick="openProtoMapPicker()" class="text-neutral-500 hover:text-black underline text-[10px] cursor-pointer">Lihat Peta</button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-bold uppercase text-neutral-700 mb-1">KOTA / KABUPATEN *</label>
@@ -720,6 +732,37 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Interactive Map Picker (Prototype) -->
+  <div id="proto-map-modal" class="fixed inset-0 z-60 bg-black/75 backdrop-blur-xs hidden items-center justify-center p-2 sm:p-4">
+    <div class="bg-white border border-neutral-800 max-w-xl w-full flex flex-col max-h-[92vh] shadow-2xl overflow-hidden">
+      <div class="p-3.5 bg-neutral-900 text-white flex items-center justify-between border-b border-neutral-800">
+        <div class="flex items-center gap-2">
+          <iconify-icon icon="lucide:map-pin" class="text-amber-400 text-base"></iconify-icon>
+          <h4 class="font-sport font-black text-sm uppercase text-white">Tentukan Titik Pengiriman di Peta</h4>
+        </div>
+        <button onclick="closeProtoMapPicker()" class="text-neutral-400 hover:text-white text-lg cursor-pointer">&times;</button>
+      </div>
+      <div class="p-2.5 bg-neutral-50 border-b border-neutral-200 flex gap-2">
+        <input type="text" id="proto-map-search" placeholder="Cari nama jalan atau area (cth: Kemang, Senayan)..." class="flex-1 bg-white border border-neutral-300 px-3 py-1.5 text-xs focus:outline-none focus:border-black font-medium" />
+        <button onclick="searchProtoMap()" class="px-3 py-1.5 bg-black text-white font-sport font-bold text-xs uppercase cursor-pointer">Cari</button>
+      </div>
+      <div id="proto-map-container" class="w-full h-72 bg-neutral-200 relative"></div>
+      <div class="p-3 bg-white border-t border-neutral-200 flex items-center justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] uppercase font-bold text-neutral-500 block">Koordinat Terpilih:</span>
+          <span id="proto-map-info" class="text-xs font-bold text-black truncate block">-6.2615, 106.8106</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="closeProtoMapPicker()" class="px-3 py-1.5 bg-neutral-100 text-neutral-700 text-xs font-bold uppercase cursor-pointer">Batal</button>
+          <button onclick="confirmProtoMap()" class="px-4 py-1.5 bg-black text-white font-sport font-black text-xs uppercase flex items-center gap-1 cursor-pointer">
+            <iconify-icon icon="lucide:check" class="text-amber-400"></iconify-icon>
+            <span>Gunakan Titik Ini</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -948,6 +991,117 @@
         toast.remove();
       }, 3000);
     }
+
+    // Leaflet Map Picker Logic for Prototype
+    let protoMap = null;
+    let protoMarker = null;
+    let protoLat = -6.2615;
+    let protoLng = 106.8106;
+
+    function openProtoMapPicker() {
+      const modal = document.getElementById('proto-map-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      setTimeout(() => {
+        if (!protoMap && typeof L !== 'undefined') {
+          protoMap = L.map('proto-map-container', { center: [protoLat, protoLng], zoom: 15 });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(protoMap);
+          
+          protoMarker = L.marker([protoLat, protoLng], { draggable: true }).addTo(protoMap);
+          
+          protoMap.on('click', (e) => {
+            protoLat = e.latlng.lat;
+            protoLng = e.latlng.lng;
+            protoMarker.setLatLng([protoLat, protoLng]);
+            updateProtoMapInfo();
+          });
+          protoMarker.on('dragend', () => {
+            const p = protoMarker.getLatLng();
+            protoLat = p.lat;
+            protoLng = p.lng;
+            updateProtoMapInfo();
+          });
+        } else if (protoMap) {
+          protoMap.invalidateSize();
+          protoMap.setView([protoLat, protoLng], 15);
+          protoMarker.setLatLng([protoLat, protoLng]);
+        }
+        updateProtoMapInfo();
+      }, 150);
+    }
+
+    function updateProtoMapInfo() {
+      const info = document.getElementById('proto-map-info');
+      if (info) info.textContent = protoLat.toFixed(5) + ', ' + protoLng.toFixed(5);
+    }
+
+    function closeProtoMapPicker() {
+      const modal = document.getElementById('proto-map-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmProtoMap() {
+      const badge = document.getElementById('proto-map-badge');
+      const text = document.getElementById('proto-map-coords-text');
+      const btn = document.getElementById('proto-map-btn-text');
+      if (badge) {
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      }
+      if (text) text.textContent = '✓ Pinpoint Terpasang: ' + protoLat.toFixed(5) + ', ' + protoLng.toFixed(5);
+      if (btn) btn.textContent = 'Ubah di Maps';
+      closeProtoMapPicker();
+      showToast('✓ Titik lokasi peta berhasil ditentukan!');
+    }
+
+    function searchProtoMap() {
+      const q = document.getElementById('proto-map-search').value;
+      if (!q.trim()) return;
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q.trim()) + '&countrycodes=id&limit=1')
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            protoLat = parseFloat(data[0].lat);
+            protoLng = parseFloat(data[0].lon);
+            if (protoMap) {
+              protoMap.setView([protoLat, protoLng], 16);
+              protoMarker.setLatLng([protoLat, protoLng]);
+            }
+            updateProtoMapInfo();
+          } else {
+            showToast('Lokasi tidak ditemukan.');
+          }
+        }).catch(() => showToast('Gagal mencari lokasi.'));
+    }
+
+    function getProtoGPS() {
+      if (!navigator.geolocation) {
+        showToast('GPS tidak didukung oleh browser Anda.');
+        return;
+      }
+      showToast('Mencari sinyal GPS...');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        protoLat = pos.coords.latitude;
+        protoLng = pos.coords.longitude;
+        confirmProtoMap();
+        showToast('✓ Lokasi GPS Anda berhasil disematkan!');
+      }, () => {
+        showToast('Akses GPS ditolak atau tidak aktif.');
+      });
+    }
+
+    // Auto-buka tab Buku Alamat jika diarahkan dari form alamat
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('saved') === '1' || params.get('tab') === 'address') {
+        switchTab('address');
+        if (params.get('saved') === '1') {
+          showToast('✓ Alamat pengiriman berhasil diperbarui!');
+        }
+      }
+    });
   </script>
 
   <!-- Live Auto-Reload Engine on GitHub Push -->

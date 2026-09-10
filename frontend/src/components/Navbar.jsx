@@ -507,8 +507,8 @@ export default function Navbar({
                       )}
                       <div className="min-w-0">
                         <div className="font-bold text-sm text-white truncate">{currentUser.name}</div>
-                        <div className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider">
-                          {currentUser.role === 'admin' ? '🛡️ Super Admin' : '⭐ Member VIP Tusko'}
+                        <div className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                          {currentUser.role === 'admin' ? '🛡️ Super Admin' : 'Member Tusko'}
                         </div>
                       </div>
                     </div>
@@ -520,7 +520,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenProfile();
                         }}
-                        className="py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-lg text-center transition-colors cursor-pointer"
+                        className="py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-none text-center transition-colors cursor-pointer"
                       >
                         Profil Saya
                       </button>
@@ -530,7 +530,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onLogout();
                         }}
-                        className="py-1.5 px-3 bg-neutral-800 hover:bg-red-950 text-red-400 hover:text-red-300 font-bold rounded-lg text-center transition-colors cursor-pointer"
+                        className="py-1.5 px-3 bg-neutral-800 hover:bg-red-950 text-red-400 hover:text-red-300 font-bold rounded-none text-center transition-colors cursor-pointer"
                       >
                         Keluar
                       </button>
@@ -551,7 +551,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenLogin();
                         }}
-                        className="py-2 px-3 bg-white text-black font-sport font-black uppercase text-center rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer"
+                        className="py-2 px-3 bg-white text-black font-sport font-black uppercase text-center rounded-none hover:bg-neutral-200 transition-colors cursor-pointer"
                       >
                         Masuk
                       </button>
@@ -561,7 +561,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenRegister();
                         }}
-                        className="py-2 px-3 bg-amber-500 text-black font-sport font-black uppercase text-center rounded-lg hover:bg-amber-400 transition-colors cursor-pointer"
+                        className="py-2 px-3 bg-amber-500 text-black font-sport font-black uppercase text-center rounded-none hover:bg-amber-400 transition-colors cursor-pointer"
                       >
                         Daftar
                       </button>
@@ -652,7 +652,7 @@ export default function Navbar({
                         setIsMobileMenuOpen(false);
                         onOpenOrders();
                       }}
-                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
                     >
                       <div className="flex items-center gap-2.5">
                         <Package size={16} className="text-black shrink-0" />
@@ -667,7 +667,7 @@ export default function Navbar({
                         setIsMobileMenuOpen(false);
                         onOpenTransactions();
                       }}
-                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 transition-colors cursor-pointer shadow-2xs"
                     >
                       <div className="flex items-center gap-2.5">
                         <Wallet size={16} className="text-black shrink-0" />
@@ -691,7 +691,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenProductsAdmin();
                         }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5">
                           <Boxes size={16} className="text-amber-600 shrink-0" />
@@ -706,7 +706,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenStock();
                         }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5">
                           <Boxes size={16} className="text-amber-600 shrink-0" />
@@ -721,7 +721,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenTemplates();
                         }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5">
                           <Boxes size={16} className="text-amber-600 shrink-0" />
@@ -736,7 +736,7 @@ export default function Navbar({
                           setIsMobileMenuOpen(false);
                           onOpenExpeditions();
                         }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5">
                           <Truck size={16} className="text-amber-600 shrink-0" />

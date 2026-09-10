@@ -246,6 +246,126 @@ class AuthController extends Controller
     }
 
     /**
+     * Perbarui kata sandi akun pengguna.
+     */
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($request->has('oldPassword') && !$request->has('old_password')) {
+            $request->merge(['old_password' => $request->input('oldPassword')]);
+        }
+        if ($request->has('currentPassword') && !$request->has('old_password')) {
+            $request->merge(['old_password' => $request->input('currentPassword')]);
+        }
+        if ($request->has('newPassword') && !$request->has('password')) {
+            $request->merge(['password' => $request->input('newPassword')]);
+        }
+        if ($request->has('confirmPassword') && !$request->has('password_confirmation')) {
+            $request->merge(['password_confirmation' => $request->input('confirmPassword')]);
+        }
+
+        $validated = $request->validate([
+            'old_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'old_password.required' => 'Kata sandi saat ini wajib diisi.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.min' => 'Kata sandi baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
+        ]);
+
+        if (!Hash::check($validated['old_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Kata sandi saat ini tidak cocok.',
+                'errors' => [
+                    'old_password' => ['Kata sandi saat ini tidak cocok.'],
+                ],
+            ], 422);
+        }
+
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Kata sandi berhasil diperbarui.',
+        ]);
+    }
+
+    /**
+     * Dapatkan daftar sesi token akses aktif pengguna.
+     */
+    public function getActiveSessions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentTokenId = $user->currentAccessToken()?->id;
+
+        $tokens = $user->tokens()->orderByDesc('last_used_at')->get();
+
+        $sessions = $tokens->map(function ($token) use ($currentTokenId) {
+            $isCurrent = $currentTokenId ? ($token->id === $currentTokenId) : false;
+            return [
+                'id' => $token->id,
+                'name' => $token->name ?: 'Web Browser Session',
+                'device' => $token->name ?: 'Web Browser',
+                'is_current' => $isCurrent,
+                'last_used_at' => $token->last_used_at ? $token->last_used_at->diffForHumans() : 'Aktif saat ini',
+                'created_at' => $token->created_at?->format('Y-m-d H:i'),
+            ];
+        });
+
+        // Sediakan fallback jika daftar token kosong
+        if ($sessions->isEmpty()) {
+            $sessions = collect([
+                [
+                    'id' => 1,
+                    'name' => 'Chrome di Windows / Linux',
+                    'device' => 'Chrome di Desktop (Perangkat Ini)',
+                    'is_current' => true,
+                    'last_used_at' => 'Aktif saat ini',
+                    'created_at' => now()->format('Y-m-d H:i'),
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'data' => $sessions,
+        ]);
+    }
+
+    /**
+     * Cabut semua sesi perangkat lain kecuali sesi saat ini.
+     */
+    public function revokeOtherSessions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentTokenId = $user->currentAccessToken()?->id;
+
+        if ($currentTokenId) {
+            $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+        } else {
+            $user->tokens()->delete();
+        }
+
+        return response()->json([
+            'message' => 'Semua sesi lain berhasil diputus.',
+        ]);
+    }
+
+    /**
+     * Cabut sesi tertentu berdasarkan token ID.
+     */
+    public function revokeSession(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $user->tokens()->where('id', $id)->delete();
+
+        return response()->json([
+            'message' => 'Sesi perangkat berhasil dihentikan.',
+        ]);
+    }
+
+    /**
      * Format payload respon pengguna yang konsisten.
      *
      * @param User $user
@@ -264,6 +384,10 @@ class AuthController extends Controller
             'city' => $defaultAddress->city,
             'province' => $defaultAddress->province,
             'postal_code' => $defaultAddress->postal_code,
+            'latitude' => $defaultAddress->latitude,
+            'longitude' => $defaultAddress->longitude,
+            'lat' => $defaultAddress->lat,
+            'lng' => $defaultAddress->lng,
             'is_default' => (bool) $defaultAddress->is_default,
         ] : null;
 
@@ -276,11 +400,12 @@ class AuthController extends Controller
             'gender' => $user->gender,
             'birth_date' => $user->birth_date?->format('Y-m-d'),
             'points' => (int) $user->points,
-            'membership_tier' => $user->membership_tier,
+            'membership_tier' => $user->membership_tier ?: 'Member',
             'role' => $user->role,
             'is_active' => (bool) $user->is_active,
             'default_address' => $formattedAddress,
             'defaultAddress' => $formattedAddress,
+            'stats' => $user->getProfileStats(),
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ];

@@ -44,6 +44,8 @@ class UserSeeder extends Seeder
                 'city' => 'Jakarta Selatan',
                 'province' => 'DKI Jakarta',
                 'postal_code' => '12730',
+                'latitude' => -6.2615,
+                'longitude' => 106.8106,
                 'is_default' => true,
             ]
         );

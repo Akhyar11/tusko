@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,15 +14,17 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::match(['put', 'patch'], '/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/password', [AuthController::class, 'updatePassword']);
+        Route::get('/sessions', [AuthController::class, 'getActiveSessions']);
+        Route::delete('/sessions/other', [AuthController::class, 'revokeOtherSessions']);
+        Route::delete('/sessions/{id}', [AuthController::class, 'revokeSession']);
     });
 });
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::get('/user', [AuthController::class, 'me'])->middleware('auth:sanctum');
-Route::match(['put', 'patch'], '/user', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
-Route::match(['put', 'patch'], '/profile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
+Route::prefix('vouchers')->group(function () {
+    Route::get('/', [VoucherController::class, 'index']);
+    Route::post('/claim', [VoucherController::class, 'claim'])->middleware('auth:sanctum');
+});
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
@@ -56,7 +59,6 @@ Route::prefix('expeditions')->group(function () {
     Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'update']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'destroy']);
     Route::post('/{id}/set-default', [\App\Http\Controllers\Api\ExpeditionController::class, 'setDefault']);
-    Route::post('/{id}/default', [\App\Http\Controllers\Api\ExpeditionController::class, 'setDefault']);
 });
 
 
@@ -64,7 +66,6 @@ Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, '
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
     Route::post('/{idOrOrderNumber}/generate-receipt', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
-    Route::post('/{idOrOrderNumber}/generate-tracking', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
     Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
     Route::match(['put', 'patch'], '/{idOrOrderNumber}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
@@ -99,21 +100,6 @@ Route::prefix('inventory')->group(function () {
     Route::get('/{idOrSku}', [\App\Http\Controllers\Api\InventoryController::class, 'show']);
 });
 
-Route::prefix('stock')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
-    Route::get('/alerts', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
-    Route::get('/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
-    Route::get('/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
-    Route::post('/add', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
-    Route::post('/{idOrSku}/add', [\App\Http\Controllers\Api\InventoryController::class, 'addStock']);
-    Route::post('/reduce', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
-    Route::post('/{idOrSku}/reduce', [\App\Http\Controllers\Api\InventoryController::class, 'reduceStock']);
-    Route::get('/{idOrSku}/mutations', [\App\Http\Controllers\Api\InventoryController::class, 'mutations']);
-    Route::get('/{idOrSku}', [\App\Http\Controllers\Api\InventoryController::class, 'show']);
-});
-
-Route::get('/dashboard/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
-
 Route::prefix('templates/emails')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\EmailTemplateController::class, 'index']);
     Route::post('/reset', [\App\Http\Controllers\Api\EmailTemplateController::class, 'reset']);
@@ -125,7 +111,6 @@ Route::prefix('templates/emails')->group(function () {
 Route::prefix('templates/receipt')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'show']);
     Route::post('/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'store']);
-    Route::match(['put', 'patch'], '/', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'store']);
     Route::post('/reset', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'reset']);
 });
 

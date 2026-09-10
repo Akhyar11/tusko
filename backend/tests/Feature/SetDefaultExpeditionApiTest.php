@@ -53,7 +53,7 @@ class SetDefaultExpeditionApiTest extends TestCase
         $this->assertEquals(1, $defaultCount);
     }
 
-    public function test_alias_default_route_works(): void
+    public function test_set_default_expedition_route_works(): void
     {
         $expedition = Expedition::create([
             'name' => 'Anteraja',
@@ -66,7 +66,7 @@ class SetDefaultExpeditionApiTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->postJson("/api/expeditions/{$expedition->id}/default");
+        $response = $this->postJson("/api/expeditions/{$expedition->id}/set-default");
 
         $response->assertStatus(200)
             ->assertJsonPath('data.id', $expedition->id)

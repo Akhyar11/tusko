@@ -72,7 +72,7 @@ class AuthRegisterTest extends TestCase
             'passwordConfirmation' => 'secret123',
         ];
 
-        $response = $this->postJson('/api/register', $payload);
+        $response = $this->postJson('/api/auth/register', $payload);
 
         $response->assertStatus(201)
             ->assertJson([

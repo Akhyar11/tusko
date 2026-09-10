@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tambah / Ubah Alamat Pengiriman - Tusko Performance</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Iconify Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-sport { font-family: 'Outfit', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Custom Athletic Tusko Pin */
+    .custom-tusko-pin {
+      background: transparent;
+      border: none;
+    }
+  </style>
+</head>
+<body class="bg-neutral-50 text-black antialiased selection:bg-black selection:text-white min-h-screen flex flex-col justify-between">
+
+  <!-- ================= HEADER NAVIGASI ================= -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="beranda.html" class="flex items-center gap-2 group flex-shrink-0">
+        <div class="w-9 sm:w-11 h-9 sm:h-10 bg-black text-white flex items-center justify-center font-sport font-black text-xl sm:text-2xl tracking-tighter -skew-x-6 group-hover:bg-neutral-800 transition-colors">
+          T
+        </div>
+        <div class="leading-none">
+          <span class="font-sport font-black text-xl sm:text-2xl tracking-tight uppercase">TUSKO<span class="text-amber-500">.</span></span>
+          <span class="block text-[8px] sm:text-[9px] font-bold tracking-widest text-neutral-400 uppercase">Performance</span>
+        </div>
+      </a>
+
+      <!-- Back to Profile Link -->
+      <a href="profile.html" class="flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-black uppercase tracking-wider transition-colors">
+        <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+        <span>Buku Alamat</span>
+      </a>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full flex-grow">
+    
+    <!-- Top Navigation / Breadcrumbs -->
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-2 text-xs text-neutral-500 font-medium">
+        <a href="beranda.html" class="hover:text-black">Beranda</a>
+        <span>/</span>
+        <a href="profile.html" class="hover:text-black">Profil Member</a>
+        <span>/</span>
+        <span class="text-black font-bold uppercase tracking-wide" id="breadcrumb-title">Tambah Alamat</span>
+      </div>
+
+      <a 
+        href="profile.html"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-black uppercase tracking-wider py-1 px-2.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 transition-colors"
+      >
+        <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+        <span>Kembali ke Profil</span>
+      </a>
+    </div>
+
+    <!-- Header Section -->
+    <div class="mb-6 bg-white border border-neutral-200 p-5 sm:p-6 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">LOKASI &amp; DESTINASI PENGIRIMAN</span>
+          <h1 class="font-sport font-black text-2xl sm:text-3xl uppercase italic tracking-tight text-black" id="page-title">
+            TAMBAH ALAMAT PENGIRIMAN
+          </h1>
+          <p class="text-xs text-neutral-500 mt-1 max-w-2xl">
+            Tentukan pinpoint lokasi di peta interaktif untuk akurasi kurir, lalu lengkapi detail identitas penerima paket.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 text-[11px] text-neutral-600 bg-neutral-100 px-3 py-2 border border-neutral-200 self-start sm:self-auto">
+          <iconify-icon icon="lucide:map-pin" class="text-amber-500 text-base shrink-0"></iconify-icon>
+          <span>Peta OpenStreetMap &amp; GPS Realtime</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form & Map Grid -->
+    <form id="address-form" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- LEFT COLUMN: INTERACTIVE MAP (5 Cols) -->
+      <div class="lg:col-span-6 space-y-4">
+        <div class="bg-white border border-neutral-200 p-4 sm:p-5 shadow-xs">
+          
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h3 class="font-sport font-black text-sm uppercase tracking-wide text-black flex items-center gap-1.5">
+              <iconify-icon icon="lucide:navigation" class="text-amber-500"></iconify-icon>
+              <span>1. Titik Peta (Pinpoint Lokasi)</span>
+            </h3>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+              Presisi GPS
+            </span>
+          </div>
+
+          <!-- Search Address on Map -->
+          <div class="relative mb-3">
+            <div class="flex items-center border border-neutral-300 focus-within:border-black bg-neutral-50">
+              <iconify-icon icon="lucide:search" class="text-neutral-400 ml-3 text-base shrink-0"></iconify-icon>
+              <input 
+                type="text"
+                id="map-search-input"
+                placeholder="Cari nama jalan, gedung, atau daerah..."
+                class="w-full bg-transparent px-3 py-2.5 text-xs font-semibold focus:outline-none"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); searchLocation(); }"
+              />
+              <button 
+                type="button"
+                onclick="searchLocation()"
+                class="bg-black hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase tracking-wider px-3.5 py-2.5 shrink-0 transition-colors"
+              >
+                Cari
+              </button>
+            </div>
+            <div id="search-spinner" class="hidden absolute right-16 top-1/2 -translate-y-1/2">
+              <iconify-icon icon="lucide:loader-2" class="text-neutral-500 animate-spin text-sm"></iconify-icon>
+            </div>
+          </div>
+
+          <!-- Quick GPS Button & Quick Suggestions -->
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              <span class="text-[10px] font-bold uppercase text-neutral-400 shrink-0">Kota:</span>
+              <button type="button" onclick="panToCity(-6.2088, 106.8456, 'Jakarta')" class="text-[10px] font-bold px-2 py-1 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-700">Jakarta</button>
+              <button type="button" onclick="panToCity(-6.9175, 107.6191, 'Bandung')" class="text-[10px] font-bold px-2 py-1 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-700">Bandung</button>
+              <button type="button" onclick="panToCity(-7.2575, 112.7521, 'Surabaya')" class="text-[10px] font-bold px-2 py-1 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-700">Surabaya</button>
+              <button type="button" onclick="panToCity(-7.7956, 110.3695, 'Yogyakarta')" class="text-[10px] font-bold px-2 py-1 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-700">Jogja</button>
+            </div>
+
+            <button 
+              type="button"
+              onclick="locateUserGPS()"
+              id="btn-gps"
+              class="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-black font-bold text-[11px] uppercase tracking-wider flex items-center gap-1 shrink-0 transition-colors shadow-xs"
+              title="Gunakan lokasi GPS saat ini"
+            >
+              <iconify-icon icon="lucide:locate-fixed" class="text-xs"></iconify-icon>
+              <span>GPS Saya</span>
+            </button>
+          </div>
+
+          <!-- Map Container -->
+          <div class="relative w-full h-[320px] sm:h-[380px] bg-neutral-200 border border-neutral-300 overflow-hidden">
+            <div id="map" class="w-full h-full z-10"></div>
+            
+            <!-- Map Instruction Overlay -->
+            <div class="absolute bottom-2 left-2 right-2 z-20 pointer-events-none">
+              <div class="bg-black/80 backdrop-blur-xs text-white text-[11px] px-3 py-1.5 flex items-center justify-between gap-2 shadow-lg">
+                <span class="flex items-center gap-1 font-medium">
+                  <iconify-icon icon="lucide:mouse-pointer-click" class="text-amber-400 shrink-0"></iconify-icon>
+                  Klik pada peta atau geser pin untuk menetapkan titik
+                </span>
+                <span id="coord-display" class="font-mono text-[10px] text-neutral-300 font-bold hidden sm:inline">
+                  -6.2088, 106.8456
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Coordinate Status & Geocoding feedback -->
+          <div class="mt-3 p-2.5 bg-neutral-50 border border-neutral-200 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <iconify-icon icon="lucide:map-pin" class="text-amber-600 text-base"></iconify-icon>
+              <div>
+                <span class="font-bold text-neutral-800 block text-[11px]">Titik Pinpoint Terpilih:</span>
+                <span id="status-coords" class="font-mono text-[11px] text-neutral-600 font-semibold">-6.2088, 106.8456</span>
+              </div>
+            </div>
+            <div id="geocoding-spinner" class="hidden flex items-center gap-1 text-[10px] text-amber-600 font-bold">
+              <iconify-icon icon="lucide:loader-2" class="animate-spin text-sm"></iconify-icon>
+              <span>Mencari detail alamat...</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: ADDRESS DETAILS FORM (7 Cols) -->
+      <div class="lg:col-span-6 space-y-4">
+        <div class="bg-white border border-neutral-200 p-5 sm:p-6 shadow-xs">
+          
+          <div class="border-b border-neutral-200 pb-3 mb-5">
+            <h3 class="font-sport font-black text-sm uppercase tracking-wide text-black flex items-center gap-1.5">
+              <iconify-icon icon="lucide:user" class="text-amber-500"></iconify-icon>
+              <span>2. Informasi Penerima &amp; Alamat Lengkap</span>
+            </h3>
+            <p class="text-[11px] text-neutral-500 mt-0.5">
+              Kolom dengan tanda bintang (<span class="text-rose-500">*</span>) wajib diisi.
+            </p>
+          </div>
+
+          <!-- Alert Notifikasi Alamat Terisi Otomatis -->
+          <div id="autofill-banner" class="mb-4 p-3.5 bg-emerald-50 border border-emerald-400 flex items-start gap-2.5">
+            <iconify-icon icon="lucide:check-circle-2" class="text-emerald-600 text-lg shrink-0 mt-0.5"></iconify-icon>
+            <div class="text-xs">
+              <div class="font-bold text-emerald-950 flex flex-wrap items-center gap-2">
+                <span id="autofill-title">Alamat Terisi Otomatis dari Titik Peta</span>
+                <span id="autofill-coords" class="text-[10px] bg-emerald-600 text-white font-mono px-2 py-0.5 font-bold">-6.20880, 106.84560</span>
+              </div>
+              <p id="autofill-desc" class="text-[11px] text-emerald-800 mt-1 leading-relaxed">
+                Detail nama jalan, kota, provinsi, dan kode pos telah diisi otomatis. Anda dapat menambahkan nomor rumah atau patokan jika perlu.
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            
+            <!-- Label Alamat Selection Chips -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-2">
+                Label Alamat <span class="text-rose-500">*</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button 
+                  type="button"
+                  onclick="selectLabel('Rumah')"
+                  id="chip-Rumah"
+                  class="label-chip px-3 py-2.5 border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-black text-white border-black"
+                >
+                  <iconify-icon icon="lucide:home"></iconify-icon>
+                  <span>Rumah</span>
+                </button>
+                <button 
+                  type="button"
+                  onclick="selectLabel('Kantor')"
+                  id="chip-Kantor"
+                  class="label-chip px-3 py-2.5 border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-white text-neutral-700 border-neutral-300 hover:border-black"
+                >
+                  <iconify-icon icon="lucide:building"></iconify-icon>
+                  <span>Kantor</span>
+                </button>
+                <button 
+                  type="button"
+                  onclick="selectLabel('Apartemen')"
+                  id="chip-Apartemen"
+                  class="label-chip px-3 py-2.5 border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-white text-neutral-700 border-neutral-300 hover:border-black"
+                >
+                  <iconify-icon icon="lucide:briefcase"></iconify-icon>
+                  <span>Apartemen</span>
+                </button>
+                <button 
+                  type="button"
+                  onclick="selectLabel('Kos')"
+                  id="chip-Kos"
+                  class="label-chip px-3 py-2.5 border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-white text-neutral-700 border-neutral-300 hover:border-black"
+                >
+                  <iconify-icon icon="lucide:tag"></iconify-icon>
+                  <span>Kos</span>
+                </button>
+              </div>
+              <input type="hidden" id="input-label" name="label" value="Rumah" />
+            </div>
+
+            <!-- Nama & Nomor Handphone Penerima -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Nama Penerima <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="input-recipient" 
+                  name="recipient_name"
+                  value="Budi Pratama"
+                  required
+                  placeholder="Contoh: Budi Pratama"
+                  class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Nomor Handphone <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  id="input-phone" 
+                  name="phone"
+                  value="0812-3456-7890"
+                  required
+                  placeholder="0812-xxxx-xxxx"
+                  class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <!-- Alamat Lengkap & Patokan -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+                  Alamat Lengkap (Jalan, RT/RW, Patokan) <span class="text-rose-500">*</span>
+                </label>
+                <span class="text-[10px] text-neutral-400 italic">Otomatis terisi dari peta</span>
+              </div>
+              <textarea 
+                rows="3"
+                id="input-address"
+                name="full_address"
+                required
+                placeholder="Tuliskan nama jalan, nomor bangunan, RT/RW, dan patokan khusus..."
+                class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black leading-relaxed"
+              ></textarea>
+            </div>
+
+            <!-- Kota, Provinsi, Kode Pos -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Kota / Kab <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="input-city" 
+                  name="city"
+                  required
+                  placeholder="Jakarta Selatan"
+                  class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Provinsi
+                </label>
+                <input 
+                  type="text" 
+                  id="input-province" 
+                  name="province"
+                  placeholder="DKI Jakarta"
+                  class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Kode Pos
+                </label>
+                <input 
+                  type="text" 
+                  id="input-postal" 
+                  name="postal_code"
+                  placeholder="12730"
+                  class="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <!-- Checkbox Jadikan Utama -->
+            <div class="pt-2 flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="input-default" 
+                name="is_default"
+                class="w-4 h-4 accent-black cursor-pointer"
+              />
+              <label for="input-default" class="text-xs font-bold text-neutral-700 cursor-pointer select-none">
+                Jadikan sebagai alamat pengiriman utama
+              </label>
+            </div>
+
+            <!-- Submit & Action Buttons -->
+            <div class="pt-5 border-t border-neutral-200 flex items-center justify-end gap-3">
+              <a 
+                href="profile.html"
+                class="px-5 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-sport font-bold text-xs uppercase tracking-wider transition-colors"
+              >
+                Batal
+              </a>
+              <button 
+                type="submit"
+                id="btn-submit"
+                class="px-6 py-3 bg-black hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md transition-colors"
+              >
+                <iconify-icon icon="lucide:save" class="text-sm"></iconify-icon>
+                <span id="submit-btn-text">Simpan Alamat Pengiriman</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-black text-white border-t border-neutral-800 py-6 text-center text-xs text-neutral-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>&copy; 2026 TUSKO Performance Inc. Seluruh hak cipta dilindungi undang-undang.</p>
+    </div>
+  </footer>
+
+  <!-- ================= TOAST NOTIFIKASI ================= -->
+  <div id="toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-black text-white border border-neutral-700 px-4 py-3 shadow-2xl flex items-center gap-2.5 text-xs font-bold">
+      <iconify-icon icon="lucide:check-circle-2" class="text-emerald-400 text-base"></iconify-icon>
+      <span id="toast-message">Alamat berhasil disimpan!</span>
+    </div>
+  </div>
+
+  <!-- ================= LOGIKA LEAFLET & INTERAKSI ================= -->
+  <script>
+    let map = null;
+    let marker = null;
+    let currentLat = -6.2088;
+    let currentLng = 106.8456;
+
+    // Inisialisasi Peta Leaflet
+    function initMap() {
+      // Periksa parameter URL apakah edit mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEdit = urlParams.get('mode') === 'edit';
+
+      if (isEdit) {
+        document.getElementById('breadcrumb-title').textContent = 'Ubah Alamat';
+        document.getElementById('page-title').textContent = 'UBAH ALAMAT PENGIRIMAN';
+        document.getElementById('submit-btn-text').textContent = 'Perbarui Alamat';
+
+        // Set data dummy edit
+        const label = urlParams.get('label') || 'Rumah';
+        selectLabel(label);
+        document.getElementById('input-recipient').value = urlParams.get('name') || 'Budi Pratama';
+        document.getElementById('input-phone').value = urlParams.get('phone') || '0812-3456-7890';
+        document.getElementById('input-address').value = urlParams.get('address') || 'Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan';
+        document.getElementById('input-city').value = urlParams.get('city') || 'Jakarta Selatan';
+        document.getElementById('input-province').value = 'DKI Jakarta';
+        document.getElementById('input-postal').value = urlParams.get('postal') || '12730';
+        if (urlParams.get('lat') && urlParams.get('lng')) {
+          currentLat = parseFloat(urlParams.get('lat'));
+          currentLng = parseFloat(urlParams.get('lng'));
+        } else {
+          currentLat = -6.2615;
+          currentLng = 106.8106;
+        }
+      } else {
+        // Default alamat untuk tambah baru
+        document.getElementById('input-address').value = 'Jl. M.H. Thamrin No. 1, Kebon Sirih, Menteng';
+        document.getElementById('input-city').value = 'Jakarta Pusat';
+        document.getElementById('input-province').value = 'DKI Jakarta';
+        document.getElementById('input-postal').value = '10340';
+      }
+
+      // Buat Leaflet Map
+      map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: true
+      }).setView([currentLat, currentLng], 15);
+
+      // OpenStreetMap Tile Layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Custom Athletic Pin
+      const tuskoIcon = L.divIcon({
+        className: 'custom-tusko-pin',
+        html: `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer;">
+            <div style="background-color: #0a0a0a; color: #fbbf24; border: 2.5px solid #fbbf24; border-radius: 9999px; padding: 7px; box-shadow: 0 10px 25px -3px rgba(0,0,0,0.6);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
+            <div style="width: 2.5px; height: 10px; background-color: #000;"></div>
+            <div style="width: 12px; height: 5px; background-color: rgba(0,0,0,0.35); border-radius: 50%; filter: blur(1px);"></div>
+          </div>
+        `,
+        iconSize: [36, 48],
+        iconAnchor: [0, 0]
+      });
+
+      marker = L.marker([currentLat, currentLng], {
+        draggable: true,
+        icon: tuskoIcon
+      }).addTo(map);
+
+      updateCoordinateDisplays(currentLat, currentLng);
+
+      // Listener Drag Marker
+      marker.on('dragend', function (e) {
+        const position = marker.getLatLng();
+        setMarkerPosition(position.lat, position.lng, true);
+      });
+
+      // Listener Klik di Peta
+      map.on('click', function (e) {
+        setMarkerPosition(e.latlng.lat, e.latlng.lng, true);
+      });
+
+      // Fix render size Leaflet
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    }
+
+    // Set posisi marker dan pemicu reverse geocoding
+    function setMarkerPosition(lat, lng, doReverseGeocode = false, isGPS = false) {
+      currentLat = lat;
+      currentLng = lng;
+      marker.setLatLng([lat, lng]);
+      map.panTo([lat, lng]);
+      updateCoordinateDisplays(lat, lng);
+
+      if (doReverseGeocode) {
+        reverseGeocode(lat, lng, isGPS);
+      }
+    }
+
+    // Update teks display koordinat
+    function updateCoordinateDisplays(lat, lng) {
+      const text = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      document.getElementById('coord-display').textContent = text;
+      document.getElementById('status-coords').textContent = text;
+    }
+
+    // Reverse geocoding via OpenStreetMap Nominatim & OTOMATIS ISI FORM
+    async function reverseGeocode(lat, lng, isGPS = false) {
+      const spinner = document.getElementById('geocoding-spinner');
+      if (spinner) spinner.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+          headers: {
+            'Accept-Language': 'id,en'
+          }
+        });
+        const data = await response.json();
+        
+        if (data && data.address) {
+          const addr = data.address;
+          const road = addr.road || addr.pedestrian || addr.street || addr.residential || '';
+          const houseNumber = addr.house_number ? `No. ${addr.house_number.replace(/^No\.?\s*/i, '')}` : '';
+          const suburb = addr.suburb || addr.village || addr.neighbourhood || addr.quarter || '';
+          const subdistrict = addr.municipality || addr.subdistrict || addr.district || '';
+          const city = addr.city || addr.town || addr.county || addr.city_district || 'Jakarta Selatan';
+          const state = addr.state || 'DKI Jakarta';
+          const postcode = addr.postcode || '';
+
+          const streetParts = [];
+          if (road) streetParts.push(houseNumber ? `${road} ${houseNumber}` : road);
+          if (suburb && suburb !== road) streetParts.push(suburb);
+          if (subdistrict && subdistrict !== suburb && subdistrict !== city) streetParts.push(subdistrict);
+
+          const streetLine = streetParts.length > 0 
+            ? streetParts.join(', ') 
+            : (data.display_name ? data.display_name.split(',').slice(0, 3).join(', ') : `Jl. Lokasi Koordinat (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+          
+          // LANGSUNG OTOMATIS TERISI KE FORMULIR
+          document.getElementById('input-address').value = streetLine;
+          if (city) document.getElementById('input-city').value = city;
+          if (state) document.getElementById('input-province').value = state;
+          if (postcode) document.getElementById('input-postal').value = postcode;
+
+          // Update banner notifikasi otomatis
+          const banner = document.getElementById('autofill-banner');
+          if (banner) {
+            banner.classList.remove('hidden');
+            document.getElementById('autofill-title').textContent = isGPS ? 'Alamat Terisi Otomatis dari GPS Perangkat' : 'Alamat Terisi Otomatis dari Titik Peta';
+            document.getElementById('autofill-coords').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            document.getElementById('autofill-desc').textContent = isGPS 
+              ? '✓ Alamat lengkap, kota, provinsi, dan kode pos telah diisi otomatis sesuai koordinat GPS Anda. Anda dapat menambahkan nomor rumah atau patokan jika perlu.'
+              : '✓ Kolom alamat telah disinkronkan otomatis dengan titik lokasi yang dipilih di peta.';
+          }
+        }
+      } catch (err) {
+        console.warn('Reverse geocode error:', err);
+        const fallback = `Titik Koordinat GPS (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+        document.getElementById('input-address').value = fallback;
+      } finally {
+        if (spinner) spinner.classList.add('hidden');
+      }
+    }
+
+    // Cari lokasi dari input pencarian
+    async function searchLocation() {
+      const query = document.getElementById('map-search-input').value.trim();
+      if (!query) return;
+
+      const spinner = document.getElementById('search-spinner');
+      spinner.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=id&limit=1`, {
+          headers: {
+            'Accept-Language': 'id,en'
+          }
+        });
+        const results = await res.json();
+        if (results && results.length > 0) {
+          const first = results[0];
+          const lat = parseFloat(first.lat);
+          const lon = parseFloat(first.lon);
+          setMarkerPosition(lat, lon, true, false);
+          map.setView([lat, lon], 16);
+        } else {
+          alert('Lokasi tidak ditemukan. Coba gunakan kata kunci nama kota atau jalan yang lebih umum.');
+        }
+      } catch (err) {
+        console.error('Pencarian lokasi gagal:', err);
+      } finally {
+        spinner.classList.add('hidden');
+      }
+    }
+
+    // Pan ke kota populer & langsung isi form
+    function panToCity(lat, lng, name) {
+      setMarkerPosition(lat, lng, true, false);
+      map.setView([lat, lng], 15);
+      showToast(`✓ Lokasi "${name}" disematkan & alamat terisi otomatis.`);
+    }
+
+    // GPS Pengguna - Langsung Isi Otomatis Alamat ke Form
+    function locateUserGPS() {
+      if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung geolokasi.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-gps');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin text-xs"></iconify-icon> <span>Mencari GPS...</span>`;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btn.innerHTML = originalText;
+          setMarkerPosition(pos.coords.latitude, pos.coords.longitude, true, true);
+          map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+          showToast('✓ Sinyal GPS aktif! Formulir alamat terisi otomatis.');
+        },
+        (err) => {
+          btn.innerHTML = originalText;
+          let msg = 'Gagal mengambil lokasi GPS: ' + err.message;
+          if (err.code === 1) msg = 'Akses GPS ditolak di browser. Mohon izinkan lokasi.';
+          showToast(msg);
+          alert(msg);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    // Ganti Label Alamat Chip
+    function selectLabel(label) {
+      document.getElementById('input-label').value = label;
+      document.querySelectorAll('.label-chip').forEach(btn => {
+        btn.classList.remove('bg-black', 'text-white', 'border-black');
+        btn.classList.add('bg-white', 'text-neutral-700', 'border-neutral-300');
+      });
+
+      const selected = document.getElementById(`chip-${label}`);
+      if (selected) {
+        selected.classList.remove('bg-white', 'text-neutral-700', 'border-neutral-300');
+        selected.classList.add('bg-black', 'text-white', 'border-black');
+      }
+    }
+
+    // Handle Submit Form
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const label = document.getElementById('input-label').value;
+      const recipient = document.getElementById('input-recipient').value;
+      const isDefault = document.getElementById('input-default').checked;
+
+      const submitBtn = document.getElementById('btn-submit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon> <span>Menyimpan...</span>`;
+
+      setTimeout(() => {
+        showToast(`✓ Alamat "${label}" untuk ${recipient} berhasil disimpan!`);
+        setTimeout(() => {
+          window.location.href = 'profile.html?saved=1';
+        }, 1200);
+      }, 600);
+    }
+
+    // Tampilkan Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+      }, 3000);
+    }
+
+    // Start
+    window.addEventListener('DOMContentLoaded', initMap);
+  </script>
+
+</body>
+</html>

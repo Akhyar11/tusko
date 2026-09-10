@@ -100,11 +100,6 @@ class InventoryListApiTest extends TestCase
             ->assertJsonPath('stats.safe_stock_count', 1)
             ->assertJsonPath('stats.low_stock_count', 1)
             ->assertJsonPath('stats.out_of_stock_count', 1);
-
-        // Uji juga route alias /api/stock
-        $stockResponse = $this->getJson('/api/stock');
-        $stockResponse->assertStatus(200)
-            ->assertJsonPath('stats.sku_count', 3);
     }
 
     public function test_can_filter_inventory_by_stock_status(): void

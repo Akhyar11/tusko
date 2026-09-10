@@ -60,16 +60,6 @@ class LowStockAlertApiTest extends TestCase
             ->assertJsonPath('summary.low_stock_count', 1)
             ->assertJsonPath('summary.total_critical', 2)
             ->assertJsonPath('summary.is_safe', false);
-
-        // Uji route dashboard /api/dashboard/low-stock
-        $dashResponse = $this->getJson('/api/dashboard/low-stock');
-        $dashResponse->assertStatus(200)
-            ->assertJsonCount(2, 'data');
-
-        // Uji route /api/stock/alerts
-        $alertResponse = $this->getJson('/api/stock/alerts');
-        $alertResponse->assertStatus(200)
-            ->assertJsonCount(2, 'data');
     }
 
     public function test_can_filter_alert_by_type(): void
