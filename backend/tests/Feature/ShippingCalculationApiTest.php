@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Expedition;
+use App\Models\Order;
 use App\Models\ShippingAddress;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ShippingCalculationApiTest extends TestCase
@@ -136,9 +138,35 @@ class ShippingCalculationApiTest extends TestCase
         $this->assertEquals('gosend', $expeditions[0]['code']);
     }
 
-    public function test_can_track_package_delivery_status(): void
+    public function test_can_track_package_delivery_status_dynamically(): void
     {
-        $response = $this->getJson('/api/expeditions/track/JP1234567890');
+        $user = User::factory()->create();
+        $randomResi = 'TK' . now()->year . mt_rand(10000000, 99999999);
+        $randomOrderNumber = 'ORD-' . strtoupper(Str::random(10));
+
+        // Buat order dinamis di database
+        $order = Order::create([
+            'order_number' => $randomOrderNumber,
+            'tracking_number' => $randomResi,
+            'user_id' => $user->id,
+            'status' => 'shipping',
+            'payment_status' => 'paid',
+            'payment_method' => 'bank_transfer',
+            'recipient_name' => 'Fajar Pratama',
+            'phone' => '081299887766',
+            'full_address' => 'Jl. Dago No. 120',
+            'city' => 'Bandung',
+            'province' => 'Jawa Barat',
+            'postal_code' => '40132',
+            'expedition_name' => 'SiCepat',
+            'expedition_service' => 'BEST',
+            'subtotal' => 250000,
+            'shipping_cost' => 22000,
+            'grand_total' => 272000,
+            'shipped_at' => now()->subHour(),
+        ]);
+
+        $response = $this->getJson("/api/expeditions/track/{$randomResi}");
 
         $response->assertStatus(200)
             ->assertJsonPath('status', 'success')
@@ -149,11 +177,19 @@ class ShippingCalculationApiTest extends TestCase
                     'resi',
                     'status',
                     'status_label',
+                    'courier',
+                    'service',
+                    'origin',
+                    'destination',
                     'provider',
                     'history',
                 ],
             ]);
 
-        $this->assertEquals('JP1234567890', $response->json('data.resi'));
+        $this->assertEquals($randomResi, $response->json('data.resi'));
+        $this->assertEquals('Bandung', $response->json('data.destination'));
+        $this->assertEquals('SiCepat', $response->json('data.courier'));
+        $this->assertEquals('shipping', $response->json('data.status'));
+        $this->assertNotEmpty($response->json('data.history'));
     }
 }

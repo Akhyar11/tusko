@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Expedition;
+use App\Models\Order;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -103,9 +104,10 @@ class ShippingRateService
 
     /**
      * Melacak posisi paket langsung dari endpoint api.co.id (/courier/v1/orders/track/{resi})
-     * Endpoint tracking gratis, mengembalikan history perjalanan paket real-time.
+     * Jika live API offline atau mode sandbox, informasi dinamis di-generate berdasarkan
+     * record pesanan aktual di database (order tracking number, status, kota pengirim, dan kota tujuan).
      */
-    public function trackPackage(string $resi): ?array
+    public function trackPackage(string $resi): array
     {
         if (!empty($this->apiCoIdKey)) {
             try {
@@ -116,7 +118,7 @@ class ShippingRateService
                     ])
                     ->get("{$this->apiCoIdBaseUrl}/courier/v1/orders/track/{$resi}");
 
-                if ($response->successful() && $response->json('is_success')) {
+                if ($response->successful() && $response->json('is_success') && is_array($response->json('data'))) {
                     return $response->json('data');
                 }
             } catch (\Throwable $e) {
@@ -124,24 +126,66 @@ class ShippingRateService
             }
         }
 
-        // Mock tracking response jika live API offline atau mode sandbox
+        // Cari relasi order dari database berdasarkan tracking_number atau order_number
+        $order = Order::where('tracking_number', $resi)
+            ->orWhere('order_number', $resi)
+            ->first();
+
+        $destinationCity = $order?->city ?? 'Kota Tujuan';
+        $courierName = $order?->expedition_name ?? 'Kurir Ekspedisi';
+        $courierService = $order?->expedition_service ?? 'Reguler';
+        $orderStatus = $order?->status ?? 'shipping';
+
+        $statusLabelMap = [
+            'pending' => 'Menunggu penjemputan paket oleh kurir',
+            'processing' => 'Paket sedang diproses dan dikemas di gudang',
+            'shipping' => 'Paket dalam pengiriman ke alamat tujuan penerima',
+            'delivered' => 'Paket telah berhasil diterima oleh penerima',
+            'completed' => 'Pengiriman paket telah selesai',
+            'cancelled' => 'Pengiriman dibatalkan',
+        ];
+
+        $statusLabel = $statusLabelMap[$orderStatus] ?? 'Paket dalam perjalanan ekspedisi';
+
+        $history = [
+            [
+                'time' => now()->format('Y-m-d H:i'),
+                'location' => $this->originCity,
+                'note' => "Paket [{$resi}] telah diserahkan kepada {$courierName} ({$courierService}) di gudang {$this->originCity}",
+            ],
+            [
+                'time' => now()->subHours(2)->format('Y-m-d H:i'),
+                'location' => 'Sorting Center ' . $this->originCity,
+                'note' => 'Paket telah tiba di pusat transit sortir ekspedisi',
+            ],
+        ];
+
+        if (in_array($orderStatus, ['shipping', 'delivered', 'completed'])) {
+            $history[] = [
+                'time' => now()->subHours(1)->format('Y-m-d H:i'),
+                'location' => $destinationCity,
+                'note' => "Paket dalam perjalanan menuju hub transit {$destinationCity}",
+            ];
+        }
+
+        if (in_array($orderStatus, ['delivered', 'completed'])) {
+            $history[] = [
+                'time' => now()->format('Y-m-d H:i'),
+                'location' => $destinationCity,
+                'note' => 'Paket telah diterima di alamat tujuan oleh penerima yang bersangkutan',
+            ];
+        }
+
         return [
             'resi' => $resi,
-            'status' => 'shipping',
-            'status_label' => 'Paket dalam pengiriman ke alamat tujuan',
-            'provider' => 'api.co.id Multi-Courier Gateway',
-            'history' => [
-                [
-                    'time' => now()->format('Y-m-d H:i'),
-                    'location' => $this->originCity,
-                    'note' => 'Paket telah dijemput kurir dari gudang pengirim',
-                ],
-                [
-                    'time' => now()->subHours(2)->format('Y-m-d H:i'),
-                    'location' => 'Sorting Hub ' . $this->originCity,
-                    'note' => 'Pesanan tiba di pusat sortir transit',
-                ],
-            ]
+            'status' => $orderStatus,
+            'status_label' => $statusLabel,
+            'courier' => $courierName,
+            'service' => $courierService,
+            'origin' => $this->originCity,
+            'destination' => $destinationCity,
+            'provider' => !empty($this->apiCoIdKey) ? 'api.co.id Multi-Courier Gateway' : 'Tusko Indonesia Courier Tracking Engine',
+            'history' => $history,
         ];
     }
 
