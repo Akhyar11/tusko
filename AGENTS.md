@@ -302,18 +302,18 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>
-# Agent Pre-Commit Auditor Policy (.githooks/)
+# Agent Pre-Commit Auditor Policy (.githooks/) — 100% OpenCode AI Powered
 
-Repository ini dilengkapi dengan sistem auditor otomatis yang berjalan setiap kali perintah `git commit` dijalankan:
-1. `01-branch-and-master-protection.sh`: Mencegah commit langsung di branch `master`.
-2. `02-feature-team-ownership.sh`: Memvalidasi boundary file sesuai pembagian tim.
-3. `03-design-system-rounded-none.sh`: Memvalidasi kepatuhan `rounded-none` dan penolakan label "VIP".
-4. `04-zero-secret-and-hardcode.sh`: AI Code Auditor (OpenCode) yang menganalisis git diff secara cerdas untuk mencegah kebocoran kredensial rahasia (.env, token, private key) dan **MENOLAK segala bentuk hardcode** (seperti lokasi gudang toko, koordinat GPS statis, biaya penanganan/handling fee, atau URL gateway pihak ketiga yang seharusnya dapat diatur secara dinamis oleh Admin melalui database).
-5. `05-backend-laravel-test-integrity.sh`: Menjalankan PHP syntax check dan `php artisan test` (wajib lolos 100%).
-6. `06-frontend-build-integrity.sh`: Menjalankan `npm run build` (wajib lolos tanpa error kompilasi).
-7. `07-frontend-consistency-auditor.sh`: Memvalidasi konsistensi Frontend (arsitektur sharp, icon library lucide-react, prefix tusko_* pada localStorage, formatter formatRupiah).
-8. `08-backend-consistency-auditor.sh`: Memvalidasi konsistensi Backend (namespace API controller, integritas up()/down() pada migrasi, dan kebersihan sisa fungsi debug).
-9. `09-zero-duplication-scanner.sh`: Scanner mandiri (tanpa git diff) yang memindai langsung seluruh fisik codebase untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, dan 0 duplikasi komponen.
+Repository ini dilengkapi dengan sistem auditor otomatis berbasis **OpenCode AI** (`opencode run -m opencode/muse-spark-1.3-contributor-free`) yang berjalan setiap kali perintah `git commit` dijalankan:
+1. `01-branch-and-master-protection.sh`: Mencegah commit langsung di branch `master` dan memvalidasi konvensi branch dengan OpenCode AI.
+2. `02-feature-team-ownership.sh`: OpenCode AI Auditor yang menganalisis boundary kepemilikan file Developer 1 vs Developer 2 sesuai panduan tim.
+3. `03-design-system-rounded-none.sh`: OpenCode AI Auditor yang memvalidasi kepatuhan sudut siku tajam `rounded-none` dan penolakan label "VIP".
+4. `04-zero-secret-and-hardcode.sh`: OpenCode AI Auditor yang menganalisis git diff secara cerdas untuk mencegah kebocoran kredensial rahasia (.env, token, private key) dan **MENOLAK segala bentuk hardcode** (seperti lokasi gudang toko, koordinat GPS statis, biaya penanganan/handling fee, atau URL gateway pihak ketiga yang seharusnya dapat diatur secara dinamis oleh Admin melalui database).
+5. `05-backend-laravel-test-integrity.sh`: Menjalankan PHP syntax check, `php artisan test` (100% lolos), dan OpenCode AI Auditor untuk integritas test backend (larangan test dummy/tanpa assertion).
+6. `06-frontend-build-integrity.sh`: Menjalankan `npm run build` dan OpenCode AI Auditor untuk kebersihan import/export JSX bundling.
+7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib menggunakan formatter `formatRupiah`, dan arsitektur tajam).
+8. `08-backend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Backend (namespace `App\Http\Controllers\Api`, pewarisan `Controller`, integritas up()/down() pada seluruh file migrasi, dan larangan sisa fungsi debug `dd`/`dump`).
+9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, dan 0 duplikasi komponen.
 
 Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang wajib memperbaiki masalah yang dilaporkan.
 </RULE[pre_commit_auditor]>
