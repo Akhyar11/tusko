@@ -54,6 +54,8 @@ Route::prefix('addresses')->group(function () {
 Route::prefix('expeditions')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ExpeditionController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\ExpeditionController::class, 'store']);
+    Route::post('/calculate-cost', [\App\Http\Controllers\Api\ExpeditionController::class, 'calculateCost']);
+    Route::get('/track/{resi}', [\App\Http\Controllers\Api\ExpeditionController::class, 'track']);
     Route::get('/categories', [\App\Http\Controllers\Api\ExpeditionController::class, 'categories']);
     Route::get('/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
     Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'update']);

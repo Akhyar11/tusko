@@ -218,6 +218,69 @@ class ExpeditionController extends Controller
     }
 
     /**
+     * Calculate shipping cost based on distance and package weight using Indonesian courier matrix / RajaOngkir.
+     */
+    public function calculateCost(Request $request, \App\Services\ShippingRateService $rateService): JsonResponse
+    {
+        $validated = $request->validate([
+            'address_id' => ['nullable', 'integer', 'exists:shipping_addresses,id'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'weight_kg' => ['nullable', 'numeric', 'min:0.01'],
+            'category' => ['nullable', 'string'],
+        ]);
+
+        $latitude = $validated['latitude'] ?? null;
+        $longitude = $validated['longitude'] ?? null;
+        $city = $validated['city'] ?? null;
+        $district = $validated['district'] ?? null;
+
+        if (!empty($validated['address_id'])) {
+            $address = \App\Models\ShippingAddress::find($validated['address_id']);
+            if ($address) {
+                $latitude = $latitude ?? $address->latitude;
+                $longitude = $longitude ?? $address->longitude;
+                $city = $city ?? $address->city;
+                $district = $district ?? $address->district;
+            }
+        }
+
+        $weightKg = (float) ($validated['weight_kg'] ?? 1.0);
+        $category = $validated['category'] ?? null;
+
+        $calculation = $rateService->calculateRates(
+            $latitude ? (float) $latitude : null,
+            $longitude ? (float) $longitude : null,
+            $weightKg,
+            $city,
+            $category,
+            $district
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Estimasi biaya kirim berhasil dikalkulasi.',
+            'data' => $calculation,
+        ]);
+    }
+
+    /**
+     * Track package delivery status using api.co.id or courier history.
+     */
+    public function track(Request $request, string $resi, \App\Services\ShippingRateService $rateService): JsonResponse
+    {
+        $trackingData = $rateService->trackPackage($resi);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pelacakan status paket berhasil diambil.',
+            'data' => $trackingData,
+        ]);
+    }
+
+    /**
      * Internal helper to retrieve category list.
      */
     protected function getCategoriesList(): array

@@ -32,6 +32,7 @@ import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
+import { cartService } from './services/cartService';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -139,6 +140,7 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
+  const [appliedCheckoutVoucher, setAppliedCheckoutVoucher] = useState(null);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
@@ -161,17 +163,8 @@ export default function App() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [pendingCartAction, setPendingCartAction] = useState(null);
 
-  // Initial cart with realistic mock items from mockProducts
-  const [cart, setCart] = useState(() => [
-    {
-      ...mockProducts[0], // Tusko Pro Matchday Football Jersey
-      quantity: 1
-    },
-    {
-      ...mockProducts[1], // Tusko HyperPace Carbon Running Shoes
-      quantity: 1
-    }
-  ]);
+  // Real cart state synced with backend database / guest session
+  const [cart, setCart] = useState([]);
   
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -210,6 +203,38 @@ export default function App() {
         // backend offline or session expired
       });
   }, []);
+
+  // Sync cart from backend database / session
+  const refreshCartFromBackend = async () => {
+    try {
+      const cartData = await cartService.getCart();
+      if (cartData && Array.isArray(cartData.items)) {
+        const formattedItems = cartData.items.map((item) => ({
+          id: item.id,
+          cart_item_id: item.id,
+          product_id: item.product_id,
+          name: item.product?.name || 'Produk',
+          price: Number(item.product?.price || 0),
+          original_price: item.product?.original_price ? Number(item.product.original_price) : null,
+          discount_percentage: item.product?.discount_percentage || 0,
+          quantity: item.quantity,
+          stock: item.product?.stock ?? 99,
+          stock_minimum: item.product?.stock_minimum ?? 5,
+          image_url: item.product?.image_url || 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80',
+          free_shipping: Boolean(item.product?.free_shipping),
+          is_official: Boolean(item.product?.is_official ?? true),
+          notes: item.notes || '',
+        }));
+        setCart(formattedItems);
+      }
+    } catch {
+      // Backend offline or empty cart
+    }
+  };
+
+  useEffect(() => {
+    refreshCartFromBackend();
+  }, [currentUser]);
 
   // Sinkronisasi selectedProduct ke localStorage
   useEffect(() => {
@@ -475,8 +500,8 @@ export default function App() {
     setCurrentView('cart');
   };
 
-  // Cart operations
-  const handleAddToCart = (product, quantity = 1, notes = '') => {
+  // Cart operations with backend database and session sync
+  const handleAddToCart = async (product, quantity = 1, notes = '') => {
     // Jika belum login, simpan aksi pending dan arahkan login terlebih dahulu
     if (!currentUser) {
       handleRequireLogin(
@@ -492,24 +517,26 @@ export default function App() {
       return;
     }
 
-    const itemKey = product.selected_variant?.id 
-      ? `${product.id}-${product.selected_variant.id}` 
-      : product.id;
-
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === itemKey);
-      const maxStock = Number(product.stock ?? 99);
-
-      if (existing) {
-        const updatedQty = Math.min(maxStock, existing.quantity + quantity);
-        return prev.map((item) =>
-          item.id === itemKey 
-            ? { ...item, quantity: updatedQty, notes: notes || item.notes } 
-            : item
-        );
-      }
-      return [...prev, { ...product, id: itemKey, product_id: product.id, quantity, notes }];
-    });
+    try {
+      await cartService.addItem(product.id, quantity, notes);
+      await refreshCartFromBackend();
+    } catch {
+      // Fallback update state lokal jika backend lambat
+      const itemKey = product.id;
+      setCart((prev) => {
+        const existing = prev.find((item) => item.product_id === itemKey || item.id === itemKey);
+        const maxStock = Number(product.stock ?? 99);
+        if (existing) {
+          const updatedQty = Math.min(maxStock, existing.quantity + quantity);
+          return prev.map((item) =>
+            (item.product_id === itemKey || item.id === itemKey)
+              ? { ...item, quantity: updatedQty, notes: notes || item.notes } 
+              : item
+          );
+        }
+        return [...prev, { ...product, id: itemKey, product_id: product.id, quantity, notes }];
+      });
+    }
 
     const variantLabel = product.variant_name ? ` [${product.variant_name}]` : '';
     setToastMessage(`"${product.name.slice(0, 18)}..."${variantLabel} (${quantity}x) masuk keranjang!`);
@@ -518,7 +545,7 @@ export default function App() {
     }, 4000);
   };
 
-  const handleBuyNow = (product, quantity = 1, notes = '') => {
+  const handleBuyNow = async (product, quantity = 1, notes = '') => {
     if (!currentUser) {
       handleRequireLogin(
         { 
@@ -532,32 +559,49 @@ export default function App() {
       );
       return;
     }
-    handleAddToCart(product, quantity, notes);
+    await handleAddToCart(product, quantity, notes);
     setCurrentView('cart');
   };
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
+  const handleUpdateQuantity = async (itemId, newQuantity) => {
     if (newQuantity <= 0) {
-      handleRemoveCartItem(productId);
+      handleRemoveCartItem(itemId);
       return;
     }
+    // Optimistic UI update
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
       )
     );
+    try {
+      await cartService.updateItem(itemId, newQuantity);
+    } catch {
+      await refreshCartFromBackend();
+    }
   };
 
-  const handleRemoveCartItem = (productId) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
+  const handleRemoveCartItem = async (itemId) => {
+    // Optimistic UI update
+    setCart((prev) => prev.filter((item) => item.id !== itemId));
     setToastMessage('Item berhasil dihapus dari keranjang.');
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
+    try {
+      await cartService.removeItem(itemId);
+    } catch {
+      await refreshCartFromBackend();
+    }
   };
 
-  const handleClearCart = () => {
+  const handleClearCart = async () => {
     setCart([]);
+    try {
+      await cartService.clearCart();
+    } catch {
+      // ignore
+    }
   };
 
   const handleSelectProduct = (product) => {
@@ -1006,6 +1050,7 @@ export default function App() {
           <CheckoutPage
             checkoutItems={checkoutItems}
             availableExpeditions={expeditions}
+            initialVoucher={appliedCheckoutVoucher}
             onBackToCart={() => setCurrentView('cart')}
             onFinishOrder={(order) => {
               // Remove checked out items from cart
@@ -1075,8 +1120,9 @@ export default function App() {
             onRemoveItem={handleRemoveCartItem}
             onClearCart={handleClearCart}
             onBackToShopping={() => setCurrentView('catalog')}
-            onProceedToCheckout={({ selectedItems }) => {
+            onProceedToCheckout={({ selectedItems, appliedVoucher }) => {
               setCheckoutItems(selectedItems);
+              setAppliedCheckoutVoucher(appliedVoucher || null);
               setCurrentView('checkout');
             }}
           />
