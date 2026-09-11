@@ -13,7 +13,8 @@ import {
   Menu, 
   X, 
   ChevronRight,
-  Sparkles
+  Sparkles,
+  ClipboardList
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -59,6 +60,13 @@ export default function AdminSidebar({
       activeViews: ['orders', 'order-detail'],
       badge: orderCount > 0 ? `${orderCount}` : null,
       badgeColor: 'bg-neutral-200 text-neutral-900'
+    },
+    {
+      id: 'procurement',
+      label: 'Pengadaan & Vendor (PO)',
+      sublabel: 'PO supplier, GRN & tagihan',
+      icon: ClipboardList,
+      activeViews: ['procurement']
     },
     {
       id: 'transactions',

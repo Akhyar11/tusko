@@ -24,10 +24,21 @@ import {
   X,
   Sparkles,
   RefreshCw,
-  Boxes
+  Boxes,
+  PieChart,
+  BookOpen,
+  ArrowRightLeft,
+  Landmark,
+  Layers
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { mockTransactions, transactionCategories } from '../data/mockTransactions';
+import { 
+  mockTransactions, 
+  transactionCategories,
+  mockFinancialAccounts,
+  mockChartOfAccounts,
+  mockCogsAnalytics
+} from '../data/mockTransactions';
 
 export default function FinancialTransactionsPage({
   transactions: initialTransactions = mockTransactions,
@@ -37,24 +48,39 @@ export default function FinancialTransactionsPage({
   onOpenStock = () => {}
 }) {
   const [transactions, setTransactions] = useState(initialTransactions);
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'income' | 'expense' | 'pending'
+  const [financialAccounts, setFinancialAccounts] = useState(mockFinancialAccounts);
+  const [chartOfAccounts] = useState(mockChartOfAccounts);
+  const [cogsAnalytics] = useState(mockCogsAnalytics);
+
+  // Active Main Tab: 'cashbook' | 'accounts' | 'coa' | 'cogs'
+  const [activeMainTab, setActiveMainTab] = useState('cashbook');
+
+  // Sub-filter for cashbook: 'all' | 'income' | 'expense' | 'pending'
+  const [cashbookFilter, setCashbookFilter] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateRange, setDateRange] = useState('all'); // 'all' | 'this_month' | '30days' | '7days'
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [receiptModalTx, setReceiptModalTx] = useState(null);
-  
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+
   // New transaction form state
   const [formType, setFormType] = useState('expense');
   const [formCategory, setFormCategory] = useState('operational');
   const [formAmount, setFormAmount] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [formPaymentMethod, setFormPaymentMethod] = useState('Kas Toko / QRIS');
+  const [formPaymentMethod, setFormPaymentMethod] = useState('BCA Bisnis Transfer');
   const [formSuccessMessage, setFormSuccessMessage] = useState('');
 
-  // Hitung KPI Keuangan
+  // Internal transfer form state
+  const [transferFrom, setTransferFrom] = useState(1);
+  const [transferTo, setTransferTo] = useState(3);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferNotes, setTransferNotes] = useState('');
+
+  // Hitung KPI Keuangan Global
   const stats = useMemo(() => {
     let totalIncome = 0;
     let totalExpense = 0;
@@ -75,6 +101,7 @@ export default function FinancialTransactionsPage({
     });
 
     const netCashflow = totalIncome - totalExpense;
+    const totalLiquidBalance = financialAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
     return {
       totalIncome,
@@ -82,17 +109,18 @@ export default function FinancialTransactionsPage({
       totalPending,
       netCashflow,
       settledCount,
-      totalCount: transactions.length
+      totalCount: transactions.length,
+      totalLiquidBalance
     };
-  }, [transactions]);
+  }, [transactions, financialAccounts]);
 
-  // Filtered transactions
+  // Filtered transactions for cashbook
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
       // 1. Tab filter
-      if (activeTab === 'income' && tx.type !== 'income') return false;
-      if (activeTab === 'expense' && tx.type !== 'expense') return false;
-      if (activeTab === 'pending' && tx.status !== 'pending') return false;
+      if (cashbookFilter === 'income' && tx.type !== 'income') return false;
+      if (cashbookFilter === 'expense' && tx.type !== 'expense') return false;
+      if (cashbookFilter === 'pending' && tx.status !== 'pending') return false;
 
       // 2. Kategori filter
       if (selectedCategory !== 'all' && tx.category !== selectedCategory) return false;
@@ -118,20 +146,20 @@ export default function FinancialTransactionsPage({
         const matchOrder = tx.order_number?.toLowerCase().includes(q);
         const matchDesc = tx.description?.toLowerCase().includes(q);
         const matchCustomer = tx.customer_name?.toLowerCase().includes(q);
-        const matchMethod = tx.payment_method?.toLowerCase().includes(q);
-        return matchNumber || matchOrder || matchDesc || matchCustomer || matchMethod;
+        const matchCategory = tx.category_label?.toLowerCase().includes(q);
+        return matchNumber || matchOrder || matchDesc || matchCustomer || matchCategory;
       }
 
       return true;
     });
-  }, [transactions, activeTab, selectedCategory, dateRange, searchQuery]);
+  }, [transactions, cashbookFilter, selectedCategory, dateRange, searchQuery]);
 
-  // Handle submit transaksi baru
-  const handleAddTransaction = (e) => {
+  // Simpan Transaksi Baru Manual
+  const handleSaveTransaction = (e) => {
     e.preventDefault();
-    if (!formAmount || Number(formAmount) <= 0 || !formDescription.trim()) return;
+    if (!formAmount || isNaN(formAmount) || Number(formAmount) <= 0) return;
 
-    const catObj = transactionCategories.find((c) => c.id === formCategory);
+    const matchedCat = transactionCategories.find((c) => c.id === formCategory);
     const newTx = {
       id: Date.now(),
       transaction_number: `TRX/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/${formType === 'income' ? 'IN' : 'EX'}-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -139,711 +167,748 @@ export default function FinancialTransactionsPage({
       order_number: null,
       type: formType,
       category: formCategory,
-      category_label: catObj ? catObj.label : 'Transaksi Lain',
+      category_label: matchedCat?.label || 'Manual Record',
       amount: Number(formAmount),
-      description: formDescription.trim(),
+      description: formDescription || `Catatan manual ${matchedCat?.label || ''}`,
       payment_method: formPaymentMethod,
       status: 'settled',
       created_at: new Date().toISOString(),
-      customer_name: formType === 'income' ? 'Pelanggan Toko' : 'Kasir / Admin'
+      customer_name: formType === 'income' ? 'Pelanggan Walk-In / Tunai' : 'Pengeluaran Toko'
     };
 
     setTransactions((prev) => [newTx, ...prev]);
-    setFormAmount('');
-    setFormDescription('');
-    setFormSuccessMessage('Transaksi berhasil dicatat ke dalam buku kas!');
+    setFormSuccessMessage(`Berhasil mencatat transaksi ${newTx.transaction_number}!`);
+
     setTimeout(() => {
       setFormSuccessMessage('');
       setIsAddModalOpen(false);
+      setFormAmount('');
+      setFormDescription('');
     }, 1200);
   };
 
-  // Unduh CSV
-  const handleExportCSV = () => {
-    const headers = ['Nomor Transaksi', 'Tanggal', 'Tipe', 'Kategori', 'Nominal', 'Status', 'Metode Pembayaran', 'Nomor Order', 'Deskripsi'];
-    const rows = filteredTransactions.map((t) => [
-      t.transaction_number,
-      new Date(t.created_at).toLocaleString('id-ID'),
-      t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-      t.category_label || t.category,
-      t.amount,
-      t.status,
-      `"${t.payment_method || ''}"`,
-      t.order_number || '-',
-      `"${t.description.replace(/"/g, '""')}"`
-    ]);
+  // Transfer Antar Rekening
+  const handleTransfer = (e) => {
+    e.preventDefault();
+    const amt = Number(transferAmount);
+    if (isNaN(amt) || amt <= 0) return;
+    if (transferFrom === transferTo) return;
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Laporan_Keuangan_Toko_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setFinancialAccounts(prev => prev.map(acc => {
+      if (acc.id === Number(transferFrom)) {
+        return { ...acc, balance: acc.balance - amt };
+      }
+      if (acc.id === Number(transferTo)) {
+        return { ...acc, balance: acc.balance + amt };
+      }
+      return acc;
+    }));
+
+    const fromAcc = financialAccounts.find(a => a.id === Number(transferFrom));
+    const toAcc = financialAccounts.find(a => a.id === Number(transferTo));
+
+    const transferTx = {
+      id: Date.now(),
+      transaction_number: `TRX/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/TRF-${Math.floor(100 + Math.random() * 900)}`,
+      order_id: null,
+      order_number: null,
+      type: 'expense',
+      category: 'operational',
+      category_label: 'Transfer Antar Rekening',
+      amount: amt,
+      description: `Transfer internal: dari ${fromAcc?.name} ke ${toAcc?.name}. ${transferNotes || ''}`.trim(),
+      payment_method: fromAcc?.name || 'Bank Transfer',
+      status: 'settled',
+      created_at: new Date().toISOString(),
+      customer_name: 'Internal Toko'
+    };
+    setTransactions(prev => [transferTx, ...prev]);
+
+    setIsTransferModalOpen(false);
+    setTransferAmount('');
+    setTransferNotes('');
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Top Breadcrumb & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-2xs">
+    <div className="space-y-6 pb-12">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 border border-gray-200">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-1">
-            <button onClick={onBackToShopping} className="hover:text-amber-600 transition-colors cursor-pointer">
-              Beranda
-            </button>
-            <ChevronRight size={13} />
-            <button onClick={onViewOrders} className="hover:text-amber-600 transition-colors cursor-pointer">
-              Pesanan
-            </button>
-            <ChevronRight size={13} />
-            <span className="text-gray-900 font-bold">Transaksi Keuangan</span>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-neutral-900 text-amber-400">
+              ERP Accounting & Cashflow
+            </span>
+            <span className="text-gray-400">•</span>
+            <span className="text-xs text-gray-500 font-mono">
+              Total Likuiditas: {formatRupiah(stats.totalLiquidBalance)}
+            </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-950 flex items-center gap-2 tracking-tight">
-            <Wallet className="text-amber-500" size={24} />
-            Pencatatan Transaksi Keuangan
+          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight mt-1">
+            Buku Kas, Akun & Laporan Keuangan
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-            Monitoring arus kas masuk & keluar, settlement gateway Midtrans, dan biaya operasional.
+          <p className="text-xs text-gray-500 mt-0.5">
+            Pencatatan arus kas, rekening bank, bagan akun (COA), dan analisis margin laba kotor toko olahraga.
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Top Header Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={onViewOrders}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+            onClick={() => setIsTransferModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
           >
-            <ShoppingBag size={15} />
-            <span>Lihat Pesanan</span>
+            <ArrowRightLeft size={14} className="text-gray-600" />
+            <span>Transfer Rekening</span>
           </button>
-          <button
-            type="button"
-            onClick={onOpenStock}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors cursor-pointer"
-          >
-            <Boxes size={15} className="text-blue-600" />
-            <span>Stok Gudang</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer shadow-2xs"
-            title="Download CSV"
-          >
-            <Download size={15} />
-            <span className="hidden sm:inline">Ekspor CSV</span>
-          </button>
+
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-all shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 border border-amber-500 shadow-xs transition-all cursor-pointer"
           >
-            <PlusCircle size={16} />
-            <span>Catat Kas Baru</span>
+            <PlusCircle size={15} />
+            <span>+ Catat Transaksi Baru</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Financial Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Saldo Bersih */}
-        <div className="bg-gradient-to-br from-neutral-900 to-neutral-800 text-white p-5 rounded-2xl border border-neutral-750 shadow-md relative overflow-hidden">
+      {/* 4 KPI Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Net Cashflow */}
+        <div className="bg-neutral-900 text-white p-5 border border-neutral-800 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wider uppercase text-neutral-400">Saldo Kas Bersih</span>
-            <div className="w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-amber-400">
-              <Wallet size={16} />
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              Arus Kas Bersih (Net)
+            </span>
+            <Wallet size={18} className="text-amber-400" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-black tracking-tight text-white">
-              {formatRupiah(stats.netCashflow)}
-            </div>
-            <div className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-300">
-              <span className={`inline-flex items-center font-bold ${stats.netCashflow >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {stats.netCashflow >= 0 ? <TrendingUp size={13} className="mr-0.5" /> : <TrendingDown size={13} className="mr-0.5" />}
-                {stats.netCashflow >= 0 ? 'Surplus Kas' : 'Defisit Kas'}
-              </span>
-              <span className="text-neutral-500">•</span>
-              <span>{stats.settledCount} transaksi terselesaikan</span>
-            </div>
+          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-amber-400 truncate">
+            {formatRupiah(stats.netCashflow)}
           </div>
-          <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
+          <p className="text-[11px] text-neutral-400 mt-1 truncate">
+            Selisih penerimaan vs pengeluaran kas
+          </p>
         </div>
 
-        {/* Card 2: Total Uang Masuk */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
+        {/* Total Income */}
+        <div className="bg-white p-5 border border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wider uppercase text-gray-500">Total Uang Masuk</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-              <ArrowDownLeft size={16} />
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Total Pemasukan Kas
+            </span>
+            <TrendingUp size={18} className="text-emerald-600" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-black tracking-tight text-emerald-600">
-              +{formatRupiah(stats.totalIncome)}
-            </div>
-            <p className="mt-1 text-[11px] text-gray-500">
-              Dari pembayaran pesanan & modal masuk
-            </p>
+          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-emerald-700 truncate">
+            {formatRupiah(stats.totalIncome)}
           </div>
+          <p className="text-[11px] text-gray-500 mt-1">Pembayaran order & setoran modal</p>
         </div>
 
-        {/* Card 3: Total Uang Keluar */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
+        {/* Total Expense */}
+        <div className="bg-white p-5 border border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wider uppercase text-gray-500">Total Uang Keluar</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-              <ArrowUpRight size={16} />
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Total Pengeluaran Kas
+            </span>
+            <TrendingDown size={18} className="text-rose-600" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-black tracking-tight text-rose-600">
-              -{formatRupiah(stats.totalExpense)}
-            </div>
-            <p className="mt-1 text-[11px] text-gray-500">
-              Ongkir kurir, restock, operasional & MDR
-            </p>
+          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-rose-700 truncate">
+            {formatRupiah(stats.totalExpense)}
           </div>
+          <p className="text-[11px] text-gray-500 mt-1">Restock, ongkir, gateway & ops</p>
         </div>
 
-        {/* Card 4: Menunggu Settlement */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
+        {/* Total Liquid Bank Balances */}
+        <div className="bg-neutral-50 p-5 border border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wider uppercase text-gray-500">Pending Settlement</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-              <Clock size={16} />
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-700">
+              Saldo Bank & Kas Riil
+            </span>
+            <Landmark size={18} className="text-blue-600" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-black tracking-tight text-amber-600">
-              {formatRupiah(stats.totalPending)}
-            </div>
-            <p className="mt-1 text-[11px] text-gray-500">
-              Pesanan belum dibayar oleh customer
-            </p>
+          <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-neutral-950 truncate">
+            {formatRupiah(stats.totalLiquidBalance)}
           </div>
+          <p className="text-[11px] text-gray-500 mt-1">Konsolidasi 4 rekening aktif</p>
         </div>
       </div>
 
-      {/* Main Filter & Table Container */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
-        {/* Navigation Tabs */}
-        <div className="flex items-center border-b border-gray-200 px-4 sm:px-6 overflow-x-auto gap-1 sm:gap-2">
+      {/* Main Tabs Container */}
+      <div className="bg-white border border-gray-200 overflow-hidden">
+        {/* Tab Headers */}
+        <div className="flex items-center border-b border-gray-200 overflow-x-auto bg-gray-50">
           <button
             type="button"
-            onClick={() => setActiveTab('all')}
-            className={`py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'all'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+            onClick={() => setActiveMainTab('cashbook')}
+            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
+              activeMainTab === 'cashbook'
+                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
+                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            Semua Transaksi ({transactions.length})
+            <Wallet size={16} />
+            <span>Buku Kas & Jurnal Mutasi ({filteredTransactions.length})</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setActiveTab('income')}
-            className={`py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'income'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+            onClick={() => setActiveMainTab('accounts')}
+            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
+              activeMainTab === 'accounts'
+                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
+                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Uang Masuk (Income)
+            <Landmark size={16} />
+            <span>Rekening Kas & Bank ({financialAccounts.length})</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setActiveTab('expense')}
-            className={`py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'expense'
-                ? 'border-rose-500 text-rose-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+            onClick={() => setActiveMainTab('coa')}
+            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
+              activeMainTab === 'coa'
+                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
+                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-            Uang Keluar (Expense)
+            <BookOpen size={16} />
+            <span>Bagan Akun (Chart of Accounts) ({chartOfAccounts.length})</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setActiveTab('pending')}
-            className={`py-3.5 px-3 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'pending'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-900'
+            onClick={() => setActiveMainTab('cogs')}
+            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
+              activeMainTab === 'cogs'
+                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
+                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            Tertunda (Pending)
+            <PieChart size={16} />
+            <span>Analisis HPP & Margin Kotor</span>
           </button>
         </div>
 
-        {/* Filter Toolbar */}
-        <div className="p-4 sm:p-5 border-b border-gray-150 bg-gray-50/50 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nomor TRX, invoice, atau deskripsi..."
-              className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-gray-900"
-            />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={15} />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
+        {/* Tab 1: Cashbook & Transactions */}
+        {activeMainTab === 'cashbook' && (
+          <div>
+            {/* Filter Bar */}
+            <div className="p-4 sm:p-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white">
+              {/* Search input */}
+              <div className="relative flex-1 max-w-md">
+                <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari nomor TRX, invoice, keterangan, atau pelanggan..."
+                  className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
 
-          {/* Select Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Category Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
-            >
-              {transactionCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              {/* Controls */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Cashbook Sub-Filter */}
+                <select
+                  value={cashbookFilter}
+                  onChange={(e) => setCashbookFilter(e.target.value)}
+                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
+                >
+                  <option value="all">Semua Tipe Kas</option>
+                  <option value="income">Kas Masuk (Income)</option>
+                  <option value="expense">Kas Keluar (Expense)</option>
+                  <option value="pending">Menunggu Pembayaran (Pending)</option>
+                </select>
 
-            {/* Date Range Filter */}
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
-            >
-              <option value="all">Semua Waktu</option>
-              <option value="this_month">Bulan Ini (Sep 2026)</option>
-              <option value="30days">30 Hari Terakhir</option>
-              <option value="7days">7 Hari Terakhir</option>
-            </select>
+                {/* Category Filter */}
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
+                >
+                  {transactionCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
 
-            {(searchQuery || selectedCategory !== 'all' || dateRange !== 'all') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                  setDateRange('all');
-                }}
-                className="px-2.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-              >
-                Reset Filter
-              </button>
-            )}
-          </div>
-        </div>
+                {/* Date Filter */}
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
+                >
+                  <option value="all">Semua Tanggal</option>
+                  <option value="this_month">Bulan Ini</option>
+                  <option value="30days">30 Hari Terakhir</option>
+                  <option value="7days">7 Hari Terakhir</option>
+                </select>
 
-        {/* Transactions Content */}
-        {filteredTransactions.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-400 mb-3">
-              <FileText size={28} />
+                {(cashbookFilter !== 'all' || selectedCategory !== 'all' || dateRange !== 'all' || searchQuery) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCashbookFilter('all');
+                      setSelectedCategory('all');
+                      setDateRange('all');
+                      setSearchQuery('');
+                    }}
+                    className="px-2.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-rose-200"
+                  >
+                    Reset Filter
+                  </button>
+                )}
+              </div>
             </div>
-            <h3 className="text-base font-bold text-gray-800">Tidak ada transaksi ditemukan</h3>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1">
-              Tidak ada data yang cocok dengan kriteria filter saat ini. Silakan ubah kata kunci atau reset filter.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50/80 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">No. Transaksi / Waktu</th>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-gray-600">
+                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">No. Transaksi & Waktu</th>
                     <th className="py-3 px-4">Kategori & Keterangan</th>
-                    <th className="py-3 px-4">Referensi Pesanan</th>
-                    <th className="py-3 px-4">Metode Bayar</th>
+                    <th className="py-3 px-4">Metode Bayar / Rekening</th>
+                    <th className="py-3 px-4 text-right">Nominal (Rp)</th>
                     <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-right">Nominal</th>
-                    <th className="py-3 px-4 text-center">Aksi</th>
+                    <th className="py-3 px-4 text-center">Bukti / Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-150 text-xs">
-                  {filteredTransactions.map((tx) => {
-                    const isIncome = tx.type === 'income';
-                    const isPending = tx.status === 'pending';
+                <tbody className="divide-y divide-gray-200">
+                  {filteredTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-gray-500">
+                        Tidak ada transaksi yang cocok dengan filter yang dipilih.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTransactions.map((tx) => {
+                      const isIncome = tx.type === 'income';
+                      const isSettled = tx.status === 'settled';
 
-                    return (
-                      <tr key={tx.id} className="hover:bg-gray-50/80 transition-colors">
-                        {/* No. Transaksi & Waktu */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-gray-900 font-mono text-[11px]">
-                            {tx.transaction_number}
-                          </div>
-                          <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                            <Calendar size={11} />
-                            {new Date(tx.created_at).toLocaleDateString('id-ID', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}{' '}
-                            •{' '}
-                            {new Date(tx.created_at).toLocaleTimeString('id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        </td>
+                      return (
+                        <tr key={tx.id} className="hover:bg-neutral-50 transition-colors">
+                          {/* No TRX & Waktu */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-mono font-bold text-gray-900">{tx.transaction_number}</div>
+                            <div className="text-[11px] text-gray-500">
+                              {new Date(tx.created_at).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                            {tx.order_number && (
+                              <button
+                                type="button"
+                                onClick={() => onViewOrderDetail({ order_number: tx.order_number })}
+                                className="text-[10px] font-mono text-blue-700 hover:underline flex items-center gap-0.5 mt-0.5"
+                              >
+                                <span>Ref: {tx.order_number}</span>
+                                <ExternalLink size={10} />
+                              </button>
+                            )}
+                          </td>
 
-                        {/* Kategori & Keterangan */}
-                        <td className="py-3.5 px-4 max-w-xs">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span
-                              className={`inline-block w-1.5 h-1.5 rounded-full ${
-                                isIncome ? 'bg-emerald-500' : 'bg-rose-500'
-                              }`}
-                            ></span>
-                            <span className="font-bold text-gray-800 text-[11px]">
-                              {tx.category_label || tx.category}
+                          {/* Kategori & Deskripsi */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-gray-900">{tx.category_label}</div>
+                            <div className="text-[11px] text-gray-600 line-clamp-1 max-w-sm">
+                              {tx.description}
+                            </div>
+                            {tx.customer_name && (
+                              <div className="text-[10px] text-gray-400 mt-0.5">Oleh: {tx.customer_name}</div>
+                            )}
+                          </td>
+
+                          {/* Metode Pembayaran */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-gray-800">{tx.payment_method}</div>
+                          </td>
+
+                          {/* Nominal */}
+                          <td className="py-3.5 px-4 text-right font-mono font-black text-sm">
+                            <span className={isIncome ? 'text-emerald-700' : 'text-rose-700'}>
+                              {isIncome ? '+' : '-'} {formatRupiah(tx.amount)}
                             </span>
-                          </div>
-                          <p className="text-gray-600 line-clamp-2 leading-relaxed">
-                            {tx.description}
-                          </p>
-                        </td>
+                          </td>
 
-                        {/* Referensi Pesanan */}
-                        <td className="py-3.5 px-4">
-                          {tx.order_number ? (
+                          {/* Status */}
+                          <td className="py-3.5 px-4 text-center">
+                            {isSettled ? (
+                              <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                Berhasil
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Aksi */}
+                          <td className="py-3.5 px-4 text-center">
                             <button
                               type="button"
-                              onClick={() => onViewOrderDetail({ order_number: tx.order_number, id: tx.order_id })}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 font-mono text-[11px] font-bold transition-colors cursor-pointer"
-                              title="Buka detail pesanan ini"
+                              onClick={() => setReceiptModalTx(tx)}
+                              className="p-1.5 text-gray-600 hover:text-neutral-950 hover:bg-gray-100 border border-gray-300 transition-colors cursor-pointer"
+                              title="Cetak Kuitansi / Bukti Kas"
                             >
-                              <span>{tx.order_number}</span>
-                              <ExternalLink size={10} />
+                              <Printer size={14} />
                             </button>
-                          ) : (
-                            <span className="text-gray-400 italic text-[11px]">Non-pesanan</span>
-                          )}
-                        </td>
-
-                        {/* Metode Bayar */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-medium text-gray-800 flex items-center gap-1">
-                            <CreditCard size={12} className="text-gray-400" />
-                            <span>{tx.payment_method || '-'}</span>
-                          </div>
-                          {tx.customer_name && (
-                            <div className="text-[10px] text-gray-500 mt-0.5">
-                              Oleh: {tx.customer_name}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 px-4 text-center">
-                          {isPending ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                              <Clock size={10} />
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 size={10} />
-                              Selesai
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Nominal */}
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                          <div
-                            className={`font-black text-sm ${
-                              isIncome ? 'text-emerald-600' : 'text-rose-600'
-                            }`}
-                          >
-                            {isIncome ? '+' : '-'}
-                            {formatRupiah(tx.amount)}
-                          </div>
-                          <div className="text-[10px] text-gray-400 uppercase font-semibold">
-                            {isIncome ? 'Kas Masuk' : 'Kas Keluar'}
-                          </div>
-                        </td>
-
-                        {/* Aksi */}
-                        <td className="py-3.5 px-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => setReceiptModalTx(tx)}
-                            className="p-1.5 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
-                            title="Lihat Kuitansi / Bukti Kas"
-                          >
-                            <Printer size={15} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
-
-            {/* Mobile Card-Based Listing (< md) */}
-            <div className="md:hidden divide-y divide-gray-150">
-              {filteredTransactions.map((tx) => {
-                const isIncome = tx.type === 'income';
-                const isPending = tx.status === 'pending';
-
-                return (
-                  <div key={tx.id} className="p-4 space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-mono text-[11px] font-bold text-gray-800">
-                        {tx.transaction_number}
-                      </div>
-                      {isPending ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                          <Clock size={10} />
-                          Pending
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 size={10} />
-                          Selesai
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-xs font-bold text-gray-900">
-                          {tx.category_label || tx.category}
-                        </div>
-                        <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
-                          {tx.description}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div
-                          className={`font-black text-sm ${
-                            isIncome ? 'text-emerald-600' : 'text-rose-600'
-                          }`}
-                        >
-                          {isIncome ? '+' : '-'}
-                          {formatRupiah(tx.amount)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1 border-t border-gray-100">
-                      <div className="flex items-center gap-1.5">
-                        <CreditCard size={12} />
-                        <span>{tx.payment_method}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {tx.order_number && (
-                          <button
-                            type="button"
-                            onClick={() => onViewOrderDetail({ order_number: tx.order_number, id: tx.order_id })}
-                            className="text-amber-700 font-bold hover:underline"
-                          >
-                            {tx.order_number}
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setReceiptModalTx(tx)}
-                          className="text-gray-700 font-semibold p-1 hover:text-amber-600"
-                          title="Lihat Kuitansi"
-                        >
-                          <Printer size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+          </div>
         )}
 
-        {/* Table Footer / Summary Bar */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
-          <div>
-            Menampilkan <span className="font-bold text-gray-900">{filteredTransactions.length}</span> dari{' '}
-            <span className="font-bold text-gray-900">{transactions.length}</span> catatan keuangan.
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="font-medium">
-              Subtotal Baris Tampil:
-            </span>
-            <span className="font-bold text-emerald-700">
-              +{formatRupiah(filteredTransactions.filter(t => t.type === 'income' && t.status === 'settled').reduce((s, i) => s + i.amount, 0))}
-            </span>
-            <span>/</span>
-            <span className="font-bold text-rose-700">
-              -{formatRupiah(filteredTransactions.filter(t => t.type === 'expense' && t.status === 'settled').reduce((s, i) => s + i.amount, 0))}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* MODAL: Catat Transaksi Baru Manual */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-150 bg-neutral-900 text-white">
-              <div className="flex items-center gap-2">
-                <PlusCircle className="text-amber-400" size={18} />
-                <h3 className="font-bold text-sm sm:text-base">Catat Transaksi Kas Baru</h3>
+        {/* Tab 2: Rekening Kas & Bank */}
+        {activeMainTab === 'accounts' && (
+          <div className="p-5 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50 p-4 border border-gray-200">
+              <div>
+                <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
+                  Daftar Rekening Kas & Rekening Bank Toko
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Saldo riil tersimpan pada rekening koran dan gateway yang siap digunakan untuk operasional.
+                </p>
               </div>
               <button
                 type="button"
+                onClick={() => setIsTransferModalOpen(true)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 text-amber-400 hover:bg-neutral-800 font-extrabold text-xs transition-colors cursor-pointer shrink-0"
+              >
+                <ArrowRightLeft size={14} />
+                <span>Pindah Dana / Transfer</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {financialAccounts.map((acc) => (
+                <div key={acc.id} className="bg-white border border-gray-300 p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-neutral-900 text-amber-400">
+                        <Landmark size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-neutral-950">{acc.name}</h4>
+                        <div className="text-[11px] font-mono text-gray-500">{acc.bank_name}</div>
+                      </div>
+                    </div>
+                    {acc.is_default_payout && (
+                      <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                        Utama Payout
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-3 bg-neutral-50 border border-gray-200 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase font-semibold">No. Rekening / ID:</span>
+                      <div className="font-mono font-bold text-gray-900 text-xs">{acc.account_number}</div>
+                      <div className="text-[10px] text-gray-500">a.n {acc.account_holder}</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-gray-400 uppercase font-semibold">Saldo Likuid:</span>
+                      <div className="font-mono font-black text-lg text-emerald-700">{formatRupiah(acc.balance)}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-2 border-t border-gray-150">
+                    <span>Status Rekening: <span className="font-bold text-emerald-700 uppercase">Aktif & Siap Pakai</span></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferFrom(acc.id);
+                        setIsTransferModalOpen(true);
+                      }}
+                      className="text-neutral-900 font-bold hover:underline cursor-pointer"
+                    >
+                      Kirim Dana &rarr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Chart of Accounts (COA) */}
+        {activeMainTab === 'coa' && (
+          <div className="p-5 space-y-5">
+            <div className="bg-neutral-50 p-4 border border-gray-200">
+              <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
+                Bagan Akun Standar (Standard Chart of Accounts)
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Struktur klasifikasi buku besar akuntansi ganda (*double-entry*) untuk menyusun Neraca dan Laporan Laba Rugi toko.
+              </p>
+            </div>
+
+            <div className="border border-gray-200 overflow-x-auto">
+              <table className="w-full text-xs text-left text-gray-600">
+                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Kode Akun</th>
+                    <th className="py-3 px-4">Nama Akun Buku Besar</th>
+                    <th className="py-3 px-4">Kelompok Laporan</th>
+                    <th className="py-3 px-4 text-center">Posisi Normal</th>
+                    <th className="py-3 px-4 text-right">Saldo Terakhir</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {chartOfAccounts.map((coa, idx) => (
+                    <tr key={idx} className="hover:bg-neutral-50">
+                      <td className="py-3 px-4 font-mono font-bold text-neutral-950">{coa.code}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900">{coa.name}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-gray-100 text-gray-800 border border-gray-300">
+                          {coa.group}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {coa.type === 'debit' ? (
+                          <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-blue-800 bg-blue-50 border border-blue-200">
+                            DEBIT
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-purple-800 bg-purple-50 border border-purple-200">
+                            KREDIT
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-black text-gray-900">
+                        {formatRupiah(coa.balance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Analisis HPP & Margin Laba Kotor */}
+        {activeMainTab === 'cogs' && (
+          <div className="p-5 space-y-6">
+            <div className="bg-neutral-50 p-4 border border-gray-200">
+              <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
+                Analisis Laba Kotor & Biaya Pokok Penjualan (COGS / HPP)
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Perhitungan keuntungan kotor toko setelah memperhitungkan modal pembelian produk olahraga dari pabrik/vendor.
+              </p>
+            </div>
+
+            {/* 3 Metric Cards for COGS */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white p-5 border border-gray-200">
+                <span className="text-[11px] font-bold text-gray-500 uppercase">Total Omset Penjualan</span>
+                <div className="text-2xl font-black font-mono text-neutral-950 mt-1">
+                  {formatRupiah(cogsAnalytics.grossRevenue)}
+                </div>
+                <p className="text-[10px] text-gray-500 mt-0.5">Nilai transaksi produk terjual</p>
+              </div>
+
+              <div className="bg-white p-5 border border-gray-200">
+                <span className="text-[11px] font-bold text-rose-700 uppercase">Beban Pokok Penjualan (HPP)</span>
+                <div className="text-2xl font-black font-mono text-rose-700 mt-1">
+                  {formatRupiah(cogsAnalytics.totalCogs)}
+                </div>
+                <p className="text-[10px] text-gray-500 mt-0.5">Modal beli produk dari vendor</p>
+              </div>
+
+              <div className="bg-neutral-900 text-white p-5 border border-neutral-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-amber-400 uppercase">Laba Kotor (Gross Profit)</span>
+                  <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-500 text-white">
+                    {cogsAnalytics.grossMarginPct}% Margin
+                  </span>
+                </div>
+                <div className="text-2xl font-black font-mono text-amber-400 mt-1">
+                  {formatRupiah(cogsAnalytics.grossProfit)}
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Omset dikurangi HPP modal</p>
+              </div>
+            </div>
+
+            {/* Category Performance Table */}
+            <div className="border border-gray-200 overflow-x-auto">
+              <table className="w-full text-xs text-left text-gray-600">
+                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Kategori Produk</th>
+                    <th className="py-3 px-4 text-right">Unit Terjual</th>
+                    <th className="py-3 px-4 text-right">Omset Penjualan</th>
+                    <th className="py-3 px-4 text-right">Beban Pokok (HPP)</th>
+                    <th className="py-3 px-4 text-right">Laba Kotor (Profit)</th>
+                    <th className="py-3 px-4 text-center">Margin %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {cogsAnalytics.categoryBreakdown.map((cat, idx) => (
+                    <tr key={idx} className="hover:bg-neutral-50">
+                      <td className="py-3.5 px-4 font-bold text-gray-900">{cat.category_name}</td>
+                      <td className="py-3.5 px-4 text-right font-mono">{cat.units_sold} unit</td>
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-neutral-950">
+                        {formatRupiah(cat.revenue)}
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-mono text-rose-700">
+                        {formatRupiah(cat.cogs)}
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-mono font-black text-emerald-700">
+                        {formatRupiah(cat.gross_profit)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          {cat.margin_pct}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal: Tambah Transaksi Manual */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-lg border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="font-black text-sm uppercase tracking-wide text-neutral-950">
+                Pencatatan Transaksi Manual
+              </h3>
+              <button
+                type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-neutral-400 hover:text-white cursor-pointer"
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddTransaction} className="p-4 sm:p-5 space-y-4 text-xs sm:text-sm">
-              {formSuccessMessage && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                  <span>{formSuccessMessage}</span>
-                </div>
-              )}
+            {formSuccessMessage && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-600" />
+                <span>{formSuccessMessage}</span>
+              </div>
+            )}
 
-              {/* Tipe Transaksi (Income / Expense) */}
+            <form onSubmit={handleSaveTransaction} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-gray-700 mb-1.5">Jenis Transaksi</label>
+                <label className="block font-bold text-gray-700 mb-1">Tipe Transaksi</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormType('income');
-                      setFormCategory('order_payment');
-                    }}
-                    className={`py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
-                      formType === 'income'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500/20'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    onClick={() => setFormType('income')}
+                    className={`py-2 text-center font-bold border transition-colors cursor-pointer ${
+                      formType === 'income' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-gray-300 text-gray-700'
                     }`}
                   >
-                    <ArrowDownLeft size={16} className="text-emerald-600" />
-                    <span>Uang Masuk (Income)</span>
+                    + Pemasukan (Income)
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormType('expense');
-                      setFormCategory('operational');
-                    }}
-                    className={`py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
-                      formType === 'expense'
-                        ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-500/20'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    onClick={() => setFormType('expense')}
+                    className={`py-2 text-center font-bold border transition-colors cursor-pointer ${
+                      formType === 'expense' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-gray-300 text-gray-700'
                     }`}
                   >
-                    <ArrowUpRight size={16} className="text-rose-600" />
-                    <span>Uang Keluar (Expense)</span>
+                    - Pengeluaran (Expense)
                   </button>
                 </div>
               </div>
 
-              {/* Kategori */}
               <div>
-                <label className="block font-bold text-gray-700 mb-1.5">Kategori Transaksi</label>
+                <label className="block font-bold text-gray-700 mb-1">Kategori Transaksi</label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-medium text-gray-800"
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
                 >
-                  {formType === 'income' ? (
-                    <>
-                      <option value="order_payment">Pembayaran Pesanan</option>
-                      <option value="capital_deposit">Modal / Setoran Kas</option>
-                      <option value="other_income">Pendapatan Lainnya</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="operational">Operasional & Kemasan</option>
-                      <option value="shipping_fee">Ongkos Kirim Kurir</option>
-                      <option value="gateway_fee">Biaya Payment Gateway (Midtrans)</option>
-                      <option value="restock">Pengadaan Stok Produk</option>
-                      <option value="refund">Pengembalian Dana (Refund)</option>
-                    </>
-                  )}
+                  {transactionCategories.filter(c => c.id !== 'all').map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Nominal (Rp) */}
               <div>
-                <label className="block font-bold text-gray-700 mb-1.5">Nominal (Rp)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 font-bold text-gray-400">Rp</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formAmount}
-                    onChange={(e) => setFormAmount(e.target.value)}
-                    placeholder="Contoh: 150000"
-                    required
-                    className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-bold text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Keterangan / Deskripsi */}
-              <div>
-                <label className="block font-bold text-gray-700 mb-1.5">Deskripsi / Catatan</label>
-                <textarea
-                  rows="2"
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Tuliskan keterangan detail transaksi..."
+                <label className="block font-bold text-gray-700 mb-1">Nominal (Rp)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formAmount}
+                  onChange={(e) => setFormAmount(e.target.value)}
+                  placeholder="Contoh: 150000"
                   required
-                  className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900"
-                ></textarea>
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-black text-gray-900"
+                />
               </div>
 
-              {/* Metode Pembayaran / Akun Kas */}
               <div>
-                <label className="block font-bold text-gray-700 mb-1.5">Metode / Akun Kas</label>
+                <label className="block font-bold text-gray-700 mb-1">Rekening / Kas Sumber</label>
                 <select
                   value={formPaymentMethod}
                   onChange={(e) => setFormPaymentMethod(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-medium text-gray-800"
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
                 >
-                  <option value="Kas Toko / Tunai">Kas Toko / Tunai</option>
-                  <option value="Kas Toko / QRIS">Kas Toko / QRIS</option>
-                  <option value="BCA Bisnis Transfer">BCA Bisnis Transfer</option>
-                  <option value="Bank Mandiri Transfer">Bank Mandiri Transfer</option>
-                  <option value="Saldo Ekspedisi SiCepat">Saldo Ekspedisi SiCepat</option>
-                  <option value="Midtrans Settlement Fee">Midtrans Settlement Fee</option>
+                  <option value="BCA Bisnis Transfer">BCA Bisnis Giro Operasional</option>
+                  <option value="Mandiri Transfer">Mandiri Utama Settlement Gateway</option>
+                  <option value="Kas Toko / Tunai">Kas Kecil Kasir Toko & Gudang</option>
                 </select>
               </div>
 
-              {/* Actions */}
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Keterangan Transaksi</label>
+                <textarea
+                  rows={2}
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="Jelaskan kebutuhan pengeluaran/pemasukan..."
+                  required
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
+                />
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2 font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer"
                 >
-                  Simpan Catatan
+                  Simpan Transaksi
                 </button>
               </div>
             </form>
@@ -851,122 +916,153 @@ export default function FinancialTransactionsPage({
         </div>
       )}
 
-      {/* MODAL: Kuitansi / Bukti Digital Transaksi */}
-      {receiptModalTx && (
+      {/* Modal: Transfer Antar Rekening */}
+      {isTransferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 bg-neutral-900 text-white">
-              <div className="flex items-center gap-2">
-                <FileText className="text-amber-400" size={18} />
-                <span className="font-bold text-xs uppercase tracking-wider">Kuitansi Kas Toko</span>
-              </div>
+          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="font-black text-sm uppercase tracking-wide text-neutral-950">
+                Transfer Antar Rekening Internal
+              </h3>
               <button
                 type="button"
-                onClick={() => setReceiptModalTx(null)}
-                className="text-neutral-400 hover:text-white cursor-pointer"
+                onClick={() => setIsTransferModalOpen(false)}
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Receipt Body */}
-            <div className="p-6 space-y-4 text-xs font-sans">
-              <div className="text-center pb-3 border-b border-dashed border-gray-300">
-                <div className="text-lg font-black tracking-tight text-neutral-900">
-                  TUSKO OFFICIAL STORE
-                </div>
-                <div className="text-[11px] text-gray-500 mt-0.5">
-                  Bukti Pencatatan Arus Kas Keuangan Resmi
-                </div>
-                <div className="text-[11px] font-mono text-gray-700 font-bold mt-1">
-                  {receiptModalTx.transaction_number}
-                </div>
-              </div>
-
-              {/* Rincian Baris */}
-              <div className="space-y-2 text-gray-700">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Tanggal & Waktu</span>
-                  <span className="font-medium text-gray-900">
-                    {new Date(receiptModalTx.created_at).toLocaleString('id-ID')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Jenis Transaksi</span>
-                  <span
-                    className={`font-bold uppercase ${
-                      receiptModalTx.type === 'income' ? 'text-emerald-700' : 'text-rose-700'
-                    }`}
-                  >
-                    {receiptModalTx.type === 'income' ? 'Uang Masuk (+)' : 'Uang Keluar (-)'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Kategori</span>
-                  <span className="font-semibold text-gray-900">
-                    {receiptModalTx.category_label || receiptModalTx.category}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Metode / Akun</span>
-                  <span className="font-medium text-gray-900">{receiptModalTx.payment_method}</span>
-                </div>
-                {receiptModalTx.order_number && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">No. Referensi Pesanan</span>
-                    <span className="font-mono font-bold text-amber-800">
-                      {receiptModalTx.order_number}
-                    </span>
-                  </div>
-                )}
-                {receiptModalTx.customer_name && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Pihak Terkait</span>
-                    <span className="font-medium text-gray-900">{receiptModalTx.customer_name}</span>
-                  </div>
-                )}
-                <div className="pt-2 border-t border-gray-200">
-                  <span className="text-gray-500 block mb-1">Catatan / Uraian:</span>
-                  <p className="p-2.5 bg-gray-50 rounded-xl text-gray-800 italic leading-relaxed border border-gray-200">
-                    "{receiptModalTx.description}"
-                  </p>
-                </div>
-              </div>
-
-              {/* Total Box */}
-              <div className="p-3.5 bg-neutral-900 text-white rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                  Jumlah Bersih
-                </span>
-                <span
-                  className={`text-base font-black ${
-                    receiptModalTx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'
-                  }`}
+            <form onSubmit={handleTransfer} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Dari Rekening Asal</label>
+                <select
+                  value={transferFrom}
+                  onChange={(e) => setTransferFrom(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
                 >
-                  {receiptModalTx.type === 'income' ? '+' : '-'}
-                  {formatRupiah(receiptModalTx.amount)}
-                </span>
+                  {financialAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} (Saldo: {formatRupiah(acc.balance)})
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="text-center text-[10px] text-gray-400 pt-1">
-                Tercatat otomatis dan tersinkronisasi dengan database Toko Online.
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Ke Rekening Tujuan</label>
+                <select
+                  value={transferTo}
+                  onChange={(e) => setTransferTo(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
+                >
+                  {financialAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} (Saldo: {formatRupiah(acc.balance)})
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            {/* Receipt Modal Footer */}
-            <div className="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Jumlah Nominal Transfer (Rp)</label>
+                <input
+                  type="number"
+                  min="1000"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="Contoh: 5000000"
+                  required
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-black text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Catatan Mutasi Internal</label>
+                <input
+                  type="text"
+                  value={transferNotes}
+                  onChange={(e) => setTransferNotes(e.target.value)}
+                  placeholder="Contoh: Isi kas kecil toko Cakung"
+                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setIsTransferModalOpen(false)}
+                  className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer"
+                >
+                  Konfirmasi Transfer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Cetak Bukti Kas / Kuitansi */}
+      {receiptModalTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <div>
+                <span className="font-black text-xs uppercase tracking-widest text-neutral-900">TUSKO ATHLETICS</span>
+                <h3 className="font-bold text-sm text-gray-700 mt-0.5">Bukti Transaksi Kas Masuk/Keluar</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setReceiptModalTx(null)}
-                className="px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="bg-neutral-50 p-4 border border-gray-200 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Nomor Transaksi:</span>
+                <span className="font-mono font-bold text-gray-900">{receiptModalTx.transaction_number}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tanggal:</span>
+                <span className="font-mono text-gray-800">{new Date(receiptModalTx.created_at).toLocaleString('id-ID')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tipe / Kategori:</span>
+                <span className="font-bold text-gray-900">{receiptModalTx.category_label}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Keterangan:</span>
+                <span className="text-gray-800 text-right max-w-[200px]">{receiptModalTx.description}</span>
+              </div>
+              <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-black">
+                <span>Total Nominal:</span>
+                <span className="text-amber-950 font-mono">{formatRupiah(receiptModalTx.amount)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setReceiptModalTx(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Tutup
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-colors cursor-pointer"
+                onClick={() => {
+                  window.print();
+                }}
+                className="px-4 py-2 text-xs font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <Printer size={14} />
                 <span>Cetak Bukti</span>

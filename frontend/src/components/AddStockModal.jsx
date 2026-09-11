@@ -90,7 +90,7 @@ export default function AddStockModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+      <div className="bg-white w-full max-w-xl rounded-none shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 bg-neutral-900 text-white shrink-0">
           <div className="flex items-center gap-2">
@@ -112,7 +112,7 @@ export default function AddStockModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs sm:text-sm">
           {successMessage && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-none text-emerald-800 text-xs font-semibold flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
               <span>{successMessage}</span>
             </div>
@@ -124,7 +124,7 @@ export default function AddStockModal({
             <select
               value={selectedProductId}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-medium text-gray-900 text-xs sm:text-sm"
+              className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 font-medium text-gray-900 text-xs sm:text-sm"
               required
             >
               {inventory.map((item) => (
@@ -137,11 +137,11 @@ export default function AddStockModal({
 
           {/* Current Product Preview Card */}
           {currentSelectedProduct && (
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-3">
+            <div className="p-3 bg-gray-50 rounded-none border border-gray-200 flex items-center gap-3">
               <img
                 src={currentSelectedProduct.image_url}
                 alt={currentSelectedProduct.name}
-                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 bg-white"
+                className="w-12 h-12 rounded-none object-cover border border-gray-200 shrink-0 bg-white"
               />
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-gray-900 line-clamp-1">{currentSelectedProduct.name}</div>
@@ -170,7 +170,7 @@ export default function AddStockModal({
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Contoh: 25"
                   required
-                  className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-bold text-gray-900"
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 font-bold text-gray-900"
                 />
                 <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-medium">unit</span>
               </div>
@@ -186,7 +186,7 @@ export default function AddStockModal({
                   value={costPrice}
                   onChange={(e) => setCostPrice(e.target.value)}
                   placeholder="Contoh: 150000"
-                  className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-bold text-gray-900"
+                  className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 font-bold text-gray-900"
                 />
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function AddStockModal({
 
           {/* Total Pembelian Summary Box */}
           {totalCost > 0 && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs font-semibold text-amber-900">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-none flex items-center justify-between text-xs font-semibold text-amber-900">
               <span className="flex items-center gap-1.5">
                 <DollarSign size={15} className="text-amber-600" />
                 Total Nilai Pengadaan Barang:
@@ -210,7 +210,7 @@ export default function AddStockModal({
               <select
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 font-medium text-gray-800 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 font-medium text-gray-800 text-xs"
               >
                 {mockSuppliers.map((s, idx) => (
                   <option key={idx} value={s}>
@@ -227,7 +227,7 @@ export default function AddStockModal({
                 value={poNumber}
                 onChange={(e) => setPoNumber(e.target.value)}
                 placeholder="PO/2026/..."
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-mono text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 text-gray-900 font-mono text-xs"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function AddStockModal({
                 value={warehouseBin}
                 onChange={(e) => setWarehouseBin(e.target.value)}
                 placeholder="Gudang A - Rak B02"
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
               />
             </div>
 
@@ -251,7 +251,7 @@ export default function AddStockModal({
                 type="date"
                 value={arrivalDate}
                 onChange={(e) => setArrivalDate(e.target.value)}
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
               />
             </div>
           </div>
@@ -265,7 +265,7 @@ export default function AddStockModal({
                 value={operator}
                 onChange={(e) => setOperator(e.target.value)}
                 placeholder="Nama pemeriksa"
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
               />
             </div>
 
@@ -276,19 +276,19 @@ export default function AddStockModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Batch baru, packaging aman, QC lolos"
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-amber-500 text-gray-900 text-xs"
               />
             </div>
           </div>
 
           {/* Sync to Cashflow Checkbox */}
-          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+          <div className="p-3 bg-neutral-50 rounded-none border border-neutral-200">
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={syncToCashflow}
                 onChange={(e) => setSyncToCashflow(e.target.checked)}
-                className="mt-0.5 rounded text-amber-500 focus:ring-amber-400 w-4 h-4 cursor-pointer"
+                className="mt-0.5 rounded-none text-amber-500 focus:ring-amber-400 w-4 h-4 cursor-pointer"
               />
               <div>
                 <div className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
@@ -307,13 +307,13 @@ export default function AddStockModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-none transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 rounded-none shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <PlusCircle size={15} />
               <span>Simpan & Tambah Stok</span>

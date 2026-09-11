@@ -27,6 +27,7 @@ import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
 import AdminDashboardPage from './components/AdminDashboardPage';
+import ProcurementPage from './components/ProcurementPage';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
@@ -45,6 +46,7 @@ const VALID_VIEWS = [
   'order-success',
   'orders',
   'order-detail',
+  'procurement',
   'transactions',
   'stock',
   'templates',
@@ -66,6 +68,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/products') return 'products-admin';
     if (rawPath === '/admin/stock') return 'stock';
     if (rawPath === '/admin/orders') return 'orders';
+    if (rawPath === '/admin/procurement') return 'procurement';
     if (rawPath === '/admin/transactions') return 'transactions';
     if (rawPath === '/admin/expeditions') return 'expeditions';
     if (rawPath === '/admin/templates') return 'templates';
@@ -273,6 +276,10 @@ export default function App() {
       if (window.location.pathname !== '/admin/stock') {
         window.history.pushState(null, '', '/admin/stock');
       }
+    } else if (currentView === 'procurement') {
+      if (window.location.pathname !== '/admin/procurement') {
+        window.history.pushState(null, '', '/admin/procurement');
+      }
     } else if (currentView === 'orders' && currentUser?.role === 'admin') {
       if (window.location.pathname !== '/admin/orders') {
         window.history.pushState(null, '', '/admin/orders');
@@ -308,9 +315,10 @@ export default function App() {
   // Listener navigasi riwayat browser (Back/Forward) via popstate dan hashchange
   useEffect(() => {
     const handleLocationChange = () => {
-      const viewFromPathOrHash = getViewFromPathOrHash();
-      const targetView = viewFromPathOrHash || 'catalog';
-      setCurrentView((prev) => (prev !== targetView ? targetView : prev));
+      const detectedView = getViewFromPathOrHash();
+      if (detectedView && VALID_VIEWS.includes(detectedView)) {
+        setCurrentView(detectedView);
+      }
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -335,14 +343,14 @@ export default function App() {
     }
   }, [currentView, currentUser]);
 
-  // Total items in cart
-  const cartTotalCount = useMemo(() => {
+  // Total quantity in cart
+  const cartItemCount = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   }, [cart]);
 
   // Cek apakah halaman saat ini adalah bagian dari Admin Panel
   const isAdminView = useMemo(() => {
-    const adminCoreViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    const adminCoreViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'procurement', 'templates', 'expeditions', 'transactions'];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
@@ -1053,6 +1061,14 @@ export default function App() {
               setTransactions(prev => [newFinancialTx, ...prev]);
               setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${tx.amount.toLocaleString('id-ID')})!`);
             }}
+          />
+        ) : currentView === 'procurement' ? (
+          <ProcurementPage
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+            onBackToDashboard={() => setCurrentView('admin-dashboard')}
           />
         ) : currentView === 'templates' ? (
           <TemplateManagementPage

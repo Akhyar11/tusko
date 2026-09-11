@@ -70,9 +70,9 @@ export default function LowStockAlertWidget({
 
   if (stats.totalCritical === 0) {
     return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4">
+      <div className="bg-emerald-50 border border-emerald-200 rounded-none p-4 sm:p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+          <div className="w-10 h-10 rounded-none bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
             <CheckCircle2 size={22} />
           </div>
           <div>
@@ -85,7 +85,7 @@ export default function LowStockAlertWidget({
         <button
           type="button"
           onClick={onViewAllStock}
-          className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shrink-0"
+          className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-none transition-colors cursor-pointer shrink-0"
         >
           Lihat Katalog
         </button>
@@ -96,7 +96,7 @@ export default function LowStockAlertWidget({
   // Compact version (misal untuk sidebar atau preview widget)
   if (isCompact) {
     return (
-      <div className="bg-amber-50/80 border border-amber-300/80 rounded-2xl p-4 space-y-3 shadow-2xs">
+      <div className="bg-amber-50/80 border border-amber-300/80 rounded-none p-4 space-y-3 shadow-2xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-900 font-black text-xs uppercase tracking-wide">
             <AlertTriangle size={16} className="text-amber-600" />
@@ -124,7 +124,7 @@ export default function LowStockAlertWidget({
               <button
                 type="button"
                 onClick={() => onRestockProduct(item)}
-                className="px-2 py-1 bg-amber-400 hover:bg-amber-300 text-neutral-950 text-[10px] font-extrabold rounded-lg shrink-0 cursor-pointer"
+                className="px-2 py-1 bg-amber-400 hover:bg-amber-300 text-neutral-950 text-[10px] font-extrabold rounded-none shrink-0 cursor-pointer"
               >
                 Restock
               </button>
@@ -137,11 +137,11 @@ export default function LowStockAlertWidget({
 
   // Full Banner / Interactive Card Version
   return (
-    <div className="bg-gradient-to-r from-amber-50 via-orange-50/40 to-amber-50/20 border border-amber-300 rounded-2xl shadow-xs overflow-hidden">
+    <div className="bg-gradient-to-r from-amber-50 via-orange-50/40 to-amber-50/20 border border-amber-300 rounded-none shadow-xs overflow-hidden">
       {/* Header Bar */}
       <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/70">
         <div className="flex items-start sm:items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center font-black shadow-xs shrink-0">
+          <div className="w-10 h-10 rounded-none bg-amber-500 text-neutral-950 flex items-center justify-center font-black shadow-xs shrink-0">
             <ShieldAlert size={22} />
           </div>
           <div>
@@ -149,7 +149,7 @@ export default function LowStockAlertWidget({
               <h3 className="text-base font-black text-amber-950 tracking-tight">
                 Peringatan Stok Menipis & Kritis
               </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-none text-[10px] font-extrabold bg-rose-600 text-white uppercase tracking-wider">
                 {stats.totalCritical} SKU Kritis
               </span>
             </div>
@@ -171,11 +171,11 @@ export default function LowStockAlertWidget({
         {/* Right Controls */}
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
           {/* Filter Pills */}
-          <div className="flex items-center bg-white p-0.5 rounded-xl border border-amber-300/80 text-[11px] font-bold">
+          <div className="flex items-center bg-white p-0.5 rounded-none border border-amber-300/80 text-[11px] font-bold">
             <button
               type="button"
               onClick={() => setAlertFilter('all')}
-              className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-none transition-colors cursor-pointer ${
                 alertFilter === 'all'
                   ? 'bg-amber-500 text-neutral-950 font-black'
                   : 'text-gray-600 hover:text-gray-900'
@@ -186,7 +186,7 @@ export default function LowStockAlertWidget({
             <button
               type="button"
               onClick={() => setAlertFilter('out_of_stock')}
-              className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-none transition-colors cursor-pointer ${
                 alertFilter === 'out_of_stock'
                   ? 'bg-rose-600 text-white font-black'
                   : 'text-gray-600 hover:text-gray-900'
@@ -197,7 +197,7 @@ export default function LowStockAlertWidget({
             <button
               type="button"
               onClick={() => setAlertFilter('low_stock')}
-              className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-none transition-colors cursor-pointer ${
                 alertFilter === 'low_stock'
                   ? 'bg-amber-600 text-white font-black'
                   : 'text-gray-600 hover:text-gray-900'
@@ -210,7 +210,7 @@ export default function LowStockAlertWidget({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 text-amber-800 hover:bg-amber-200/50 rounded-xl transition-colors cursor-pointer"
+            className="p-1.5 text-amber-800 hover:bg-amber-200/50 rounded-none transition-colors cursor-pointer"
             title={isExpanded ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
           >
             {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -222,7 +222,7 @@ export default function LowStockAlertWidget({
       {isExpanded && (
         <div className="p-4 sm:p-5 space-y-4">
           {/* Smart Reorder Recommendation Banner */}
-          <div className="p-3.5 bg-white/90 backdrop-blur-xs rounded-xl border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 bg-white/90 backdrop-blur-xs rounded-none border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 text-gray-700">
               <Sparkles size={16} className="text-amber-500 shrink-0" />
               <div>
@@ -247,13 +247,13 @@ export default function LowStockAlertWidget({
               return (
                 <div
                   key={item.id}
-                  className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs flex flex-col justify-between hover:border-amber-400 transition-all gap-3"
+                  className="bg-white p-3.5 rounded-none border border-amber-200 shadow-2xs flex flex-col justify-between hover:border-amber-400 transition-all gap-3"
                 >
                   <div className="flex items-start gap-3">
                     <img
                       src={item.image_url}
                       alt={item.name}
-                      className="w-14 h-14 rounded-lg object-cover border border-gray-200 shrink-0 bg-gray-50"
+                      className="w-14 h-14 rounded-none object-cover border border-gray-200 shrink-0 bg-gray-50"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
@@ -261,11 +261,11 @@ export default function LowStockAlertWidget({
                           {item.sku}
                         </span>
                         {isOutOfStock ? (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
+                          <span className="px-2 py-0.5 rounded-none text-[9px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
                             Stok Habis
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
+                          <span className="px-2 py-0.5 rounded-none text-[9px] font-black uppercase bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
                             Menipis
                           </span>
                         )}
@@ -300,7 +300,7 @@ export default function LowStockAlertWidget({
                     <button
                       type="button"
                       onClick={() => onRestockProduct(item)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-amber-400 text-xs font-extrabold rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-amber-400 text-xs font-extrabold rounded-none shadow-xs transition-colors cursor-pointer shrink-0"
                     >
                       <PlusCircle size={13} />
                       <span>Restock</span>

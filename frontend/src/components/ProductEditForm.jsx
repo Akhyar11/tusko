@@ -16,7 +16,8 @@ import {
   Truck, 
   Eye,
   Info,
-  Edit3
+  Edit3,
+  Grid
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
@@ -28,12 +29,12 @@ export default function ProductEditForm({
 }) {
   if (!product) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-gray-200">
+      <div className="p-8 text-center bg-white border border-gray-200">
         <p className="text-sm font-bold text-gray-700">Pilih produk yang ingin diedit.</p>
         <button
           type="button"
           onClick={onCancel}
-          className="mt-3 px-4 py-2 bg-amber-500 text-neutral-950 font-black text-xs rounded-xl"
+          className="mt-3 px-4 py-2 bg-amber-400 text-neutral-950 font-black text-xs border border-amber-500 cursor-pointer"
         >
           Kembali ke Daftar
         </button>
@@ -158,26 +159,38 @@ export default function ProductEditForm({
   };
 
   // Variant helper
-  const handleUpdateVariantStock = (idx, newStock) => {
+  const handleUpdateVariant = (index, field, val) => {
     const updated = [...variantsList];
-    updated[idx] = { ...updated[idx], stock: Math.max(0, Number(newStock)) };
+    updated[index][field] = field === 'price' || field === 'stock' ? Number(val) : val;
     setVariantsList(updated);
   };
 
-  const handleUpdateVariantPrice = (idx, newPrice) => {
-    const updated = [...variantsList];
-    updated[idx] = { ...updated[idx], price: Math.max(0, Number(newPrice)) };
-    setVariantsList(updated);
+  const handleRemoveVariant = (index) => {
+    setVariantsList(variantsList.filter((_, i) => i !== index));
+  };
+
+  const handleAddVariantRow = () => {
+    setVariantsList([
+      ...variantsList,
+      {
+        id: `v_new_${Date.now()}`,
+        sku: `${sku || 'TSK'}-NEW`,
+        color: 'Standar',
+        size: 'All Size',
+        price: Number(price) || 0,
+        stock: 10
+      }
+    ]);
   };
 
   // Submit Handler
   const handleSubmit = (targetStatus = status) => {
     if (!name.trim()) {
-      alert('Nama produk tidak boleh kosong!');
+      alert('Nama produk wajib diisi!');
       return;
     }
 
-    // Build specifications dictionary
+    // Build specs dictionary
     const specificationsObj = {};
     specList.forEach(item => {
       if (item.key.trim() && item.value.trim()) {
@@ -189,7 +202,7 @@ export default function ProductEditForm({
       ...product,
       name: name.trim(),
       category_id: Number(categoryId),
-      sku: sku.trim() || product.sku,
+      sku: sku.trim(),
       weight: Number(weight) || 250,
       location,
       free_shipping: freeShipping,
@@ -200,9 +213,6 @@ export default function ProductEditForm({
       price: Number(price) || 0,
       original_price: Number(originalPrice) || Number(price) || 0,
       cost_price: Number(costPrice) || Math.round(Number(price) * 0.6),
-      discount_percentage: Number(originalPrice) > Number(price)
-        ? Math.round(((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100)
-        : 0,
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
       image_url: imageUrl.trim(),
@@ -217,176 +227,265 @@ export default function ProductEditForm({
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 border border-gray-200">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs font-semibold text-gray-500 hover:text-amber-600 flex items-center gap-1.5 mb-2 transition-colors cursor-pointer"
+            className="p-2 hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer border border-gray-300"
+            title="Kembali ke Daftar Produk"
           >
-            <ArrowLeft size={14} />
-            <span>Kembali ke Daftar Produk</span>
+            <ArrowLeft size={18} />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center font-black">
-              <Edit3 size={22} />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-neutral-900 text-amber-400">
+                Edit SKU: {product.sku}
+              </span>
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
-                Edit Produk: {product.name}
-              </h1>
-              <p className="text-xs text-gray-500">
-                Ubah informasi produk, sesuaikan harga jual, margin, stok varian, dan kelola status etalase.
-              </p>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight mt-0.5">
+              Edit Data Produk & Varian
+            </h1>
           </div>
         </div>
 
-        {/* Action Header Buttons */}
-        <div className="flex items-center gap-2.5">
+        {/* Header Actions */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={handleResetToOriginal}
-            className="px-3 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-            title="Reset ke data awal produk"
+            className="px-3 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+            title="Kembalikan data ke awal sebelum diedit"
           >
-            <RotateCcw size={13} />
-            <span>Reset</span>
+            <RotateCcw size={14} />
+            <span>Reset Perubahan</span>
           </button>
+
           <button
             type="button"
             onClick={onCancel}
-            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
           >
             Batal
           </button>
+
           <button
             type="button"
-            onClick={() => handleSubmit(status)}
-            className="px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            onClick={() => handleSubmit('active')}
+            className="px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 bg-amber-400 hover:bg-amber-300 border border-amber-500 shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <Save size={15} />
+            <Save size={14} />
             <span>Simpan Perubahan</span>
           </button>
         </div>
       </div>
 
-      {/* Main Grid: Form Sections */}
+      {/* Form Content (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols) */}
+        {/* Left 2 Cols */}
         <div className="lg:col-span-2 space-y-6">
           {/* Section 1: Informasi Dasar */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <Package size={16} className="text-amber-500" />
-              <span>Informasi Dasar Produk</span>
-            </div>
+              <span>1. Informasi Dasar Produk</span>
+            </h2>
 
-            {/* Nama Produk */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Nama Produk Lengkap <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Nama Lengkap Produk <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-gray-900 font-medium transition-all"
+                required
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-medium"
               />
             </div>
 
-            {/* Kategori & SKU */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Kategori Produk
-                </label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Kategori Produk</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold cursor-pointer"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold cursor-pointer"
                 >
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  SKU Induk (Kode Produk)
-                </label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Kode SKU Induk</label>
                 <input
                   type="text"
                   value={sku}
                   onChange={(e) => setSku(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-mono font-semibold"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-mono font-semibold"
                 />
               </div>
             </div>
 
-            {/* Bobot Paket & Lokasi */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Berat Pengiriman (Gram)
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={weight}
-                    onChange={(e) => setWeight(Math.max(1, Number(e.target.value)))}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold pr-12"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-gray-400 font-bold">gram</span>
-                </div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Berat Paket (Gram)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Kota Gudang / Asal Pengiriman
-                </label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Lokasi Pengiriman Toko</label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
                 />
               </div>
             </div>
 
-            {/* Deskripsi */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Deskripsi Produk
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Deskripsi Lengkap Produk</label>
               <textarea
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 leading-relaxed"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 leading-relaxed"
               />
             </div>
           </div>
 
-          {/* Section 2: Spesifikasi Produk */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-                <FileText size={16} className="text-amber-500" />
-                <span>Spesifikasi Produk</span>
+          {/* Section 2: Varian & Matriks Varian */}
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+              <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                <Grid size={16} className="text-amber-500" />
+                <span>2. Matriks Varian Produk</span>
+              </h2>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                  <input
+                    type="checkbox"
+                    checked={hasVariants}
+                    onChange={(e) => setHasVariants(e.target.checked)}
+                    className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                  />
+                  <span>Produk Bervarian</span>
+                </label>
+                {hasVariants && (
+                  <button
+                    type="button"
+                    onClick={handleAddVariantRow}
+                    className="px-2.5 py-1 bg-neutral-900 text-amber-400 text-xs font-bold border border-neutral-900 cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus size={12} />
+                    <span>Tambah Baris</span>
+                  </button>
+                )}
               </div>
+            </div>
+
+            {hasVariants && (
+              <div className="border border-gray-200 overflow-x-auto">
+                <table className="w-full text-left text-xs text-gray-600">
+                  <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-2.5 px-3">SKU Varian</th>
+                      <th className="py-2.5 px-3">Warna / Opsi</th>
+                      <th className="py-2.5 px-3">Ukuran / Size</th>
+                      <th className="py-2.5 px-3 text-right">Harga Khusus (Rp)</th>
+                      <th className="py-2.5 px-3 text-right">Stok Fisik</th>
+                      <th className="py-2.5 px-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {variantsList.map((v, idx) => (
+                      <tr key={idx} className="hover:bg-neutral-50">
+                        <td className="py-2 px-3">
+                          <input
+                            type="text"
+                            value={v.sku || ''}
+                            onChange={(e) => handleUpdateVariant(idx, 'sku', e.target.value)}
+                            className="w-full px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-xs"
+                          />
+                        </td>
+                        <td className="py-2 px-3">
+                          <input
+                            type="text"
+                            value={v.color || ''}
+                            onChange={(e) => handleUpdateVariant(idx, 'color', e.target.value)}
+                            className="w-full px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-xs"
+                          />
+                        </td>
+                        <td className="py-2 px-3">
+                          <input
+                            type="text"
+                            value={v.size || ''}
+                            onChange={(e) => handleUpdateVariant(idx, 'size', e.target.value)}
+                            className="w-full px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-xs"
+                          />
+                        </td>
+                        <td className="py-2 px-3 text-right">
+                          <input
+                            type="number"
+                            value={v.price || 0}
+                            onChange={(e) => handleUpdateVariant(idx, 'price', e.target.value)}
+                            className="w-28 px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-gray-900"
+                          />
+                        </td>
+                        <td className="py-2 px-3 text-right">
+                          <input
+                            type="number"
+                            value={v.stock || 0}
+                            onChange={(e) => handleUpdateVariant(idx, 'stock', e.target.value)}
+                            className="w-20 px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-gray-900"
+                          />
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveVariant(idx)}
+                            className="p-1 text-gray-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Section 3: Spesifikasi Teknis */}
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+              <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                <FileText size={16} className="text-amber-500" />
+                <span>3. Spesifikasi Teknis Produk</span>
+              </h2>
               <button
                 type="button"
                 onClick={handleAddSpecRow}
-                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold border border-gray-300 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <Plus size={13} />
+                <Plus size={12} />
                 <span>Tambah Baris</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {specList.map((spec, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <input
@@ -394,253 +493,162 @@ export default function ProductEditForm({
                     value={spec.key}
                     onChange={(e) => handleUpdateSpec(idx, 'key', e.target.value)}
                     placeholder="Parameter"
-                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-bold focus:outline-none focus:border-amber-500"
+                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-bold focus:outline-none focus:border-amber-500"
                   />
                   <input
                     type="text"
                     value={spec.value}
                     onChange={(e) => handleUpdateSpec(idx, 'value', e.target.value)}
                     placeholder="Nilai"
-                    className="flex-1 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-amber-500"
+                    className="flex-1 px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 focus:outline-none focus:border-amber-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveSpec(idx)}
-                    className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                    title="Hapus baris spesifikasi"
+                    className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Section 3: Varian Produk Eksisting */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-                <Layers size={16} className="text-amber-500" />
-                <span>Daftar Varian Produk ({variantsList.length})</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasVariants}
-                  onChange={(e) => setHasVariants(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
-                <span className="ml-2 text-xs font-bold text-gray-700">Aktifkan Varian</span>
-              </label>
-            </div>
-
-            {hasVariants && variantsList.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-3">SKU Varian</th>
-                      <th className="py-2.5 px-3">Kombinasi Opsi</th>
-                      <th className="py-2.5 px-3">Harga Khusus</th>
-                      <th className="py-2.5 px-3">Stok</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {variantsList.map((variant, idx) => (
-                      <tr key={variant.id || idx} className="hover:bg-gray-50/60">
-                        <td className="py-2.5 px-3 font-mono font-bold text-gray-700">
-                          {variant.sku || `VAR-${idx + 1}`}
-                        </td>
-                        <td className="py-2.5 px-3 text-gray-900 font-semibold">
-                          {[variant.color, variant.size, variant.sleeve].filter(Boolean).join(' • ')}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <input
-                            type="number"
-                            value={variant.price}
-                            onChange={(e) => handleUpdateVariantPrice(idx, e.target.value)}
-                            className="w-28 px-2.5 py-1 text-xs font-bold bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-amber-500"
-                          />
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <input
-                            type="number"
-                            value={variant.stock}
-                            onChange={(e) => handleUpdateVariantStock(idx, e.target.value)}
-                            className="w-20 px-2.5 py-1 text-xs font-black bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-amber-500"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500 italic">
-                Produk ini tidak memiliki varian bertingkat. Stok dan harga diatur secara terpusat pada form di samping.
-              </p>
-            )}
-          </div>
         </div>
 
-        {/* Right Column (1 Col) */}
+        {/* Right 1 Col: Pricing, Inventory & Status */}
         <div className="space-y-6">
           {/* Pricing & Stock Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <DollarSign size={16} className="text-amber-500" />
-              <span>Harga & Keuntungan</span>
-            </div>
+              <span>Harga & Modal HPP</span>
+            </h2>
 
-            {/* Harga Jual Ritel */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              <label className="block text-xs font-bold text-gray-700 mb-1">
                 Harga Jual Ritel (Rp) <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
+                min="0"
                 value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-extrabold"
+                onChange={(e) => setPrice(e.target.value)}
+                required
+                className="w-full px-3.5 py-2.5 text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-extrabold"
               />
             </div>
 
-            {/* Harga Asli & Diskon */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Harga Asli / Coret
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Harga Coret (Rp)</label>
                 <input
                   type="number"
+                  min="0"
                   value={originalPrice}
-                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium"
+                  onChange={(e) => setOriginalPrice(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-700 font-medium"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Diskon Otomatis
-                </label>
-                <div className="px-3 py-2 text-xs font-extrabold bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-center">
-                  {discountPercent > 0 ? `Hemat ${discountPercent}%` : 'Tanpa Diskon'}
+              {discountPercent > 0 && (
+                <div className="flex items-center justify-center bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black">
+                  Diskon {discountPercent}%
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Harga Modal / Pokok */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Harga Modal / Pokok (HPP)
-              </label>
+              <label className="block text-[11px] font-bold text-gray-600 mb-1">Harga Modal Beli / HPP (Rp)</label>
               <input
                 type="number"
+                min="0"
                 value={costPrice}
-                onChange={(e) => setCostPrice(Number(e.target.value))}
-                className="w-full px-3.5 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-semibold"
+                onChange={(e) => setCostPrice(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-semibold"
               />
-              <div className="mt-1.5 flex items-center justify-between text-[11px] text-gray-500 font-medium">
-                <span>Estimasi Laba Kotor:</span>
-                <span className="font-extrabold text-emerald-600">
-                  +{formatRupiah(marginInfo.profit)} ({marginInfo.marginPercent}%)
-                </span>
-              </div>
+              <p className="text-[10px] text-gray-500 mt-1">
+                Estimasi Gross Profit: <span className="font-bold text-emerald-700">{formatRupiah(marginInfo.profit)}</span> ({marginInfo.marginPercent}%)
+              </p>
             </div>
 
-            {/* Total Stok & Stok Minimum */}
-            <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Total Stok <span className="text-rose-500">*</span>
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Total Stok Fisik</label>
                 <input
                   type="number"
-                  disabled={hasVariants && variantsList.length > 0}
+                  min="0"
                   value={stock}
-                  onChange={(e) => setStock(Math.max(0, Number(e.target.value)))}
-                  className="w-full px-3 py-2 text-xs font-black bg-gray-50 border border-gray-200 rounded-xl text-gray-900 disabled:bg-gray-100"
+                  disabled={hasVariants}
+                  onChange={(e) => setStock(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-black bg-gray-50 border border-gray-300 text-gray-900 disabled:bg-gray-100"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Batas Min. Stok
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Safety Min</label>
                 <input
                   type="number"
+                  min="1"
                   value={stockMinimum}
-                  onChange={(e) => setStockMinimum(Math.max(1, Number(e.target.value)))}
-                  className="w-full px-3 py-2 text-xs font-bold bg-gray-50 border border-gray-200 rounded-xl text-gray-700"
+                  onChange={(e) => setStockMinimum(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-bold bg-gray-50 border border-gray-300 text-gray-700"
                 />
               </div>
             </div>
           </div>
 
-          {/* Media Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          {/* Media & Images Card */}
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <ImageIcon size={16} className="text-amber-500" />
-              <span>Foto Produk & Galeri</span>
-            </div>
+              <span>Foto & Galeri Produk</span>
+            </h2>
 
-            {/* Thumbnail URL Input */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                URL Foto Utama
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">URL Foto Utama</label>
               <input
                 type="text"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-mono"
+                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-mono"
               />
             </div>
 
-            {/* Live Thumbnail Preview */}
             {imageUrl && (
-              <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative aspect-video w-full overflow-hidden border border-gray-200 bg-gray-100">
+                <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>
             )}
 
-            {/* Galeri Tambahan */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Foto Galeri Tambahan ({galleryUrls.length})
-              </label>
-              <div className="flex gap-2 mb-2">
+            {/* Additional Gallery */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <label className="block text-[11px] font-bold text-gray-600">Tambah Foto Galeri (URL):</label>
+              <div className="flex gap-2">
                 <input
                   type="text"
                   value={newGalleryInput}
                   onChange={(e) => setNewGalleryInput(e.target.value)}
-                  placeholder="URL foto..."
-                  className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-mono"
+                  placeholder="https://..."
+                  className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleAddGalleryUrl}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold border border-gray-300 transition-colors cursor-pointer"
                 >
-                  + Tambah
+                  Tambah
                 </button>
               </div>
 
               {galleryUrls.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap pt-2">
                   {galleryUrls.map((url, idx) => (
-                    <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-200 group">
-                      <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                    <div key={idx} className="relative w-14 h-14 overflow-hidden border border-gray-200 group">
+                      <img src={url} alt="Thumb" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => handleRemoveGalleryUrl(idx)}
-                        className="absolute inset-0 bg-rose-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        title="Hapus foto"
+                        className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -651,56 +659,50 @@ export default function ProductEditForm({
             </div>
           </div>
 
-          {/* Status & Options Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-              <Tag size={16} className="text-amber-500" />
+          {/* Visibility Card */}
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
+              <Eye size={16} className="text-amber-500" />
               <span>Status & Visibilitas</span>
-            </div>
+            </h2>
 
-            {/* Status Live / Draft */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2">
-                Status Etalase
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Status Publikasi</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setStatus('active')}
-                  className={`py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`py-2 text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     status === 'active' 
-                      ? 'bg-emerald-500 text-neutral-950 font-black' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-emerald-600 text-white border-emerald-600 font-black' 
+                      : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-emerald-950"></span>
                   <span>🟢 Aktif (Live)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatus('inactive')}
-                  className={`py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`py-2 text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     status === 'inactive' 
-                      ? 'bg-gray-800 text-white font-black' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-gray-800 text-white border-gray-800 font-black' 
+                      : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-gray-400"></span>
                   <span>⚪ Nonaktif (Draft)</span>
                 </button>
               </div>
             </div>
 
-            {/* Checkbox Options */}
-            <div className="space-y-2 pt-2 border-t border-gray-100 text-xs">
+            <div className="space-y-2 pt-2 border-t border-gray-150 text-xs">
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={freeShipping}
                   onChange={(e) => setFreeShipping(e.target.checked)}
-                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                  className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
                 />
-                <span className="font-semibold text-gray-800">Badge Bebas Ongkir</span>
+                <span className="font-semibold text-gray-800">Badge Bebas Ongkir (Gratis Ongkir)</span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer">
@@ -708,18 +710,17 @@ export default function ProductEditForm({
                   type="checkbox"
                   checked={isOfficial}
                   onChange={(e) => setIsOfficial(e.target.checked)}
-                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                  className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
                 />
-                <span className="font-semibold text-gray-800">Badge Tusko Pro (Official)</span>
+                <span className="font-semibold text-gray-800">Badge Tusko Pro (Official Flagship)</span>
               </label>
             </div>
 
-            {/* Bottom Save */}
-            <div className="pt-3 border-t border-gray-100 space-y-2">
+            <div className="pt-3 border-t border-gray-150 space-y-2">
               <button
                 type="button"
-                onClick={() => handleSubmit(status)}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => handleSubmit('active')}
+                className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Save size={15} />
                 <span>Simpan Perubahan</span>

@@ -15,7 +15,9 @@ import {
   Tag, 
   Truck, 
   Eye,
-  Info
+  Info,
+  Boxes,
+  Grid
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { createMockProduct, generateProductSku } from '../data/mockProducts';
@@ -58,10 +60,15 @@ export default function ProductCreateForm({
   ]);
   const [newGalleryInput, setNewGalleryInput] = useState('');
 
-  // Variants
+  // Nested Multi-Attribute Variant Matrix
   const [hasVariants, setHasVariants] = useState(true);
   const [variantColorInput, setVariantColorInput] = useState('Triple Black, Crimson Red, Royal Blue');
   const [variantSizeInput, setVariantSizeInput] = useState('M, L, XL');
+  const [variantMatrix, setVariantMatrix] = useState([
+    { id: 'v_1', sku: 'TSK-JRS-BLK-M', name: 'Triple Black / M', color: 'Triple Black', size: 'M', price: 299000, stock: 15 },
+    { id: 'v_2', sku: 'TSK-JRS-BLK-L', name: 'Triple Black / L', color: 'Triple Black', size: 'L', price: 299000, stock: 15 },
+    { id: 'v_3', sku: 'TSK-JRS-RED-M', name: 'Crimson Red / M', color: 'Crimson Red', size: 'M', price: 299000, stock: 10 }
+  ]);
 
   // Auto-calculated fields
   const discountPercent = useMemo(() => {
@@ -76,6 +83,74 @@ export default function ProductCreateForm({
     const marginPercent = price > 0 ? Math.round((profit / price) * 100) : 0;
     return { profit, marginPercent };
   }, [price, costPrice]);
+
+  // Generate Matrix rows from inputs
+  const handleRegenerateMatrix = () => {
+    const colors = variantColorInput.split(',').map(s => s.trim()).filter(Boolean);
+    const sizes = variantSizeInput.split(',').map(s => s.trim()).filter(Boolean);
+
+    const baseSku = sku || 'TSK-PRD';
+    const rows = [];
+    let count = 1;
+
+    if (colors.length > 0 && sizes.length > 0) {
+      colors.forEach(col => {
+        sizes.forEach(sz => {
+          rows.push({
+            id: `vm_${Date.now()}_${count++}`,
+            sku: `${baseSku}-${col.slice(0, 3).toUpperCase()}-${sz}`,
+            name: `${col} / ${sz}`,
+            color: col,
+            size: sz,
+            price: Number(price) || 0,
+            stock: Math.max(1, Math.floor(stock / (colors.length * sizes.length)))
+          });
+        });
+      });
+    } else if (colors.length > 0) {
+      colors.forEach(col => {
+        rows.push({
+          id: `vm_${Date.now()}_${count++}`,
+          sku: `${baseSku}-${col.slice(0, 3).toUpperCase()}`,
+          name: col,
+          color: col,
+          size: 'All Size',
+          price: Number(price) || 0,
+          stock: Math.max(1, Math.floor(stock / colors.length))
+        });
+      });
+    } else if (sizes.length > 0) {
+      sizes.forEach(sz => {
+        rows.push({
+          id: `vm_${Date.now()}_${count++}`,
+          sku: `${baseSku}-${sz}`,
+          name: sz,
+          color: 'Standard',
+          size: sz,
+          price: Number(price) || 0,
+          stock: Math.max(1, Math.floor(stock / sizes.length))
+        });
+      });
+    }
+
+    setVariantMatrix(rows);
+  };
+
+  const handleUpdateMatrixRow = (rowId, field, value) => {
+    setVariantMatrix(prev => prev.map(r => {
+      if (r.id === rowId) {
+        return {
+          ...r,
+          [field]: field === 'price' || field === 'stock' ? Number(value) : value
+        };
+      }
+      return r;
+    }));
+  };
+
+  const handleRemoveMatrixRow = (rowId) => {
+    setVariantMatrix(prev => prev.filter(r => r.id !== rowId));
+  };
 
   // Auto generate SKU if empty
   const handleGenerateSku = () => {
@@ -121,7 +196,7 @@ export default function ProductCreateForm({
     setFreeShipping(true);
     setIsOfficial(true);
     setStatus('active');
-    setDescription('Singlet lari ultra-ringan dengan panel ventilasi micro-mesh laser cut di area dada dan punggung. Didesain khusus untuk pelari half dan full marathon yang membutuhkan sirkulasi udara maksimal dan jahitan tanpa gesekan (zero-chafe bonded seams).');
+    setDescription('Singlet lari ultra-ringan dengan panel ventilasi micro-mesh laser cut di area dada dan punggung. Didesain khusus untuk pelari half dan full marathon yang membutuhkan sirkulasi udara maksimal dan jahitan tanpa gesekan.');
     setPrice(229000);
     setOriginalPrice(299000);
     setCostPrice(115000);
@@ -141,6 +216,12 @@ export default function ProductCreateForm({
     setHasVariants(true);
     setVariantColorInput('Neon Volt, Arctic White, Shadow Black');
     setVariantSizeInput('S, M, L, XL');
+    setVariantMatrix([
+      { id: 'vm_1', sku: 'TSK-RUN-SGL-VOLT-S', name: 'Neon Volt / S', color: 'Neon Volt', size: 'S', price: 229000, stock: 15 },
+      { id: 'vm_2', sku: 'TSK-RUN-SGL-VOLT-M', name: 'Neon Volt / M', color: 'Neon Volt', size: 'M', price: 229000, stock: 20 },
+      { id: 'vm_3', sku: 'TSK-RUN-SGL-WHT-L', name: 'Arctic White / L', color: 'Arctic White', size: 'L', price: 229000, stock: 15 },
+      { id: 'vm_4', sku: 'TSK-RUN-SGL-BLK-XL', name: 'Shadow Black / XL', color: 'Shadow Black', size: 'XL', price: 239000, stock: 10 }
+    ]);
   };
 
   // Submit Handler
@@ -158,7 +239,7 @@ export default function ProductCreateForm({
       }
     });
 
-    // Build variants if enabled
+    // Build variants & levels
     let variants = [];
     let variantLevels = [];
     if (hasVariants) {
@@ -172,42 +253,14 @@ export default function ProductCreateForm({
         variantLevels.push({ name: 'Ukuran', code: 'size', options: sizes });
       }
 
-      // Generate combinations
-      let vid = 1;
-      if (colors.length > 0 && sizes.length > 0) {
-        colors.forEach(col => {
-          sizes.forEach(sz => {
-            variants.push({
-              id: `v_new_${vid++}`,
-              sku: `${sku || 'TSK'}-${col.slice(0, 3).toUpperCase()}-${sz}`,
-              color: col,
-              size: sz,
-              price: Number(price),
-              stock: Math.max(1, Math.floor(stock / (colors.length * sizes.length)))
-            });
-          });
-        });
-      } else if (colors.length > 0) {
-        colors.forEach(col => {
-          variants.push({
-            id: `v_new_${vid++}`,
-            sku: `${sku || 'TSK'}-${col.slice(0, 3).toUpperCase()}`,
-            color: col,
-            price: Number(price),
-            stock: Math.max(1, Math.floor(stock / colors.length))
-          });
-        });
-      } else if (sizes.length > 0) {
-        sizes.forEach(sz => {
-          variants.push({
-            id: `v_new_${vid++}`,
-            sku: `${sku || 'TSK'}-${sz}`,
-            size: sz,
-            price: Number(price),
-            stock: Math.max(1, Math.floor(stock / sizes.length))
-          });
-        });
-      }
+      variants = variantMatrix.map((r, idx) => ({
+        id: r.id || `v_${idx + 1}`,
+        sku: r.sku,
+        color: r.color,
+        size: r.size,
+        price: Number(r.price),
+        stock: Number(r.stock)
+      }));
     }
 
     const newProduct = createMockProduct({
@@ -238,438 +291,469 @@ export default function ProductCreateForm({
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 border border-gray-200">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs font-semibold text-gray-500 hover:text-amber-600 flex items-center gap-1.5 mb-2 transition-colors cursor-pointer"
+            className="p-2 hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer border border-gray-300"
+            title="Kembali ke Daftar Produk"
           >
-            <ArrowLeft size={14} />
-            <span>Kembali ke Daftar Produk</span>
+            <ArrowLeft size={18} />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-black">
-              <Plus size={22} />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-neutral-900 text-amber-400">
+                Katalog Produk Admin
+              </span>
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight">
-                Tambah Produk Baru
-              </h1>
-              <p className="text-xs text-gray-500">
-                Isi rincian produk, atur harga, modal, stok inventaris, foto galeri, dan varian barang.
-              </p>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight mt-0.5">
+              Tambah Produk & Varian Baru
+            </h1>
           </div>
         </div>
 
-        {/* Action Header Buttons */}
-        <div className="flex items-center gap-2.5">
+        {/* Header Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={handleFillDemoData}
-            className="px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Isi otomatis dengan data contoh produk running"
+            className="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <Sparkles size={14} />
-            <span>Isi Data Demo</span>
+            <Sparkles size={14} className="text-amber-600" />
+            <span>Isi Data Demo Singlet</span>
           </button>
+
           <button
             type="button"
             onClick={onCancel}
-            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
           >
             Batal
           </button>
+
           <button
             type="button"
             onClick={() => handleSubmit('active')}
-            className="px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 bg-amber-400 hover:bg-amber-300 border border-amber-500 shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <Save size={15} />
+            <Save size={14} />
             <span>Simpan & Publikasikan</span>
           </button>
         </div>
       </div>
 
-      {/* Main Grid: Form Sections */}
+      {/* Main Form Layout (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols): Core Details, Specs, Variants */}
+        {/* Left 2 Columns: Details & Variant Matrix */}
         <div className="lg:col-span-2 space-y-6">
           {/* Section 1: Informasi Dasar */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <Package size={16} className="text-amber-500" />
-              <span>Informasi Dasar Produk</span>
-            </div>
+              <span>1. Informasi Dasar Produk</span>
+            </h2>
 
-            {/* Nama Produk */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Nama Produk Lengkap <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Nama Lengkap Produk <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Tusko Pro AeroTech Training Football Jersey 2026"
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-gray-900 font-medium transition-all"
+                placeholder="Contoh: Tusko Pro Matchday Football Jersey 2026 AeroTech"
+                required
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-medium"
               />
             </div>
 
-            {/* Kategori & SKU */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Kategori Produk <span className="text-rose-500">*</span>
-                </label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Kategori Produk</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold cursor-pointer"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold cursor-pointer"
                 >
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-gray-700">
-                    SKU Induk (Kode Produk)
-                  </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-gray-700">Kode SKU Induk</label>
                   <button
                     type="button"
                     onClick={handleGenerateSku}
-                    className="text-[11px] font-bold text-amber-600 hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-amber-700 hover:underline cursor-pointer"
                   >
-                    Auto Generate
+                    Otomatis Buat SKU
                   </button>
                 </div>
                 <input
                   type="text"
                   value={sku}
                   onChange={(e) => setSku(e.target.value)}
-                  placeholder="TSK-JRS-001"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-mono font-semibold"
+                  placeholder="TSK-CAT-PROD-2026"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-mono font-semibold"
                 />
               </div>
             </div>
 
-            {/* Bobot Paket & Lokasi */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Berat Pengiriman (Gram) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={weight}
-                    onChange={(e) => setWeight(Math.max(1, Number(e.target.value)))}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold pr-12"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-gray-400 font-bold">gram</span>
-                </div>
-                <span className="text-[10px] text-gray-400 mt-1 block">Digunakan kurir ekspedisi untuk hitung ongkir.</span>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Berat Paket (Gram)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="250"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Kota Asal Pengiriman / Gudang
-                </label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Lokasi Pengiriman Toko</label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Jakarta Barat"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                  placeholder="Jakarta Timur (Gudang Cakung)"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
                 />
               </div>
             </div>
 
-            {/* Deskripsi Produk */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Deskripsi Lengkap Produk
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Deskripsi Lengkap Produk</label>
               <textarea
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tuliskan keunggulan produk, detail material, petunjuk ukuran, dan teknologi yang disematkan..."
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 leading-relaxed"
+                placeholder="Jelaskan keunggulan performa, teknologi kain, dan petunjuk perawatan..."
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 leading-relaxed"
               />
             </div>
           </div>
 
-          {/* Section 2: Spesifikasi Produk Dinamis */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-                <FileText size={16} className="text-amber-500" />
-                <span>Spesifikasi Produk</span>
+          {/* Section 2: Nested Variant Matrix Generator */}
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+              <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                <Grid size={16} className="text-amber-500" />
+                <span>2. Generator Matriks Varian Bertingkat</span>
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-800">
+                <input
+                  type="checkbox"
+                  checked={hasVariants}
+                  onChange={(e) => setHasVariants(e.target.checked)}
+                  className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                />
+                <span>Aktifkan Varian</span>
+              </label>
+            </div>
+
+            {hasVariants && (
+              <div className="space-y-4">
+                <div className="bg-neutral-50 p-4 border border-gray-200 space-y-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-gray-800 mb-1">
+                      Pilihan Warna (Pisahkan dengan koma):
+                    </label>
+                    <input
+                      type="text"
+                      value={variantColorInput}
+                      onChange={(e) => setVariantColorInput(e.target.value)}
+                      placeholder="Triple Black, Crimson Red, Navy Blue"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-800 mb-1">
+                      Pilihan Ukuran / Size (Pisahkan dengan koma):
+                    </label>
+                    <input
+                      type="text"
+                      value={variantSizeInput}
+                      onChange={(e) => setVariantSizeInput(e.target.value)}
+                      placeholder="S, M, L, XL"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRegenerateMatrix}
+                    className="px-4 py-2 bg-neutral-900 text-amber-400 hover:bg-neutral-800 font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Sparkles size={13} />
+                    <span>Generate Matriks Kombinasi Varian</span>
+                  </button>
+                </div>
+
+                {/* Matrix Table */}
+                {variantMatrix.length > 0 && (
+                  <div className="border border-gray-200 overflow-x-auto">
+                    <table className="w-full text-left text-xs text-gray-600">
+                      <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
+                        <tr>
+                          <th className="py-2.5 px-3">Kombinasi Varian</th>
+                          <th className="py-2.5 px-3">SKU Turunan</th>
+                          <th className="py-2.5 px-3 text-right">Harga Jual (Rp)</th>
+                          <th className="py-2.5 px-3 text-right">Alokasi Stok</th>
+                          <th className="py-2.5 px-3 text-center">Hapus</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {variantMatrix.map((row) => (
+                          <tr key={row.id} className="hover:bg-neutral-50">
+                            <td className="py-2 px-3 font-bold text-gray-900">
+                              {row.name}
+                            </td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="text"
+                                value={row.sku}
+                                onChange={(e) => handleUpdateMatrixRow(row.id, 'sku', e.target.value)}
+                                className="w-full px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-xs"
+                              />
+                            </td>
+                            <td className="py-2 px-3 text-right">
+                              <input
+                                type="number"
+                                value={row.price}
+                                onChange={(e) => handleUpdateMatrixRow(row.id, 'price', e.target.value)}
+                                className="w-28 px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-gray-900"
+                              />
+                            </td>
+                            <td className="py-2 px-3 text-right">
+                              <input
+                                type="number"
+                                value={row.stock}
+                                onChange={(e) => handleUpdateMatrixRow(row.id, 'stock', e.target.value)}
+                                className="w-20 px-2 py-1 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-gray-900"
+                              />
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMatrixRow(row.id)}
+                                className="p-1 text-gray-400 hover:text-rose-600 cursor-pointer"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
+            )}
+          </div>
+
+          {/* Section 3: Spesifikasi Teknis */}
+          <div className="bg-white p-5 sm:p-6 border border-gray-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+              <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+                <FileText size={16} className="text-amber-500" />
+                <span>3. Spesifikasi Teknis & Material</span>
+              </h2>
               <button
                 type="button"
                 onClick={handleAddSpecRow}
-                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold border border-gray-300 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <Plus size={13} />
+                <Plus size={12} />
                 <span>Tambah Baris</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {specList.map((spec, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <input
                     type="text"
                     value={spec.key}
                     onChange={(e) => handleUpdateSpec(idx, 'key', e.target.value)}
-                    placeholder="Parameter (misal: Bahan)"
-                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-bold focus:outline-none focus:border-amber-500"
+                    placeholder="Nama Parameter (cth: Bobot)"
+                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-bold focus:outline-none focus:border-amber-500"
                   />
                   <input
                     type="text"
                     value={spec.value}
                     onChange={(e) => handleUpdateSpec(idx, 'value', e.target.value)}
-                    placeholder="Nilai (misal: 100% Recycled Polyester)"
-                    className="flex-1 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-amber-500"
+                    placeholder="Nilai Spesifikasi (cth: 120 gram)"
+                    className="flex-1 px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 focus:outline-none focus:border-amber-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveSpec(idx)}
-                    className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                    title="Hapus baris spesifikasi"
+                    className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Section 3: Varian Produk Bertingkat */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-                <Layers size={16} className="text-amber-500" />
-                <span>Varian Produk (Warna & Ukuran)</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasVariants}
-                  onChange={(e) => setHasVariants(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
-                <span className="ml-2 text-xs font-bold text-gray-700">Aktifkan Varian</span>
-              </label>
-            </div>
-
-            {hasVariants && (
-              <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Pilihan Warna (Pisahkan dengan koma)
-                  </label>
-                  <input
-                    type="text"
-                    value={variantColorInput}
-                    onChange={(e) => setVariantColorInput(e.target.value)}
-                    placeholder="Contoh: Triple Black, Deep Navy, Crimson Red"
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Pilihan Ukuran / Tipe (Pisahkan dengan koma)
-                  </label>
-                  <input
-                    type="text"
-                    value={variantSizeInput}
-                    onChange={(e) => setVariantSizeInput(e.target.value)}
-                    placeholder="Contoh: S, M, L, XL atau 39, 40, 41, 42"
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-                  <Info size={13} className="text-amber-500 shrink-0" />
-                  <span>Kombinasi varian akan otomatis dibuat dengan pembagian stok proporsional.</span>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Right Column (1 Col): Pricing, Stock, Media, Status */}
+        {/* Right 1 Column: Pricing, Inventory Stock & Images */}
         <div className="space-y-6">
           {/* Pricing & Stock Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <DollarSign size={16} className="text-amber-500" />
-              <span>Harga & Keuntungan</span>
-            </div>
+              <span>Harga & Modal HPP</span>
+            </h2>
 
-            {/* Harga Jual Ritel */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              <label className="block text-xs font-bold text-gray-700 mb-1">
                 Harga Jual Ritel (Rp) <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
+                min="0"
                 value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 text-sm bg-gray-50 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 text-gray-900 font-extrabold"
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="299000"
+                required
+                className="w-full px-3.5 py-2.5 text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-extrabold"
               />
             </div>
 
-            {/* Harga Asli & Diskon */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Harga Asli / Coret
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Harga Coret (Rp)</label>
                 <input
                   type="number"
+                  min="0"
                   value={originalPrice}
-                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium"
+                  onChange={(e) => setOriginalPrice(e.target.value)}
+                  placeholder="399000"
+                  className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-700 font-medium"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Diskon Otomatis
-                </label>
-                <div className="px-3 py-2 text-xs font-extrabold bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-center">
-                  {discountPercent > 0 ? `Hemat ${discountPercent}%` : 'Tanpa Diskon'}
+              {discountPercent > 0 && (
+                <div className="flex items-center justify-center bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black">
+                  Diskon {discountPercent}%
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Harga Modal / Pokok */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                Harga Modal / Pokok (HPP)
-              </label>
+              <label className="block text-[11px] font-bold text-gray-600 mb-1">Harga Modal Beli / HPP (Rp)</label>
               <input
                 type="number"
+                min="0"
                 value={costPrice}
-                onChange={(e) => setCostPrice(Number(e.target.value))}
-                className="w-full px-3.5 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-semibold"
+                onChange={(e) => setCostPrice(e.target.value)}
+                placeholder="160000"
+                className="w-full px-3.5 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-semibold"
               />
-              <div className="mt-1.5 flex items-center justify-between text-[11px] text-gray-500 font-medium">
-                <span>Estimasi Laba Kotor:</span>
-                <span className="font-extrabold text-emerald-600">
-                  +{formatRupiah(marginInfo.profit)} ({marginInfo.marginPercent}%)
-                </span>
-              </div>
+              <p className="text-[10px] text-gray-500 mt-1">
+                Estimasi Gross Profit: <span className="font-bold text-emerald-700">{formatRupiah(marginInfo.profit)}</span> ({marginInfo.marginPercent}%)
+              </p>
             </div>
 
-            {/* Total Stok & Stok Minimum */}
-            <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Total Stok Awal <span className="text-rose-500">*</span>
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Total Stok Fisik</label>
                 <input
                   type="number"
+                  min="0"
                   value={stock}
-                  onChange={(e) => setStock(Math.max(0, Number(e.target.value)))}
-                  className="w-full px-3 py-2 text-xs font-black bg-gray-50 border border-gray-200 rounded-xl text-gray-900"
+                  onChange={(e) => setStock(e.target.value)}
+                  placeholder="40"
+                  className="w-full px-3 py-2 text-xs font-black bg-gray-50 border border-gray-300 text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Batas Min. Stok
-                </label>
+                <label className="block text-[11px] font-bold text-gray-600 mb-1">Safety Min</label>
                 <input
                   type="number"
+                  min="1"
                   value={stockMinimum}
-                  onChange={(e) => setStockMinimum(Math.max(1, Number(e.target.value)))}
-                  className="w-full px-3 py-2 text-xs font-bold bg-gray-50 border border-gray-200 rounded-xl text-gray-700"
+                  onChange={(e) => setStockMinimum(e.target.value)}
+                  placeholder="8"
+                  className="w-full px-3 py-2 text-xs font-bold bg-gray-50 border border-gray-300 text-gray-700"
                 />
               </div>
             </div>
           </div>
 
-          {/* Media & Galeri Foto Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
+          {/* Media & Images Card */}
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
               <ImageIcon size={16} className="text-amber-500" />
-              <span>Gambar & Galeri Foto</span>
-            </div>
+              <span>Foto & Galeri Produk</span>
+            </h2>
 
-            {/* Thumbnail URL Input */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                URL Foto Utama (Thumbnail) <span className="text-rose-500">*</span>
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">URL Foto Utama</label>
               <input
                 type="text"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://images.unsplash.com/..."
-                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-mono"
+                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-mono"
               />
             </div>
 
-            {/* Live Thumbnail Preview */}
             {imageUrl && (
-              <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+              <div className="relative aspect-video w-full overflow-hidden border border-gray-200 bg-gray-100">
                 <img
                   src={imageUrl}
                   alt="Preview"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80';
+                    e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80';
                   }}
                 />
-                <span className="absolute bottom-2 left-2 bg-neutral-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-xs">
-                  Foto Utama
-                </span>
               </div>
             )}
 
-            {/* Galeri Tambahan */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Foto Galeri Tambahan ({galleryUrls.length})
-              </label>
-              <div className="flex gap-2 mb-2">
+            {/* Additional Gallery */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <label className="block text-[11px] font-bold text-gray-600">Tambah Foto Galeri (URL):</label>
+              <div className="flex gap-2">
                 <input
                   type="text"
                   value={newGalleryInput}
                   onChange={(e) => setNewGalleryInput(e.target.value)}
-                  placeholder="URL foto tambahan..."
-                  className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-mono"
+                  placeholder="https://..."
+                  className="flex-1 px-3 py-1.5 text-xs bg-gray-50 border border-gray-300 text-gray-800 font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleAddGalleryUrl}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold border border-gray-300 transition-colors cursor-pointer"
                 >
-                  + Tambah
+                  Tambah
                 </button>
               </div>
 
               {galleryUrls.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap pt-2">
                   {galleryUrls.map((url, idx) => (
-                    <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-200 group">
-                      <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                    <div key={idx} className="relative w-14 h-14 overflow-hidden border border-gray-200 group">
+                      <img src={url} alt="Thumb" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => handleRemoveGalleryUrl(idx)}
-                        className="absolute inset-0 bg-rose-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        title="Hapus foto"
+                        className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -680,54 +764,48 @@ export default function ProductCreateForm({
             </div>
           </div>
 
-          {/* Status & Badge Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-100 text-gray-900 font-extrabold text-sm uppercase tracking-wider">
-              <Tag size={16} className="text-amber-500" />
+          {/* Visibility & Badges Card */}
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
+            <h2 className="text-sm font-black text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-3">
+              <Eye size={16} className="text-amber-500" />
               <span>Status & Visibilitas</span>
-            </div>
+            </h2>
 
-            {/* Status Live / Draft */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2">
-                Status Publikasi
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Status Publikasi</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setStatus('active')}
-                  className={`py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`py-2 text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     status === 'active' 
-                      ? 'bg-emerald-500 text-neutral-950 font-black' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-emerald-600 text-white border-emerald-600 font-black' 
+                      : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-emerald-950"></span>
                   <span>🟢 Aktif (Live)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatus('inactive')}
-                  className={`py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`py-2 text-xs font-bold border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     status === 'inactive' 
-                      ? 'bg-gray-800 text-white font-black' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-gray-800 text-white border-gray-800 font-black' 
+                      : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-gray-400"></span>
                   <span>⚪ Nonaktif (Draft)</span>
                 </button>
               </div>
             </div>
 
-            {/* Checkbox Options */}
-            <div className="space-y-2 pt-2 border-t border-gray-100 text-xs">
+            <div className="space-y-2 pt-2 border-t border-gray-150 text-xs">
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={freeShipping}
                   onChange={(e) => setFreeShipping(e.target.checked)}
-                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                  className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
                 />
                 <span className="font-semibold text-gray-800">Badge Bebas Ongkir (Gratis Ongkir)</span>
               </label>
@@ -737,18 +815,17 @@ export default function ProductCreateForm({
                   type="checkbox"
                   checked={isOfficial}
                   onChange={(e) => setIsOfficial(e.target.checked)}
-                  className="rounded border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                  className="border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4"
                 />
                 <span className="font-semibold text-gray-800">Badge Tusko Pro (Official Flagship)</span>
               </label>
             </div>
 
-            {/* Save Buttons at Bottom */}
-            <div className="pt-3 border-t border-gray-100 space-y-2">
+            <div className="pt-3 border-t border-gray-150 space-y-2">
               <button
                 type="button"
                 onClick={() => handleSubmit('active')}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Save size={15} />
                 <span>Simpan Produk</span>
@@ -756,7 +833,7 @@ export default function ProductCreateForm({
               <button
                 type="button"
                 onClick={() => handleSubmit('inactive')}
-                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 Simpan sebagai Draft Nonaktif
               </button>
