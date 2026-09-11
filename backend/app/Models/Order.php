@@ -125,6 +125,21 @@ class Order extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function orderStatus(): BelongsTo
+    {
+        return $this->belongsTo(OrderStatus::class, 'status_id');
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    public function shipment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Shipment::class);
+    }
+
     /**
      * Scope for pending orders.
      */

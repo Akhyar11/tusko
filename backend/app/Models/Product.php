@@ -83,6 +83,21 @@ class Product extends Model
         return $this->hasMany(StockMutation::class)->latest();
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function inventoryBalances(): HasMany
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
+
+    public function cogsHistories(): HasMany
+    {
+        return $this->hasMany(CogsHistory::class);
+    }
+
     public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);

@@ -6,51 +6,45 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CartItem extends Model
+class InventoryBalance extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'cart_id',
+        'warehouse_id',
         'product_id',
         'product_variant_id',
-        'quantity',
-        'notes',
+        'bin_id',
+        'on_hand_stock',
+        'reserved_stock',
+        'available_stock',
+        'safety_stock',
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
+        'on_hand_stock' => 'integer',
+        'reserved_stock' => 'integer',
+        'available_stock' => 'integer',
+        'safety_stock' => 'integer',
     ];
 
-    /**
-     * The cart this item belongs to.
-     */
-    public function cart(): BelongsTo
+    public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(Warehouse::class);
     }
 
-    /**
-     * The product in this cart item.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * The product variant in this cart item.
-     */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    /**
-     * Calculated subtotal for this item.
-     */
-    public function getSubtotalAttribute(): float
+    public function bin(): BelongsTo
     {
-        return (float) ($this->quantity * ($this->product->price ?? 0));
+        return $this->belongsTo(WarehouseBin::class, 'bin_id');
     }
 }

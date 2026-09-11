@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OrderItem extends Model
+class StockReservation extends Model
 {
     use HasFactory;
 
@@ -14,46 +14,34 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'product_variant_id',
-        'product_name',
-        'product_slug',
-        'product_image',
-        'product_price',
-        'product_weight',
-        'unit_cogs',
+        'warehouse_id',
         'quantity',
-        'subtotal',
-        'notes',
+        'status',
+        'expires_at',
     ];
 
     protected $casts = [
-        'product_price' => 'float',
-        'product_weight' => 'float',
-        'unit_cogs' => 'float',
         'quantity' => 'integer',
-        'subtotal' => 'float',
+        'expires_at' => 'datetime',
     ];
 
-    /**
-     * Order relation.
-     */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
-    /**
-     * Product relation.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * Variant relation.
-     */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }

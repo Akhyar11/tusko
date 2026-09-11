@@ -6,51 +6,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CartItem extends Model
+class StockOpnameItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'cart_id',
+        'stock_opname_id',
         'product_id',
         'product_variant_id',
-        'quantity',
+        'system_stock',
+        'physical_stock',
+        'difference',
         'notes',
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
+        'system_stock' => 'integer',
+        'physical_stock' => 'integer',
+        'difference' => 'integer',
     ];
 
-    /**
-     * The cart this item belongs to.
-     */
-    public function cart(): BelongsTo
+    public function opname(): BelongsTo
     {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(StockOpname::class, 'stock_opname_id');
     }
 
-    /**
-     * The product in this cart item.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * The product variant in this cart item.
-     */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
-    }
-
-    /**
-     * Calculated subtotal for this item.
-     */
-    public function getSubtotalAttribute(): float
-    {
-        return (float) ($this->quantity * ($this->product->price ?? 0));
     }
 }
