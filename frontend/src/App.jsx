@@ -773,7 +773,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className={`flex-1 w-full ${currentView === 'catalog' || currentView === 'detail' ? '' : 'max-w-7xl mx-auto px-4 py-6'}`}>
+      <main className={`flex-1 w-full ${currentView === 'catalog' || currentView === 'detail' ? '' : 'w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6'}`}>
         {currentView === 'product-edit' && editingProduct ? (
           <ProductEditForm
             product={editingProduct}
