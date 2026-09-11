@@ -55,9 +55,28 @@ const VALID_VIEWS = [
   'profile',
 ];
 
-const getViewFromHash = () => {
+const getViewFromPathOrHash = () => {
   try {
+    const rawPath = window.location.pathname.replace(/\/+$/, '');
+    if (rawPath === '/admin/dashboard' || rawPath === '/admin') {
+      return 'products-admin';
+    }
+    if (rawPath === '/admin/stock') return 'stock';
+    if (rawPath === '/admin/orders') return 'orders';
+    if (rawPath === '/admin/transactions') return 'transactions';
+    if (rawPath === '/admin/expeditions') return 'expeditions';
+    if (rawPath === '/admin/templates') return 'templates';
+    if (rawPath === '/admin/products/create') return 'product-create';
+    if (rawPath === '/login') return 'login';
+    if (rawPath === '/register') return 'register';
+    if (rawPath === '/profile') return 'profile';
+    if (rawPath === '/cart') return 'cart';
+    if (rawPath === '/checkout') return 'checkout';
+
     const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
+    if (rawHash === 'admin/dashboard' || rawHash === 'admin') {
+      return 'products-admin';
+    }
     if (rawHash && VALID_VIEWS.includes(rawHash)) {
       return rawHash;
     }
@@ -68,8 +87,8 @@ const getViewFromHash = () => {
 };
 
 const getInitialView = () => {
-  const fromHash = getViewFromHash();
-  const rawView = fromHash || (() => {
+  const fromPathOrHash = getViewFromPathOrHash();
+  const rawView = fromPathOrHash || (() => {
     try {
       return localStorage.getItem('tusko_current_view');
     } catch {
@@ -186,6 +205,7 @@ export default function App() {
     showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
     if (demoUser?.role === 'admin') {
       setCurrentView('products-admin');
+      window.history.pushState(null, '', '/admin/dashboard');
     }
   };
 
@@ -200,6 +220,7 @@ export default function App() {
     const adminViews = ['products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
+      window.history.pushState(null, '', '/');
     }
   };
 
@@ -229,7 +250,7 @@ export default function App() {
     }
   }, [selectedProduct]);
 
-  // Sinkronisasi status tampilan (currentView) ke URL hash & localStorage
+  // Sinkronisasi status tampilan (currentView) ke URL path / hash & localStorage
   useEffect(() => {
     try {
       localStorage.setItem('tusko_current_view', currentView);
@@ -237,10 +258,37 @@ export default function App() {
       // ignore
     }
 
-    const currentHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
-    if (currentView === 'catalog') {
-      if (currentHash) {
-        window.history.pushState(null, '', window.location.pathname + window.location.search);
+    if (currentView === 'products-admin') {
+      if (window.location.pathname !== '/admin/dashboard') {
+        window.history.pushState(null, '', '/admin/dashboard');
+      }
+    } else if (currentView === 'stock') {
+      if (window.location.pathname !== '/admin/stock') {
+        window.history.pushState(null, '', '/admin/stock');
+      }
+    } else if (currentView === 'orders' && currentUser?.role === 'admin') {
+      if (window.location.pathname !== '/admin/orders') {
+        window.history.pushState(null, '', '/admin/orders');
+      }
+    } else if (currentView === 'transactions' && currentUser?.role === 'admin') {
+      if (window.location.pathname !== '/admin/transactions') {
+        window.history.pushState(null, '', '/admin/transactions');
+      }
+    } else if (currentView === 'expeditions') {
+      if (window.location.pathname !== '/admin/expeditions') {
+        window.history.pushState(null, '', '/admin/expeditions');
+      }
+    } else if (currentView === 'templates') {
+      if (window.location.pathname !== '/admin/templates') {
+        window.history.pushState(null, '', '/admin/templates');
+      }
+    } else if (currentView === 'product-create') {
+      if (window.location.pathname !== '/admin/products/create') {
+        window.history.pushState(null, '', '/admin/products/create');
+      }
+    } else if (currentView === 'catalog') {
+      if (window.location.pathname !== '/' || window.location.hash) {
+        window.history.pushState(null, '', '/' + window.location.search);
       }
     } else {
       const targetHash = `#/${currentView}`;
@@ -248,13 +296,13 @@ export default function App() {
         window.history.pushState(null, '', targetHash);
       }
     }
-  }, [currentView]);
+  }, [currentView, currentUser]);
 
   // Listener navigasi riwayat browser (Back/Forward) via popstate dan hashchange
   useEffect(() => {
     const handleLocationChange = () => {
-      const viewFromHash = getViewFromHash();
-      const targetView = viewFromHash || 'catalog';
+      const viewFromPathOrHash = getViewFromPathOrHash();
+      const targetView = viewFromPathOrHash || 'catalog';
       setCurrentView((prev) => (prev !== targetView ? targetView : prev));
     };
 
@@ -709,10 +757,11 @@ export default function App() {
       }
     }
 
-    // Jika akun adalah admin, alihkan langsung ke panel admin / manajemen produk
+    // Jika akun adalah admin, alihkan langsung ke /admin/dashboard
     if (user?.role === 'admin') {
       setPendingCartAction(null);
       setCurrentView('products-admin');
+      window.history.pushState(null, '', '/admin/dashboard');
       return;
     }
 
