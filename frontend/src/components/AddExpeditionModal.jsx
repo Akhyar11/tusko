@@ -106,12 +106,12 @@ export default function AddExpeditionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto">
+      <div className="bg-white w-full max-w-lg rounded-none shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-none bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <Truck size={18} />
             </div>
             <div>
@@ -126,7 +126,7 @@ export default function AddExpeditionModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-none transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -149,7 +149,7 @@ export default function AddExpeditionModal({
                   if (errors.name) setErrors(prev => ({ ...prev, name: null }));
                 }}
                 placeholder="Contoh: TIKI, Ninja Xpress"
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   errors.name 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -175,7 +175,7 @@ export default function AddExpeditionModal({
                   if (errors.code) setErrors(prev => ({ ...prev, code: null }));
                 }}
                 placeholder="Contoh: tiki, ninja, pos"
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   errors.code 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -204,7 +204,7 @@ export default function AddExpeditionModal({
                   if (errors.service) setErrors(prev => ({ ...prev, service: null }));
                 }}
                 placeholder="Contoh: Reguler, ONS, Kilat"
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   errors.service 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -225,7 +225,7 @@ export default function AddExpeditionModal({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               >
                 <option value="Reguler">Reguler</option>
                 <option value="Instan & Same Day">Instan &amp; Same Day</option>
@@ -249,7 +249,7 @@ export default function AddExpeditionModal({
                   if (errors.etd) setErrors(prev => ({ ...prev, etd: null }));
                 }}
                 placeholder="Contoh: 1 - 2 hari, 3 jam"
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   errors.etd 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -271,7 +271,7 @@ export default function AddExpeditionModal({
                 <button
                   type="button"
                   onClick={() => setRateType('per_kg')}
-                  className={`py-2 px-2.5 rounded-xl border text-center font-bold transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-none border text-center font-bold transition-all cursor-pointer ${
                     rateType === 'per_kg'
                       ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -282,7 +282,7 @@ export default function AddExpeditionModal({
                 <button
                   type="button"
                   onClick={() => setRateType('flat')}
-                  className={`py-2 px-2.5 rounded-xl border text-center font-bold transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-none border text-center font-bold transition-all cursor-pointer ${
                     rateType === 'flat'
                       ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -313,7 +313,7 @@ export default function AddExpeditionModal({
                   if (errors.baseRate) setErrors(prev => ({ ...prev, baseRate: null }));
                 }}
                 placeholder="Contoh: 18000"
-                className={`w-full pl-11 pr-3 py-2 bg-gray-50 border rounded-xl font-mono font-bold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full pl-11 pr-3 py-2 bg-gray-50 border rounded-none font-mono font-bold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   errors.baseRate 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -333,7 +333,7 @@ export default function AddExpeditionModal({
           </div>
 
           {/* Row 5: Fitur Layanan (Tracking & COD) */}
-          <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-2.5">
+          <div className="bg-gray-50 p-3.5 rounded-none border border-gray-200 space-y-2.5">
             <span className="font-bold text-gray-700 block">Fitur Pendukung</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -341,7 +341,7 @@ export default function AddExpeditionModal({
                   type="checkbox"
                   checked={trackingSupport}
                   onChange={(e) => setTrackingSupport(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="font-medium text-gray-800">
                   Dukungan Live Tracking Resi
@@ -353,7 +353,7 @@ export default function AddExpeditionModal({
                   type="checkbox"
                   checked={codSupport}
                   onChange={(e) => setCodSupport(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="font-medium text-gray-800">
                   Dukungan Pembayaran COD
@@ -373,7 +373,7 @@ export default function AddExpeditionModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Penjelasan keunggulan layanan..."
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
             </div>
             <div>
@@ -385,7 +385,7 @@ export default function AddExpeditionModal({
                 value={badge}
                 onChange={(e) => setBadge(e.target.value)}
                 placeholder="Contoh: Paling Hemat, Garansi Cepat"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
             </div>
           </div>
@@ -395,13 +395,13 @@ export default function AddExpeditionModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-bold rounded-xl border border-gray-200 transition-colors cursor-pointer"
+              className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-bold rounded-none border border-gray-200 transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-none transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
             >
               <Plus size={15} />
               <span>Simpan Ekspedisi</span>

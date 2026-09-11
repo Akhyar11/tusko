@@ -104,7 +104,7 @@ export default function ExpeditionSettingsPage({
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
             <Truck className="text-emerald-600" size={26} />
             <span>Pengaturan Jasa Ekspedisi</span>
-            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">
+            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-none">
               Kurir & Ongkir
             </span>
           </h1>
@@ -117,7 +117,7 @@ export default function ExpeditionSettingsPage({
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-2"
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-none transition-all cursor-pointer shadow-xs flex items-center gap-2"
           >
             <Plus size={16} />
             <span>Tambah Ekspedisi</span>
@@ -127,7 +127,7 @@ export default function ExpeditionSettingsPage({
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs space-y-1">
           <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
             Total Ekspedisi
           </span>
@@ -137,7 +137,7 @@ export default function ExpeditionSettingsPage({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs space-y-1">
           <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
             Ekspedisi Aktif
           </span>
@@ -147,7 +147,7 @@ export default function ExpeditionSettingsPage({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs space-y-1">
           <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
             Ekspedisi Utama (Default)
           </span>
@@ -162,7 +162,7 @@ export default function ExpeditionSettingsPage({
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs space-y-1">
           <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
             Rata-rata Ongkir
           </span>
@@ -176,7 +176,7 @@ export default function ExpeditionSettingsPage({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+      <div className="bg-white p-4 rounded-none border border-gray-200 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           
           {/* Search Box */}
@@ -186,7 +186,7 @@ export default function ExpeditionSettingsPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari ekspedisi atau nama layanan..."
-              className="w-full pl-9 pr-8 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-gray-50 border border-gray-200 rounded-none focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={15} />
             {searchQuery && (
@@ -205,7 +205,7 @@ export default function ExpeditionSettingsPage({
             <button
               type="button"
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-none transition-all cursor-pointer ${
                 statusFilter === 'all'
                   ? 'bg-neutral-900 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -216,7 +216,7 @@ export default function ExpeditionSettingsPage({
             <button
               type="button"
               onClick={() => setStatusFilter('active')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-none transition-all cursor-pointer ${
                 statusFilter === 'active'
                   ? 'bg-emerald-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -227,7 +227,7 @@ export default function ExpeditionSettingsPage({
             <button
               type="button"
               onClick={() => setStatusFilter('inactive')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-none transition-all cursor-pointer ${
                 statusFilter === 'inactive'
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -248,7 +248,7 @@ export default function ExpeditionSettingsPage({
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                className={`px-3 py-1 text-xs font-semibold rounded-none whitespace-nowrap transition-colors cursor-pointer ${
                   isSelected
                     ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-300'
                     : 'text-gray-600 hover:bg-gray-100 border border-transparent'
@@ -262,7 +262,7 @@ export default function ExpeditionSettingsPage({
       </div>
 
       {/* Expeditions Data Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-none border border-gray-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-gray-700">
             <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
@@ -293,7 +293,7 @@ export default function ExpeditionSettingsPage({
                     {/* Courier Name & Service */}
                     <td className="px-4 py-3.5">
                       <div className="flex items-start gap-2.5">
-                        <div className={`px-2 py-1 rounded font-black text-[11px] tracking-wider uppercase shrink-0 ${getCourierColor(exp.code)}`}>
+                        <div className={`px-2 py-1 rounded-none font-black text-[11px] tracking-wider uppercase shrink-0 ${getCourierColor(exp.code)}`}>
                           {exp.code || exp.name.slice(0, 3)}
                         </div>
                         <div className="min-w-0">
@@ -302,7 +302,7 @@ export default function ExpeditionSettingsPage({
                               {exp.name}
                             </span>
                             {exp.isDefault && (
-                              <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 font-bold text-[9.5px] rounded flex items-center gap-0.5">
+                              <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 font-bold text-[9.5px] rounded-none flex items-center gap-0.5">
                                 <Star size={10} className="fill-amber-500" />
                                 Utama
                               </span>
@@ -320,7 +320,7 @@ export default function ExpeditionSettingsPage({
 
                     {/* Category Badge */}
                     <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-md font-bold text-[10.5px] ${
+                      <span className={`px-2 py-0.5 rounded-none font-bold text-[10.5px] ${
                         exp.category === 'Reguler' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                         exp.category === 'Instan & Same Day' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                         exp.category === 'Next Day' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
@@ -344,7 +344,7 @@ export default function ExpeditionSettingsPage({
                         <span className="font-black text-gray-900 text-xs sm:text-sm block">
                           {formatRupiah(exp.baseRate)}
                         </span>
-                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-none ${
                           exp.rateType === 'per_kg'
                             ? 'bg-amber-50 text-amber-800 border border-amber-200'
                             : 'bg-teal-50 text-teal-800 border border-teal-200'
@@ -358,7 +358,7 @@ export default function ExpeditionSettingsPage({
                     <td className="px-4 py-3.5 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         <span 
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          className={`px-1.5 py-0.5 rounded-none text-[10px] font-bold ${
                             exp.trackingSupport ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-400'
                           }`}
                           title={exp.trackingSupport ? 'Mendukung nomor resi live tracking' : 'Tidak mendukung tracking'}
@@ -366,7 +366,7 @@ export default function ExpeditionSettingsPage({
                           Resi
                         </span>
                         <span 
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          className={`px-1.5 py-0.5 rounded-none text-[10px] font-bold ${
                             exp.codSupport ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-gray-100 text-gray-400'
                           }`}
                           title={exp.codSupport ? 'Mendukung Cash On Delivery' : 'Non-COD'}
@@ -388,7 +388,7 @@ export default function ExpeditionSettingsPage({
                           onToggleActive(exp);
                           onShowToast(`Status ${exp.name} (${exp.service}) diubah menjadi ${!exp.isActive ? 'Aktif' : 'Nonaktif'}.`);
                         }}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-[11px] transition-all cursor-pointer shadow-2xs ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-none font-bold text-[11px] transition-all cursor-pointer shadow-2xs ${
                           exp.isActive
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
                             : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
@@ -397,11 +397,11 @@ export default function ExpeditionSettingsPage({
                       >
                         {exp.isActive ? (
                           <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-none h-2 w-2 bg-emerald-600"></span>
                           </span>
                         ) : (
-                          <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                          <span className="w-2 h-2 rounded-none bg-gray-400"></span>
                         )}
                         <span>{exp.isActive ? 'Aktif' : 'Nonaktif'}</span>
                       </button>
@@ -411,7 +411,7 @@ export default function ExpeditionSettingsPage({
                     <td className="px-4 py-3.5 text-center whitespace-nowrap">
                       {exp.isDefault ? (
                         <div 
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-full font-black text-[11px] shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-none font-black text-[11px] shadow-2xs"
                           title="Ekspedisi ini dipilih secara otomatis saat checkout pembeli"
                         >
                           <Star size={13} className="fill-amber-400 text-amber-500" />
@@ -424,7 +424,7 @@ export default function ExpeditionSettingsPage({
                             onSetDefault(exp);
                             onShowToast(`⭐ ${exp.name} (${exp.service}) berhasil dijadikan ekspedisi utama toko!`);
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-gray-500 hover:text-amber-800 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 rounded-full transition-all cursor-pointer shadow-2xs"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-gray-500 hover:text-amber-800 bg-gray-50 hover:bg-amber-50 border border-gray-200 hover:border-amber-300 rounded-none transition-all cursor-pointer shadow-2xs"
                           title="Klik untuk menjadikan ekspedisi pilihan utama pembeli"
                         >
                           <Star size={12} className="text-gray-400" />
@@ -439,7 +439,7 @@ export default function ExpeditionSettingsPage({
                         <button
                           type="button"
                           onClick={() => setEditRateExpedition(exp)}
-                          className="p-1.5 text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-none transition-colors cursor-pointer"
                           title="Atur Tarif & Mode Ongkir"
                         >
                           <DollarSign size={14} />
@@ -448,7 +448,7 @@ export default function ExpeditionSettingsPage({
                           type="button"
                           onClick={() => setDeleteTargetExpedition(exp)}
                           disabled={exp.isDefault}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          className={`p-1.5 rounded-none transition-colors cursor-pointer ${
                             exp.isDefault
                               ? 'text-gray-300 cursor-not-allowed'
                               : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
@@ -493,9 +493,9 @@ export default function ExpeditionSettingsPage({
       {/* Delete Confirmation Modal Popup */}
       {deleteTargetExpedition && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in">
+          <div className="bg-white rounded-none max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in">
             <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-none bg-red-50 flex items-center justify-center shrink-0">
                 <Trash2 size={20} />
               </div>
               <div>
@@ -508,7 +508,7 @@ export default function ExpeditionSettingsPage({
               </div>
             </div>
 
-            <div className="bg-red-50/70 p-3.5 rounded-2xl border border-red-200 text-xs text-red-900 space-y-1">
+            <div className="bg-red-50/70 p-3.5 rounded-none border border-red-200 text-xs text-red-900 space-y-1">
               <p className="font-bold">
                 {deleteTargetExpedition.name} - {deleteTargetExpedition.service}
               </p>
@@ -524,7 +524,7 @@ export default function ExpeditionSettingsPage({
               <button
                 type="button"
                 onClick={() => setDeleteTargetExpedition(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-none transition-colors cursor-pointer"
               >
                 Batal
               </button>
@@ -535,7 +535,7 @@ export default function ExpeditionSettingsPage({
                   onShowToast(`Ekspedisi "${deleteTargetExpedition.name} - ${deleteTargetExpedition.service}" berhasil dihapus.`);
                   setDeleteTargetExpedition(null);
                 }}
-                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
               >
                 <Trash2 size={13} />
                 <span>Ya, Hapus Ekspedisi</span>

@@ -104,7 +104,7 @@ export default function ProductListPage({
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Top Breadcrumb & Header Action */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-2xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-gray-200 shadow-2xs">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-1">
             <button 
@@ -120,7 +120,7 @@ export default function ProductListPage({
             <span className="text-amber-600 font-bold">Manajemen Produk</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-black">
+            <div className="w-10 h-10 rounded-none bg-amber-500/10 text-amber-600 flex items-center justify-center font-black">
               <Package size={22} />
             </div>
             <div>
@@ -139,7 +139,7 @@ export default function ProductListPage({
           <button
             type="button"
             onClick={onBackToShopping}
-            className="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <ExternalLink size={14} />
             <span>Lihat Etalase</span>
@@ -147,7 +147,7 @@ export default function ProductListPage({
           <button
             type="button"
             onClick={onAddNewProduct}
-            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black uppercase tracking-wider rounded-none transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Plus size={16} />
             <span>Tambah Produk</span>
@@ -158,7 +158,7 @@ export default function ProductListPage({
       {/* Overview Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Total Products */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs">
           <div className="flex items-center justify-between text-gray-500 mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider">Total Produk</span>
             <Package size={16} className="text-amber-500" />
@@ -174,7 +174,7 @@ export default function ProductListPage({
         </div>
 
         {/* Low Stock Warning */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs">
           <div className="flex items-center justify-between text-gray-500 mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider">Perlu Restok</span>
             <AlertTriangle size={16} className="text-amber-500" />
@@ -191,7 +191,7 @@ export default function ProductListPage({
         </div>
 
         {/* Total Stock Asset Value */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs">
           <div className="flex items-center justify-between text-gray-500 mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider">Nilai Aset Stok</span>
             <DollarSign size={16} className="text-emerald-500" />
@@ -205,7 +205,7 @@ export default function ProductListPage({
         </div>
 
         {/* Total Sold Count */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs">
           <div className="flex items-center justify-between text-gray-500 mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider">Total Terjual</span>
             <TrendingUp size={16} className="text-sky-500" />
@@ -223,7 +223,7 @@ export default function ProductListPage({
       </div>
 
       {/* Filter and Search Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-3.5">
+      <div className="bg-white p-4 rounded-none border border-gray-200 shadow-2xs space-y-3.5">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -233,7 +233,7 @@ export default function ProductListPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama produk, SKU, atau spesifikasi..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-gray-50 hover:bg-gray-100/80 focus:bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all text-gray-900"
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-gray-50 hover:bg-gray-100/80 focus:bg-white border border-gray-200 rounded-none focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all text-gray-900"
             />
             {searchQuery && (
               <button
@@ -252,7 +252,7 @@ export default function ProductListPage({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-none text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="all">Semua Kategori ({categories.length})</option>
               {categories.map((c) => (
@@ -264,7 +264,7 @@ export default function ProductListPage({
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-none text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="all">Semua Status</option>
               <option value="active">🟢 Aktif (Live)</option>
@@ -275,7 +275,7 @@ export default function ProductListPage({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="px-3 py-2 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-none text-gray-700 focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="newest">Terbaru Ditambahkan</option>
               <option value="sold">Paling Banyak Terjual</option>
@@ -315,11 +315,11 @@ export default function ProductListPage({
       </div>
 
       {/* Product Table List */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-none border border-gray-200 shadow-2xs overflow-hidden">
         {filteredProducts.length === 0 ? (
           /* Empty State */
           <div className="p-12 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto mb-3">
+            <div className="w-16 h-16 rounded-none bg-gray-100 text-gray-400 flex items-center justify-center mx-auto mb-3">
               <Package size={32} />
             </div>
             <h3 className="text-base font-bold text-gray-900">Tidak ada produk yang cocok</h3>
@@ -334,14 +334,14 @@ export default function ProductListPage({
                   setSelectedCategory('all');
                   setSelectedStatus('all');
                 }}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-none transition-colors cursor-pointer"
               >
                 Reset Filter
               </button>
               <button
                 type="button"
                 onClick={onAddNewProduct}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black rounded-none transition-colors cursor-pointer"
               >
                 + Tambah Produk Baru
               </button>
@@ -381,7 +381,7 @@ export default function ProductListPage({
                           <img
                             src={product.image_url}
                             alt={product.name}
-                            className="w-12 h-12 rounded-xl object-cover border border-gray-200 shrink-0 bg-gray-100"
+                            className="w-12 h-12 rounded-none object-cover border border-gray-200 shrink-0 bg-gray-100"
                           />
                           <div className="min-w-0 max-w-xs sm:max-w-sm">
                             <button
@@ -393,7 +393,7 @@ export default function ProductListPage({
                               {product.name}
                             </button>
                             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400">
-                              <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-semibold text-[10px]">
+                              <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded-none text-gray-600 font-semibold text-[10px]">
                                 {product.sku || `TSK-PRD-${product.id}`}
                               </span>
                               <span>•</span>
@@ -411,7 +411,7 @@ export default function ProductListPage({
 
                       {/* Category */}
                       <td className="py-3.5 px-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-bold bg-gray-100 text-gray-700">
                           {getCategoryName(product.category_id)}
                         </span>
                       </td>
@@ -445,7 +445,7 @@ export default function ProductListPage({
                         </div>
                         <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
                           {variantCount > 0 ? (
-                            <span className="bg-sky-50 text-sky-700 font-bold px-1.5 py-0.2 rounded">
+                            <span className="bg-sky-50 text-sky-700 font-bold px-1.5 py-0.2 rounded-none">
                               {variantCount} varian
                             </span>
                           ) : (
@@ -465,14 +465,14 @@ export default function ProductListPage({
                         <button
                           type="button"
                           onClick={() => onToggleStatus(product)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-[11px] font-bold cursor-pointer transition-all ${
                             isActive
                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                           title={isActive ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'}
                         >
-                          <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                          <span className={`w-2 h-2 rounded-none ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
                           <span>{isActive ? 'Aktif' : 'Nonaktif'}</span>
                         </button>
                       </td>
@@ -484,7 +484,7 @@ export default function ProductListPage({
                           <button
                             type="button"
                             onClick={() => onViewProductDetail(product)}
-                            className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-none transition-colors cursor-pointer"
                             title="Lihat Detail Produk"
                           >
                             <Eye size={15} />
@@ -494,7 +494,7 @@ export default function ProductListPage({
                           <button
                             type="button"
                             onClick={() => onEditProduct(product)}
-                            className="p-1.5 text-gray-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-gray-500 hover:text-sky-600 hover:bg-sky-50 rounded-none transition-colors cursor-pointer"
                             title="Ubah Produk"
                           >
                             <Edit3 size={15} />
@@ -504,7 +504,7 @@ export default function ProductListPage({
                           <button
                             type="button"
                             onClick={() => setProductToDelete(product)}
-                            className="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-none transition-colors cursor-pointer"
                             title="Hapus Produk"
                           >
                             <Trash2 size={15} />

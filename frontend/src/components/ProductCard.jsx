@@ -164,7 +164,7 @@ export default function ProductCard({
               e.stopPropagation();
               setIsWishlisted(!isWishlisted);
             }}
-            className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/90 rounded-full flex items-center justify-center text-neutral-700 hover:text-red-500 shadow-2xs transition-colors cursor-pointer"
+            className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-white/90 rounded-none flex items-center justify-center text-neutral-700 hover:text-red-500 shadow-2xs transition-colors cursor-pointer"
             title="Tambah ke Wishlist"
           >
             <Heart 

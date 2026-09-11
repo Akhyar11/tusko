@@ -278,7 +278,7 @@ export default function ProductDetail({
               <button 
                 type="button"
                 onClick={() => setIsWishlist(!isWishlist)}
-                className="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-neutral-800 hover:text-red-500 shadow-md transition-colors cursor-pointer"
+                className="absolute top-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-none flex items-center justify-center text-neutral-800 hover:text-red-500 shadow-md transition-colors cursor-pointer"
                 title={isWishlist ? 'Hapus dari Wishlist' : 'Tambah ke Wishlist'}
               >
                 <Heart size={18} className={isWishlist ? 'fill-red-500 text-red-500' : ''} />
