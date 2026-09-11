@@ -159,7 +159,7 @@ export default function CartPage({
             <span>Lanjut Belanja</span>
           </button>
           <h1 className="text-xl sm:text-2xl font-sport font-black uppercase tracking-tight text-black">
-            Keranjang Belanja <span className="text-amber-500">({cart.length})</span>
+            Keranjang Belanja <span className="text-neutral-400 font-bold">({cart.length})</span>
           </h1>
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs font-sport font-bold uppercase text-neutral-500">
