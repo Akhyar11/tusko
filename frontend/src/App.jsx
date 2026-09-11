@@ -25,6 +25,7 @@ import PopularChipsBar from './components/PopularChipsBar';
 import SportCategoriesSection from './components/SportCategoriesSection';
 import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
+import AdminRightSidebar from './components/AdminRightSidebar';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
@@ -283,6 +284,14 @@ export default function App() {
   const cartTotalCount = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   }, [cart]);
+
+  // Cek apakah halaman saat ini adalah bagian dari Admin Panel
+  const isAdminView = useMemo(() => {
+    const adminCoreViews = ['products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    if (adminCoreViews.includes(currentView)) return true;
+    if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
+    return false;
+  }, [currentView, currentUser]);
 
   // Unique locations from product catalog
   const uniqueLocations = useMemo(() => {
@@ -742,7 +751,7 @@ export default function App() {
     <div className={`min-h-screen flex flex-col ${currentView === 'catalog' || currentView === 'detail' ? 'bg-white' : 'bg-[#f5f6f8]'}`}>
       {/* Toast Notification with Cart Shortcut */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 text-white border border-neutral-700 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 text-white border border-neutral-700 px-4 py-3 rounded-none shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
           <CheckCircle2 size={18} className="text-amber-400 shrink-0" />
           <span className="font-semibold">{toastMessage}</span>
           <button
@@ -751,40 +760,48 @@ export default function App() {
               handleOpenCart();
               setToastMessage(null);
             }}
-            className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-xl transition-colors cursor-pointer shrink-0 tracking-wider"
+            className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-none transition-colors cursor-pointer shrink-0 tracking-wider"
           >
             Lihat Keranjang
           </button>
         </div>
       )}
 
-      {/* Navigation Header */}
-      <Navbar
-        cartCount={cartTotalCount}
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        selectedCategory={selectedCategoryId}
-        onSelectCategory={handleSelectCategory}
-        products={products}
-        onSelectProduct={handleSelectProduct}
-        onResetHome={handleResetHome}
-        onOpenCart={handleOpenCart}
-        onOpenOrders={() => setCurrentView('orders')}
-        onOpenTransactions={() => setCurrentView('transactions')}
-        onOpenProductsAdmin={() => setCurrentView('products-admin')}
-        onOpenStock={() => setCurrentView('stock')}
-        onOpenTemplates={() => setCurrentView('templates')}
-        onOpenExpeditions={() => setCurrentView('expeditions')}
-        currentUser={currentUser}
-        onOpenLogin={() => setCurrentView('login')}
-        onOpenRegister={() => setCurrentView('register')}
-        onOpenProfile={() => setCurrentView('profile')}
-        onLogout={handleLogout}
-        onSwitchUser={handleSwitchUser}
-      />
+      {/* Navigation Header: Hanya ditampilkan di storefront, disembunyikan di Panel Admin */}
+      {!isAdminView && (
+        <Navbar
+          cartCount={cartTotalCount}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          selectedCategory={selectedCategoryId}
+          onSelectCategory={handleSelectCategory}
+          products={products}
+          onSelectProduct={handleSelectProduct}
+          onResetHome={handleResetHome}
+          onOpenCart={handleOpenCart}
+          onOpenOrders={() => setCurrentView('orders')}
+          onOpenTransactions={() => setCurrentView('transactions')}
+          onOpenProductsAdmin={() => setCurrentView('products-admin')}
+          onOpenStock={() => setCurrentView('stock')}
+          onOpenTemplates={() => setCurrentView('templates')}
+          onOpenExpeditions={() => setCurrentView('expeditions')}
+          currentUser={currentUser}
+          onOpenLogin={() => setCurrentView('login')}
+          onOpenRegister={() => setCurrentView('register')}
+          onOpenProfile={() => setCurrentView('profile')}
+          onLogout={handleLogout}
+          onSwitchUser={handleSwitchUser}
+        />
+      )}
 
-      {/* Main Container */}
-      <main className={`flex-1 w-full ${currentView === 'catalog' || currentView === 'detail' ? '' : 'w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6'}`}>
+      {/* Main Layout Area: Di Admin Panel, tata letak flex-row dengan navigasi di sebelah KANAN */}
+      <div className={`flex-1 flex ${isAdminView ? 'flex-col lg:flex-row' : 'flex-col'} w-full min-w-0`}>
+        {/* Main View Area */}
+        <main className={`flex-1 min-w-0 w-full ${
+          isAdminView 
+            ? 'px-4 sm:px-8 lg:px-10 py-6' 
+            : (currentView === 'catalog' || currentView === 'detail' ? '' : 'w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6')
+        }`}>
         {currentView === 'product-edit' && editingProduct ? (
           <ProductEditForm
             product={editingProduct}
@@ -1176,17 +1193,33 @@ export default function App() {
         )}
       </main>
 
-      {/* 8. Footer Standar E-Commerce Adidas */}
-      <Footer
-        onSelectCategory={(term) => {
-          setSearchQuery(term);
-          setSelectedCategoryId(null);
-          setCurrentView('catalog');
-          const el = document.getElementById('product-catalog');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
-        onOpenOrders={() => setCurrentView('orders')}
-      />
+      {/* Navigasi Panel Admin di Sebelah Kanan (Bukan di Atas) */}
+      {isAdminView && (
+        <AdminRightSidebar
+          currentView={currentView}
+          onNavigate={(view) => setCurrentView(view)}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onBackToStore={() => setCurrentView('catalog')}
+          orderCount={orders.length}
+          lowStockCount={products.filter(p => p.stock <= (p.stock_minimum || 5)).length}
+        />
+      )}
+      </div>
+
+      {/* 8. Footer Standar E-Commerce Adidas (Hanya di Toko Publik) */}
+      {!isAdminView && (
+        <Footer
+          onSelectCategory={(term) => {
+            setSearchQuery(term);
+            setSelectedCategoryId(null);
+            setCurrentView('catalog');
+            const el = document.getElementById('product-catalog');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onOpenOrders={() => setCurrentView('orders')}
+        />
+      )}
     </div>
   );
 }
