@@ -26,6 +26,7 @@ import SportCategoriesSection from './components/SportCategoriesSection';
 import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
+import AdminDashboardPage from './components/AdminDashboardPage';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
@@ -36,6 +37,7 @@ import { authService } from './services/authService';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
+  'admin-dashboard',
   'catalog',
   'detail',
   'cart',
@@ -59,8 +61,9 @@ const getViewFromPathOrHash = () => {
   try {
     const rawPath = window.location.pathname.replace(/\/+$/, '');
     if (rawPath === '/admin/dashboard' || rawPath === '/admin') {
-      return 'products-admin';
+      return 'admin-dashboard';
     }
+    if (rawPath === '/admin/products') return 'products-admin';
     if (rawPath === '/admin/stock') return 'stock';
     if (rawPath === '/admin/orders') return 'orders';
     if (rawPath === '/admin/transactions') return 'transactions';
@@ -75,7 +78,7 @@ const getViewFromPathOrHash = () => {
 
     const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
     if (rawHash === 'admin/dashboard' || rawHash === 'admin') {
-      return 'products-admin';
+      return 'admin-dashboard';
     }
     if (rawHash && VALID_VIEWS.includes(rawHash)) {
       return rawHash;
@@ -204,7 +207,7 @@ export default function App() {
     handleUpdateUser(demoUser);
     showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
     if (demoUser?.role === 'admin') {
-      setCurrentView('products-admin');
+      setCurrentView('admin-dashboard');
       window.history.pushState(null, '', '/admin/dashboard');
     }
   };
@@ -217,7 +220,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -258,9 +261,13 @@ export default function App() {
       // ignore
     }
 
-    if (currentView === 'products-admin') {
+    if (currentView === 'admin-dashboard') {
       if (window.location.pathname !== '/admin/dashboard') {
         window.history.pushState(null, '', '/admin/dashboard');
+      }
+    } else if (currentView === 'products-admin') {
+      if (window.location.pathname !== '/admin/products') {
+        window.history.pushState(null, '', '/admin/products');
       }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
@@ -335,7 +342,7 @@ export default function App() {
 
   // Cek apakah halaman saat ini adalah bagian dari Admin Panel
   const isAdminView = useMemo(() => {
-    const adminCoreViews = ['products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    const adminCoreViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
@@ -864,7 +871,14 @@ export default function App() {
             ? 'px-4 sm:px-8 lg:px-10 py-6' 
             : (currentView === 'catalog' || currentView === 'detail' ? '' : 'w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6')
         }`}>
-        {currentView === 'product-edit' && editingProduct ? (
+        {currentView === 'admin-dashboard' ? (
+          <AdminDashboardPage
+            products={products}
+            orders={orders}
+            transactions={transactions}
+            onNavigate={(view) => setCurrentView(view)}
+          />
+        ) : currentView === 'product-edit' && editingProduct ? (
           <ProductEditForm
             product={editingProduct}
             categories={categories}

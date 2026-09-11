@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { 
+  LayoutDashboard,
   Package, 
   Boxes, 
   ShoppingBag, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminSidebar({
-  currentView = 'products-admin',
+  currentView = 'admin-dashboard',
   onNavigate = () => {},
   currentUser = null,
   onLogout = () => {},
@@ -27,6 +27,13 @@ export default function AdminSidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuItems = [
+    {
+      id: 'admin-dashboard',
+      label: 'Ringkasan Dashboard',
+      sublabel: 'KPI revenue & performa toko',
+      icon: LayoutDashboard,
+      activeViews: ['admin-dashboard']
+    },
     {
       id: 'products-admin',
       label: 'Produk & Katalog',
