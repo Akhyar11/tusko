@@ -25,7 +25,7 @@ import PopularChipsBar from './components/PopularChipsBar';
 import SportCategoriesSection from './components/SportCategoriesSection';
 import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
-import AdminRightSidebar from './components/AdminRightSidebar';
+import AdminSidebar from './components/AdminSidebar';
 import { categories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
@@ -794,8 +794,21 @@ export default function App() {
         />
       )}
 
-      {/* Main Layout Area: Di Admin Panel, tata letak flex-row dengan navigasi di sebelah KANAN */}
+      {/* Main Layout Area: Di Admin Panel, tata letak flex-row dengan navigasi di sebelah KIRI */}
       <div className={`flex-1 flex ${isAdminView ? 'flex-col lg:flex-row' : 'flex-col'} w-full min-w-0`}>
+        {/* Navigasi Panel Admin di Sebelah KIRI */}
+        {isAdminView && (
+          <AdminSidebar
+            currentView={currentView}
+            onNavigate={(view) => setCurrentView(view)}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onBackToStore={() => setCurrentView('catalog')}
+            orderCount={orders.length}
+            lowStockCount={products.filter(p => p.stock <= (p.stock_minimum || 5)).length}
+          />
+        )}
+
         {/* Main View Area */}
         <main className={`flex-1 min-w-0 w-full ${
           isAdminView 
@@ -1192,19 +1205,6 @@ export default function App() {
           </>
         )}
       </main>
-
-      {/* Navigasi Panel Admin di Sebelah Kanan (Bukan di Atas) */}
-      {isAdminView && (
-        <AdminRightSidebar
-          currentView={currentView}
-          onNavigate={(view) => setCurrentView(view)}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          onBackToStore={() => setCurrentView('catalog')}
-          orderCount={orders.length}
-          lowStockCount={products.filter(p => p.stock <= (p.stock_minimum || 5)).length}
-        />
-      )}
       </div>
 
       {/* 8. Footer Standar E-Commerce Adidas (Hanya di Toko Publik) */}

@@ -15,7 +15,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function AdminRightSidebar({
+export default function AdminSidebar({
   currentView = 'products-admin',
   onNavigate = () => {},
   currentUser = null,
@@ -221,17 +221,17 @@ export default function AdminRightSidebar({
 
   return (
     <>
-      {/* ================= DESKTOP RIGHT SIDEBAR ================= */}
+      {/* ================= DESKTOP LEFT SIDEBAR ================= */}
       <aside 
-        className="hidden lg:flex flex-col w-72 xl:w-80 h-screen sticky top-0 right-0 border-l border-neutral-300 shrink-0 z-30 shadow-xs"
+        className="hidden lg:flex flex-col w-72 xl:w-80 h-screen sticky top-0 left-0 border-r border-neutral-300 shrink-0 z-30 shadow-xs"
         aria-label="Navigasi Panel Admin"
       >
         {sidebarContent}
       </aside>
 
-      {/* ================= MOBILE / TABLET RIGHT DRAWER TOGGLE & DRAWER ================= */}
+      {/* ================= MOBILE / TABLET LEFT DRAWER TOGGLE & DRAWER ================= */}
       {/* Mobile Top Floating Bar */}
-      <div className="lg:hidden fixed top-3 right-3 z-40">
+      <div className="lg:hidden fixed top-3 left-3 z-40">
         <button
           type="button"
           onClick={() => setIsMobileOpen(true)}
@@ -243,17 +243,17 @@ export default function AdminRightSidebar({
         </button>
       </div>
 
-      {/* Mobile Right Drawer Overlay */}
+      {/* Mobile Left Drawer Overlay */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex justify-end animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-start animate-in fade-in duration-150">
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileOpen(false)}
           />
 
-          {/* Drawer Content on the RIGHT */}
-          <div className="relative w-72 sm:w-80 h-full bg-white z-10 shadow-2xl flex flex-col border-l border-neutral-300 animate-in slide-in-from-right duration-200 rounded-none">
+          {/* Drawer Content on the LEFT */}
+          <div className="relative w-72 sm:w-80 h-full bg-white z-10 shadow-2xl flex flex-col border-r border-neutral-300 animate-in slide-in-from-left duration-200 rounded-none">
             {/* Close Button Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-black text-white border-b border-neutral-800 rounded-none">
               <span className="font-sport font-black text-xs uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
