@@ -183,6 +183,9 @@ export default function App() {
   const handleSwitchUser = (demoUser) => {
     handleUpdateUser(demoUser);
     showToast(`Beralih ke akun demo: ${demoUser.name} (${demoUser.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
+    if (demoUser?.role === 'admin') {
+      setCurrentView('products-admin');
+    }
   };
 
   const handleLogout = async () => {
@@ -193,7 +196,8 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    if (currentView === 'profile' || currentView === 'cart') {
+    const adminViews = ['products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
     }
   };
@@ -694,6 +698,13 @@ export default function App() {
         setCurrentView('cart');
         return;
       }
+    }
+
+    // Jika akun adalah admin, alihkan langsung ke panel admin / manajemen produk
+    if (user?.role === 'admin') {
+      setPendingCartAction(null);
+      setCurrentView('products-admin');
+      return;
     }
 
     setCurrentView('catalog');
