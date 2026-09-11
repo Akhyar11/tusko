@@ -229,9 +229,12 @@ export default function AdminSidebar({
 
   return (
     <>
-      {/* ================= DESKTOP LEFT SIDEBAR ================= */}
+      {/* Spacer to preserve layout width in flex container on desktop */}
+      <div className="hidden lg:block w-72 xl:w-80 shrink-0" aria-hidden="true" />
+
+      {/* ================= DESKTOP FIXED LEFT SIDEBAR ================= */}
       <aside 
-        className="hidden lg:flex flex-col w-72 xl:w-80 h-screen sticky top-0 left-0 border-r border-neutral-300 shrink-0 z-30 shadow-xs"
+        className="hidden lg:flex flex-col w-72 xl:w-80 h-screen fixed top-0 left-0 border-r border-neutral-300 z-30 shadow-xs bg-white"
         aria-label="Navigasi Panel Admin"
       >
         {sidebarContent}
