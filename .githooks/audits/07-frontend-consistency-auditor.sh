@@ -32,6 +32,12 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
    - DILARANG membuat implementasi inline `new Intl.NumberFormat('id-ID', ...)` atau membuat fungsi formatter rupiah lokal baru.
 4. Standardisasi Desain Tajam:
    - Komponen UI wajib menggunakan `rounded-none`. Dilarang menyisipkan `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-lg`.
+5. Standardisasi Arsitektur Atomic Design:
+   - Komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan arsitektur Atomic Design (pemisahan Atoms, Molecules, Organisms, Pages).
+6. Standardisasi Tombol Header Simbol/Icon-Only dengan Tooltip:
+   - Tombol kontrol/aksi pada header tabel produk menggunakan simbol/ikon saja (icon-only) bersudut siku tajam (`rounded-none`) dan WAJIB dilengkapi tooltip yang memunculkan keterangan fungsi saat di-highlight/hover/fokus.
+7. Standardisasi Sentralisasi Filter:
+   - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri, dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
 
 Git Diff (Staged Frontend Changes):
 ```diff

@@ -31,6 +31,9 @@ import {
 import { formatRupiah } from '../utils/formatters';
 import DeleteProductModal from './DeleteProductModal';
 import ServerSideTable from './ServerSideTable';
+import ProductHeaderActions from './organisms/ProductHeaderActions';
+import ProductFilterDrawer from './organisms/ProductFilterDrawer';
+import SearchBar from './molecules/SearchBar';
 
 export default function ProductListPage({
   products = [],
@@ -536,67 +539,15 @@ export default function ProductListPage({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap pt-2 xl:pt-0 border-t xl:border-t-0 border-neutral-100">
-          {/* View mode toggle */}
-          <div className="inline-flex items-center border border-neutral-300 bg-neutral-100 p-1 rounded-none h-10 shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`w-8 h-8 rounded-none transition-colors cursor-pointer flex items-center justify-center ${
-                viewMode === 'table' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black hover:bg-neutral-200'
-              }`}
-              title="Tampilan Tabel Server-Side"
-            >
-              <List size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`w-8 h-8 rounded-none transition-colors cursor-pointer flex items-center justify-center ${
-                viewMode === 'grid' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black hover:bg-neutral-200'
-              }`}
-              title="Tampilan Grid Kartu"
-            >
-              <LayoutGrid size={16} />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={onBackToShopping}
-            className="h-10 px-3.5 sm:px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-          >
-            <ExternalLink size={14} />
-            <span>Lihat Etalase</span>
-          </button>
-          <button
-            type="button"
-            onClick={onAddNewProduct}
-            className="h-10 px-4 sm:px-5 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider rounded-none transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer border border-amber-500 shrink-0"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-            <span>Tambah Produk</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsFilterSidebarOpen(true)}
-            className={`h-10 px-3.5 sm:px-4 font-sport font-black text-xs uppercase tracking-wider rounded-none border transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
-              activeFilterCount > 0 
-                ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
-                : 'bg-white hover:bg-neutral-100 text-neutral-900 border-neutral-300'
-            }`}
-            title="Buka Sidebar Filter Produk"
-          >
-            <SlidersHorizontal size={15} className={activeFilterCount > 0 ? 'text-amber-400' : 'text-neutral-700'} />
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="w-5 h-5 bg-amber-400 text-black font-mono text-[10px] font-black flex items-center justify-center rounded-none ml-0.5">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* Action Buttons: Atomic Organism */}
+        <ProductHeaderActions
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onBackToShopping={onBackToShopping}
+          onAddNewProduct={onAddNewProduct}
+          onOpenFilter={() => setIsFilterSidebarOpen(true)}
+          activeFilterCount={activeFilterCount}
+        />
       </div>
 
       {/* Overview Metric Cards */}
@@ -666,129 +617,29 @@ export default function ProductListPage({
         </div>
       </div>
 
-      {/* Filter and Search Toolbar */}
-      <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-3 text-neutral-400" size={16} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama produk olahraga, kode SKU, atau spesifikasi..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-neutral-50 hover:bg-neutral-100/80 focus:bg-white border border-neutral-300 rounded-none focus:outline-none focus:border-black transition-all text-neutral-900"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-xs font-sport font-bold uppercase text-neutral-400 hover:text-black cursor-pointer"
-              >
-                ✕ Reset
-              </button>
-            )}
-          </div>
-
-          {/* Secondary Quick Filter trigger on toolbar */}
-          <button
-            type="button"
-            onClick={() => setIsFilterSidebarOpen(true)}
-            className={`h-9 sm:h-10 px-3.5 sm:px-4 font-sport font-black text-xs uppercase tracking-wider rounded-none border transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
-              activeFilterCount > 0 
-                ? 'bg-neutral-950 text-white border-neutral-950' 
-                : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border-neutral-300'
-            }`}
-          >
-            <SlidersHorizontal size={14} className={activeFilterCount > 0 ? 'text-amber-400' : 'text-neutral-600'} />
-            <span>Kustom Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.5 bg-amber-400 text-black font-mono text-[10px] font-black rounded-none">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
+      {/* Search Toolbar (Pure Search, Centralized Filter on Sidebar) */}
+      <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs space-y-2.5">
+        <div className="flex items-center gap-3">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onReset={() => setSearchQuery('')}
+            placeholder="Cari nama produk olahraga, kode SKU, atau spesifikasi..."
+          />
         </div>
 
-        {/* Active Filter Chips / Badges */}
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
-            <span className="text-[11px] font-sport font-bold uppercase text-neutral-500 tracking-wider mr-1">
-              Filter Aktif:
-            </span>
-            {selectedCategory !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 border border-neutral-300 text-neutral-900 font-mono font-medium rounded-none">
-                <span>Kategori: {getCategoryName(Number(selectedCategory))}</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory('all')}
-                  className="hover:text-amber-700 font-bold ml-1 cursor-pointer text-neutral-500"
-                  title="Hapus filter kategori"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {selectedStatus !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 border border-neutral-300 text-neutral-900 font-mono font-medium rounded-none">
-                <span>Status: {selectedStatus === 'active' ? '🟢 Aktif' : '⚪ Draft'}</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedStatus('all')}
-                  className="hover:text-amber-700 font-bold ml-1 cursor-pointer text-neutral-500"
-                  title="Hapus filter status"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {stockCondition !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 border border-neutral-300 text-neutral-900 font-mono font-medium rounded-none">
-                <span>
-                  Stok: {stockCondition === 'low' ? '⚠️ Perlu Restok' : stockCondition === 'empty' ? '❌ Habis' : '✅ Aman'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setStockCondition('all')}
-                  className="hover:text-amber-700 font-bold ml-1 cursor-pointer text-neutral-500"
-                  title="Hapus filter kondisi stok"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {(minPrice.trim() !== '' || maxPrice.trim() !== '') && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 border border-neutral-300 text-neutral-900 font-mono font-medium rounded-none">
-                <span>
-                  Harga: {minPrice ? formatRupiah(Number(minPrice)) : 'Rp 0'} - {maxPrice ? formatRupiah(Number(maxPrice)) : 'Maks'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                  className="hover:text-amber-700 font-bold ml-1 cursor-pointer text-neutral-500"
-                  title="Hapus filter harga"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="text-amber-700 hover:text-amber-800 font-sport font-bold uppercase text-[11px] underline cursor-pointer ml-1.5"
-            >
-              Reset Semua
-            </button>
-          </div>
-        )}
-
-        {/* Filter Summary & Result Count */}
+        {/* Search & Result Metadata */}
         <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-200">
           <div>
             Ditemukan <strong className="font-mono text-neutral-950 font-bold">{totalFiltered}</strong> dari <strong className="font-mono text-neutral-950">{products.length}</strong> produk
             {searchQuery && (
               <span className="ml-1">
                 untuk &ldquo;<span className="font-semibold text-amber-700">{searchQuery}</span>&rdquo;
+              </span>
+            )}
+            {activeFilterCount > 0 && (
+              <span className="ml-2 font-sport font-bold text-amber-700 uppercase">
+                ({activeFilterCount} filter aktif di sidebar)
               </span>
             )}
           </div>
@@ -926,271 +777,33 @@ export default function ProductListPage({
         </div>
       )}
 
-      {/* Filter Sidebar Drawer (Sliding Right to Left) */}
-      <div 
-        className={`fixed inset-0 z-50 transition-all duration-300 ${
-          isFilterSidebarOpen ? 'visible opacity-100 pointer-events-auto' : 'invisible opacity-0 pointer-events-none'
-        }`}
-        aria-hidden={!isFilterSidebarOpen}
-      >
-        {/* Backdrop overlay */}
-        <div 
-          className="fixed inset-0 bg-neutral-950/60 backdrop-blur-[2px] transition-opacity"
-          onClick={() => setIsFilterSidebarOpen(false)}
-        />
-
-        {/* Drawer panel sliding in from right */}
-        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-          <div 
-            className={`w-screen max-w-md bg-white border-l border-neutral-300 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out rounded-none ${
-              isFilterSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
-          >
-            {/* Drawer Header */}
-            <div className="p-5 sm:p-6 bg-neutral-950 text-white flex items-center justify-between border-b border-neutral-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-neutral-900 border border-neutral-700 text-amber-400 flex items-center justify-center rounded-none font-black">
-                  <SlidersHorizontal size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-black font-sport uppercase tracking-wider text-white">
-                      Filter Produk
-                    </h2>
-                    {activeFilterCount > 0 && (
-                      <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-black uppercase rounded-none">
-                        {activeFilterCount} Aktif
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-400 font-mono mt-0.5">
-                    Saring katalog menurut parameter spesifik
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsFilterSidebarOpen(false)}
-                className="w-9 h-9 rounded-none bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-700 flex items-center justify-center transition-colors cursor-pointer"
-                title="Tutup Filter (Esc)"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Drawer Content (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-              
-              {/* 1. Status Publikasi */}
-              <div className="space-y-2.5">
-                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                  Status Publikasi Produk
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'all', label: 'Semua' },
-                    { id: 'active', label: '🟢 Aktif' },
-                    { id: 'inactive', label: '⚪ Draft' }
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSelectedStatus(s.id)}
-                      className={`py-2 px-2.5 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center ${
-                        selectedStatus === s.id
-                          ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                          : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 2. Kategori Olahraga */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                    Kategori Olahraga
-                  </label>
-                  {selectedCategory !== 'all' && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('all')}
-                      className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
-                    >
-                      Reset Kategori
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-1.5 max-h-52 overflow-y-auto border border-neutral-200 p-2 bg-neutral-50/50 rounded-none">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className={`w-full text-left px-3 py-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors flex items-center justify-between cursor-pointer ${
-                      selectedCategory === 'all'
-                        ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                        : 'bg-white hover:bg-neutral-100 text-neutral-800 border-neutral-200'
-                    }`}
-                  >
-                    <span>Semua Kategori</span>
-                    <span className="font-mono text-[11px] opacity-80">{products.length}</span>
-                  </button>
-                  {categories.map((cat) => {
-                    const catCount = products.filter(p => p.category_id === cat.id).length;
-                    const isSelected = String(selectedCategory) === String(cat.id);
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setSelectedCategory(String(cat.id))}
-                        className={`w-full text-left px-3 py-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                            : 'bg-white hover:bg-neutral-100 text-neutral-800 border-neutral-200'
-                        }`}
-                      >
-                        <span className="truncate">{cat.name}</span>
-                        <span className="font-mono text-[11px] opacity-80 ml-2">{catCount}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 3. Kondisi Stok Inventaris */}
-              <div className="space-y-2.5">
-                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                  Kondisi Stok Inventaris
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'all', label: 'Semua Stok' },
-                    { id: 'low', label: '⚠️ Perlu Restok' },
-                    { id: 'empty', label: '❌ Stok Habis' },
-                    { id: 'ready', label: '✅ Stok Aman' }
-                  ].map((stk) => (
-                    <button
-                      key={stk.id}
-                      type="button"
-                      onClick={() => setStockCondition(stk.id)}
-                      className={`py-2 px-2.5 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center ${
-                        stockCondition === stk.id
-                          ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                          : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                      }`}
-                    >
-                      {stk.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 4. Rentang Harga Jual */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                    Rentang Harga Jual (IDR)
-                  </label>
-                  {(minPrice || maxPrice) && (
-                    <button
-                      type="button"
-                      onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                      className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
-                    >
-                      Reset Harga
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Harga Minimum</span>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="Rp Min"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                      className="w-full px-3 py-2 text-xs font-mono bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
-                    />
-                  </div>
-                  <div>
-                    <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Harga Maksimum</span>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="Rp Maks"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                      className="w-full px-3 py-2 text-xs font-mono bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 5. Urutan Data (Sorting) */}
-              <div className="space-y-2.5">
-                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                  Urutkan Katalog Berdasarkan
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Terbaru', sort: 'created_at', dir: 'desc' },
-                    { label: 'Terlama', sort: 'created_at', dir: 'asc' },
-                    { label: 'Harga Tertinggi', sort: 'price', dir: 'desc' },
-                    { label: 'Harga Terendah', sort: 'price', dir: 'asc' },
-                    { label: 'Stok Terbanyak', sort: 'stock', dir: 'desc' },
-                    { label: 'Paling Laris', sort: 'sold_count', dir: 'desc' },
-                  ].map((sOpt, idx) => {
-                    const isSelected = sortBy === sOpt.sort && sortDirection === sOpt.dir;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setSortBy(sOpt.sort);
-                          setSortDirection(sOpt.dir);
-                        }}
-                        className={`py-2 px-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center truncate ${
-                          isSelected
-                            ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                            : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                        }`}
-                      >
-                        {sOpt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Drawer Footer */}
-            <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                disabled={activeFilterCount === 0}
-                className="flex-1 h-11 bg-white hover:bg-neutral-100 disabled:opacity-50 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <RotateCcw size={14} />
-                <span>Reset Filter</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsFilterSidebarOpen(false)}
-                className="flex-1 h-11 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider rounded-none border border-amber-500 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Check size={16} strokeWidth={2.5} />
-                <span>Terapkan ({totalFiltered})</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
+      {/* Centralized Filter Sidebar Drawer Organism */}
+      <ProductFilterDrawer
+        isOpen={isFilterSidebarOpen}
+        onClose={() => setIsFilterSidebarOpen(false)}
+        activeFilterCount={activeFilterCount}
+        totalFiltered={totalFiltered}
+        totalProducts={products.length}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        categories={categories}
+        products={products}
+        stockCondition={stockCondition}
+        onStockConditionChange={setStockCondition}
+        minPrice={minPrice}
+        onMinPriceChange={setMinPrice}
+        maxPrice={maxPrice}
+        onMaxPriceChange={setMaxPrice}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={(newSort, newDir) => {
+          setSortBy(newSort);
+          setSortDirection(newDir);
+        }}
+        onResetFilters={handleResetFilters}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteProductModal
