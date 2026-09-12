@@ -56,7 +56,7 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "WARNING"; then
+if grep -E -q "(^|[[:space:]]|\*\*)WARNING([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo "⚠️ ======================================================================"
     echo "⚠️ [Audit Feature Ownership] PERINGATAN BOUNDARY FITUR OLEH OPENCODE AI:"
     echo "⚠️ ======================================================================"

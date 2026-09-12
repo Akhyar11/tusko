@@ -127,11 +127,6 @@ export default function AdminDashboardPage({
       {/* 1. Header Bar Dashboard Admin */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-            <span className="text-amber-700 font-bold">OPERATIONAL ERP CONTROL</span>
-            <span>&bull;</span>
-            <span>Tusko Central Platform</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-neutral-950 font-sport tracking-tight uppercase">
             Dashboard Utama Toko
           </h1>

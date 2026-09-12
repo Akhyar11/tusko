@@ -28,8 +28,10 @@ import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
 import AdminDashboardPage from './components/AdminDashboardPage';
-import ProcurementPage from './components/ProcurementPage';
-import { categories as initialMockCategories, mockProducts } from './data/mockProducts';
+import PurchaseOrderListPage from './components/PurchaseOrderListPage';
+import GoodsReceiptListPage from './components/GoodsReceiptListPage';
+import VendorBillListPage from './components/VendorBillListPage';
+import SupplierListPage from './components/SupplierListPage';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
@@ -37,7 +39,7 @@ import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { categoryService } from './services/categoryService';
-import { CheckCircle2, Filter } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
   'admin-dashboard',
@@ -49,6 +51,10 @@ const VALID_VIEWS = [
   'orders',
   'order-detail',
   'procurement',
+  'procurement-pos',
+  'procurement-grn',
+  'procurement-bills',
+  'suppliers-admin',
   'transactions',
   'stock',
   'templates',
@@ -70,9 +76,14 @@ const getViewFromPathOrHash = () => {
     }
     if (rawPath === '/admin/products') return 'products-admin';
     if (rawPath === '/admin/categories') return 'categories-admin';
+    if (rawPath === '/admin/suppliers') return 'suppliers-admin';
     if (rawPath === '/admin/stock') return 'stock';
     if (rawPath === '/admin/orders') return 'orders';
-    if (rawPath === '/admin/procurement') return 'procurement';
+    if (rawPath === '/admin/procurement') return 'procurement-pos';
+    if (rawPath === '/admin/procurement/pos') return 'procurement-pos';
+    if (rawPath === '/admin/procurement/grn') return 'procurement-grn';
+    if (rawPath === '/admin/procurement/bills') return 'procurement-bills';
+    if (rawPath === '/admin/procurement/vendors') return 'suppliers-admin';
     if (rawPath === '/admin/transactions') return 'transactions';
     if (rawPath === '/admin/expeditions') return 'expeditions';
     if (rawPath === '/admin/templates') return 'templates';
@@ -154,31 +165,21 @@ export default function App() {
     }
   };
 
-  const [products, setProducts] = useState(mockProducts);
-  const [categories, setCategories] = useState(initialMockCategories);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // Fetch categories from server on mount
   useEffect(() => {
     categoryService.fetchCategories({ all: true })
       .then(res => {
-        if (res && res.data && res.data.length > 0) {
+        if (res && res.data) {
           setCategories(res.data);
         }
       })
       .catch(err => console.warn('categoryService initial load:', err));
   }, []);
 
-  const [selectedProduct, setSelectedProduct] = useState(() => {
-    try {
-      const savedId = localStorage.getItem('tusko_selected_product_id');
-      if (savedId) {
-        return mockProducts.find(p => String(p.id) === String(savedId)) || null;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  });
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
@@ -204,22 +205,20 @@ export default function App() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [pendingCartAction, setPendingCartAction] = useState(null);
 
-  // Initial cart with realistic mock items from mockProducts
-  const [cart, setCart] = useState(() => [
-    {
-      ...mockProducts[0], // Tusko Pro Matchday Football Jersey
-      quantity: 1
-    },
-    {
-      ...mockProducts[1], // Tusko HyperPace Carbon Running Shoes
-      quantity: 1
-    }
-  ]);
+  // Initial cart starts empty
+  const [cart, setCart] = useState([]);
   
   const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
+  const showToast = (msg, options = {}) => {
+    if (!msg) {
+      setToastMessage(null);
+      return;
+    }
+    const toastData = typeof msg === 'string'
+      ? { message: msg, showCart: !!options?.showCart, type: options?.type || 'success' }
+      : { message: msg?.message || '', showCart: !!msg?.showCart, type: msg?.type || 'success' };
+    setToastMessage(toastData);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -293,13 +292,25 @@ export default function App() {
       if (window.location.pathname !== '/admin/categories') {
         window.history.pushState(null, '', '/admin/categories');
       }
+    } else if (currentView === 'suppliers-admin') {
+      if (window.location.pathname !== '/admin/suppliers') {
+        window.history.pushState(null, '', '/admin/suppliers');
+      }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
         window.history.pushState(null, '', '/admin/stock');
       }
-    } else if (currentView === 'procurement') {
-      if (window.location.pathname !== '/admin/procurement') {
-        window.history.pushState(null, '', '/admin/procurement');
+    } else if (currentView === 'procurement-pos' || currentView === 'procurement') {
+      if (window.location.pathname !== '/admin/procurement/pos' && window.location.pathname !== '/admin/procurement') {
+        window.history.pushState(null, '', '/admin/procurement/pos');
+      }
+    } else if (currentView === 'procurement-grn') {
+      if (window.location.pathname !== '/admin/procurement/grn') {
+        window.history.pushState(null, '', '/admin/procurement/grn');
+      }
+    } else if (currentView === 'procurement-bills') {
+      if (window.location.pathname !== '/admin/procurement/bills') {
+        window.history.pushState(null, '', '/admin/procurement/bills');
       }
     } else if (currentView === 'orders' && currentUser?.role === 'admin') {
       if (window.location.pathname !== '/admin/orders') {
@@ -371,7 +382,22 @@ export default function App() {
 
   // Cek apakah halaman saat ini adalah bagian dari Admin Panel
   const isAdminView = useMemo(() => {
-    const adminCoreViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'product-create', 'product-edit', 'stock', 'procurement', 'templates', 'expeditions', 'transactions'];
+    const adminCoreViews = [
+      'admin-dashboard', 
+      'products-admin', 
+      'categories-admin', 
+      'suppliers-admin',
+      'product-create', 
+      'product-edit', 
+      'stock', 
+      'procurement', 
+      'procurement-pos',
+      'procurement-grn',
+      'procurement-bills',
+      'templates', 
+      'expeditions', 
+      'transactions'
+    ];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
@@ -754,7 +780,7 @@ export default function App() {
 
         const variantLabel = prod.variant_name ? ` [${prod.variant_name}]` : '';
         setTimeout(() => {
-          showToast(`"${prod.name.slice(0, 18)}..."${variantLabel} (${qty}x) berhasil masuk keranjang!`);
+          showToast(`"${prod.name.slice(0, 18)}..."${variantLabel} (${qty}x) berhasil masuk keranjang!`, { showCart: true });
         }, 400);
 
         if (action.returnView === 'detail' && selectedProduct) {
@@ -834,20 +860,38 @@ export default function App() {
 
   return (
     <div className={`min-h-screen flex flex-col ${currentView === 'catalog' || currentView === 'detail' ? 'bg-white' : 'bg-[#f5f6f8]'}`}>
-      {/* Toast Notification with Cart Shortcut */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900/95 text-white border border-neutral-700 px-4 py-3 rounded-none shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
-          <CheckCircle2 size={18} className="text-amber-400 shrink-0" />
-          <span className="font-semibold">{toastMessage}</span>
+        <div className={`fixed bottom-6 right-6 z-50 text-white border px-4 py-3 rounded-none shadow-2xl flex items-center gap-3 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-4 duration-150 ${
+          toastMessage.type === 'error'
+            ? 'bg-red-950/95 border-red-700 text-red-100'
+            : 'bg-neutral-900/95 border-neutral-700 text-white'
+        }`}>
+          {toastMessage.type === 'error' ? (
+            <AlertCircle size={18} className="text-red-400 shrink-0" />
+          ) : (
+            <CheckCircle2 size={18} className="text-amber-400 shrink-0" />
+          )}
+          <span className="font-semibold">{toastMessage.message || toastMessage}</span>
+          {toastMessage.showCart && (
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenCart();
+                setToastMessage(null);
+              }}
+              className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-none transition-colors cursor-pointer shrink-0 tracking-wider"
+            >
+              Lihat Keranjang
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => {
-              handleOpenCart();
-              setToastMessage(null);
-            }}
-            className="ml-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase text-xs rounded-none transition-colors cursor-pointer shrink-0 tracking-wider"
+            onClick={() => setToastMessage(null)}
+            className="ml-1 p-0.5 text-neutral-400 hover:text-white rounded-none cursor-pointer shrink-0 transition-colors"
+            title="Tutup Notifikasi"
           >
-            Lihat Keranjang
+            <X size={14} />
           </button>
         </div>
       )}
@@ -911,6 +955,7 @@ export default function App() {
           <ProductEditForm
             product={editingProduct}
             categories={categories}
+            products={products}
             onUpdateProduct={(updatedProduct) => {
               setProducts(prev => prev.map(item => item.id === updatedProduct.id ? updatedProduct : item));
               if (selectedProduct && selectedProduct.id === updatedProduct.id) {
@@ -920,23 +965,30 @@ export default function App() {
               setCurrentView('products-admin');
             }}
             onCancel={() => setCurrentView('products-admin')}
+            onNavigateToCategories={() => setCurrentView('categories-admin')}
+            onNavigateToSuppliers={() => setCurrentView('suppliers-admin')}
           />
         ) : currentView === 'product-create' ? (
           <ProductCreateForm
             categories={categories}
+            products={products}
             onSaveProduct={(newProduct) => {
               setProducts(prev => [newProduct, ...prev]);
               showToast(`Produk "${newProduct.name}" berhasil ditambahkan!`);
               setCurrentView('products-admin');
             }}
             onCancel={() => setCurrentView('products-admin')}
+            onNavigateToCategories={() => setCurrentView('categories-admin')}
+            onNavigateToSuppliers={() => setCurrentView('suppliers-admin')}
           />
         ) : currentView === 'categories-admin' ? (
           <CategoryListPage
             categories={categories}
             products={products}
             onCategoriesChange={setCategories}
+            onShowToast={showToast}
             onBackToShopping={() => setCurrentView('catalog')}
+            onNavigateToProducts={() => setCurrentView('products-admin')}
           />
         ) : currentView === 'products-admin' ? (
           <ProductListPage
@@ -965,6 +1017,8 @@ export default function App() {
             }}
             onBackToShopping={() => setCurrentView('catalog')}
             onCategoriesChange={setCategories}
+            onNavigateToCategories={() => setCurrentView('categories-admin')}
+            onOpenCategoryMaster={() => setCurrentView('categories-admin')}
           />
         ) : currentView === 'profile' ? (
           <ProfilePage
@@ -1091,13 +1145,38 @@ export default function App() {
               setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${tx.amount.toLocaleString('id-ID')})!`);
             }}
           />
-        ) : currentView === 'procurement' ? (
-          <ProcurementPage
+        ) : currentView === 'suppliers-admin' ? (
+          <SupplierListPage
             onShowToast={(msg) => {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
-            onBackToDashboard={() => setCurrentView('admin-dashboard')}
+            onNavigateToPO={() => {
+              setCurrentView('procurement-pos');
+            }}
+          />
+        ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (
+          <PurchaseOrderListPage
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+            onNavigateToGRN={() => setCurrentView('procurement-grn')}
+            onNavigateToBills={() => setCurrentView('procurement-bills')}
+          />
+        ) : currentView === 'procurement-grn' ? (
+          <GoodsReceiptListPage
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+          />
+        ) : currentView === 'procurement-bills' ? (
+          <VendorBillListPage
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
           />
         ) : currentView === 'templates' ? (
           <TemplateManagementPage

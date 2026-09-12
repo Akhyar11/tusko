@@ -104,9 +104,6 @@ export default function ExpeditionSettingsPage({
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
             <Truck className="text-emerald-600" size={26} />
             <span>Pengaturan Jasa Ekspedisi</span>
-            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-none">
-              Kurir & Ongkir
-            </span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-500">
             Kelola pilihan kurir pengiriman, tarif dasar (flat/per kg), dan status ekspedisi utama toko.

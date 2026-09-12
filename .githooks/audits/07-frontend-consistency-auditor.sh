@@ -40,7 +40,7 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
    - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
    - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks (Tambah/Filter) pada kanvas halaman utama di antara kartu metrik dan tabel jika filter sidebar dan tombol aksi header sudah diterapkan. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (ServerSideTable) setelah kartu metrik/header.
 8. Standardisasi Wajib Komponen Reusable (Mandatory Reusable Component Reuse):
-   - Pengembang WAJIB memanfaatkan dan mengimpor komponen reusable yang sudah ada di codebase (misalnya `IconButton` pada atoms/, `SearchBar` dan `ViewModeToggle` pada molecules/, `ServerSideTable`, `ProductFilterDrawer`, `ProductHeaderActions` pada organisms/).
+   - Pengembang WAJIB memanfaatkan dan mengimpor komponen reusable yang sudah ada di codebase (misalnya `IconButton` pada atoms/, `SearchBar` dan `ServerSideSelect` pada molecules/, `ServerSideTable`, `ProductFilterDrawer`, `ProductHeaderActions` pada organisms/).
    - DILARANG KERAS membuat ulang kode mentah (inline reinventing) seperti tombol kontrol, input pencarian, tabel server-side, atau tooltip manual jika sudah ada komponen reusable yang menyediakannya.
 9. Standardisasi Kontrol Filter & Pencarian (Filter & Search Rules):
    - Pemisahan Pencarian Nama & SKU: Pencarian nama produk dan pencarian kode SKU WAJIB dipisah menjadi input mandiri masing-masing (dua komponen SearchBar terpisah). Dilarang menyatukan pencarian nama dan SKU ke dalam satu input gabungan.
@@ -63,12 +63,39 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
 13. Standardisasi Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah:
     - Tombol kontrol filter (Filter Drawer/Sidebar Toggle) WAJIB selalu diletakkan di samping kanan tombol tambah (urutan aksi: `[Tombol Tambah] -> [Tombol Filter]`), BUKAN di sebelah kiri tombol tambah atau di posisi lain.
     - Berlaku konsisten baik pada kelompok tombol kontrol header (IconButton group) maupun toolbar.
+14. Standardisasi Tampilan Tunggal Tabel Admin (Single Table View Only):
+    - Seluruh tampilan daftar data admin (seperti Daftar Produk dan Master Kategori) WAJIB hanya menggunakan tampilan tabel tunggal (`ServerSideTable`).
+    - DILARANG menampilkan tombol pengalih tampilan (`ViewModeToggle` / list vs grid switch) pada header modul admin karena daftar data admin hanya disajikan dalam format tabel.
+15. Standardisasi Kolom Aksi Tabel Admin (MoreVertical Dropdown Action Menu):
+    - Seluruh tabel daftar data admin (`ServerSideTable`) WAJIB menggunakan tombol menu titik tiga (`MoreVertical`) untuk kolom 'Aksi' yang memicu floating dropdown popup menu bersudut siku (`rounded-none`).
+    - DILARANG KERAS menampilkan tombol aksi mentah secara telanjang/sejajar (seperti icon pensil edit dan tempat sampah delete berdampingan langsung di dalam baris sel tabel). Seluruh tindakan baris (ubah, hapus, detail, dll.) WAJIB terbungkus rapi di dalam dropdown menu `MoreVertical`.
+16. Standardisasi 1 Halaman 1 Entitas Mandiri (Single-Purpose Dedicated Page - No Multi-Module Tabs):
+    - Seluruh halaman admin WAJIB berdiri sendiri untuk satu entitas/modul bisnis spesifik (1 halaman untuk 1 entitas mandiri).
+    - DILARANG KERAS menggabungkan beberapa entitas bisnis yang berbeda ke dalam sistem navigasi tab horizontal dalam satu halaman (seperti Purchase Order, Supplier, Penerimaan Barang GRN, dan Tagihan Vendor digabung dalam 1 halaman dengan tombol-tombol tab switcher).
+    - Setiap entitas bisnis wajib memiliki file komponen halaman tersendiri (`src/components/*Page.jsx`), rute URL mandiri, kartu header modul terfokus, metrik KPI yang relevan, dan tabel data tunggal yang langsung disajikan tanpa tab switcher pengalih modul.
+17. Standardisasi Sistem Notifikasi Toast (Unified Toast Notification Consistency):
+    - Seluruh halaman dan form modul admin WAJIB menggunakan sistem Toast yang sudah ada secara konsisten melalui prop/fungsi `onShowToast` atau `showToast` untuk memberikan feedback operasional (tambah data, perbarui perubahan, hapus, toggle status, dan pesan error).
+    - DILARANG KERAS membuat alert box sukses lokal atau banner notifikasi hijau/merah inline di atas kanvas halaman admin (seperti banner `successMessage` di antara header dan kartu metrik). Kanvas halaman utama harus selalu bersih dan seluruh feedback aksi pengguna wajib disalurkan melalui Toast.
+    - DILARANG menampilkan tombol aksi belanja ('Lihat Keranjang' / Cart Shortcut) secara serampangan pada toast modul admin. Tombol keranjang hanya boleh muncul secara selektif saat pembeli menambahkan produk ke keranjang di storefront (`showCart: true`).
+18. Standardisasi Larangan Mutlak Label/Badge/Pill Header pada Halaman Manapun (Strict Prohibition of Header Category Badges/Labels):
+    - DILARANG KERAS menyertakan label badge, pill, tag, atau chip kategori/modul (seperti label hitam bersudut siku dengan teks kuning/amber seperti "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP Inventory & Multi-Warehouse", "ERP ORDER FULFILLMENT", "OPERATIONAL ERP CONTROL", atau label modul sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
+    - Header halaman WAJIB bersih dan langsung berfokus pada judul modul (`<h1>`) dan deskripsi fungsinya tanpa label/tag/badge pengenal modul semacam itu.
+    - Setiap penambahan atau keberadaan badge/label kategori di atas judul halaman WAJIB DITOLAK (REJECTED).
+19. Standardisasi Pewarnaan Semantik Konsisten pada Isi Menu Aksi Tabel Admin (Consistent Semantic Action Menu Colors):
+    - Seluruh item tindakan/aksi pada menu aksi baris tabel (`MoreVertical` dropdown menu atau tombol aksi sejenis) WAJIB diberikan warna semantik yang konsisten dan ekspresif pada ikon dan teks:
+      - Lihat / Detail (View / Detail): Biru konsisten (`text-blue-600` / `text-blue-700`, `hover:bg-blue-50`).
+      - Ubah / Edit Data: Biru Langit / Sky konsisten (`text-sky-600` / `text-sky-700`, `hover:bg-sky-50`).
+      - Aksi Positif / Aktifkan / Selesai / Terima (GRN) / Pembayaran: Hijau Emerald konsisten (`text-emerald-600` / `text-emerald-700`, `hover:bg-emerald-50`).
+      - Aksi Transisi Dokumen / Terbitkan PO: Indigo konsisten (`text-indigo-600` / `text-indigo-700`, `hover:bg-indigo-50`).
+      - Aksi Peringatan / Nonaktifkan / Jadikan Draft / Batalkan: Kuning Amber / Oranye konsisten (`text-amber-600` / `text-amber-700`, `hover:bg-amber-50`).
+      - Aksi Destruktif / Hapus: Merah Rose konsisten (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+    - DILARANG KERAS membiarkan item aksi tanpa warna (seperti teks monokrom hitam/abu-abu netral polos `text-neutral-800`, `text-neutral-700`, atau ikon abu-abu tanpa warna `text-neutral-500`, `text-neutral-400`, atau tanpa class warna sama sekali). Seluruh opsi aksi dalam dropdown wajib memiliki perlakuan warna semantik yang seragam dan seimbang.
 
 Git Diff (Staged Frontend Changes):
-```diff
+```
 EOF
 
-echo "$STAGED_FE_DIFF" | head -n 120 >> "$PROMPT_FILE"
+sed -n '1,120p' <<< "$STAGED_FE_DIFF" >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
 ```
@@ -89,7 +116,7 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ =========================================================================="
     echo "❌ [Audit Frontend Consistency] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"

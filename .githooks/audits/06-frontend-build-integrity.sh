@@ -26,7 +26,7 @@ ATURAN INTEGRITAS FRONTEND BUILD:
 Git Diff:
 ```diff
 EOF
-    echo "$STAGED_FE_DIFF" | head -n 120 >> "$PROMPT_FILE"
+    sed -n '1,120p' <<< "$STAGED_FE_DIFF" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 
@@ -44,7 +44,7 @@ EOF
     fi
     rm -f "$PROMPT_FILE"
 
-    if echo "$AI_RESULT" | grep -qi "REJECTED"; then
+    if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AI_RESULT"; then
         echo "❌ [Audit Frontend Build] DITOLAK OLEH OPENCODE AI:"
         echo "$AI_RESULT" | grep -i "REJECTED"
         exit 1

@@ -175,11 +175,6 @@ export default function OrderListPage({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 border border-neutral-300 rounded-none shadow-2xs">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
-            <span className="text-amber-700 font-bold">ERP ORDER FULFILLMENT</span>
-            <span>&bull;</span>
-            <span>KiriminAja Logistics Hub</span>
-          </div>
           <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase flex items-center gap-2.5">
             <ShoppingBag className="text-amber-600" size={24} />
             Antrean Pesanan & Transaksi

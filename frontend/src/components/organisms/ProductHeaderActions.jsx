@@ -1,16 +1,12 @@
 import React from 'react';
-import { ExternalLink, Plus, SlidersHorizontal, FolderKanban } from 'lucide-react';
+import { Plus, SlidersHorizontal, FolderKanban } from 'lucide-react';
 import IconButton from '../atoms/IconButton';
-import ViewModeToggle from '../molecules/ViewModeToggle';
 
 /**
  * Organism: ProductHeaderActions
  * Centralizes top header action buttons (icon-only with tooltips)
  */
 export default function ProductHeaderActions({
-  viewMode = 'table',
-  onViewModeChange = () => {},
-  onBackToShopping = () => {},
   onAddNewProduct = () => {},
   onOpenFilter = () => {},
   onOpenCategoryMaster = () => {},
@@ -18,23 +14,12 @@ export default function ProductHeaderActions({
 }) {
   return (
     <div className="flex items-center gap-2 shrink-0 flex-nowrap pt-2 xl:pt-0 border-t xl:border-t-0 border-neutral-100">
-      {/* View Mode Toggle: List / Grid */}
-      <ViewModeToggle viewMode={viewMode} onChange={onViewModeChange} />
-
       {/* Master Kategori: Icon-only with tooltip */}
       <IconButton
         icon={FolderKanban}
         label="Master Kategori Produk"
         variant="secondary"
         onClick={onOpenCategoryMaster}
-      />
-
-      {/* Lihat Etalase: Icon-only with tooltip */}
-      <IconButton
-        icon={ExternalLink}
-        label="Lihat Etalase Storefront"
-        variant="secondary"
-        onClick={onBackToShopping}
       />
 
       {/* Tambah Produk: Icon-only with tooltip */}

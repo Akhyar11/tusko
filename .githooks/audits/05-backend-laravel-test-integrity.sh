@@ -40,7 +40,7 @@ ATURAN INTEGRITAS BACKEND & TEST:
 Git Diff:
 ```diff
 EOF
-    echo "$STAGED_PHP_DIFF" | head -n 120 >> "$PROMPT_FILE"
+    sed -n '1,120p' <<< "$STAGED_PHP_DIFF" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 
@@ -58,7 +58,7 @@ EOF
     fi
     rm -f "$PROMPT_FILE"
 
-    if echo "$AI_RESULT" | grep -qi "REJECTED"; then
+    if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AI_RESULT"; then
         echo "❌ [Audit Backend Test Integrity] DITOLAK OLEH OPENCODE AI:"
         echo "$AI_RESULT" | grep -i "REJECTED"
         exit 1

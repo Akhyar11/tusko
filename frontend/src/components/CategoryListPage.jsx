@@ -3,19 +3,19 @@ import {
   FolderKanban, 
   Plus, 
   Edit2, 
+  Edit3,
   Trash2, 
   Package, 
   Tag, 
   CheckCircle2, 
   AlertTriangle, 
-  RefreshCw, 
-  ExternalLink,
   Sparkles,
   AlertCircle,
   Check,
   Layers,
   X,
-  SlidersHorizontal
+  SlidersHorizontal,
+  MoreVertical
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
@@ -26,13 +26,14 @@ export default function CategoryListPage({
   categories: initialCategories = [],
   products = [],
   onCategoriesChange = () => {},
-  onBackToShopping = () => {}
+  onShowToast = () => {},
+  onBackToShopping = () => {},
+  onNavigateToProducts = () => {}
 }) {
   const [categories, setCategories] = useState(initialCategories);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Table pagination, sorting, and checkbox list selection states
   const [page, setPage] = useState(1);
@@ -40,6 +41,7 @@ export default function CategoryListPage({
   const [sortBy, setSortBy] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Filter Drawer states
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -79,6 +81,13 @@ export default function CategoryListPage({
 
   useEffect(() => {
     loadCategories();
+  }, []);
+
+  // Close action popup when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveActionMenuId(null);
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
   }, []);
 
   // Compute metrics
@@ -234,18 +243,19 @@ export default function CategoryListPage({
 
       if (editingCategory) {
         const updated = await categoryService.updateCategory(editingCategory.id, payload);
-        setSuccessMessage(`Kategori "${updated.name}" berhasil diperbarui!`);
+        onShowToast(`Kategori "${updated.name}" berhasil diperbarui!`);
       } else {
         const created = await categoryService.createCategory(payload);
-        setSuccessMessage(`Kategori "${created.name}" berhasil ditambahkan ke master!`);
+        onShowToast(`Kategori "${created.name}" berhasil ditambahkan ke master!`);
       }
 
       await loadCategories();
       setIsModalOpen(false);
       setEditingCategory(null);
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setErrorMessage(err.data?.message || err.message || 'Gagal menyimpan kategori.');
+      const msg = err.data?.message || err.message || 'Gagal menyimpan kategori.';
+      setErrorMessage(msg);
+      onShowToast(msg, { type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -257,8 +267,7 @@ export default function CategoryListPage({
       : products.filter(p => p.category_id === cat.id).length;
 
     if (activeProds > 0) {
-      setErrorMessage(`Kategori "${cat.name}" memiliki ${activeProds} produk aktif dan tidak dapat dihapus!`);
-      setTimeout(() => setErrorMessage(''), 4000);
+      onShowToast(`Kategori "${cat.name}" memiliki ${activeProds} produk aktif dan tidak dapat dihapus!`, { type: 'error' });
       return;
     }
 
@@ -268,12 +277,10 @@ export default function CategoryListPage({
 
     try {
       await categoryService.deleteCategory(cat.id);
-      setSuccessMessage(`Kategori "${cat.name}" berhasil dihapus.`);
+      onShowToast(`Kategori "${cat.name}" berhasil dihapus.`);
       await loadCategories();
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setErrorMessage(err.data?.message || err.message || 'Gagal menghapus kategori.');
-      setTimeout(() => setErrorMessage(''), 4000);
+      onShowToast(err.data?.message || err.message || 'Gagal menghapus kategori.', { type: 'error' });
     }
   };
 
@@ -330,8 +337,7 @@ export default function CategoryListPage({
     });
 
     if (protectedCats.length > 0) {
-      setErrorMessage(`${protectedCats.length} kategori tidak dapat dihapus karena masih memiliki produk katalog aktif.`);
-      setTimeout(() => setErrorMessage(''), 4000);
+      onShowToast(`${protectedCats.length} kategori tidak dapat dihapus karena masih memiliki produk katalog aktif.`, { type: 'error' });
       return;
     }
 
@@ -344,12 +350,10 @@ export default function CategoryListPage({
         await categoryService.deleteCategory(id);
       }
       setSelectedCategoryIds([]);
-      setSuccessMessage(`${selectedCategoryIds.length} kategori berhasil dihapus.`);
+      onShowToast(`${selectedCategoryIds.length} kategori berhasil dihapus.`);
       await loadCategories();
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setErrorMessage('Sebagian kategori gagal dihapus.');
-      setTimeout(() => setErrorMessage(''), 4000);
+      onShowToast('Sebagian kategori gagal dihapus.', { type: 'error' });
     }
   };
 
@@ -420,30 +424,71 @@ export default function CategoryListPage({
     {
       key: 'actions',
       label: 'Aksi',
+      sortable: false,
       align: 'right',
       width: 'w-24',
-      render: (_, cat) => (
-        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => handleOpenEdit(cat)}
-            className="p-1.5 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-200 border border-transparent hover:border-neutral-300 transition-colors cursor-pointer rounded-none"
-            title="Edit Kategori"
-          >
-            <Edit2 size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDeleteCategory(cat)}
-            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer rounded-none"
-            title="Hapus Kategori"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      )
+      render: (_, cat, rowIdx) => {
+        const isOpen = activeActionMenuId === cat.id;
+        const isNearBottom = rowIdx >= paginatedCategories.length - 2 && paginatedCategories.length > 3;
+
+        return (
+          <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+            {/* Tombol Titik 3 */}
+            <button
+              type="button"
+              onClick={() => setActiveActionMenuId(isOpen ? null : cat.id)}
+              className={`p-1.5 rounded-none border transition-colors cursor-pointer ${
+                isOpen 
+                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
+                  : 'text-neutral-700 hover:text-black hover:bg-neutral-100 border-neutral-300 bg-white shadow-2xs'
+              }`}
+              title="Menu Aksi Kategori"
+              aria-label="Menu Aksi Baris Kategori"
+            >
+              <MoreVertical size={16} />
+            </button>
+
+            {/* Popup Menu Dropdown */}
+            {isOpen && (
+              <div 
+                className={`absolute right-0 ${
+                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
+                } w-48 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100 font-sans`}
+              >
+                {/* 1. Ubah Kategori */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    handleOpenEdit(cat);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-50 hover:text-sky-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Edit3 size={15} className="text-sky-600" />
+                  <span>Ubah Kategori</span>
+                </button>
+
+                <div className="border-t border-neutral-200 my-1" />
+
+                {/* 2. Hapus Kategori */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    handleDeleteCategory(cat);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Trash2 size={15} className="text-rose-600" />
+                  <span>Hapus Kategori</span>
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      }
     }
-  ], [products]);
+  ], [products, paginatedCategories, activeActionMenuId]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -465,19 +510,14 @@ export default function CategoryListPage({
 
         {/* Header Action Buttons (Icon-Only with Tooltip) */}
         <div className="flex items-center gap-2 shrink-0">
-          <IconButton
-            icon={RefreshCw}
-            onClick={loadCategories}
-            title="Muat Ulang Data Kategori"
-            variant="secondary"
-          />
-
-          <IconButton
-            icon={ExternalLink}
-            onClick={onBackToShopping}
-            title="Lihat Etalase Storefront"
-            variant="secondary"
-          />
+          {onNavigateToProducts && (
+            <IconButton
+              icon={Package}
+              onClick={onNavigateToProducts}
+              title="Kembali ke Daftar Produk"
+              variant="secondary"
+            />
+          )}
 
           <IconButton
             icon={Plus}
@@ -496,28 +536,7 @@ export default function CategoryListPage({
         </div>
       </div>
 
-      {/* 2. Feedback Alert Banners */}
-      {errorMessage && (
-        <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between text-xs font-sport font-bold uppercase animate-in fade-in duration-150">
-          <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="text-rose-600 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-          <button type="button" onClick={() => setErrorMessage('')} className="text-rose-600 cursor-pointer">✕</button>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="p-4 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-800 rounded-none flex items-center justify-between text-xs font-sport font-bold uppercase animate-in fade-in duration-150">
-          <div className="flex items-center gap-2">
-            <Check size={16} className="text-emerald-600 shrink-0" />
-            <span>{successMessage}</span>
-          </div>
-          <button type="button" onClick={() => setSuccessMessage('')} className="text-emerald-600 cursor-pointer">✕</button>
-        </div>
-      )}
-
-      {/* 3. Metric Overview Cards */}
+      {/* 2. Metric Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 mb-1.5">
@@ -584,16 +603,21 @@ export default function CategoryListPage({
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50]}
-        onPageChange={setPage}
+        onPageChange={(p) => {
+          setPage(p);
+          setActiveActionMenuId(null);
+        }}
         onLimitChange={(newLimit) => {
           setLimit(newLimit);
           setPage(1);
+          setActiveActionMenuId(null);
         }}
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
           setSortBy(newSortBy);
           setSortDirection(newDir);
+          setActiveActionMenuId(null);
         }}
         isLoading={isLoading}
         selectable={true}
@@ -625,9 +649,6 @@ export default function CategoryListPage({
                   <FolderKanban size={18} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-sport font-black uppercase tracking-wider text-amber-400">
-                    {editingCategory ? 'Edit Master Data' : 'Tambah Master Data'}
-                  </span>
                   <h3 className="text-base font-black font-sport uppercase tracking-tight text-white">
                     {editingCategory ? `Edit: ${editingCategory.name}` : 'Kategori Produk Baru'}
                   </h3>

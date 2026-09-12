@@ -49,7 +49,7 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ [Audit Branch Protection] NAMA BRANCH DITOLAK OLEH OPENCODE AI:"
     echo "$AUDITOR_RESULT" | grep -i "REJECTED"

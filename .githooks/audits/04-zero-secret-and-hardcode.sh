@@ -21,7 +21,7 @@ if [ -n "$STAGED_ENV" ]; then
 fi
 
 # Cek Cepat 2: Dilarang menyisipkan private key mentah
-if echo "$STAGED_DIFF" | grep -E "^\+[^\+]*(-----BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY-----|sk_live_[0-9a-zA-Z]{24})" > /dev/null; then
+if grep -E -q "^\+[^\+]*(-----BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY-----|sk_live_[0-9a-zA-Z]{24})" <<< "$STAGED_DIFF"; then
     echo ""
     echo "❌ [Audit Security] TERDETEKSI PRIVATE KEY ATAU LIVE SECRET TOKEN DALAM DIFF!"
     echo "💡 Dilarang meng-commit private key atau credential rahasia ke repository."
@@ -39,6 +39,8 @@ if [ -z "$APP_CHANGES" ]; then
     echo "✅ [Audit Hardcode & Security] Tidak ada perubahan pada backend/app atau frontend/src. PASSED."
     exit 0
 fi
+
+STAGED_APP_DIFF=$(git diff --cached -- "backend/app" "frontend/src")
 
 PROMPT_FILE=$(mktemp)
 cat << 'EOF' > "$PROMPT_FILE"
@@ -73,10 +75,12 @@ echo "$APP_CHANGES" >> "$PROMPT_FILE"
 echo "" >> "$PROMPT_FILE"
 echo "Git Diff (Staged Changes):" >> "$PROMPT_FILE"
 echo '```diff' >> "$PROMPT_FILE"
-echo "$STAGED_DIFF" | head -n 120 >> "$PROMPT_FILE"
+sed -n '1,120p' <<< "$STAGED_APP_DIFF" >> "$PROMPT_FILE"
 echo '```' >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
+
+PENTING: Evaluasi secara langsung teks Git Diff di atas tanpa menjalankan perintah shell atau tool eksternal.
 
 FORMAT JAWABAN (PILIH SALAH SATU):
 Jika kode bersih dari segala bentuk hardcode dan rahasia:
@@ -90,19 +94,19 @@ EOF
 
 AUDITOR_RESULT=""
 if command -v opencode &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 35s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
+    AUDITOR_RESULT=$(timeout 60s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
 elif command -v agy &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 25s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
+    AUDITOR_RESULT=$(timeout 40s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
 fi
 
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ =============================================================================="
     echo "❌ [Audit Hardcode & Security] DITOLAK OLEH AI CODE AUDITOR (OPENCODE)!"
     echo "❌ =============================================================================="
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT"
     echo ""
     echo "💡 Petunjuk: Semua parameter toko (lokasi gudang, koordinat, handling fee) wajib diambil"
     echo "   secara dinamis dari tabel database (StoreSetting) yang diatur oleh Admin."

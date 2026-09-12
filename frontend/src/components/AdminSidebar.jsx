@@ -16,7 +16,10 @@ import {
   ChevronDown,
   Sparkles,
   ClipboardList,
-  FolderKanban
+  FolderKanban,
+  Building2,
+  PackageCheck,
+  Receipt
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -30,7 +33,8 @@ export default function AdminSidebar({
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({
-    'menu-products': true
+    'menu-products': true,
+    'menu-procurement': true
   });
 
   const toggleGroup = (groupId) => {
@@ -91,11 +95,42 @@ export default function AdminSidebar({
       badgeColor: 'bg-neutral-200 text-neutral-900'
     },
     {
-      id: 'procurement',
+      id: 'menu-procurement',
       label: 'Pengadaan & Vendor (PO)',
       sublabel: 'PO supplier, GRN & tagihan',
       icon: ClipboardList,
-      activeViews: ['procurement']
+      activeViews: ['suppliers-admin', 'procurement-pos', 'procurement-grn', 'procurement-bills', 'procurement'],
+      isGroup: true,
+      subItems: [
+        {
+          id: 'suppliers-admin',
+          label: 'Master Supplier / Vendor',
+          sublabel: 'Direktori & data mitra vendor',
+          icon: Building2,
+          activeViews: ['suppliers-admin']
+        },
+        {
+          id: 'procurement-pos',
+          label: 'Purchase Order (PO)',
+          sublabel: 'Pemesanan stok ke supplier',
+          icon: ClipboardList,
+          activeViews: ['procurement-pos', 'procurement']
+        },
+        {
+          id: 'procurement-grn',
+          label: 'Penerimaan Barang (GRN)',
+          sublabel: 'Penerimaan fisik barang masuk',
+          icon: PackageCheck,
+          activeViews: ['procurement-grn']
+        },
+        {
+          id: 'procurement-bills',
+          label: 'Tagihan Vendor (Bills)',
+          sublabel: 'Invoice & pelunasan hutang',
+          icon: Receipt,
+          activeViews: ['procurement-bills']
+        }
+      ]
     },
     {
       id: 'transactions',

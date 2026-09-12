@@ -43,9 +43,7 @@ export const categoryService = {
       const res = await apiClient.get(`/api/categories?${params.toString()}`);
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       
-      if (list.length > 0) {
-        setCachedCategories(list);
-      }
+      setCachedCategories(list);
       return {
         data: list,
         total: res.total || list.length

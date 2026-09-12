@@ -48,7 +48,7 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
    - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
    - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks pada kanvas halaman utama di antara kartu metrik dan tabel. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (`ServerSideTable`) setelah kartu metrik/header.
 6. **Wajib Penggunaan Komponen Reusable (Mandatory Reusable Component Reuse)**:
-   - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ViewModeToggle`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
+   - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ServerSideSelect`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
    - DILARANG KERAS membuat elemen UI mentah berulang atau mengabaikan komponen reusable yang sudah ada di codebase.
 7. **Standar Kontrol Filter & Pencarian (Filter & Search Rules)**:
    - **Pemisahan Pencarian Nama & SKU**: Pencarian nama produk dan pencarian kode SKU WAJIB dipisah menjadi input mandiri masing-masing (`SearchBar` Nama Produk terpisah dari `SearchBar` Kode SKU). Dilarang menyatukan nama dan SKU ke dalam satu input gabungan.
@@ -65,6 +65,30 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
     - Seluruh tabel daftar data admin WAJIB menyertakan kolom checkbox list (multi-selection) dengan checkbox Select All di kolom pertama `thead` dan checkbox baris di setiap baris `tbody` (memanfaatkan prop `selectable={true}` pada `ServerSideTable`).
 11. **Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah (Filter Button Placed Right of Add Button)**:
     - Tombol kontrol filter (baik pada icon-only header controls maupun toolbar di atas tabel) WAJIB selalu diposisikan di **samping kanan tombol tambah** (`[Tombol Tambah] [Tombol Filter]`). Dilarang meletakkan tombol filter di sebelah kiri tombol tambah.
+12. **Standar Tampilan Tunggal Tabel Admin (Single Table View Only)**:
+    - Seluruh daftar data pada modul admin (seperti Produk dan Master Kategori) WAJIB disajikan secara eksklusif menggunakan tampilan tabel tunggal (`ServerSideTable`). Dilarang menampilkan tombol pengalih tampilan (`ViewModeToggle` / list vs grid) atau menyediakan variasi layout grid pada halaman data admin.
+13. **Standar Kolom Aksi Tabel Admin (MoreVertical Dropdown Action Menu)**:
+    - Seluruh kolom "Aksi" pada tabel data admin (`ServerSideTable`) WAJIB menggunakan tombol menu titik tiga (`MoreVertical`) bersudut siku (`rounded-none`) yang memicu floating dropdown popup menu aksi. DILARANG KERAS menampilkan tombol aksi mentah secara telanjang/sejajar (seperti icon pensil edit dan tempat sampah delete berdampingan langsung di dalam baris sel tabel).
+14. **Standar 1 Halaman 1 Entitas Mandiri (Single-Purpose Dedicated Page - No Multi-Module Tabs)**:
+    - Seluruh halaman admin WAJIB berdiri sendiri untuk satu entitas/modul bisnis spesifik (1 halaman untuk 1 entitas mandiri).
+    - DILARANG KERAS menggabungkan modul/entitas yang berbeda ke dalam sistem navigasi tab horizontal dalam 1 halaman (seperti PO, Supplier, GRN, dan Bills dijadikan tab-taban dalam 1 layar).
+    - Setiap entitas bisnis wajib memiliki file halaman tersendiri (`src/components/*Page.jsx`), URL rute mandiri, kartu header modul terfokus, metrik KPI yang relevan, dan tabel data tunggal yang langsung disajikan tanpa tab switcher.
+15. **Standar Sistem Notifikasi Toast (Unified Toast Notification Consistency)**:
+    - Seluruh modul dan tabel admin WAJIB menggunakan sistem Toast yang sudah ada secara konsisten melalui prop/fungsi `onShowToast` atau `showToast` untuk memberikan feedback operasional (tambah data, perbarui perubahan, hapus, toggle status, dan error).
+    - DILARANG KERAS merender alertbox sukses lokal atau banner notifikasi hijau/merah inline di atas kanvas halaman utama (seperti banner `successMessage` di antara header dan kartu metrik) agar kanvas utama tetap bersih.
+    - DILARANG menampilkan tombol shortcut belanja ('Lihat Keranjang' / Cart Shortcut) pada toast modul admin. Tombol keranjang hanya boleh ditampilkan secara selektif pada aksi penambahan produk ke keranjang belanja storefront (`showCart: true`).
+16. **Larangan Mutlak Label/Badge Header Redundant (No Header Badges / Category Pills on Any Page)**:
+    - DILARANG KERAS menyertakan label badge, tag, chip, atau pill kategori/modul (seperti badge hitam/amber "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP ORDER FULFILLMENT", atau label sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
+    - Header kartu modul WAJIB bersih dan langsung berfokus pada judul halaman (`<h1>`) serta deskripsi fungsi tanpa label penanda modul redundant di atasnya.
+17. **Standar Pewarnaan Semantik Konsisten pada Isi Menu Aksi Tabel Admin (Consistent Semantic Action Menu Colors)**:
+    - Seluruh item aksi pada menu aksi baris tabel (`MoreVertical` dropdown menu) WAJIB diberikan warna semantik yang konsisten dan ekspresif pada ikon dan teks:
+      - **Lihat / Detail**: Biru konsisten (`text-blue-600` / `text-blue-700`, `hover:bg-blue-50`).
+      - **Ubah / Edit**: Biru Langit / Sky konsisten (`text-sky-600` / `text-sky-700`, `hover:bg-sky-50`).
+      - **Aksi Positif / Aktifkan / Selesai / Terima (GRN) / Bayar**: Hijau Emerald konsisten (`text-emerald-600` / `text-emerald-700`, `hover:bg-emerald-50`).
+      - **Aksi Transisi / Terbitkan PO**: Indigo konsisten (`text-indigo-600` / `text-indigo-700`, `hover:bg-indigo-50`).
+      - **Aksi Peringatan / Nonaktifkan / Draft / Batal**: Kuning Amber / Oranye konsisten (`text-amber-600` / `text-amber-700`, `hover:bg-amber-50`).
+      - **Aksi Destruktif / Hapus**: Merah Rose konsisten (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+    - DILARANG KERAS membiarkan item aksi tanpa warna (seperti teks monokrom hitam/abu-abu netral polos atau ikon abu-abu tanpa warna `text-neutral-500`, `text-neutral-400`). Seluruh opsi aksi dalam dropdown wajib memiliki perlakuan warna semantik yang seimbang dan tidak boleh ada opsi yang dibiarkan hambar tanpa warna.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

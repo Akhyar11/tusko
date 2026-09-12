@@ -234,16 +234,7 @@ export default function FinancialTransactionsPage({
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 border border-gray-200">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-neutral-900 text-amber-400">
-              ERP Accounting & Cashflow
-            </span>
-            <span className="text-gray-400">•</span>
-            <span className="text-xs text-gray-500 font-mono">
-              Total Likuiditas: {formatRupiah(stats.totalLiquidBalance)}
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight">
             Buku Kas, Akun & Laporan Keuangan
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">

@@ -203,10 +203,18 @@ class ProductController extends Controller
             $slug = "{$baseSlug}-" . $counter++;
         }
 
-        // Generate SKU if empty
-        $sku = !empty($validated['sku']) 
-            ? strtoupper(trim($validated['sku']))
-            : 'TSK-' . strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $slug), 0, 4)) . '-' . mt_rand(1000, 9999);
+        // Generate guaranteed unique SKU if empty
+        if (!empty($validated['sku'])) {
+            $sku = strtoupper(trim($validated['sku']));
+        } else {
+            $catPrefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $slug), 0, 4)) ?: 'PRD';
+            $seq = 1;
+            $sku = 'TSK-' . $catPrefix . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+            while (Product::where('sku', $sku)->exists()) {
+                $seq++;
+                $sku = 'TSK-' . $catPrefix . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+            }
+        }
 
         $status = $validated['status'] ?? 'active';
         $active = isset($validated['active']) ? (bool) $validated['active'] : ($status === 'active');

@@ -123,6 +123,11 @@ Route::prefix('templates/receipt')->group(function () {
     Route::post('/reset', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'reset']);
 });
 
-
-
-
+Route::prefix('vendors')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\VendorController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\VendorController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\VendorController::class, 'show']);
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\VendorController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\VendorController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\VendorController::class, 'toggleStatus']);
+});

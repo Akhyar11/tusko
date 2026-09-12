@@ -22,14 +22,19 @@ export default function ServerSideTable({
   columns = [],
   data = [],
   total = 0,
+  totalCount,
   page = 1,
   limit = 10,
+  perPage,
   limitOptions = [10, 25, 50, 100],
   onPageChange = () => {},
   onLimitChange = () => {},
+  onPerPageChange,
   sortBy = '',
+  sortColumn,
   sortDirection = 'desc', // 'asc' | 'desc'
   onSortChange = () => {},
+  onSort,
   isLoading = false,
   emptyMessage = 'Tidak ada data yang ditemukan',
   emptyDescription = 'Coba sesuaikan kata kunci pencarian atau filter Anda.',
@@ -38,38 +43,76 @@ export default function ServerSideTable({
   selectedIds = [],
   onSelectRow = () => {},
   onSelectAll = () => {},
+  onSelectionChange,
   idKey = 'id',
+  rowIdKey,
   bulkActions = null,
   className = ''
 }) {
+  const effectiveTotal = totalCount !== undefined ? totalCount : total;
+  const effectiveLimit = perPage !== undefined ? perPage : limit;
+  const effectiveSortBy = sortColumn !== undefined ? sortColumn : sortBy;
+  const effectiveIdKey = rowIdKey !== undefined ? rowIdKey : idKey;
+
   // Hitung total halaman
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const totalPages = Math.max(1, Math.ceil(effectiveTotal / effectiveLimit));
   const safePage = Math.min(Math.max(1, page), totalPages);
 
   // Range item yang sedang ditampilkan
-  const startItem = total === 0 ? 0 : (safePage - 1) * limit + 1;
-  const endItem = Math.min(safePage * limit, total);
+  const startItem = effectiveTotal === 0 ? 0 : (safePage - 1) * effectiveLimit + 1;
+  const endItem = Math.min(safePage * effectiveLimit, effectiveTotal);
 
   // Checkbox select all status
   const isAllSelected = useMemo(() => {
     if (!data.length) return false;
-    return data.every((row) => selectedIds.includes(row[idKey]));
-  }, [data, selectedIds, idKey]);
+    return data.every((row) => selectedIds.includes(row[effectiveIdKey]));
+  }, [data, selectedIds, effectiveIdKey]);
 
   const isSomeSelected = useMemo(() => {
     if (!data.length) return false;
-    return data.some((row) => selectedIds.includes(row[idKey])) && !isAllSelected;
-  }, [data, selectedIds, idKey, isAllSelected]);
+    return data.some((row) => selectedIds.includes(row[effectiveIdKey])) && !isAllSelected;
+  }, [data, selectedIds, effectiveIdKey, isAllSelected]);
 
   // Handler klik header kolom untuk sorting
   const handleHeaderClick = (col) => {
     if (!col.sortable) return;
-    const isCurrentSort = sortBy === col.key;
+    const isCurrentSort = effectiveSortBy === col.key;
     let nextDir = 'asc';
     if (isCurrentSort) {
       nextDir = sortDirection === 'asc' ? 'desc' : 'asc';
     }
     onSortChange({ sortBy: col.key, sortDirection: nextDir });
+    if (typeof onSort === 'function') {
+      onSort(col.key, nextDir);
+    }
+  };
+
+  const handleRowSelect = (rowId) => {
+    onSelectRow(rowId);
+    if (typeof onSelectionChange === 'function') {
+      const nextSelected = selectedIds.includes(rowId)
+        ? selectedIds.filter(id => id !== rowId)
+        : [...selectedIds, rowId];
+      onSelectionChange(nextSelected);
+    }
+  };
+
+  const handleAllSelect = () => {
+    onSelectAll();
+    if (typeof onSelectionChange === 'function') {
+      if (isAllSelected) {
+        onSelectionChange([]);
+      } else {
+        onSelectionChange(data.map(row => row[effectiveIdKey]));
+      }
+    }
+  };
+
+  const handleLimitChange = (newLimit) => {
+    onLimitChange(newLimit);
+    if (typeof onPerPageChange === 'function') {
+      onPerPageChange(newLimit);
+    }
   };
 
   // Helper nomor halaman dengan ellipsis cerdas (e.g. 1 ... 4 [5] 6 ... 20)
@@ -140,7 +183,7 @@ export default function ServerSideTable({
                     ref={(el) => {
                       if (el) el.indeterminate = isSomeSelected;
                     }}
-                    onChange={onSelectAll}
+                    onChange={handleAllSelect}
                     aria-label="Pilih semua baris"
                     className="h-4 w-4 accent-amber-500 rounded-none cursor-pointer"
                   />
@@ -148,7 +191,7 @@ export default function ServerSideTable({
               )}
 
               {columns.map((col) => {
-                const isCurrentSort = sortBy === col.key;
+                const isCurrentSort = effectiveSortBy === col.key;
                 const alignClass = 
                   col.align === 'center' ? 'text-center' :
                   col.align === 'right' ? 'text-right' : 'text-left';
@@ -192,7 +235,7 @@ export default function ServerSideTable({
           <tbody className="divide-y divide-neutral-200 font-sans">
             {isLoading ? (
               // Skeleton Loader State
-              Array.from({ length: Math.min(limit, 5) }).map((_, idx) => (
+              Array.from({ length: Math.min(effectiveLimit, 5) }).map((_, idx) => (
                 <tr key={`skeleton-${idx}`} className="animate-pulse bg-white">
                   {selectable && (
                     <td className="py-4 px-4 text-center">
@@ -200,7 +243,7 @@ export default function ServerSideTable({
                     </td>
                   )}
                   {columns.map((col, colIdx) => (
-                    <td key={`col-${colIdx}`} className="py-4 px-4">
+                    <td key={`col-${colIdx}`} className={`py-4 px-4 ${col.width || ''}`}>
                       <div 
                         className="h-3.5 bg-neutral-200 rounded-none" 
                         style={{ width: `${60 + ((colIdx * 17) % 35)}%` }}
@@ -232,7 +275,7 @@ export default function ServerSideTable({
             ) : (
               // Rows Rendering
               data.map((row, rowIdx) => {
-                const rowId = row[idKey];
+                const rowId = row[effectiveIdKey];
                 const isSelected = selectedIds.includes(rowId);
 
                 return (
@@ -249,7 +292,7 @@ export default function ServerSideTable({
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => onSelectRow(rowId)}
+                          onChange={() => handleRowSelect(rowId)}
                           aria-label={`Pilih baris ${rowId}`}
                           className="h-4 w-4 accent-amber-500 rounded-none cursor-pointer"
                         />
@@ -265,10 +308,10 @@ export default function ServerSideTable({
                       return (
                         <td 
                           key={col.key} 
-                          className={`py-3.5 px-4 ${alignClass} text-neutral-800`}
+                          className={`py-3.5 px-4 ${alignClass} ${col.width || ''} text-neutral-800`}
                         >
                           {typeof col.render === 'function' 
-                            ? col.render(value, row, rowIdx) 
+                            ? col.render(value !== undefined ? value : row, row, rowIdx) 
                             : (value ?? '-')}
                         </td>
                       );
@@ -289,8 +332,8 @@ export default function ServerSideTable({
           <div className="flex items-center gap-1.5">
             <span>Tampilkan:</span>
             <select
-              value={limit}
-              onChange={(e) => onLimitChange(Number(e.target.value))}
+              value={effectiveLimit}
+              onChange={(e) => handleLimitChange(Number(e.target.value))}
               disabled={isLoading}
               aria-label="Jumlah baris per halaman"
               className="bg-white border border-neutral-300 text-xs font-mono font-bold px-2 py-1 rounded-none text-neutral-900 focus:outline-none focus:border-black cursor-pointer shadow-2xs"

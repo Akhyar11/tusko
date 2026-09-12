@@ -16,13 +16,9 @@ import {
   TrendingUp,
   Tag,
   Boxes,
-  ExternalLink,
   ChevronRight,
   MoreVertical,
   Check,
-  RefreshCw,
-  LayoutGrid,
-  List,
   SlidersHorizontal,
   X,
   RotateCcw
@@ -43,9 +39,12 @@ export default function ProductListPage({
   onToggleStatus = () => {},
   onViewProductDetail = () => {},
   onBackToShopping = () => {},
-  onCategoriesChange = () => {}
+  onCategoriesChange = () => {},
+  onNavigateToCategories,
+  onOpenCategoryMaster
 }) {
   const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
+  const handleOpenCategoryMaster = onNavigateToCategories || onOpenCategoryMaster || (() => setIsCategoryMasterOpen(true));
   // Filter & Search states
   const [searchName, setSearchName] = useState('');
   const [searchSku, setSearchSku] = useState('');
@@ -55,7 +54,6 @@ export default function ProductListPage({
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
   const [productToDelete, setProductToDelete] = useState(null);
 
   // Server-side Table Pagination & Sorting states
@@ -453,9 +451,9 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onViewProductDetail(product);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 hover:text-amber-700 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className="w-full px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
-                  <Eye size={15} className="text-neutral-500" />
+                  <Eye size={15} className="text-blue-600" />
                   <span>Lihat Detail</span>
                 </button>
 
@@ -466,7 +464,7 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onEditProduct(product);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 hover:text-sky-700 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className="w-full px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-50 hover:text-sky-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
                   <Edit3 size={15} className="text-sky-600" />
                   <span>Ubah Produk</span>
@@ -479,11 +477,15 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onToggleStatus(product);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2.5 transition-colors cursor-pointer text-left ${
+                    isActive 
+                      ? 'text-amber-700 hover:bg-amber-50 hover:text-amber-800' 
+                      : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  }`}
                 >
                   {isActive ? (
                     <>
-                      <XCircle size={15} className="text-neutral-500" />
+                      <XCircle size={15} className="text-amber-600" />
                       <span>Jadikan Draft</span>
                     </>
                   ) : (
@@ -539,12 +541,9 @@ export default function ProductListPage({
 
         {/* Action Buttons: Atomic Organism */}
         <ProductHeaderActions
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onBackToShopping={onBackToShopping}
           onAddNewProduct={onAddNewProduct}
           onOpenFilter={() => setIsFilterSidebarOpen(true)}
-          onOpenCategoryMaster={() => setIsCategoryMasterOpen(true)}
+          onOpenCategoryMaster={handleOpenCategoryMaster}
           activeFilterCount={activeFilterCount}
         />
       </div>
@@ -618,124 +617,59 @@ export default function ProductListPage({
 
 
 
-      {/* Main Table or Grid View */}
-      {viewMode === 'table' ? (
-        <ServerSideTable
-          columns={tableColumns}
-          data={paginatedProducts}
-          total={totalFiltered}
-          page={page}
-          limit={limit}
-          limitOptions={[10, 25, 50, 100]}
-          onPageChange={setPage}
-          onLimitChange={(newLimit) => {
-            setLimit(newLimit);
-            setPage(1);
-          }}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-            setSortBy(newSortBy);
-            setSortDirection(newDir);
-          }}
-          isLoading={isLoading}
-          selectable={true}
-          selectedIds={selectedProductIds}
-          onSelectRow={handleSelectRow}
-          onSelectAll={handleSelectAll}
-          idKey="id"
-          emptyMessage="Tidak Ada Produk Ditemukan"
-          emptyDescription="Sesuaikan kata kunci pencarian atau ubah filter kategori etalase."
-          bulkActions={
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleBulkActivate}
-                className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
-              >
-                Aktifkan
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkDeactivate}
-                className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer border border-neutral-700"
-              >
-                Nonaktifkan
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                className="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
-              >
-                Hapus
-              </button>
-            </div>
-          }
-        />
-      ) : (
-        /* Alternative Grid View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {paginatedProducts.map((product) => {
-            const isActive = product.status === 'active' || product.active;
-            const isLowStock = Number(product.stock) <= Number(product.stock_minimum || 5);
-
-            return (
-              <div 
-                key={product.id}
-                className="bg-white border border-neutral-300 p-4 rounded-none shadow-2xs space-y-3 hover:border-black transition-colors"
-              >
-                <div className="relative aspect-square bg-neutral-100 overflow-hidden border border-neutral-200">
-                  <img
-                    src={product.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300'}
-                    alt={product.name}
-                    className="w-full h-full object-cover rounded-none"
-                  />
-                  <span className={`absolute top-2 left-2 px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border ${
-                    isActive 
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
-                      : 'bg-neutral-100 text-neutral-600 border-neutral-300'
-                  }`}>
-                    {isActive ? 'Aktif' : 'Draft'}
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-[10px] font-mono text-neutral-500 uppercase">
-                    {getCategoryName(product.category_id)}
-                  </div>
-                  <h3 className="font-sport font-bold text-sm text-neutral-950 line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <div className="font-mono font-black text-sm text-neutral-950">
-                    {formatRupiah(product.price)}
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 border-t border-neutral-100 font-mono">
-                    <span>Stok: <strong className={isLowStock ? 'text-amber-700' : 'text-neutral-900'}>{product.stock}</strong></span>
-                    <span>Terjual: <strong>{product.sold_count || 0}</strong></span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 pt-2 border-t border-neutral-200">
-                  <button
-                    type="button"
-                    onClick={() => onViewProductDetail(product)}
-                    className="flex-1 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-sport font-bold text-xs uppercase rounded-none border border-neutral-300 transition-colors"
-                  >
-                    Detail
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onEditProduct(product)}
-                    className="flex-1 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-white font-sport font-bold text-xs uppercase rounded-none transition-colors"
-                  >
-                    Ubah
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Main Table View */}
+      <ServerSideTable
+        columns={tableColumns}
+        data={paginatedProducts}
+        total={totalFiltered}
+        page={page}
+        limit={limit}
+        limitOptions={[10, 25, 50, 100]}
+        onPageChange={setPage}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
+          setSortBy(newSortBy);
+          setSortDirection(newDir);
+        }}
+        isLoading={isLoading}
+        selectable={true}
+        selectedIds={selectedProductIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        idKey="id"
+        emptyMessage="Tidak Ada Produk Ditemukan"
+        emptyDescription="Sesuaikan kata kunci pencarian atau ubah filter kategori etalase."
+        bulkActions={
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleBulkActivate}
+              className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
+            >
+              Aktifkan
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDeactivate}
+              className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer border border-neutral-700"
+            >
+              Nonaktifkan
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              className="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
+            >
+              Hapus
+            </button>
+          </div>
+        }
+      />
 
       {/* Centralized Filter Sidebar Drawer Organism */}
       <ProductFilterDrawer

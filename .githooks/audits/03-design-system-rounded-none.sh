@@ -26,7 +26,7 @@ Git Diff (Staged Frontend Changes):
 ```diff
 EOF
 
-echo "$STAGED_DIFF" | head -n 120 >> "$PROMPT_FILE"
+sed -n '1,120p' <<< "$STAGED_DIFF" >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
 ```
@@ -48,7 +48,7 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ ======================================================================"
     echo "❌ [Audit Design System] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
