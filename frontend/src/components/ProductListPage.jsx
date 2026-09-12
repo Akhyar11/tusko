@@ -451,9 +451,9 @@ export default function ProductListPage({
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* Top Breadcrumb & Header Action */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1.5 flex-wrap">
             <button 
               onClick={onBackToShopping}
               className="hover:text-amber-600 flex items-center gap-1 transition-colors cursor-pointer"
@@ -461,20 +461,20 @@ export default function ProductListPage({
               <ArrowLeft size={13} />
               <span>Etalase Storefront</span>
             </button>
-            <span>&bull;</span>
+            <span className="text-neutral-300">&bull;</span>
             <span className="text-neutral-900 font-bold">Admin ERP</span>
-            <span>&bull;</span>
+            <span className="text-neutral-300">&bull;</span>
             <span className="text-amber-700 font-bold">Katalog Produk</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
               <Package size={22} />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
                 Daftar Produk & Katalog Toko
               </h1>
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-neutral-600 mt-0.5">
                 Kelola master produk, varian bertingkat (matrix SKU), penetapan harga jual, HPP, serta inventaris toko.
               </p>
             </div>
@@ -482,14 +482,14 @@ export default function ProductListPage({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap pt-2 xl:pt-0 border-t xl:border-t-0 border-neutral-100">
           {/* View mode toggle */}
-          <div className="flex items-center border border-neutral-300 bg-neutral-100 p-1 rounded-none">
+          <div className="inline-flex items-center border border-neutral-300 bg-neutral-100 p-1 rounded-none h-10 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-none transition-colors cursor-pointer ${
-                viewMode === 'table' ? 'bg-black text-white' : 'text-neutral-600 hover:text-black'
+              className={`w-8 h-8 rounded-none transition-colors cursor-pointer flex items-center justify-center ${
+                viewMode === 'table' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black hover:bg-neutral-200'
               }`}
               title="Tampilan Tabel Server-Side"
             >
@@ -498,8 +498,8 @@ export default function ProductListPage({
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-none transition-colors cursor-pointer ${
-                viewMode === 'grid' ? 'bg-black text-white' : 'text-neutral-600 hover:text-black'
+              className={`w-8 h-8 rounded-none transition-colors cursor-pointer flex items-center justify-center ${
+                viewMode === 'grid' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black hover:bg-neutral-200'
               }`}
               title="Tampilan Grid Kartu"
             >
@@ -510,7 +510,7 @@ export default function ProductListPage({
           <button
             type="button"
             onClick={onBackToShopping}
-            className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="h-10 px-3.5 sm:px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
           >
             <ExternalLink size={14} />
             <span>Lihat Etalase</span>
@@ -518,9 +518,9 @@ export default function ProductListPage({
           <button
             type="button"
             onClick={onAddNewProduct}
-            className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider rounded-none transition-all shadow-xs flex items-center gap-1.5 cursor-pointer border border-amber-500"
+            className="h-10 px-4 sm:px-5 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider rounded-none transition-all shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer border border-amber-500 shrink-0"
           >
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={2.5} />
             <span>Tambah Produk</span>
           </button>
         </div>
