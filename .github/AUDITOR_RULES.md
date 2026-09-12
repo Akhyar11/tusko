@@ -28,3 +28,14 @@ Repository ini diawasi oleh auditor otomatis bertenaga OpenCode AI (`.githooks/a
 ## 5. Proteksi Keamanan & Hardcode
 - Dilarang keras melakukan hardcode kredensial, konfigurasi dinamis toko, atau koordinat statis.
 - Seluruh komit wajib melalui 9 modul pre-commit auditor OpenCode AI sebelum dapat digabungkan ke branch master.
+
+## 6. Kewajiban Penggunaan Komponen Reusable yang Sudah Dibuat (Zero Reinventing)
+- Pengembang dan Agen AI WAJIB mengimpor dan memanfaatkan komponen-komponen reusable yang sudah ada di proyek:
+  - Tombol aksi/kontrol: Wajib menggunakan `atoms/IconButton`.
+  - Bilah pencarian: Wajib menggunakan `molecules/SearchBar`.
+  - Pengalih tampilan: Wajib menggunakan `molecules/ViewModeToggle`.
+  - Tabel server-side (pagination, limit, sorting, row selection): Wajib menggunakan `ServerSideTable`.
+  - Drawer filter katalog produk: Wajib menggunakan `organisms/ProductFilterDrawer`.
+  - Tombol aksi header katalog: Wajib menggunakan `organisms/ProductHeaderActions`.
+- DILARANG KERAS membuat markup mentah baru atau menduplikasi elemen UI yang sudah tersedia komponen reusable-nya. Auditor OpenCode AI akan OTOMATIS MENOLAK (REJECT) komit yang membypass atau menduplikasi komponen reusable.
+

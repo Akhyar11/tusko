@@ -26,6 +26,9 @@ Tugasmu adalah menganalisis Git Diff dan daftar berkas yang di-stage berikut unt
    - Dilarang mendefinisikan ulang fungsi formatting mata uang Rupiah lokal (seperti formatRupiah, formatIDR, toIDR) di dalam komponen. Wajib mengimpor dan menggunakan `formatRupiah` dari `@/utils/formatters.js`.
 4. Duplikasi Komponen & Export (frontend/src/components/):
    - Dilarang membuat komponen dengan nama yang sama atau mengekspor ulang komponen yang sudah ada di direktori komponen.
+5. Duplikasi Elemen UI & Kewajiban Menggunakan Komponen Reusable:
+   - DILARANG menduplikasi atau membuat ulang elemen UI mentah secara inline jika sudah ada komponen reusable yang menyediakannya (contoh: wajib menggunakan `atoms/IconButton` untuk tombol aksi, `molecules/SearchBar` untuk input pencarian, `molecules/ViewModeToggle` untuk toggle view, `ServerSideTable` untuk tabel ber-pagination/limit, `organisms/ProductFilterDrawer` untuk filter katalog).
+   - Pengembang WAJIB mengimpor dan memanfaatkan kembali (reuse) komponen-komponen yang telah dibuat sebelumnya.
 
 Berkas Ter-stage:
 EOF

@@ -46,6 +46,9 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
    - Tombol kontrol/aksi navigasi pada header tabel produk WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku (`rounded-none`) dan dilengkapi tooltip keterangan fungsi saat di-highlight/hover/fokus.
 5. **Sentralisasi Kontrol Filter**:
    - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri. Dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
+6. **Wajib Penggunaan Komponen Reusable (Mandatory Reusable Component Reuse)**:
+   - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ViewModeToggle`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
+   - DILARANG KERAS membuat elemen UI mentah berulang atau mengabaikan komponen reusable yang sudah ada di codebase.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>
@@ -58,9 +61,9 @@ Repository ini dilengkapi dengan sistem auditor otomatis berbasis **OpenCode AI*
 4. `04-zero-secret-and-hardcode.sh`: OpenCode AI Auditor yang menganalisis git diff secara cerdas untuk mencegah kebocoran kredensial rahasia (.env, token, private key) dan **MENOLAK segala bentuk hardcode** (seperti lokasi gudang toko, koordinat GPS statis, biaya penanganan/handling fee, atau URL gateway pihak ketiga yang seharusnya dapat diatur secara dinamis oleh Admin melalui database).
 5. `05-backend-laravel-test-integrity.sh`: Menjalankan PHP syntax check, `php artisan test` (100% lolos), dan OpenCode AI Auditor untuk integritas test backend (larangan test dummy/tanpa assertion).
 6. `06-frontend-build-integrity.sh`: Menjalankan `npm run build` dan OpenCode AI Auditor untuk kebersihan import/export JSX bundling.
-7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib formatter `formatRupiah`, kepatuhan Atomic Design, icon-only header controls dengan tooltip, sentralisasi filter sidebar kanan, dan arsitektur tajam).
+7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib formatter `formatRupiah`, kepatuhan Atomic Design, icon-only header controls dengan tooltip, sentralisasi filter sidebar kanan, kewajiban penggunaan komponen reusable, dan arsitektur tajam).
 8. `08-backend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Backend (namespace `App\Http\Controllers\Api`, pewarisan `Controller`, integritas up()/down() pada seluruh file migrasi, dan larangan sisa fungsi debug `dd`/`dump`).
-9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, dan 0 duplikasi komponen.
+9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, 0 duplikasi komponen, dan penolakan duplikasi elemen UI mentah yang membypass komponen reusable yang sudah ada.
 
 Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang wajib memperbaiki masalah yang dilaporkan.
 </RULE[pre_commit_auditor]>

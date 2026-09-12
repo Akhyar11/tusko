@@ -38,6 +38,9 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
    - Tombol kontrol/aksi pada header tabel produk menggunakan simbol/ikon saja (icon-only) bersudut siku tajam (`rounded-none`) dan WAJIB dilengkapi tooltip yang memunculkan keterangan fungsi saat di-highlight/hover/fokus.
 7. Standardisasi Sentralisasi Filter:
    - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri, dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
+8. Standardisasi Wajib Komponen Reusable (Mandatory Reusable Component Reuse):
+   - Pengembang WAJIB memanfaatkan dan mengimpor komponen reusable yang sudah ada di codebase (misalnya `IconButton` pada atoms/, `SearchBar` dan `ViewModeToggle` pada molecules/, `ServerSideTable`, `ProductFilterDrawer`, `ProductHeaderActions` pada organisms/).
+   - DILARANG KERAS membuat ulang kode mentah (inline reinventing) seperti tombol kontrol, input pencarian, tabel server-side, atau tooltip manual jika sudah ada komponen reusable yang menyediakannya.
 
 Git Diff (Staged Frontend Changes):
 ```diff
