@@ -1,9 +1,10 @@
 import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
+import SearchBar from '../molecules/SearchBar';
 
 /**
  * Organism: ProductFilterDrawer
- * Right-to-left centralized drawer for all product catalog filters
+ * Right-to-left centralized drawer for all product catalog filters & search
  */
 export default function ProductFilterDrawer({
   isOpen = false,
@@ -11,6 +12,9 @@ export default function ProductFilterDrawer({
   activeFilterCount = 0,
   totalFiltered = 0,
   totalProducts = 0,
+  // Search State
+  searchQuery = '',
+  onSearchChange = () => {},
   // Filter States
   selectedStatus = 'all',
   onStatusChange = () => {},
@@ -58,7 +62,7 @@ export default function ProductFilterDrawer({
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-black font-sport uppercase tracking-wider text-white">
-                    Filter Produk
+                    Filter & Pencarian
                   </h2>
                   {activeFilterCount > 0 && (
                     <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-black uppercase rounded-none">
@@ -84,7 +88,32 @@ export default function ProductFilterDrawer({
           {/* Drawer Content (Scrollable) */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
             
-            {/* 1. Status Publikasi */}
+            {/* 1. Pencarian Produk & SKU */}
+            <div className="space-y-2.5 pb-5 border-b border-neutral-200">
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                Pencarian Produk & SKU
+              </label>
+              <SearchBar
+                value={searchQuery}
+                onChange={onSearchChange}
+                onReset={() => onSearchChange('')}
+                placeholder="Cari nama produk, SKU, spesifikasi..."
+              />
+              <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500 pt-0.5">
+                <span>Ditemukan <strong className="text-neutral-950 font-bold">{totalFiltered}</strong> dari <strong className="text-neutral-950">{totalProducts}</strong> produk</span>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange('')}
+                    className="text-amber-700 font-sport font-bold uppercase hover:underline cursor-pointer"
+                  >
+                    Reset Cari
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Status Publikasi */}
             <div className="space-y-2.5">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                 Status Publikasi Produk

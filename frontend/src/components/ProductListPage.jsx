@@ -33,7 +33,6 @@ import DeleteProductModal from './DeleteProductModal';
 import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
 import ProductFilterDrawer from './organisms/ProductFilterDrawer';
-import SearchBar from './molecules/SearchBar';
 
 export default function ProductListPage({
   products = [],
@@ -91,19 +90,21 @@ export default function ProductListPage({
     setActiveActionMenuId(null);
   }, [searchQuery, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
 
-  // Active filters count
+  // Active filters & search count
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (searchQuery.trim() !== '') count++;
     if (selectedCategory !== 'all') count++;
     if (selectedStatus !== 'all') count++;
     if (stockCondition !== 'all') count++;
     if (minPrice.trim() !== '') count++;
     if (maxPrice.trim() !== '') count++;
     return count;
-  }, [selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
+  }, [searchQuery, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
 
-  // Reset all filters helper
+  // Reset all filters & search helper
   const handleResetFilters = () => {
+    setSearchQuery('');
     setSelectedCategory('all');
     setSelectedStatus('all');
     setStockCondition('all');
@@ -617,46 +618,7 @@ export default function ProductListPage({
         </div>
       </div>
 
-      {/* Search Toolbar (Pure Search, Centralized Filter on Sidebar) */}
-      <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs space-y-2.5">
-        <div className="flex items-center gap-3">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onReset={() => setSearchQuery('')}
-            placeholder="Cari nama produk olahraga, kode SKU, atau spesifikasi..."
-          />
-        </div>
 
-        {/* Search & Result Metadata */}
-        <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-200">
-          <div>
-            Ditemukan <strong className="font-mono text-neutral-950 font-bold">{totalFiltered}</strong> dari <strong className="font-mono text-neutral-950">{products.length}</strong> produk
-            {searchQuery && (
-              <span className="ml-1">
-                untuk &ldquo;<span className="font-semibold text-amber-700">{searchQuery}</span>&rdquo;
-              </span>
-            )}
-            {activeFilterCount > 0 && (
-              <span className="ml-2 font-sport font-bold text-amber-700 uppercase">
-                ({activeFilterCount} filter aktif di sidebar)
-              </span>
-            )}
-          </div>
-          {(searchQuery || activeFilterCount > 0) && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                handleResetFilters();
-              }}
-              className="text-amber-700 font-sport font-bold uppercase text-xs hover:underline cursor-pointer"
-            >
-              Bersihkan Pencarian & Filter
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* Main Table or Grid View */}
       {viewMode === 'table' ? (
@@ -784,6 +746,8 @@ export default function ProductListPage({
         activeFilterCount={activeFilterCount}
         totalFiltered={totalFiltered}
         totalProducts={products.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
         selectedCategory={selectedCategory}
