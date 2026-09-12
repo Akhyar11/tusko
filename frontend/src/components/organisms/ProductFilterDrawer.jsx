@@ -13,7 +13,12 @@ export default function ProductFilterDrawer({
   activeFilterCount = 0,
   totalFiltered = 0,
   totalProducts = 0,
-  // Search State
+  // Search State: Separated Product Name & SKU
+  searchName = '',
+  onSearchNameChange = () => {},
+  searchSku = '',
+  onSearchSkuChange = () => {},
+  // Backwards compatibility
   searchQuery = '',
   onSearchChange = () => {},
   // Filter States
@@ -89,29 +94,52 @@ export default function ProductFilterDrawer({
           {/* Drawer Content (Scrollable) */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
             
-            {/* 1. Pencarian Produk & SKU */}
-            <div className="space-y-2.5 pb-5 border-b border-neutral-200">
-              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                Pencarian Produk & SKU
-              </label>
-              <SearchBar
-                value={searchQuery}
-                onChange={onSearchChange}
-                onReset={() => onSearchChange('')}
-                placeholder="Cari nama produk, SKU, spesifikasi..."
-              />
-              <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500 pt-0.5">
-                <span>Ditemukan <strong className="text-neutral-950 font-bold">{totalFiltered}</strong> dari <strong className="text-neutral-950">{totalProducts}</strong> produk</span>
-                {searchQuery && (
+            {/* 1. Pencarian Nama Produk */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Nama Produk
+                </label>
+                {searchName && (
                   <button
                     type="button"
-                    onClick={() => onSearchChange('')}
-                    className="text-amber-700 font-sport font-bold uppercase hover:underline cursor-pointer"
+                    onClick={() => onSearchNameChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
                   >
-                    Reset Cari
+                    Reset Nama
                   </button>
                 )}
               </div>
+              <SearchBar
+                value={searchName}
+                onChange={onSearchNameChange}
+                onReset={() => onSearchNameChange('')}
+                placeholder="Cari nama produk..."
+              />
+            </div>
+
+            {/* 2. Pencarian Kode SKU */}
+            <div className="space-y-2 pb-5 border-b border-neutral-200">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Kode SKU Produk
+                </label>
+                {searchSku && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchSkuChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset SKU
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={searchSku}
+                onChange={onSearchSkuChange}
+                onReset={() => onSearchSkuChange('')}
+                placeholder="Cari kode SKU (contoh: TSK-RUN)..."
+              />
             </div>
 
             {/* 2. Status Publikasi */}
@@ -131,14 +159,14 @@ export default function ProductFilterDrawer({
                 )}
               </div>
               <ServerSideSelect
-                value={selectedStatus}
+                value={selectedStatus === 'all' ? '' : selectedStatus}
                 onChange={(val) => onStatusChange(val || 'all')}
                 options={[
                   { value: 'all', label: 'Semua Status Publikasi' },
                   { value: 'active', label: '🟢 Aktif' },
                   { value: 'inactive', label: '⚪ Draft' }
                 ]}
-                placeholder="-- Pilih Status Publikasi --"
+                placeholder="Pilih status publikasi..."
                 isClearable={selectedStatus !== 'all'}
                 scrollPadding={30}
               />
@@ -161,7 +189,7 @@ export default function ProductFilterDrawer({
                 )}
               </div>
               <ServerSideSelect
-                value={selectedCategory}
+                value={selectedCategory === 'all' ? '' : selectedCategory}
                 onChange={(val) => onCategoryChange(val || 'all')}
                 options={[
                   { value: 'all', label: `Semua Kategori (${totalProducts})`, name: 'Semua Kategori', count: totalProducts },
@@ -175,7 +203,7 @@ export default function ProductFilterDrawer({
                     };
                   })
                 ]}
-                placeholder="-- Pilih Kategori Olahraga --"
+                placeholder="Pilih kategori olahraga..."
                 isClearable={selectedCategory !== 'all'}
                 scrollPadding={30}
                 renderOption={(opt, isSelected) => (
@@ -208,7 +236,7 @@ export default function ProductFilterDrawer({
                 )}
               </div>
               <ServerSideSelect
-                value={stockCondition}
+                value={stockCondition === 'all' ? '' : stockCondition}
                 onChange={(val) => onStockConditionChange(val || 'all')}
                 options={[
                   { value: 'all', label: 'Semua Kondisi Stok' },
@@ -216,7 +244,7 @@ export default function ProductFilterDrawer({
                   { value: 'empty', label: '❌ Stok Habis' },
                   { value: 'ready', label: '✅ Stok Aman' }
                 ]}
-                placeholder="-- Pilih Kondisi Stok --"
+                placeholder="Pilih kondisi stok..."
                 isClearable={stockCondition !== 'all'}
                 scrollPadding={30}
               />
@@ -284,7 +312,7 @@ export default function ProductFilterDrawer({
                   { value: 'stock:desc', label: 'Stok Terbanyak' },
                   { value: 'sold_count:desc', label: 'Paling Laris' }
                 ]}
-                placeholder="-- Pilih Urutan Katalog --"
+                placeholder="Pilih urutan katalog..."
                 scrollPadding={30}
               />
             </div>

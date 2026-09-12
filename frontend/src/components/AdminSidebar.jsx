@@ -13,8 +13,10 @@ import {
   Menu, 
   X, 
   ChevronRight,
+  ChevronDown,
   Sparkles,
-  ClipboardList
+  ClipboardList,
+  FolderKanban
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -27,6 +29,16 @@ export default function AdminSidebar({
   lowStockCount = 0
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({
+    'menu-products': true
+  });
+
+  const toggleGroup = (groupId) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
 
   const menuItems = [
     {
@@ -37,11 +49,28 @@ export default function AdminSidebar({
       activeViews: ['admin-dashboard']
     },
     {
-      id: 'products-admin',
-      label: 'Produk & Katalog',
-      sublabel: 'Kelola SKU, varian, dan harga',
+      id: 'menu-products',
+      label: 'Menu Produk',
+      sublabel: 'Katalog, SKU & Kategori',
       icon: Package,
-      activeViews: ['products-admin', 'product-create', 'product-edit']
+      activeViews: ['products-admin', 'product-create', 'product-edit', 'categories-admin'],
+      isGroup: true,
+      subItems: [
+        {
+          id: 'products-admin',
+          label: 'Produk',
+          sublabel: 'Daftar produk & varian SKU',
+          icon: Package,
+          activeViews: ['products-admin', 'product-create', 'product-edit']
+        },
+        {
+          id: 'categories-admin',
+          label: 'Kategori Produk',
+          sublabel: 'Master kategori & taksonomi',
+          icon: FolderKanban,
+          activeViews: ['categories-admin']
+        }
+      ]
     },
     {
       id: 'stock',
@@ -154,6 +183,106 @@ export default function AdminSidebar({
         {menuItems.map((item) => {
           const isActive = item.activeViews.includes(currentView);
           const IconComponent = item.icon;
+
+          if (item.isGroup && item.subItems) {
+            const isExpanded = expandedGroups[item.id] !== undefined ? expandedGroups[item.id] : true;
+            return (
+              <div key={item.id} className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(item.id)}
+                  className={`w-full flex items-center justify-between p-3 transition-all rounded-none text-left cursor-pointer border ${
+                    isActive && !isExpanded
+                      ? 'bg-black border-black text-white shadow-xs'
+                      : isActive
+                        ? 'bg-neutral-100 border-neutral-300 text-neutral-950 font-bold'
+                        : 'bg-white hover:bg-neutral-100 border-transparent hover:border-neutral-300 text-neutral-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 flex items-center justify-center rounded-none shrink-0 border ${
+                      isActive 
+                        ? 'bg-neutral-900 border-neutral-700 text-amber-400' 
+                        : 'bg-neutral-100 border-neutral-200 text-neutral-700'
+                    }`}>
+                      <IconComponent size={16} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
+                        isActive && !isExpanded ? 'text-white' : 'text-neutral-950'
+                      }`}>
+                        {item.label}
+                      </div>
+                      <div className={`text-[10px] truncate ${
+                        isActive && !isExpanded ? 'text-neutral-400' : 'text-neutral-500'
+                      }`}>
+                        {item.sublabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {isExpanded ? (
+                      <ChevronDown size={14} className={isActive && !isExpanded ? 'text-amber-400' : 'text-neutral-500'} />
+                    ) : (
+                      <ChevronRight size={14} className={isActive && !isExpanded ? 'text-amber-400' : 'text-neutral-500'} />
+                    )}
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="ml-3 pl-3 border-l-2 border-neutral-300 space-y-1 my-1">
+                    {item.subItems.map((sub) => {
+                      const isSubActive = sub.activeViews.includes(currentView);
+                      const SubIcon = sub.icon;
+
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => handleItemClick(sub.id)}
+                          className={`w-full flex items-center justify-between p-2.5 transition-all rounded-none text-left cursor-pointer border ${
+                            isSubActive
+                              ? 'bg-black border-black text-white shadow-xs'
+                              : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-neutral-300 text-neutral-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-6 h-6 flex items-center justify-center rounded-none shrink-0 border ${
+                              isSubActive
+                                ? 'bg-neutral-900 border-neutral-700 text-amber-400'
+                                : 'bg-neutral-100 border-neutral-200 text-neutral-700'
+                            }`}>
+                              <SubIcon size={13} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
+                                isSubActive ? 'text-white' : 'text-neutral-950'
+                              }`}>
+                                {sub.label}
+                              </div>
+                              <div className={`text-[9px] truncate ${
+                                isSubActive ? 'text-neutral-400' : 'text-neutral-500'
+                              }`}>
+                                {sub.sublabel}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <ChevronRight 
+                              size={12} 
+                              className={isSubActive ? 'text-amber-400' : 'text-neutral-400'} 
+                            />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
 
           return (
             <button

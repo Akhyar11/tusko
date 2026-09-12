@@ -171,9 +171,12 @@ export default function ServerSideSelect({
   }, [isOpen]);
 
   // Find currently selected option object
-  const selectedOption = displayedOptions.find(o => String(o.value) === String(value))
-    || normalizedStaticOptions().find(o => String(o.value) === String(value))
-    || (value ? { value, label: String(value) } : null);
+  const hasValidValue = value !== undefined && value !== null && value !== '';
+  const selectedOption = hasValidValue
+    ? (displayedOptions.find(o => String(o.value) === String(value))
+        || normalizedStaticOptions().find(o => String(o.value) === String(value))
+        || { value, label: String(value) })
+    : null;
 
   const handleSelect = (option) => {
     onChange(option.value, option);
@@ -206,7 +209,7 @@ export default function ServerSideSelect({
           isOpen ? 'border-black ring-1 ring-black bg-white' : 'border-neutral-300'
         } ${className}`}
       >
-        <span className={`truncate font-medium ${selectedOption ? 'text-neutral-900 font-semibold' : 'text-neutral-400'}`}>
+        <span className={`truncate ${selectedOption ? 'text-neutral-950 font-semibold' : 'text-neutral-400 font-normal'}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
 

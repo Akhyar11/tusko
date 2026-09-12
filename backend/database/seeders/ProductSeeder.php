@@ -13,6 +13,14 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $categoriesData = [
+            ['name' => 'Jersey & Apparel', 'slug' => 'jersey-apparel', 'icon' => 'Shirt'],
+            ['name' => 'Sepatu Olahraga', 'slug' => 'sepatu-olahraga', 'icon' => 'Footprints'],
+            ['name' => 'Peralatan & Gym', 'slug' => 'peralatan-gym', 'icon' => 'Dumbbell'],
+            ['name' => 'Aksesoris & Deker', 'slug' => 'aksesoris-deker', 'icon' => 'Shield'],
+            ['name' => 'Running & Marathon', 'slug' => 'running-marathon', 'icon' => 'Zap'],
+            ['name' => 'Futsal & Sepakbola', 'slug' => 'futsal-sepakbola', 'icon' => 'Trophy'],
+            ['name' => 'Training & Fitness', 'slug' => 'training-fitness', 'icon' => 'Activity'],
+            ['name' => 'Koleksi Pro Player', 'slug' => 'koleksi-pro-player', 'icon' => 'Sparkles'],
             ['name' => 'Elektronik', 'slug' => 'elektronik'],
             ['name' => 'Komputer & Laptop', 'slug' => 'komputer-laptop'],
             ['name' => 'Handphone & Tablet', 'slug' => 'handphone-tablet'],

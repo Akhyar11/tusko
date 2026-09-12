@@ -43,12 +43,27 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 3. **Arsitektur Atomic Design**:
    - Seluruh komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan prinsip Atomic Design (`atoms/`, `molecules/`, `organisms/`, `templates/pages`).
 4. **Icon-Only Header Controls dengan Tooltip**:
-   - Tombol kontrol/aksi navigasi pada header tabel produk WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku (`rounded-none`) dan dilengkapi tooltip keterangan fungsi saat di-highlight/hover/fokus.
+   - Tombol kontrol/aksi navigasi pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku (`rounded-none`), memanfaatkan komponen reusable `IconButton`, dan dilengkapi tooltip keterangan fungsi saat di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header.
 5. **Sentralisasi Kontrol Filter**:
    - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri. Dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
 6. **Wajib Penggunaan Komponen Reusable (Mandatory Reusable Component Reuse)**:
    - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ViewModeToggle`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
    - DILARANG KERAS membuat elemen UI mentah berulang atau mengabaikan komponen reusable yang sudah ada di codebase.
+7. **Standar Kontrol Filter & Pencarian (Filter & Search Rules)**:
+   - **Pemisahan Pencarian Nama & SKU**: Pencarian nama produk dan pencarian kode SKU WAJIB dipisah menjadi input mandiri masing-masing (`SearchBar` Nama Produk terpisah dari `SearchBar` Kode SKU). Dilarang menyatukan nama dan SKU ke dalam satu input gabungan.
+   - **Larangan Counter Redundant**: Dilarang menampilkan teks hitungan redundant seperti "Ditemukan X dari Y produk" di bawah kotak input pencarian filter.
+   - **Wajib Dropdown ServerSideSelect**: Seluruh dropdown filter (Kategori, Status Publikasi, Kondisi Stok, Urutan Katalog) WAJIB menggunakan `ServerSideSelect` dengan fitur pencarian dan scroll padding.
+   - **Format Teks Placeholder**: Placeholder filter wajib berupa kalimat ajakan deskriptif (contoh: "Pilih status publikasi...", "Pilih kategori olahraga...", "Pilih kondisi stok...", "Pilih urutan katalog..."), BUKAN langsung menampilkan nilai opsi seperti "Semua ..." saat filter belum dipilih.
+   - **Kontras Warna Placeholder**: Warna teks placeholder WAJIB dibedakan jelas dari label atasnya menggunakan warna abu-abu lembut `text-neutral-400 font-normal` (bukan teks hitam tebal seperti judul/label).
+8. **Standar Header Modul Bersih (Clean Header & No Redundant Breadcrumbs)**:
+   - DILARANG menampilkan baris navigasi teks/breadcrumb manual yang redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") jika navigasi dan aksi sudah disediakan oleh tombol kontrol header (`ProductHeaderActions`).
+   - Kartu header halaman WAJIB bersih dan langsung berfokus pada identitas modul (ikon besar, judul, deskripsi) di sisi kiri serta kelompok tombol kontrol di sisi kanan.
+9. **Larangan Container Tambahan Sebelum Tabel (No Extra Container Card Before Table)**:
+   - Pada halaman list/tabel admin, DILARANG menambahkan container/card pembungkus ekstra sebelum tabel (seperti membungkus search bar dan tabel ke dalam satu wadah card pembungkus ekstra). Toolbar pencarian/aksi dan tabel harus berada pada hierarki layout langsung yang bersih tanpa container ganda pembungkus tabel.
+10. **Wajib Checkbox List pada Tabel Admin (Mandatory Table Row Checkbox List)**:
+    - Seluruh tabel daftar data admin WAJIB menyertakan kolom checkbox list (multi-selection) dengan checkbox Select All di kolom pertama `thead` dan checkbox baris di setiap baris `tbody` (memanfaatkan prop `selectable={true}` pada `ServerSideTable`).
+11. **Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah (Filter Button Placed Right of Add Button)**:
+    - Tombol kontrol filter (baik pada icon-only header controls maupun toolbar di atas tabel) WAJIB selalu diposisikan di **samping kanan tombol tambah** (`[Tombol Tambah] [Tombol Filter]`). Dilarang meletakkan tombol filter di sebelah kiri tombol tambah.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

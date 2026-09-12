@@ -12,7 +12,6 @@ import {
   XCircle, 
   AlertTriangle, 
   Layers, 
-  ArrowLeft,
   DollarSign,
   TrendingUp,
   Tag,
@@ -33,6 +32,7 @@ import DeleteProductModal from './DeleteProductModal';
 import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
 import ProductFilterDrawer from './organisms/ProductFilterDrawer';
+import CategoryMasterModal from './organisms/CategoryMasterModal';
 
 export default function ProductListPage({
   products = [],
@@ -42,10 +42,13 @@ export default function ProductListPage({
   onDeleteProduct = () => {},
   onToggleStatus = () => {},
   onViewProductDetail = () => {},
-  onBackToShopping = () => {}
+  onBackToShopping = () => {},
+  onCategoriesChange = () => {}
 }) {
+  const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   // Filter & Search states
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchName, setSearchName] = useState('');
+  const [searchSku, setSearchSku] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all'); // 'all' | 'active' | 'inactive'
   const [stockCondition, setStockCondition] = useState('all'); // 'all' | 'low' | 'empty' | 'ready'
@@ -88,23 +91,25 @@ export default function ProductListPage({
   useEffect(() => {
     setPage(1);
     setActiveActionMenuId(null);
-  }, [searchQuery, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
+  }, [searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
 
   // Active filters & search count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (searchQuery.trim() !== '') count++;
+    if (searchName.trim() !== '') count++;
+    if (searchSku.trim() !== '') count++;
     if (selectedCategory !== 'all') count++;
     if (selectedStatus !== 'all') count++;
     if (stockCondition !== 'all') count++;
     if (minPrice.trim() !== '') count++;
     if (maxPrice.trim() !== '') count++;
     return count;
-  }, [searchQuery, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
+  }, [searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
 
   // Reset all filters & search helper
   const handleResetFilters = () => {
-    setSearchQuery('');
+    setSearchName('');
+    setSearchSku('');
     setSelectedCategory('all');
     setSelectedStatus('all');
     setStockCondition('all');
@@ -133,13 +138,18 @@ export default function ProductListPage({
   // Filtered and sorted products (Server-side simulation engine)
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchName = p.name?.toLowerCase().includes(q);
-        const matchSku = p.sku?.toLowerCase().includes(q);
-        const matchDesc = p.description?.toLowerCase().includes(q);
-        if (!matchName && !matchSku && !matchDesc) return false;
+      // Search by Product Name
+      if (searchName.trim()) {
+        const qName = searchName.toLowerCase();
+        if (!p.name?.toLowerCase().includes(qName)) return false;
+      }
+
+      // Search by Product SKU
+      if (searchSku.trim()) {
+        const qSku = searchSku.toLowerCase();
+        const matchSku = p.sku?.toLowerCase().includes(qSku);
+        const matchVariantSku = p.variants?.some(v => v.sku?.toLowerCase().includes(qSku));
+        if (!matchSku && !matchVariantSku) return false;
       }
 
       // Category filter
@@ -186,7 +196,7 @@ export default function ProductListPage({
       if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [products, searchQuery, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice, sortBy, sortDirection]);
+  }, [products, searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice, sortBy, sortDirection]);
 
   // Total filtered records
   const totalFiltered = filteredProducts.length;
@@ -509,22 +519,9 @@ export default function ProductListPage({
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
-      {/* Top Breadcrumb & Header Action */}
+      {/* Top Header Action */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 uppercase tracking-widest mb-1.5 flex-wrap">
-            <button 
-              onClick={onBackToShopping}
-              className="hover:text-amber-600 flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={13} />
-              <span>Etalase Storefront</span>
-            </button>
-            <span className="text-neutral-300">&bull;</span>
-            <span className="text-neutral-900 font-bold">Admin ERP</span>
-            <span className="text-neutral-300">&bull;</span>
-            <span className="text-amber-700 font-bold">Katalog Produk</span>
-          </div>
           <div className="flex items-start sm:items-center gap-3">
             <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
               <Package size={22} />
@@ -547,6 +544,7 @@ export default function ProductListPage({
           onBackToShopping={onBackToShopping}
           onAddNewProduct={onAddNewProduct}
           onOpenFilter={() => setIsFilterSidebarOpen(true)}
+          onOpenCategoryMaster={() => setIsCategoryMasterOpen(true)}
           activeFilterCount={activeFilterCount}
         />
       </div>
@@ -746,8 +744,10 @@ export default function ProductListPage({
         activeFilterCount={activeFilterCount}
         totalFiltered={totalFiltered}
         totalProducts={products.length}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        searchName={searchName}
+        onSearchNameChange={setSearchName}
+        searchSku={searchSku}
+        onSearchSkuChange={setSearchSku}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
         selectedCategory={selectedCategory}
@@ -782,6 +782,13 @@ export default function ProductListPage({
           onToggleStatus(p);
           setProductToDelete(null);
         }}
+      />
+
+      {/* Category Master Modal */}
+      <CategoryMasterModal
+        isOpen={isCategoryMasterOpen}
+        onClose={() => setIsCategoryMasterOpen(false)}
+        onCategoriesChange={onCategoriesChange}
       />
     </div>
   );

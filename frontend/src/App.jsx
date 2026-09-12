@@ -20,6 +20,7 @@ import ProfilePage from './components/ProfilePage';
 import ProductListPage from './components/ProductListPage';
 import ProductCreateForm from './components/ProductCreateForm';
 import ProductEditForm from './components/ProductEditForm';
+import CategoryListPage from './components/CategoryListPage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
 import PopularChipsBar from './components/PopularChipsBar';
 import SportCategoriesSection from './components/SportCategoriesSection';
@@ -28,13 +29,14 @@ import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
 import AdminDashboardPage from './components/AdminDashboardPage';
 import ProcurementPage from './components/ProcurementPage';
-import { categories, mockProducts } from './data/mockProducts';
+import { categories as initialMockCategories, mockProducts } from './data/mockProducts';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
+import { categoryService } from './services/categoryService';
 import { CheckCircle2, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -52,6 +54,7 @@ const VALID_VIEWS = [
   'templates',
   'expeditions',
   'products-admin',
+  'categories-admin',
   'product-create',
   'product-edit',
   'login',
@@ -66,6 +69,7 @@ const getViewFromPathOrHash = () => {
       return 'admin-dashboard';
     }
     if (rawPath === '/admin/products') return 'products-admin';
+    if (rawPath === '/admin/categories') return 'categories-admin';
     if (rawPath === '/admin/stock') return 'stock';
     if (rawPath === '/admin/orders') return 'orders';
     if (rawPath === '/admin/procurement') return 'procurement';
@@ -151,6 +155,19 @@ export default function App() {
   };
 
   const [products, setProducts] = useState(mockProducts);
+  const [categories, setCategories] = useState(initialMockCategories);
+
+  // Fetch categories from server on mount
+  useEffect(() => {
+    categoryService.fetchCategories({ all: true })
+      .then(res => {
+        if (res && res.data && res.data.length > 0) {
+          setCategories(res.data);
+        }
+      })
+      .catch(err => console.warn('categoryService initial load:', err));
+  }, []);
+
   const [selectedProduct, setSelectedProduct] = useState(() => {
     try {
       const savedId = localStorage.getItem('tusko_selected_product_id');
@@ -223,7 +240,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -271,6 +288,10 @@ export default function App() {
     } else if (currentView === 'products-admin') {
       if (window.location.pathname !== '/admin/products') {
         window.history.pushState(null, '', '/admin/products');
+      }
+    } else if (currentView === 'categories-admin') {
+      if (window.location.pathname !== '/admin/categories') {
+        window.history.pushState(null, '', '/admin/categories');
       }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
@@ -350,7 +371,7 @@ export default function App() {
 
   // Cek apakah halaman saat ini adalah bagian dari Admin Panel
   const isAdminView = useMemo(() => {
-    const adminCoreViews = ['admin-dashboard', 'products-admin', 'product-create', 'product-edit', 'stock', 'procurement', 'templates', 'expeditions', 'transactions'];
+    const adminCoreViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'product-create', 'product-edit', 'stock', 'procurement', 'templates', 'expeditions', 'transactions'];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
@@ -910,6 +931,13 @@ export default function App() {
             }}
             onCancel={() => setCurrentView('products-admin')}
           />
+        ) : currentView === 'categories-admin' ? (
+          <CategoryListPage
+            categories={categories}
+            products={products}
+            onCategoriesChange={setCategories}
+            onBackToShopping={() => setCurrentView('catalog')}
+          />
         ) : currentView === 'products-admin' ? (
           <ProductListPage
             products={products}
@@ -936,6 +964,7 @@ export default function App() {
               setCurrentView('detail');
             }}
             onBackToShopping={() => setCurrentView('catalog')}
+            onCategoriesChange={setCategories}
           />
         ) : currentView === 'profile' ? (
           <ProfilePage

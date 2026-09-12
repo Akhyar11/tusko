@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Plus, SlidersHorizontal } from 'lucide-react';
+import { ExternalLink, Plus, SlidersHorizontal, FolderKanban } from 'lucide-react';
 import IconButton from '../atoms/IconButton';
 import ViewModeToggle from '../molecules/ViewModeToggle';
 
@@ -13,12 +13,21 @@ export default function ProductHeaderActions({
   onBackToShopping = () => {},
   onAddNewProduct = () => {},
   onOpenFilter = () => {},
+  onOpenCategoryMaster = () => {},
   activeFilterCount = 0
 }) {
   return (
     <div className="flex items-center gap-2 shrink-0 flex-nowrap pt-2 xl:pt-0 border-t xl:border-t-0 border-neutral-100">
       {/* View Mode Toggle: List / Grid */}
       <ViewModeToggle viewMode={viewMode} onChange={onViewModeChange} />
+
+      {/* Master Kategori: Icon-only with tooltip */}
+      <IconButton
+        icon={FolderKanban}
+        label="Master Kategori Produk"
+        variant="secondary"
+        onClick={onOpenCategoryMaster}
+      />
 
       {/* Lihat Etalase: Icon-only with tooltip */}
       <IconButton
