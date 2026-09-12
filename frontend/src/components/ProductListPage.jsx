@@ -53,10 +53,19 @@ export default function ProductListPage({
   const [sortDirection, setSortDirection] = useState('desc');
   const [selectedProductIds, setSelectedProductIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+
+  // Close action popup when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveActionMenuId(null);
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   // Reset pagination on filter/search change with simulated short transition
   useEffect(() => {
     setPage(1);
+    setActiveActionMenuId(null);
   }, [searchQuery, selectedCategory, selectedStatus]);
 
   // Metric summaries
@@ -338,42 +347,100 @@ export default function ProductListPage({
       label: 'Aksi',
       sortable: false,
       align: 'right',
-      width: 'w-32',
-      render: (_, product) => {
+      width: 'w-24',
+      render: (_, product, rowIdx) => {
+        const isOpen = activeActionMenuId === product.id;
+        const isActive = product.status === 'active' || product.active;
+        const isNearBottom = rowIdx >= paginatedProducts.length - 2 && paginatedProducts.length > 3;
+
         return (
-          <div className="flex items-center justify-end gap-1.5">
-            {/* View Detail Preview */}
+          <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+            {/* Tombol Titik 3 */}
             <button
               type="button"
-              onClick={() => onViewProductDetail(product)}
-              className="p-1.5 text-neutral-600 hover:text-black hover:bg-neutral-100 border border-transparent hover:border-neutral-300 rounded-none transition-colors cursor-pointer"
-              title="Lihat Detail Produk"
-              aria-label="Lihat Detail Produk"
+              onClick={() => setActiveActionMenuId(isOpen ? null : product.id)}
+              className={`p-1.5 rounded-none border transition-colors cursor-pointer ${
+                isOpen 
+                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
+                  : 'text-neutral-700 hover:text-black hover:bg-neutral-100 border-neutral-300 bg-white shadow-2xs'
+              }`}
+              title="Menu Aksi Produk"
+              aria-label="Menu Aksi Baris Produk"
             >
-              <Eye size={15} />
+              <MoreVertical size={16} />
             </button>
 
-            {/* Edit Product */}
-            <button
-              type="button"
-              onClick={() => onEditProduct(product)}
-              className="p-1.5 text-neutral-600 hover:text-black hover:bg-neutral-100 border border-transparent hover:border-neutral-300 rounded-none transition-colors cursor-pointer"
-              title="Ubah Produk"
-              aria-label="Ubah Produk"
-            >
-              <Edit3 size={15} />
-            </button>
+            {/* Popup Menu Dropdown */}
+            {isOpen && (
+              <div 
+                className={`absolute right-0 ${
+                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
+                } w-48 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100 font-sans`}
+              >
+                {/* 1. Lihat Detail */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    onViewProductDetail(product);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 hover:text-amber-700 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Eye size={15} className="text-neutral-500" />
+                  <span>Lihat Detail</span>
+                </button>
 
-            {/* Delete Product */}
-            <button
-              type="button"
-              onClick={() => setProductToDelete(product)}
-              className="p-1.5 text-neutral-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-none transition-colors cursor-pointer"
-              title="Hapus Produk"
-              aria-label="Hapus Produk"
-            >
-              <Trash2 size={15} />
-            </button>
+                {/* 2. Ubah Produk */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    onEditProduct(product);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 hover:text-sky-700 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Edit3 size={15} className="text-sky-600" />
+                  <span>Ubah Produk</span>
+                </button>
+
+                {/* 3. Toggle Status Aktif/Draft */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    onToggleStatus(product);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-800 hover:bg-neutral-100 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  {isActive ? (
+                    <>
+                      <XCircle size={15} className="text-neutral-500" />
+                      <span>Jadikan Draft</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={15} className="text-emerald-600" />
+                      <span>Aktifkan Produk</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="border-t border-neutral-200 my-1" />
+
+                {/* 4. Hapus Produk */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    setProductToDelete(product);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Trash2 size={15} className="text-rose-600" />
+                  <span>Hapus Produk</span>
+                </button>
+              </div>
+            )}
           </div>
         );
       }

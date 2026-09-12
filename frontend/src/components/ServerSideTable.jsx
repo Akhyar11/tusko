@@ -127,7 +127,7 @@ export default function ServerSideTable({
       )}
 
       {/* Table Container */}
-      <div className="overflow-x-auto relative">
+      <div className="overflow-x-auto relative min-h-[300px]">
         <table className="w-full text-left text-xs border-collapse">
           {/* Table Head */}
           <thead>
