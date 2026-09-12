@@ -85,6 +85,9 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
       - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
       - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
       - Dilarang mewarnai aksi non-destruktif dengan warna-warni berlebihan di dalam dropdown menu agar antarmuka admin tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
+18. **Proteksi Mutlak dari Potensi Infinite Re-render Loop di React (Anti-Infinite Loop Guard)**:
+    - DILARANG KERAS memanggil setter state yang menghasilkan referensi objek/array/Set/Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`) di dalam `useEffect` jika state tersebut menjadi dependency dari `useEffect` yang sama TANPA bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
+    - DILARANG menggunakan default parameter inline (seperti `vendors = []`) pada props komponen jika menjadi dependency `useEffect` yang memicu re-fetch/update saat kosong. WAJIB menggunakan referensi stabil (seperti `const EMPTY_ARRAY = [];`) atau menjalankan fetch hanya sekali saat mount (`[]`).
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

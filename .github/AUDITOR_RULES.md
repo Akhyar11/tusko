@@ -103,3 +103,9 @@ Repository ini diawasi oleh auditor otomatis bertenaga OpenCode AI (`.githooks/a
   - Pelanggaran: [Deskripsi detail aturan yang dilanggar]
   - Solusi: [Tindakan perbaikan konkret yang harus dilakukan]
   ```
+
+## 19. Proteksi Mutlak dari Potensi Infinite Re-render Loop di React (Anti-Infinite Loop Guard)
+- **Larangan Instansiasi Objek/Set Baru di Dependency Loop**: DILARANG KERAS memanggil setter state yang menghasilkan referensi objek, array, Set, atau Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`, `setMap(new Map())`) di dalam `useEffect` jika state tersebut menjadi dependency dari `useEffect` yang sama, TANPA pengecekan bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
+- **Wajib Referensi Stabil untuk Default Array/Object Props**: DILARANG menggunakan default parameter inline (seperti `items = []`, `vendors = []`) pada props komponen jika prop tersebut menjadi dependency di dalam `useEffect` yang memicu pembaruan state atau fetch data asinkron saat kosong. WAJIB menggunakan konstanta referensi stabil di luar komponen (seperti `const EMPTY_ARRAY = [];`) atau menjalankan fetch/inisialisasi asinkron hanya sekali saat komponen mount (`[]`).
+- **Pencegahan Galat Maximum Update Depth Exceeded**: Seluruh komponen React wajib bebas dari dependency loop yang berpotensi memicu re-render tanpa henti dan banjir request API ke server backend.
+

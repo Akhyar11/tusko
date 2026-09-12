@@ -86,6 +86,10 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
       - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
       - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
     - DILARANG mewarnai aksi non-destruktif dengan warna-warni mencolok (seperti teks/ikon biru, hijau, ungu, kuning) di dalam dropdown menu agar tampilan antarmuka tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
+20. Proteksi Mutlak dari Potensi Infinite Re-render Loop di React (Anti-Infinite Loop Guard):
+    - DILARANG KERAS memanggil setter state yang menghasilkan referensi objek/array/Set/Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`, `setMap(new Map())`) di dalam `useEffect` di mana state tersebut (atau turunannya) dimasukkan ke dalam dependency array `useEffect` yang sama TANPA pengecekan bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
+    - DILARANG KERAS menggunakan default parameter array/objek inline baru (seperti `items = []`, `vendors = []`) pada props komponen jika parameter tersebut dimasukkan ke dalam dependency array `useEffect` yang memicu pembaruan state atau fetch data asinkron saat kosong. WAJIB menggunakan konstanta referensi stabil (misalnya `const EMPTY_ARRAY = [];`) atau menjalankan efek inisialisasi/fetch asinkron hanya sekali saat komponen mount (`[]`).
+    - DILARANG mendefinisikan dependency `useEffect` yang menyebabkan circular re-render loop (Maximum update depth exceeded).
 
 Git Diff (Staged Frontend Changes):
 ```

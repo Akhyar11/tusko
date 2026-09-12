@@ -35,11 +35,13 @@ import CategoryMasterModal from './organisms/CategoryMasterModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
 
+const EMPTY_ARRAY = [];
+
 export default function ProductEditForm({
   product = null,
-  categories = [],
-  vendors = [],
-  products = [],
+  categories = EMPTY_ARRAY,
+  vendors = EMPTY_ARRAY,
+  products = EMPTY_ARRAY,
   onUpdateProduct = () => {},
   onCancel = () => {},
   onNavigateToCategories = () => {},
@@ -78,14 +80,22 @@ export default function ProductEditForm({
   useEffect(() => {
     if (vendors && vendors.length > 0) {
       setVendorList(vendors);
-    } else {
+    }
+  }, [vendors]);
+
+  useEffect(() => {
+    if (!vendors || vendors.length === 0) {
+      let isMounted = true;
       vendorService.fetchVendors().then(res => {
-        if (res?.data && res.data.length > 0) {
+        if (isMounted && res?.data && res.data.length > 0) {
           setVendorList(res.data);
         }
       }).catch(() => {});
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [vendors]);
+  }, []);
   if (!product) {
     return (
       <div className="p-8 text-center bg-white border border-gray-200">

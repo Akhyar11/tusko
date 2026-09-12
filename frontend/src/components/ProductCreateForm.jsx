@@ -29,10 +29,12 @@ import IconButton from './atoms/IconButton';
 import CategoryMasterModal from './organisms/CategoryMasterModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
+const EMPTY_ARRAY = [];
+
 export default function ProductCreateForm({
-  categories = [],
-  vendors = [],
-  products = [],
+  categories = EMPTY_ARRAY,
+  vendors = EMPTY_ARRAY,
+  products = EMPTY_ARRAY,
   onSaveProduct = () => {},
   onCancel = () => {},
   onNavigateToCategories = () => {},
@@ -79,14 +81,22 @@ export default function ProductCreateForm({
   useEffect(() => {
     if (vendors && vendors.length > 0) {
       setVendorList(vendors);
-    } else {
+    }
+  }, [vendors]);
+
+  useEffect(() => {
+    if (!vendors || vendors.length === 0) {
+      let isMounted = true;
       vendorService.fetchVendors().then(res => {
-        if (res?.data && res.data.length > 0) {
+        if (isMounted && res?.data && res.data.length > 0) {
           setVendorList(res.data);
         }
       }).catch(() => {});
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [vendors]);
+  }, []);
   const [sku, setSku] = useState('');
 
   // ── Weight System ──────────────────────────────────────────────────────────
@@ -199,8 +209,8 @@ export default function ProductCreateForm({
   // Auto-generate / sync Matrix rows reactively when variantAttributes change
   useEffect(() => {
     if (!hasVariants) {
-      setVariantMatrix([]);
-      setRemovedRowNames(new Set());
+      setVariantMatrix(prev => (prev.length === 0 ? prev : []));
+      setRemovedRowNames(prev => (prev.size === 0 ? prev : new Set()));
       return;
     }
 
@@ -212,7 +222,7 @@ export default function ProductCreateForm({
       .filter(a => a.name && a.options.length > 0);
 
     if (activeAttrs.length === 0) {
-      setVariantMatrix([]);
+      setVariantMatrix(prev => (prev.length === 0 ? prev : []));
       return;
     }
 
@@ -1015,7 +1025,14 @@ export default function ProductCreateForm({
                 <input
                   type="checkbox"
                   checked={hasVariants}
-                  onChange={(e) => setHasVariants(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setHasVariants(checked);
+                    if (!checked) {
+                      setVariantMatrix([]);
+                      setRemovedRowNames(new Set());
+                    }
+                  }}
                   className="rounded-none border-neutral-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
                 />
                 <span>Aktifkan Varian</span>
