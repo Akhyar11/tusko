@@ -20,6 +20,7 @@ import {
   Grid
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import ServerSideSelect from './molecules/ServerSideSelect';
 
 export default function ProductEditForm({
   product = null,
@@ -307,17 +308,13 @@ export default function ProductEditForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Kategori Produk</label>
-                <select
+                <ServerSideSelect
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-gray-50 focus:bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900 font-semibold cursor-pointer"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setCategoryId(val)}
+                  options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                  placeholder="Pilih Kategori Produk..."
+                  scrollPadding={35}
+                />
               </div>
 
               <div>
