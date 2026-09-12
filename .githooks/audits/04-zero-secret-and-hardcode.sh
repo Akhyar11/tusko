@@ -88,8 +88,9 @@ PASSED
 
 Jika ditemukan nilai hardcode (lokasi toko, koordinat, handling fee, gateway URL, atau kredensial):
 REJECTED
-- Pelanggaran: [Sebutkan file, baris, dan apa saja yang di-hardcode]
-- Solusi untuk Developer: [Jelaskan perbaikan agar nilai tersebut diambil secara dinamis dari database Admin]
+- Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: backend/app/Services/ShippingService.php:142]
+- Pelanggaran: [Sebutkan nilai/parameter apa saja yang di-hardcode]
+- Solusi untuk Developer: [Jelaskan perbaikan konkret agar nilai tersebut diambil secara dinamis dari database Admin]
 EOF
 
 AUDITOR_RESULT=""
@@ -106,7 +107,7 @@ if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<<
     echo "❌ =============================================================================="
     echo "❌ [Audit Hardcode & Security] DITOLAK OLEH AI CODE AUDITOR (OPENCODE)!"
     echo "❌ =============================================================================="
-    echo "$AUDITOR_RESULT"
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     echo "💡 Petunjuk: Semua parameter toko (lokasi gudang, koordinat, handling fee) wajib diambil"
     echo "   secara dinamis dari tabel database (StoreSetting) yang diatur oleh Admin."

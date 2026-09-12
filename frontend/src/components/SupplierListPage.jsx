@@ -473,9 +473,9 @@ export default function SupplierListPage({
                     setActiveActionMenuId(null);
                     setDetailVendor(r);
                   }}
-                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2 transition-colors cursor-pointer"
+                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Eye size={13} className="text-blue-600" />
+                  <Eye size={13} className="text-neutral-500" />
                   <span>Lihat Detail</span>
                 </button>
 
@@ -485,9 +485,9 @@ export default function SupplierListPage({
                     setActiveActionMenuId(null);
                     handleOpenEditModal(r);
                   }}
-                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-sky-700 hover:bg-sky-50 hover:text-sky-800 flex items-center gap-2 transition-colors cursor-pointer"
+                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Edit3 size={13} className="text-sky-600" />
+                  <Edit3 size={13} className="text-neutral-500" />
                   <span>Edit Data Vendor</span>
                 </button>
 
@@ -498,9 +498,9 @@ export default function SupplierListPage({
                       setActiveActionMenuId(null);
                       onNavigateToPO(r);
                     }}
-                    className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 flex items-center gap-2 transition-colors cursor-pointer"
+                    className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
                   >
-                    <ClipboardList size={13} className="text-indigo-600" />
+                    <ClipboardList size={13} className="text-neutral-500" />
                     <span>Terbitkan PO Baru</span>
                   </button>
                 )}
@@ -513,20 +513,16 @@ export default function SupplierListPage({
                     setActiveActionMenuId(null);
                     handleToggleStatus(r);
                   }}
-                  className={`w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer ${
-                    r.is_active 
-                      ? 'text-amber-700 hover:bg-amber-50 hover:text-amber-800' 
-                      : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
-                  }`}
+                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   {r.is_active ? (
                     <>
-                      <XCircle size={13} className="text-amber-600" />
+                      <XCircle size={13} className="text-neutral-500" />
                       <span>Nonaktifkan</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 size={13} className="text-emerald-600" />
+                      <CheckCircle2 size={13} className="text-neutral-500" />
                       <span>Aktifkan</span>
                     </>
                   )}

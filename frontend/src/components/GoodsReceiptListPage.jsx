@@ -193,9 +193,9 @@ export default function GoodsReceiptListPage({
                     setSelectedGRNDetail(r);
                     setActiveActionMenuId(null);
                   }}
-                  className="w-full px-3 py-2 text-left text-xs font-bold text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <Eye size={14} className="text-blue-600" />
+                  <Eye size={14} className="text-neutral-500" />
                   <span>Lihat Detail Fisik</span>
                 </button>
               </div>

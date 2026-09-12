@@ -38,7 +38,11 @@ Aturan Branching:
 Format Jawaban:
 Jawab HANYA kata "PASSED" jika valid.
 Jika melanggar aturan penamaan branch, jawab:
-REJECTED: [alasan singkat dan rekomendasi nama branch yang benar]
+REJECTED
+- Nama Branch Saat Ini: [Nama branch aktif yang diperiksa]
+- Alasan Penolakan: [Alasan mengapa nama branch melanggar konvensi]
+- Rekomendasi Nama: [Contoh nama branch yang benar, misal: feat/nama-fitur atau fix/nama-bug]
+- Solusi: Ubah nama branch dengan perintah: git branch -m feat/nama-fitur-baru
 EOF
 
 AUDITOR_RESULT=""
@@ -52,7 +56,7 @@ rm -f "$PROMPT_FILE"
 if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ [Audit Branch Protection] NAMA BRANCH DITOLAK OLEH OPENCODE AI:"
-    echo "$AUDITOR_RESULT" | grep -i "REJECTED"
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     exit 1
 fi

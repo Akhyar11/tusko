@@ -80,15 +80,11 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 16. **Larangan Mutlak Label/Badge Header Redundant (No Header Badges / Category Pills on Any Page)**:
     - DILARANG KERAS menyertakan label badge, tag, chip, atau pill kategori/modul (seperti badge hitam/amber "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP ORDER FULFILLMENT", atau label sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
     - Header kartu modul WAJIB bersih dan langsung berfokus pada judul halaman (`<h1>`) serta deskripsi fungsi tanpa label penanda modul redundant di atasnya.
-17. **Standar Pewarnaan Semantik Konsisten pada Isi Menu Aksi Tabel Admin (Consistent Semantic Action Menu Colors)**:
-    - Seluruh item aksi pada menu aksi baris tabel (`MoreVertical` dropdown menu) WAJIB diberikan warna semantik yang konsisten dan ekspresif pada ikon dan teks:
-      - **Lihat / Detail**: Biru konsisten (`text-blue-600` / `text-blue-700`, `hover:bg-blue-50`).
-      - **Ubah / Edit**: Biru Langit / Sky konsisten (`text-sky-600` / `text-sky-700`, `hover:bg-sky-50`).
-      - **Aksi Positif / Aktifkan / Selesai / Terima (GRN) / Bayar**: Hijau Emerald konsisten (`text-emerald-600` / `text-emerald-700`, `hover:bg-emerald-50`).
-      - **Aksi Transisi / Terbitkan PO**: Indigo konsisten (`text-indigo-600` / `text-indigo-700`, `hover:bg-indigo-50`).
-      - **Aksi Peringatan / Nonaktifkan / Draft / Batal**: Kuning Amber / Oranye konsisten (`text-amber-600` / `text-amber-700`, `hover:bg-amber-50`).
-      - **Aksi Destruktif / Hapus**: Merah Rose konsisten (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
-    - DILARANG KERAS membiarkan item aksi tanpa warna (seperti teks monokrom hitam/abu-abu netral polos atau ikon abu-abu tanpa warna `text-neutral-500`, `text-neutral-400`). Seluruh opsi aksi dalam dropdown wajib memiliki perlakuan warna semantik yang seimbang dan tidak boleh ada opsi yang dibiarkan hambar tanpa warna.
+17. **Standar Pewarnaan Aksi Menu Dropdown Tabel Admin (Clean Neutral Action Menu with Red Destructive Only)**:
+    - Pada menu aksi baris tabel (`MoreVertical` dropdown popup):
+      - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+      - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
+      - Dilarang mewarnai aksi non-destruktif dengan warna-warni berlebihan di dalam dropdown menu agar antarmuka admin tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>
@@ -104,6 +100,7 @@ Repository ini dilengkapi dengan sistem auditor otomatis berbasis **OpenCode AI*
 7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib formatter `formatRupiah`, kepatuhan Atomic Design, icon-only header controls dengan tooltip, sentralisasi filter sidebar kanan, kewajiban penggunaan komponen reusable, dan arsitektur tajam).
 8. `08-backend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Backend (namespace `App\Http\Controllers\Api`, pewarisan `Controller`, integritas up()/down() pada seluruh file migrasi, dan larangan sisa fungsi debug `dd`/`dump`).
 9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, 0 duplikasi komponen, dan penolakan duplikasi elemen UI mentah yang membypass komponen reusable yang sudah ada.
+10. **Kewajiban Lokasi Berkas pada Rejection**: Setiap penolakan (`REJECTED`) dari seluruh modul auditor OpenCode AI WAJIB menyertakan lokasi berkas konkret dan nomor baris (`path/ke/file:baris`) yang harus diperbaiki oleh pengembang, bukan hanya alasan abstrak semata.
 
 Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang wajib memperbaiki masalah yang dilaporkan.
 </RULE[pre_commit_auditor]>

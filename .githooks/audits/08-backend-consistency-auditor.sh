@@ -42,8 +42,9 @@ FORMAT JAWABAN:
 - Jika seluruh standar konsistensi backend terpenuhi: Jawab HANYA kata "PASSED".
 - Jika melanggar:
   REJECTED
-  - Pelanggaran: [Sebutkan file, baris, dan aturan konsistensi yang dilanggar]
-  - Solusi: [Tindakan perbaikan yang harus dilakukan pengembang]
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: backend/app/Http/Controllers/Api/OrderController.php:32]
+  - Pelanggaran: [Detail aturan konsistensi backend yang dilanggar, misal: controller tanpa inheritance Controller, migrasi tanpa down(), atau sisa debugging dd()]
+  - Solusi: [Tindakan perbaikan konkret yang harus dilakukan pengembang]
 EOF
 
 AUDITOR_RESULT=""
@@ -59,7 +60,7 @@ if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<<
     echo "❌ =========================================================================="
     echo "❌ [Audit Backend Consistency] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
     echo "❌ =========================================================================="
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     exit 1
 fi

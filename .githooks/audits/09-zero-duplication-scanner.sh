@@ -47,7 +47,8 @@ FORMAT JAWABAN:
   Jawab HANYA kata "PASSED".
 - Jika ditemukan duplikasi:
   REJECTED
-  - Pelanggaran: [Sebutkan kategori duplikasi, file, dan baris yang menduplikasi kode]
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris kedua lokasi yang saling menduplikasi, contoh: frontend/src/utils/myHelper.js:15 vs frontend/src/utils/formatters.js:30]
+  - Pelanggaran: [Detail apa yang terduplikasi (rute API, skema tabel, helper, komponen, atau UI mentah)]
   - Solusi: [Tindakan konsolidasi atau penghapusan duplikasi]
 EOF
 
@@ -64,7 +65,7 @@ if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<<
     echo "❌ =========================================================================="
     echo "❌ [Audit Zero Duplication] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
     echo "❌ =========================================================================="
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     echo "💡 Sesuai arsitektur Tusko: Rute API, migrasi tabel database, helper/formatter, dan komponen wajib tunggal & bebas duplikasi."
     echo ""

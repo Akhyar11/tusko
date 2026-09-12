@@ -462,9 +462,9 @@ export default function CategoryListPage({
                     setActiveActionMenuId(null);
                     handleOpenEdit(cat);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-50 hover:text-sky-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
-                  <Edit3 size={15} className="text-sky-600" />
+                  <Edit3 size={15} className="text-neutral-500" />
                   <span>Ubah Kategori</span>
                 </button>
 

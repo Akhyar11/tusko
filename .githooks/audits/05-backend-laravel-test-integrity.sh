@@ -47,7 +47,10 @@ EOF
 FORMAT JAWABAN:
 - Jika kode backend dan test memenuhi standar: Jawab HANYA kata "PASSED".
 - Jika melanggar:
-  REJECTED: [alasan singkat kegagalan integritas backend/test]
+  REJECTED
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: backend/tests/Feature/VendorApiTest.php:45]
+  - Pelanggaran: [Detail kegagalan integritas backend/test, misal: method test tanpa assertion konkret atau penanganan error fatal]
+  - Solusi: [Tindakan perbaikan yang harus dilakukan pengembang]
 EOF
 
     AI_RESULT=""
@@ -60,7 +63,7 @@ EOF
 
     if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AI_RESULT"; then
         echo "❌ [Audit Backend Test Integrity] DITOLAK OLEH OPENCODE AI:"
-        echo "$AI_RESULT" | grep -i "REJECTED"
+        echo "$AI_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
         exit 1
     fi
 fi

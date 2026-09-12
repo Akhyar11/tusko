@@ -337,9 +337,9 @@ export default function PurchaseOrderListPage({
                     setSelectedPODetail(r);
                     setActiveActionMenuId(null);
                   }}
-                  className="w-full px-3 py-2 text-left text-xs font-bold text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <Eye size={14} className="text-blue-600" />
+                  <Eye size={14} className="text-neutral-500" />
                   <span>Lihat Detail Item PO</span>
                 </button>
 
@@ -347,9 +347,9 @@ export default function PurchaseOrderListPage({
                   <button
                     type="button"
                     onClick={() => handleOpenReceiveModal(r)}
-                    className="w-full px-3 py-2 text-left text-xs font-sport font-bold uppercase text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center gap-2 cursor-pointer transition-colors"
+                    className="w-full px-3 py-2 text-left text-xs font-sport font-bold uppercase text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    <PackageCheck size={14} className="text-emerald-600" />
+                    <PackageCheck size={14} className="text-neutral-500" />
                     <span>Terima Barang (GRN)</span>
                   </button>
                 )}
@@ -381,13 +381,7 @@ export default function PurchaseOrderListPage({
             <ClipboardList size={24} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-black text-white text-[10px] font-sport font-black uppercase tracking-wider rounded-none">
-                ERP PENGADAAN
-              </span>
-              <span className="text-xs text-neutral-500 font-mono">/ Modul Purchase Order</span>
-            </div>
-            <h1 className="text-2xl font-sport font-black uppercase tracking-tight text-neutral-950 mt-1">
+            <h1 className="text-2xl font-sport font-black uppercase tracking-tight text-neutral-950">
               Purchase Order (PO)
             </h1>
             <p className="text-xs text-neutral-600 font-sans mt-0.5">

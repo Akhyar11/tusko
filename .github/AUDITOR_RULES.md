@@ -88,12 +88,18 @@ Repository ini diawasi oleh auditor otomatis bertenaga OpenCode AI (`.githooks/a
 - **Rasional Desain & Ergonomi**: Identitas modul telah terwakili secara resmi dan elegan melalui menu sidebar navigasi yang aktif, ikon modul, serta judul halaman (`<h1>`) yang deskriptif. Penambahan badge/label mini di atas judul menciptakan redundansi visual dan mengotori hierarki tipografi.
 - **Wajib Header Bersih**: Seluruh kartu header halaman WAJIB bersih, langsung menampilkan judul halaman (`<h1>`) dan deskripsi tanpa didahului badge/tag/pill modul di atasnya.
 
-## 17. Standar Pewarnaan Semantik Konsisten pada Isi Menu Aksi Tabel Admin (Consistent Semantic Action Menu Colors)
-- **Wajib Warna Semantik Terstandarisasi**: Seluruh item aksi pada menu aksi baris tabel (`MoreVertical` dropdown popup) WAJIB diberikan warna semantik yang konsisten dan ekspresif pada ikon dan teks:
-  - **Lihat / Detail (View / Detail)**: Biru konsisten (`text-blue-600` / `text-blue-700` dengan hover halus `hover:bg-blue-50`).
-  - **Ubah / Edit Data**: Biru Langit / Sky konsisten (`text-sky-600` / `text-sky-700` dengan hover halus `hover:bg-sky-50`).
-  - **Aksi Positif / Aktifkan / Selesai / Terima (GRN) / Pembayaran**: Hijau Emerald konsisten (`text-emerald-600` / `text-emerald-700` dengan hover halus `hover:bg-emerald-50`).
-  - **Aksi Transisi Dokumen / Terbitkan PO**: Indigo konsisten (`text-indigo-600` / `text-indigo-700` dengan hover halus `hover:bg-indigo-50`).
-  - **Aksi Peringatan / Nonaktifkan / Jadikan Draft / Batalkan**: Kuning Amber / Oranye konsisten (`text-amber-600` / `text-amber-700` dengan hover halus `hover:bg-amber-50`).
-  - **Aksi Destruktif / Hapus**: Merah Rose konsisten (`text-rose-600` / `text-rose-700` dengan hover halus `hover:bg-rose-50`).
-- **Larangan Mutlak Item Aksi Tanpa Warna**: DILARANG KERAS membiarkan item aksi tanpa warna (seperti teks monokrom hitam/abu-abu netral polos `text-neutral-800`, `text-neutral-700`, atau ikon abu-abu tanpa warna `text-neutral-500`, `text-neutral-400`, atau tanpa class warna sama sekali). Seluruh aksi dalam satu menu dropdown wajib memiliki perlakuan warna semantik yang seimbang dan tidak boleh ada opsi yang dibiarkan hambar tanpa warna.
+## 17. Standar Pewarnaan Aksi Menu Dropdown Tabel Admin (Clean Neutral Action Menu with Red Destructive Only)
+- **Aksi Destruktif Wajib Merah**: Pada menu aksi baris tabel (`MoreVertical` dropdown popup), HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+- **Aksi Non-Destruktif Wajib Netral**: SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
+- **Larangan Warna-Warni Berlebihan**: DILARANG mewarnai aksi non-destruktif dengan warna-warni mencolok (seperti teks/ikon biru, hijau, ungu, kuning) di dalam dropdown menu agar tampilan antarmuka tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
+
+## 18. Kewajiban Menyertakan Lokasi Berkas Lengkap pada Laporan Rejection Auditor (Mandatory File Location & Line Number on Rejection)
+- **Wajib Lokasi Berkas & Baris**: Setiap modul auditor pre-commit OpenCode AI (`01` s/d `09`) WAJIB menyertakan lokasi berkas lengkap beserta nomor baris spesifik (`path/ke/file:baris`) yang harus diperbaiki oleh pengembang saat mengeluarkan status penolakan (`REJECTED`).
+- **Larangan Alasan Tanpa Lokasi**: DILARANG KERAS hanya memberikan alasan penolakan secara abstrak tanpa menyebutkan lokasi berkas dan nomor baris konkret tempat pelanggaran terjadi.
+- **Format Baku Laporan Penolakan**:
+  ```markdown
+  REJECTED
+  - Lokasi Berkas: [path/ke/file.ext:nomor_baris]
+  - Pelanggaran: [Deskripsi detail aturan yang dilanggar]
+  - Solusi: [Tindakan perbaikan konkret yang harus dilakukan]
+  ```

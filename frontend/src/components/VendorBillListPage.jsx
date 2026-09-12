@@ -200,9 +200,9 @@ export default function VendorBillListPage({
                     setSelectedBillDetail(r);
                     setActiveActionMenuId(null);
                   }}
-                  className="w-full px-3 py-2 text-left text-xs font-bold text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <Eye size={14} className="text-blue-600" />
+                  <Eye size={14} className="text-neutral-500" />
                   <span>Lihat Detail Tagihan</span>
                 </button>
 
@@ -213,9 +213,9 @@ export default function VendorBillListPage({
                       setPayingBill(r);
                       setActiveActionMenuId(null);
                     }}
-                    className="w-full px-3 py-2 text-left text-xs font-sport font-bold uppercase text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
+                    className="w-full px-3 py-2 text-left text-xs font-sport font-bold uppercase text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                   >
-                    <CreditCard size={14} className="text-emerald-600" />
+                    <CreditCard size={14} className="text-neutral-500" />
                     <span>Bayar Tagihan</span>
                   </button>
                 )}

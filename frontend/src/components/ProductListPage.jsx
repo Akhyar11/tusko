@@ -451,9 +451,9 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onViewProductDetail(product);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
-                  <Eye size={15} className="text-blue-600" />
+                  <Eye size={15} className="text-neutral-500" />
                   <span>Lihat Detail</span>
                 </button>
 
@@ -464,9 +464,9 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onEditProduct(product);
                   }}
-                  className="w-full px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-50 hover:text-sky-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
-                  <Edit3 size={15} className="text-sky-600" />
+                  <Edit3 size={15} className="text-neutral-500" />
                   <span>Ubah Produk</span>
                 </button>
 
@@ -477,20 +477,16 @@ export default function ProductListPage({
                     setActiveActionMenuId(null);
                     onToggleStatus(product);
                   }}
-                  className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2.5 transition-colors cursor-pointer text-left ${
-                    isActive 
-                      ? 'text-amber-700 hover:bg-amber-50 hover:text-amber-800' 
-                      : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
-                  }`}
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
                   {isActive ? (
                     <>
-                      <XCircle size={15} className="text-amber-600" />
+                      <XCircle size={15} className="text-neutral-500" />
                       <span>Jadikan Draft</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 size={15} className="text-emerald-600" />
+                      <CheckCircle2 size={15} className="text-neutral-500" />
                       <span>Aktifkan Produk</span>
                     </>
                   )}

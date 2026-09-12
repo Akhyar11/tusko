@@ -81,15 +81,11 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
     - DILARANG KERAS menyertakan label badge, pill, tag, atau chip kategori/modul (seperti label hitam bersudut siku dengan teks kuning/amber seperti "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP Inventory & Multi-Warehouse", "ERP ORDER FULFILLMENT", "OPERATIONAL ERP CONTROL", atau label modul sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
     - Header halaman WAJIB bersih dan langsung berfokus pada judul modul (`<h1>`) dan deskripsi fungsinya tanpa label/tag/badge pengenal modul semacam itu.
     - Setiap penambahan atau keberadaan badge/label kategori di atas judul halaman WAJIB DITOLAK (REJECTED).
-19. Standardisasi Pewarnaan Semantik Konsisten pada Isi Menu Aksi Tabel Admin (Consistent Semantic Action Menu Colors):
-    - Seluruh item tindakan/aksi pada menu aksi baris tabel (`MoreVertical` dropdown menu atau tombol aksi sejenis) WAJIB diberikan warna semantik yang konsisten dan ekspresif pada ikon dan teks:
-      - Lihat / Detail (View / Detail): Biru konsisten (`text-blue-600` / `text-blue-700`, `hover:bg-blue-50`).
-      - Ubah / Edit Data: Biru Langit / Sky konsisten (`text-sky-600` / `text-sky-700`, `hover:bg-sky-50`).
-      - Aksi Positif / Aktifkan / Selesai / Terima (GRN) / Pembayaran: Hijau Emerald konsisten (`text-emerald-600` / `text-emerald-700`, `hover:bg-emerald-50`).
-      - Aksi Transisi Dokumen / Terbitkan PO: Indigo konsisten (`text-indigo-600` / `text-indigo-700`, `hover:bg-indigo-50`).
-      - Aksi Peringatan / Nonaktifkan / Jadikan Draft / Batalkan: Kuning Amber / Oranye konsisten (`text-amber-600` / `text-amber-700`, `hover:bg-amber-50`).
-      - Aksi Destruktif / Hapus: Merah Rose konsisten (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
-    - DILARANG KERAS membiarkan item aksi tanpa warna (seperti teks monokrom hitam/abu-abu netral polos `text-neutral-800`, `text-neutral-700`, atau ikon abu-abu tanpa warna `text-neutral-500`, `text-neutral-400`, atau tanpa class warna sama sekali). Seluruh opsi aksi dalam dropdown wajib memiliki perlakuan warna semantik yang seragam dan seimbang.
+19. Standar Pewarnaan Aksi Menu Dropdown Tabel Admin (Clean Neutral Action Menu with Red Destructive Only):
+    - Pada menu aksi baris tabel (`MoreVertical` dropdown menu / popup):
+      - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+      - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
+    - DILARANG mewarnai aksi non-destruktif dengan warna-warni mencolok (seperti teks/ikon biru, hijau, ungu, kuning) di dalam dropdown menu agar tampilan antarmuka tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
 
 Git Diff (Staged Frontend Changes):
 ```
@@ -104,8 +100,9 @@ FORMAT JAWABAN:
 - Jika seluruh standar konsistensi frontend terpenuhi: Jawab HANYA kata "PASSED".
 - Jika melanggar:
   REJECTED
-  - Pelanggaran: [Sebutkan file, baris, dan standar konsistensi apa yang dilanggar]
-  - Solusi: [Tindakan perbaikan yang harus dilakukan pengembang]
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: frontend/src/components/ProductListPage.jsx:145]
+  - Pelanggaran: [Detail aturan konsistensi frontend apa yang dilanggar secara spesifik]
+  - Solusi: [Tindakan perbaikan konkret yang harus dilakukan pengembang]
 EOF
 
 AUDITOR_RESULT=""
@@ -121,7 +118,7 @@ if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<<
     echo "❌ =========================================================================="
     echo "❌ [Audit Frontend Consistency] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
     echo "❌ =========================================================================="
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     exit 1
 fi
