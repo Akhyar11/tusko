@@ -1,6 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
+import ServerSideSelect from '../molecules/ServerSideSelect';
 
 /**
  * Organism: ProductFilterDrawer
@@ -114,34 +115,37 @@ export default function ProductFilterDrawer({
             </div>
 
             {/* 2. Status Publikasi */}
-            <div className="space-y-2.5">
-              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                Status Publikasi Produk
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'all', label: 'Semua' },
-                  { id: 'active', label: '🟢 Aktif' },
-                  { id: 'inactive', label: '⚪ Draft' }
-                ].map((s) => (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Status Publikasi Produk
+                </label>
+                {selectedStatus !== 'all' && (
                   <button
-                    key={s.id}
                     type="button"
-                    onClick={() => onStatusChange(s.id)}
-                    className={`py-2 px-2.5 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center ${
-                      selectedStatus === s.id
-                        ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                        : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                    }`}
+                    onClick={() => onStatusChange('all')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
                   >
-                    {s.label}
+                    Reset Status
                   </button>
-                ))}
+                )}
               </div>
+              <ServerSideSelect
+                value={selectedStatus}
+                onChange={(val) => onStatusChange(val || 'all')}
+                options={[
+                  { value: 'all', label: 'Semua Status Publikasi' },
+                  { value: 'active', label: '🟢 Aktif' },
+                  { value: 'inactive', label: '⚪ Draft' }
+                ]}
+                placeholder="-- Pilih Status Publikasi --"
+                isClearable={selectedStatus !== 'all'}
+                scrollPadding={30}
+              />
             </div>
 
-            {/* 2. Kategori Olahraga */}
-            <div className="space-y-2.5">
+            {/* 3. Kategori Olahraga */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                   Kategori Olahraga
@@ -156,70 +160,69 @@ export default function ProductFilterDrawer({
                   </button>
                 )}
               </div>
-              <div className="space-y-1.5 max-h-52 overflow-y-auto border border-neutral-200 p-2 bg-neutral-50/50 rounded-none">
-                <button
-                  type="button"
-                  onClick={() => onCategoryChange('all')}
-                  className={`w-full text-left px-3 py-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors flex items-center justify-between cursor-pointer ${
-                    selectedCategory === 'all'
-                      ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                      : 'bg-white hover:bg-neutral-100 text-neutral-800 border-neutral-200'
-                  }`}
-                >
-                  <span>Semua Kategori</span>
-                  <span className="font-mono text-[11px] opacity-80">{totalProducts}</span>
-                </button>
-                {categories.map((cat) => {
-                  const catCount = products.filter(p => p.category_id === cat.id).length;
-                  const isSelected = String(selectedCategory) === String(cat.id);
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => onCategoryChange(String(cat.id))}
-                      className={`w-full text-left px-3 py-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors flex items-center justify-between cursor-pointer ${
-                        isSelected
-                          ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                          : 'bg-white hover:bg-neutral-100 text-neutral-800 border-neutral-200'
-                      }`}
-                    >
-                      <span className="truncate">{cat.name}</span>
-                      <span className="font-mono text-[11px] opacity-80 ml-2">{catCount}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <ServerSideSelect
+                value={selectedCategory}
+                onChange={(val) => onCategoryChange(val || 'all')}
+                options={[
+                  { value: 'all', label: `Semua Kategori (${totalProducts})`, name: 'Semua Kategori', count: totalProducts },
+                  ...categories.map((cat) => {
+                    const catCount = products.filter(p => p.category_id === cat.id).length;
+                    return {
+                      value: String(cat.id),
+                      label: `${cat.name} (${catCount})`,
+                      name: cat.name,
+                      count: catCount
+                    };
+                  })
+                ]}
+                placeholder="-- Pilih Kategori Olahraga --"
+                isClearable={selectedCategory !== 'all'}
+                scrollPadding={30}
+                renderOption={(opt, isSelected) => (
+                  <div className="flex items-center justify-between w-full">
+                    <span className="truncate">{opt.name || opt.label}</span>
+                    {opt.count !== undefined && (
+                      <span className={`font-mono text-[11px] ml-2 ${isSelected ? 'text-amber-300' : 'text-neutral-500'}`}>
+                        {opt.count}
+                      </span>
+                    )}
+                  </div>
+                )}
+              />
             </div>
 
-            {/* 3. Kondisi Stok Inventaris */}
-            <div className="space-y-2.5">
-              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                Kondisi Stok Inventaris
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'all', label: 'Semua Stok' },
-                  { id: 'low', label: '⚠️ Perlu Restok' },
-                  { id: 'empty', label: '❌ Stok Habis' },
-                  { id: 'ready', label: '✅ Stok Aman' }
-                ].map((stk) => (
+            {/* 4. Kondisi Stok Inventaris */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Kondisi Stok Inventaris
+                </label>
+                {stockCondition !== 'all' && (
                   <button
-                    key={stk.id}
                     type="button"
-                    onClick={() => onStockConditionChange(stk.id)}
-                    className={`py-2 px-2.5 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center ${
-                      stockCondition === stk.id
-                        ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                        : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                    }`}
+                    onClick={() => onStockConditionChange('all')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
                   >
-                    {stk.label}
+                    Reset Stok
                   </button>
-                ))}
+                )}
               </div>
+              <ServerSideSelect
+                value={stockCondition}
+                onChange={(val) => onStockConditionChange(val || 'all')}
+                options={[
+                  { value: 'all', label: 'Semua Kondisi Stok' },
+                  { value: 'low', label: '⚠️ Perlu Restok' },
+                  { value: 'empty', label: '❌ Stok Habis' },
+                  { value: 'ready', label: '✅ Stok Aman' }
+                ]}
+                placeholder="-- Pilih Kondisi Stok --"
+                isClearable={stockCondition !== 'all'}
+                scrollPadding={30}
+              />
             </div>
 
-            {/* 4. Rentang Harga Jual */}
+            {/* 5. Rentang Harga Jual */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
@@ -261,37 +264,29 @@ export default function ProductFilterDrawer({
               </div>
             </div>
 
-            {/* 5. Urutan Data (Sorting) */}
-            <div className="space-y-2.5">
+            {/* 6. Urutan Data (Sorting) */}
+            <div className="space-y-2">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                 Urutkan Katalog Berdasarkan
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Terbaru', sort: 'created_at', dir: 'desc' },
-                  { label: 'Terlama', sort: 'created_at', dir: 'asc' },
-                  { label: 'Harga Tertinggi', sort: 'price', dir: 'desc' },
-                  { label: 'Harga Terendah', sort: 'price', dir: 'asc' },
-                  { label: 'Stok Terbanyak', sort: 'stock', dir: 'desc' },
-                  { label: 'Paling Laris', sort: 'sold_count', dir: 'desc' },
-                ].map((sOpt, idx) => {
-                  const isSelected = sortBy === sOpt.sort && sortDirection === sOpt.dir;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => onSortChange(sOpt.sort, sOpt.dir)}
-                      className={`py-2 px-2 text-xs font-sport font-bold uppercase rounded-none border transition-colors cursor-pointer text-center truncate ${
-                        isSelected
-                          ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
-                          : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                      }`}
-                    >
-                      {sOpt.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <ServerSideSelect
+                value={`${sortBy}:${sortDirection}`}
+                onChange={(val) => {
+                  if (!val) return;
+                  const [newSort, newDir] = val.split(':');
+                  onSortChange(newSort, newDir);
+                }}
+                options={[
+                  { value: 'created_at:desc', label: 'Terbaru' },
+                  { value: 'created_at:asc', label: 'Terlama' },
+                  { value: 'price:desc', label: 'Harga Tertinggi' },
+                  { value: 'price:asc', label: 'Harga Terendah' },
+                  { value: 'stock:desc', label: 'Stok Terbanyak' },
+                  { value: 'sold_count:desc', label: 'Paling Laris' }
+                ]}
+                placeholder="-- Pilih Urutan Katalog --"
+                scrollPadding={30}
+              />
             </div>
 
           </div>
