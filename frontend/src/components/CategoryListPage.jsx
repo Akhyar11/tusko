@@ -14,12 +14,10 @@ import {
   AlertCircle,
   Check,
   Layers,
-  Search,
   X,
   SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
-import SearchBar from './molecules/SearchBar';
 import ServerSideTable from './ServerSideTable';
 import CategoryFilterDrawer from './organisms/CategoryFilterDrawer';
 import { categoryService } from '../services/categoryService';
@@ -578,55 +576,7 @@ export default function CategoryListPage({
         </div>
       </div>
 
-      {/* 4. Toolbar: Search and Action Buttons (Direct Layout, No Redundant Outer Container) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex-1 max-w-md">
-          <SearchBar
-            value={searchQuery}
-            onChange={(val) => {
-              setSearchQuery(val);
-              setPage(1);
-            }}
-            onReset={() => {
-              setSearchQuery('');
-              setPage(1);
-            }}
-            placeholder="Cari kategori produk berdasarkan nama atau slug..."
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleOpenCreate}
-            className="px-4 py-2 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 font-sport font-black uppercase text-xs rounded-none transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <Plus size={14} />
-            <span>Tambah Master Kategori</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsFilterDrawerOpen(true)}
-            className={`px-3.5 py-2 border font-sport font-black uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeFilterCount > 0
-                ? 'bg-black text-white border-black shadow-xs'
-                : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-800'
-            }`}
-            title="Buka Filter Kategori"
-          >
-            <SlidersHorizontal size={14} className={activeFilterCount > 0 ? 'text-amber-400' : ''} />
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 bg-amber-400 text-black text-[10px] flex items-center justify-center rounded-none font-bold">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* 5. Master Categories ServerSideTable with Checkbox List */}
+      {/* Master Categories ServerSideTable with Checkbox List */}
       <ServerSideTable
         columns={tableColumns}
         data={paginatedCategories}
@@ -789,6 +739,11 @@ export default function CategoryListPage({
         activeFilterCount={activeFilterCount}
         totalFiltered={filteredCategories.length}
         totalCategories={categories.length}
+        searchQuery={searchQuery}
+        onSearchQueryChange={(val) => {
+          setSearchQuery(val);
+          setPage(1);
+        }}
         productStatusFilter={productStatusFilter}
         onProductStatusFilterChange={(val) => {
           setProductStatusFilter(val);

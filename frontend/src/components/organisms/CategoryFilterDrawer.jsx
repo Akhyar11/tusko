@@ -1,5 +1,6 @@
 import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
+import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
 
 /**
@@ -12,6 +13,9 @@ export default function CategoryFilterDrawer({
   activeFilterCount = 0,
   totalFiltered = 0,
   totalCategories = 0,
+  // Search state
+  searchQuery = '',
+  onSearchQueryChange = () => {},
   // Filter states
   productStatusFilter = 'all',
   onProductStatusFilterChange = () => {},
@@ -76,7 +80,31 @@ export default function CategoryFilterDrawer({
 
           {/* Drawer Body (Filter Controls) */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-            {/* 1. Kondisi Produk Terkait */}
+            {/* 1. Pencarian Nama / Slug Kategori */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Pencarian Nama / Slug
+                </label>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchQueryChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Cari
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={searchQuery}
+                onChange={onSearchQueryChange}
+                onReset={() => onSearchQueryChange('')}
+                placeholder="Cari kategori produk atau slug..."
+              />
+            </div>
+
+            {/* 2. Kondisi Produk Terkait */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">

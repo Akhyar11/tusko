@@ -44,8 +44,9 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
    - Seluruh komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan prinsip Atomic Design (`atoms/`, `molecules/`, `organisms/`, `templates/pages`).
 4. **Icon-Only Header Controls dengan Tooltip**:
    - Tombol kontrol/aksi navigasi pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku (`rounded-none`), memanfaatkan komponen reusable `IconButton`, dan dilengkapi tooltip keterangan fungsi saat di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header.
-5. **Sentralisasi Kontrol Filter**:
-   - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri. Dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
+5. **Sentralisasi Kontrol Filter & Pencarian**:
+   - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
+   - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks pada kanvas halaman utama di antara kartu metrik dan tabel. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (`ServerSideTable`) setelah kartu metrik/header.
 6. **Wajib Penggunaan Komponen Reusable (Mandatory Reusable Component Reuse)**:
    - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ViewModeToggle`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
    - DILARANG KERAS membuat elemen UI mentah berulang atau mengabaikan komponen reusable yang sudah ada di codebase.
@@ -58,8 +59,8 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 8. **Standar Header Modul Bersih (Clean Header & No Redundant Breadcrumbs)**:
    - DILARANG menampilkan baris navigasi teks/breadcrumb manual yang redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") jika navigasi dan aksi sudah disediakan oleh tombol kontrol header (`ProductHeaderActions`).
    - Kartu header halaman WAJIB bersih dan langsung berfokus pada identitas modul (ikon besar, judul, deskripsi) di sisi kiri serta kelompok tombol kontrol di sisi kanan.
-9. **Larangan Container Tambahan Sebelum Tabel (No Extra Container Card Before Table)**:
-   - Pada halaman list/tabel admin, DILARANG menambahkan container/card pembungkus ekstra sebelum tabel (seperti membungkus search bar dan tabel ke dalam satu wadah card pembungkus ekstra). Toolbar pencarian/aksi dan tabel harus berada pada hierarki layout langsung yang bersih tanpa container ganda pembungkus tabel.
+9. **Larangan Baris Toolbar/Container Tambahan Sebelum Tabel (No Extra Toolbar/Container Before Table)**:
+   - Pada halaman list/tabel admin, DILARANG menambahkan baris toolbar ekstra (seperti input pencarian SearchBar atau tombol aksi teks) ataupun container card pembungkus sebelum tabel data. Seluruh tindakan navigasi/tambah/filter diwadahi oleh tombol icon-only di kartu header, pencarian/filter diwadahi oleh Sidebar Filter kanan, dan tabel data (`ServerSideTable`) langsung dirender pada hierarki halaman utama.
 10. **Wajib Checkbox List pada Tabel Admin (Mandatory Table Row Checkbox List)**:
     - Seluruh tabel daftar data admin WAJIB menyertakan kolom checkbox list (multi-selection) dengan checkbox Select All di kolom pertama `thead` dan checkbox baris di setiap baris `tbody` (memanfaatkan prop `selectable={true}` pada `ServerSideTable`).
 11. **Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah (Filter Button Placed Right of Add Button)**:

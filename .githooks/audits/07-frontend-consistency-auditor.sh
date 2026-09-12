@@ -36,8 +36,9 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
    - Komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan arsitektur Atomic Design (pemisahan Atoms, Molecules, Organisms, Pages).
 6. Standardisasi Tombol Header Simbol/Icon-Only dengan Tooltip:
    - Tombol kontrol/aksi pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku tajam (`rounded-none`), memanfaatkan komponen reusable `IconButton`, dan WAJIB dilengkapi tooltip yang memunculkan keterangan fungsi saat di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header jika dapat diwadahi oleh IconButton.
-7. Standardisasi Sentralisasi Filter:
-   - Seluruh kontrol filter katalog produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri, dilarang meletakkan/menduplikasi komponen filter pada halaman utama jika filter sidebar sudah diterapkan.
+7. Standardisasi Sentralisasi Filter & Pencarian:
+   - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
+   - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks (Tambah/Filter) pada kanvas halaman utama di antara kartu metrik dan tabel jika filter sidebar dan tombol aksi header sudah diterapkan. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (ServerSideTable) setelah kartu metrik/header.
 8. Standardisasi Wajib Komponen Reusable (Mandatory Reusable Component Reuse):
    - Pengembang WAJIB memanfaatkan dan mengimpor komponen reusable yang sudah ada di codebase (misalnya `IconButton` pada atoms/, `SearchBar` dan `ViewModeToggle` pada molecules/, `ServerSideTable`, `ProductFilterDrawer`, `ProductHeaderActions` pada organisms/).
    - DILARANG KERAS membuat ulang kode mentah (inline reinventing) seperti tombol kontrol, input pencarian, tabel server-side, atau tooltip manual jika sudah ada komponen reusable yang menyediakannya.
@@ -50,9 +51,9 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
 10. Standardisasi Header Modul Bersih (Clean Header & No Redundant Breadcrumbs):
     - DILARANG menyisipkan baris navigasi teks/breadcrumb redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") jika navigasi dan aksi sudah diwadahi oleh komponen tombol aksi header (ProductHeaderActions).
     - Header modul WAJIB bersih dan langsung berfokus pada identitas modul (ikon besar, judul halaman, deskripsi fungsi) dan kelompok tombol kontrol/aksi.
-11. Standardisasi Larangan Container Tambahan Sebelum/Pembungkus Tabel:
-    - Pada halaman daftar data admin (admin list/table views), DILARANG membungkus elemen tabel di dalam container card ekstra (seperti membuat `<div className="bg-white p-5 ..."><table...></div>` yang membungkus search bar dan tabel sekaligus).
-    - Toolbar pencarian/aksi dan komponen tabel WAJIB diletakkan langsung pada layout halaman secara mandiri dan bersih tanpa pembungkus card ganda yang redundan.
+11. Standardisasi Larangan Baris Toolbar/Container Redundant Sebelum Tabel:
+    - Pada halaman daftar data admin (admin list/table views), DILARANG menambahkan baris toolbar ekstra (seperti input pencarian SearchBar atau tombol aksi filter/tambah duplikat) ataupun container card pembungkus sebelum tabel data.
+    - Seluruh aksi navigasi/tambah/filter diwadahi oleh tombol icon-only di kartu header, seluruh pencarian/filter diwadahi oleh Sidebar Filter kanan, dan tabel data (ServerSideTable) langsung dirender bersih pada layout utama.
 12. Standardisasi Wajib Checkbox List (Multi-Select) pada Seluruh Tabel Admin:
     - Seluruh tabel daftar data admin WAJIB memiliki kolom checkbox list untuk seleksi massal (bulk selection):
       - Header kolom pertama (`<th>`) WAJIB memuat checkbox "Select All" (`<input type="checkbox"...>`).
@@ -61,7 +62,7 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
     - Manfaatkan komponen reusable `ServerSideTable` dengan prop `selectable={true}` untuk memenuhi standar ini secara otomatis.
 13. Standardisasi Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah:
     - Tombol kontrol filter (Filter Drawer/Sidebar Toggle) WAJIB selalu diletakkan di samping kanan tombol tambah (urutan aksi: `[Tombol Tambah] -> [Tombol Filter]`), BUKAN di sebelah kiri tombol tambah atau di posisi lain.
-    - Berlaku konsisten baik pada kelompok tombol kontrol header (IconButton group) maupun toolbar di atas tabel.
+    - Berlaku konsisten baik pada kelompok tombol kontrol header (IconButton group) maupun toolbar.
 
 Git Diff (Staged Frontend Changes):
 ```diff

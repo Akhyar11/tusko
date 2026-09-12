@@ -15,9 +15,9 @@ Repository ini diawasi oleh auditor otomatis bertenaga OpenCode AI (`.githooks/a
 - Tombol aksi navigasi dan kontrol pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan **simbol/ikon saja (icon-only)**.
 - Setiap tombol WAJIB menggunakan komponen reusable `atoms/IconButton`, memiliki ketinggian dan rasio seragam (`h-10 w-10`), sudut siku tajam `rounded-none`, dan **menampilkan tooltip interaktif** yang jelas saat tombol di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header.
 
-## 3. Sentralisasi Kontrol Filter pada Sidebar
-- Seluruh kontrol penyaringan (kategori, status publikasi, kondisi stok, rentang harga, dan pengurutan/sorting) WAJIB terpusat pada **Sidebar Filter (Drawer Kanan-ke-Kiri)**.
-- Halaman utama DILARANG memuat komponen filter ganda/terduplikasi. Halaman utama hanya memuat bilah pencarian (`SearchBar`) yang bersih, hasil jumlah produk, dan tabel data.
+## 3. Sentralisasi Kontrol Filter & Pencarian pada Sidebar
+- Seluruh kontrol penyaringan dan pencarian (kategori, status publikasi, kondisi stok, rentang harga, keyword pencarian, dan pengurutan/sorting) WAJIB terpusat pada **Sidebar Filter (Drawer Kanan-ke-Kiri)**.
+- Halaman utama DILARANG memuat bilah toolbar pencarian (`SearchBar`), tombol tambah teks, atau tombol filter teks redundant di atas tabel. Halaman utama hanya memuat kartu header (dengan icon-only controls), kartu metrik, dan langsung tabel data (`ServerSideTable`).
 
 ## 4. Standar Desain Tusko Athletic Performance
 - **Sudut Siku Tegas (`rounded-none`)**: 100% komponen antarmuka dilarang menggunakan sudut melengkung (`rounded-md`, `rounded-lg`, `rounded-xl`, dll.).
@@ -50,9 +50,9 @@ Repository ini diawasi oleh auditor otomatis bertenaga OpenCode AI (`.githooks/a
 - **Larangan Breadcrumb Manual Redundant**: DILARANG menampilkan baris navigasi teks/breadcrumb manual yang redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") karena perpindahan navigasi storefront dan tindakan halaman telah diwadahi secara elegan oleh komponen tombol aksi header (`ProductHeaderActions`).
 - **Fokus Header**: Kartu header modul harus bersih dan langsung berfokus pada identitas modul (ikon besar, judul halaman, deskripsi fungsi) dan kelompok tombol kontrol/aksi.
 
-## 9. Larangan Container Tambahan Sebelum/Pembungkus Tabel
-- **Larangan Container Card Ganda**: Pada halaman list/tabel admin, DILARANG membungkus elemen tabel di dalam kartu container ekstra (seperti `<div className="bg-white p-5 ... border ..."><table...>` atau container card bertumpuk yang membungkus search bar dan tabel sekaligus).
-- **Struktur Layout Bersih**: Toolbar kontrol/pencarian dan tabel WAJIB berada pada hierarki layout halaman langsung yang bersih tanpa pembungkus card ganda yang mempersempit ruang dan membingkai tabel berulang kali.
+## 9. Larangan Baris Toolbar/Container Tambahan Sebelum Tabel
+- **Larangan Baris Toolbar & Container Card Ganda**: Pada halaman list/tabel admin, DILARANG membungkus elemen tabel di dalam kartu container ekstra ataupun meletakkan baris toolbar perantara (seperti `SearchBar`, tombol Tambah teks, atau tombol Filter teks) sebelum tabel data.
+- **Struktur Layout Bersih**: Seluruh tindakan navigasi, penambahan data, dan pemicu drawer diwadahi oleh kelompok tombol icon-only di header, dan tabel data WAJIB langsung dirender bersih pada hierarki layout halaman langsung tanpa ada bilah perantara di atasnya.
 
 ## 10. Standardisasi Wajib Checkbox List pada Tabel Admin
 - **Wajib Fitur Multi-Select / Bulk Selection**: Seluruh tabel daftar data admin WAJIB menyediakan kolom checkbox list:
