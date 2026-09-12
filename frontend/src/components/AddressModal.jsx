@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, Check, X, Search, Edit3, Trash2, AlertCircle, Building2, Home, Briefcase, Compass } from 'lucide-react';
+import { MapPin, Plus, Check, X, Search, Edit3, Trash2, AlertCircle, Building2, Home, Briefcase } from 'lucide-react';
 
 const PROVINCES_AND_CITIES = {
   'DKI Jakarta': ['Jakarta Selatan', 'Jakarta Pusat', 'Jakarta Barat', 'Jakarta Timur', 'Jakarta Utara', 'Kepulauan Seribu'],
@@ -184,22 +184,22 @@ export default function AddressModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white rounded-none max-w-lg w-full p-5 sm:p-6 shadow-2xl border-2 border-black max-h-[90vh] flex flex-col">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <MapPin size={18} />
+        <div className="flex items-center justify-between pb-3 border-b-2 border-black shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-none bg-black text-white flex items-center justify-center -skew-x-6">
+              <MapPin size={16} className="text-amber-400 skew-x-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-gray-900">
+              <h3 className="font-sport font-black uppercase text-sm sm:text-base text-black tracking-wide">
                 {isFormOpen 
                   ? (editingId ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Pengiriman Baru')
                   : 'Pilih Alamat Pengiriman'}
               </h3>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-neutral-500 font-medium">
                 {isFormOpen 
                   ? 'Pastikan rincian alamat akurat untuk kemudahan kurir' 
                   : 'Pilih alamat tujuan pengiriman pesananmu'}
@@ -214,7 +214,7 @@ export default function AddressModal({
                 onClose();
               }
             }}
-            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
+            className="p-1.5 rounded-none text-neutral-400 hover:text-black hover:bg-neutral-100 cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
@@ -227,8 +227,8 @@ export default function AddressModal({
             <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
               {/* Label Alamat */}
               <div>
-                <label className="font-semibold text-gray-700 block mb-1.5">
-                  Label Alamat <span className="text-gray-400 font-normal">(Contoh: Rumah, Kantor)</span>
+                <label className="font-sport font-bold uppercase text-black block mb-1.5">
+                  Label Alamat <span className="text-neutral-400 font-normal">(Contoh: Rumah, Kantor)</span>
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {labelPresets.map((preset) => {
@@ -239,10 +239,10 @@ export default function AddressModal({
                         key={preset.name}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, label: preset.name }))}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border font-semibold text-xs cursor-pointer transition-all ${
+                        className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-none border font-sport font-bold uppercase text-xs cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-emerald-600 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
-                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                            ? 'border-black bg-black text-white'
+                            : 'border-neutral-300 text-black hover:bg-neutral-100'
                         }`}
                       >
                         <Icon size={14} />
@@ -256,70 +256,56 @@ export default function AddressModal({
               {/* Penerima & Nomor Telepon */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Nama Penerima <span className="text-rose-500">*</span>
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Nama Penerima <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.recipient_name}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, recipient_name: e.target.value }));
-                      if (formErrors.recipient_name) {
-                        setFormErrors(prev => ({ ...prev, recipient_name: undefined }));
-                      }
-                    }}
-                    placeholder="Contoh: Akhyar Ramadan"
-                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                    onChange={(e) => setFormData(prev => ({ ...prev, recipient_name: e.target.value }))}
+                    placeholder="Contoh: Budi Pratama"
+                    className={`w-full px-3 py-2 border rounded-none focus:outline-none focus:border-black font-medium transition-colors ${
                       formErrors.recipient_name 
-                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
-                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                        ? 'border-red-500 bg-red-50/50' 
+                        : 'border-neutral-300 bg-neutral-50 focus:bg-white'
                     }`}
                   />
                   {formErrors.recipient_name && (
-                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
-                      <AlertCircle size={10} /> {formErrors.recipient_name}
-                    </span>
+                    <span className="text-[10px] font-sport font-bold text-red-600 block mt-1">{formErrors.recipient_name}</span>
                   )}
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Nomor Telepon / HP <span className="text-rose-500">*</span>
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Nomor Telepon / WhatsApp <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, phone: e.target.value }));
-                      if (formErrors.phone) {
-                        setFormErrors(prev => ({ ...prev, phone: undefined }));
-                      }
-                    }}
-                    placeholder="081234567890"
-                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="Contoh: 08123456789"
+                    className={`w-full px-3 py-2 border rounded-none focus:outline-none focus:border-black font-mono font-medium transition-colors ${
                       formErrors.phone 
-                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
-                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                        ? 'border-red-500 bg-red-50/50' 
+                        : 'border-neutral-300 bg-neutral-50 focus:bg-white'
                     }`}
                   />
                   {formErrors.phone && (
-                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
-                      <AlertCircle size={10} /> {formErrors.phone}
-                    </span>
+                    <span className="text-[10px] font-sport font-bold text-red-600 block mt-1">{formErrors.phone}</span>
                   )}
                 </div>
               </div>
 
-              {/* Provinsi & Kota Dropdown */}
+              {/* Wilayah: Provinsi & Kota */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Provinsi <span className="text-rose-500">*</span>
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Provinsi <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.province}
                     onChange={(e) => handleProvinceChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white cursor-pointer"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-none focus:outline-none focus:border-black bg-neutral-50 focus:bg-white cursor-pointer font-medium"
                   >
                     {Object.keys(PROVINCES_AND_CITIES).map((prov) => (
                       <option key={prov} value={prov}>{prov}</option>
@@ -328,16 +314,16 @@ export default function AddressModal({
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Kota / Kabupaten <span className="text-rose-500">*</span>
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Kota / Kabupaten <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.city}
                     onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white cursor-pointer"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-none focus:outline-none focus:border-black bg-neutral-50 focus:bg-white cursor-pointer font-medium"
                   >
-                    {(PROVINCES_AND_CITIES[formData.province] || []).map((cty) => (
-                      <option key={cty} value={cty}>{cty}</option>
+                    {(PROVINCES_AND_CITIES[formData.province] || []).map((c) => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
@@ -346,126 +332,102 @@ export default function AddressModal({
               {/* Kecamatan & Kode Pos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Kecamatan / Kelurahan
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Kecamatan
                   </label>
                   <input
                     type="text"
                     value={formData.district}
                     onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
-                    placeholder="Contoh: Kebayoran Baru, Senayan"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white"
+                    placeholder="Contoh: Gambir"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-none focus:outline-none focus:border-black bg-neutral-50 focus:bg-white font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">
-                    Kode Pos <span className="text-rose-500">*</span>
+                  <label className="font-sport font-bold uppercase text-black block mb-1">
+                    Kode Pos <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     maxLength={5}
                     value={formData.postal_code}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      setFormData(prev => ({ ...prev, postal_code: val }));
-                      if (formErrors.postal_code) {
-                        setFormErrors(prev => ({ ...prev, postal_code: undefined }));
-                      }
-                    }}
-                    placeholder="12190"
-                    className={`w-full px-3 py-2 border rounded-xl focus:outline-none transition-colors ${
+                    onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
+                    placeholder="Contoh: 10110"
+                    className={`w-full px-3 py-2 border rounded-none focus:outline-none focus:border-black font-mono font-medium transition-colors ${
                       formErrors.postal_code 
-                        ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
-                        : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                        ? 'border-red-500 bg-red-50/50' 
+                        : 'border-neutral-300 bg-neutral-50 focus:bg-white'
                     }`}
                   />
                   {formErrors.postal_code && (
-                    <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
-                      <AlertCircle size={10} /> {formErrors.postal_code}
-                    </span>
+                    <span className="text-[10px] font-sport font-bold text-red-600 block mt-1">{formErrors.postal_code}</span>
                   )}
                 </div>
               </div>
 
               {/* Alamat Lengkap */}
               <div>
-                <label className="font-semibold text-gray-700 block mb-1">
-                  Alamat Lengkap <span className="text-rose-500">*</span>
+                <label className="font-sport font-bold uppercase text-black block mb-1">
+                  Alamat Lengkap <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   rows={2}
                   value={formData.full_address}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, full_address: e.target.value }));
-                    if (formErrors.full_address) {
-                      setFormErrors(prev => ({ ...prev, full_address: undefined }));
-                    }
-                  }}
-                  placeholder="Nama jalan, nomor gedung/rumah, RT/RW..."
-                  className={`w-full px-3 py-2 border rounded-xl focus:outline-none resize-none transition-colors ${
+                  onChange={(e) => setFormData(prev => ({ ...prev, full_address: e.target.value }))}
+                  placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, gedung/patokan..."
+                  className={`w-full px-3 py-2 border rounded-none focus:outline-none focus:border-black resize-none font-medium transition-colors ${
                     formErrors.full_address 
-                      ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' 
-                      : 'border-gray-200 bg-gray-50/70 focus:bg-white focus:border-emerald-500'
+                      ? 'border-red-500 bg-red-50/50' 
+                      : 'border-neutral-300 bg-neutral-50 focus:bg-white'
                   }`}
                 />
                 {formErrors.full_address && (
-                  <span className="text-[10px] text-rose-600 flex items-center gap-1 mt-1">
-                    <AlertCircle size={10} /> {formErrors.full_address}
-                  </span>
+                  <span className="text-[10px] font-sport font-bold text-red-600 block mt-1">{formErrors.full_address}</span>
                 )}
               </div>
 
-              {/* Catatan untuk Kurir / Patokan */}
+              {/* Catatan untuk Kurir */}
               <div>
-                <label className="font-semibold text-gray-700 block mb-1">
-                  Patokan / Catatan Pengiriman <span className="text-gray-400 font-normal">(Opsional)</span>
+                <label className="font-sport font-bold uppercase text-black block mb-1">
+                  Catatan Patokan untuk Kurir <span className="text-neutral-400 font-normal">(Opsional)</span>
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Contoh: Pagar hitam samping minimarket, titip di satpam"
-                    className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 bg-gray-50/70 focus:bg-white"
-                  />
-                  <Compass size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-                </div>
+                <input
+                  type="text"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Contoh: Pagar hitam depan lapangan basket"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-none focus:outline-none focus:border-black bg-neutral-50 focus:bg-white font-medium"
+                />
               </div>
 
-              {/* Checkbox Alamat Utama */}
+              {/* Jadikan Alamat Utama */}
               <div className="pt-1">
-                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={formData.is_default}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300 cursor-pointer"
+                    className="w-4 h-4 rounded-none accent-black border-neutral-300 cursor-pointer"
                   />
-                  <span className="text-xs text-gray-700 font-medium">Jadikan sebagai alamat utama</span>
+                  <span className="font-sport font-bold uppercase text-black text-xs">Jadikan Alamat Utama Pengiriman</span>
                 </label>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              {/* Form Buttons */}
+              <div className="pt-3 border-t border-neutral-200 flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (initialMode === 'add') {
-                      onClose();
-                    } else {
-                      setIsFormOpen(false);
-                    }
-                  }}
-                  className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors cursor-pointer"
+                  onClick={() => setIsFormOpen(false)}
+                  className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-black rounded-none border border-neutral-300 font-sport font-bold uppercase transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 bg-black hover:bg-neutral-800 text-white rounded-none font-sport font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  Simpan & Gunakan
+                  Simpan &amp; Gunakan
                 </button>
               </div>
             </form>
@@ -480,15 +442,15 @@ export default function AddressModal({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari penerima atau alamat..."
-                    className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black font-medium"
                   />
-                  <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+                  <Search size={14} className="absolute left-2.5 top-2.5 text-neutral-400" />
                 </div>
 
                 <button
                   type="button"
                   onClick={handleOpenAddForm}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs cursor-pointer shrink-0 transition-colors shadow-xs"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-black hover:bg-neutral-800 text-white font-sport font-black uppercase rounded-none text-xs cursor-pointer shrink-0 transition-colors"
                 >
                   <Plus size={14} />
                   <span>Tambah Alamat</span>
@@ -496,9 +458,9 @@ export default function AddressModal({
               </div>
 
               {filteredAddresses.length === 0 ? (
-                <div className="py-10 text-center text-gray-500 text-xs">
-                  <MapPin size={28} className="mx-auto text-gray-300 mb-2" />
-                  <p>Tidak ada alamat yang sesuai pencarian.</p>
+                <div className="py-10 text-center text-neutral-500 text-xs">
+                  <MapPin size={28} className="mx-auto text-neutral-300 mb-2" />
+                  <p className="font-sport font-bold uppercase">Tidak ada alamat yang sesuai pencarian.</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -511,57 +473,57 @@ export default function AddressModal({
                           onSelectAddress(addr.id);
                           onClose();
                         }}
-                        className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between gap-2 ${
+                        className={`p-3.5 rounded-none border-2 cursor-pointer transition-all flex flex-col justify-between gap-2 ${
                           isSelected
-                            ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-500'
-                            : 'border-gray-200 hover:border-emerald-300 bg-white'
+                            ? 'border-black bg-neutral-50 shadow-none'
+                            : 'border-neutral-200 hover:border-black bg-white'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-xs sm:text-sm text-gray-900">
+                              <span className="font-sport font-black uppercase text-xs sm:text-sm text-black">
                                 {addr.recipient_name}
                               </span>
-                              <span className="text-[10px] bg-gray-100 text-gray-700 font-semibold px-2 py-0.5 rounded">
+                              <span className="text-[10px] bg-neutral-100 text-neutral-800 font-sport font-bold uppercase px-2 py-0.5 rounded-none border border-neutral-200">
                                 {addr.label}
                               </span>
                               {addr.is_default && (
-                                <span className="text-[10px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] bg-black text-white font-sport font-black uppercase px-1.5 py-0.5 rounded-none">
                                   Utama
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] text-gray-500 mt-0.5">{addr.phone}</p>
+                            <p className="text-[11px] text-neutral-500 font-mono font-medium mt-0.5">{addr.phone}</p>
                           </div>
 
                           {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                            <div className="w-5 h-5 rounded-none bg-black text-white flex items-center justify-center shrink-0">
                               <Check size={12} strokeWidth={3} />
                             </div>
                           )}
                         </div>
 
-                        <p className="text-xs text-gray-600 leading-relaxed">
+                        <p className="text-xs text-neutral-700 leading-relaxed font-medium">
                           {addr.full_address}
                           {addr.district ? `, ${addr.district}` : ''}
                           {`, ${addr.city}, ${addr.province}, ${addr.postal_code}`}
                         </p>
 
                         {addr.notes && (
-                          <p className="text-[11px] text-gray-500 italic bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
+                          <p className="text-[11px] text-neutral-500 italic bg-neutral-50 px-2.5 py-1 rounded-none border border-neutral-200">
                             Patokan: {addr.notes}
                           </p>
                         )}
 
-                        <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
+                        <div className="pt-2 border-t border-neutral-200 flex items-center justify-between text-xs">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenEditForm(addr);
                             }}
-                            className="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1 cursor-pointer"
+                            className="text-black hover:text-amber-600 font-sport font-bold uppercase flex items-center gap-1 cursor-pointer"
                           >
                             <Edit3 size={12} />
                             <span>Ubah Alamat</span>
@@ -574,7 +536,7 @@ export default function AddressModal({
                                 e.stopPropagation();
                                 onDeleteAddress(addr.id);
                               }}
-                              className="text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1 cursor-pointer"
+                              className="text-red-600 hover:text-red-800 font-sport font-bold uppercase flex items-center gap-1 cursor-pointer"
                             >
                               <Trash2 size={12} />
                               <span>Hapus</span>
