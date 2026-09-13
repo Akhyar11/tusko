@@ -40,6 +40,7 @@ import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
+import { apiClient } from './services/apiClient';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -178,6 +179,35 @@ export default function App() {
         }
       })
       .catch(err => console.warn('categoryService initial load:', err));
+  }, []);
+
+  // Fetch products from server on mount
+  useEffect(() => {
+    apiClient.get('/api/products?per_page=100')
+      .then(res => {
+        const list = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
+        if (Array.isArray(list) && list.length > 0) {
+          const formatted = list.map(p => ({
+            ...p,
+            location: p.warehouse_bin || p.location || 'Gudang Pusat',
+            seller_name: p.seller_name || 'Tusko Official Flagship',
+            is_official: p.is_official ?? true,
+            free_shipping: p.free_shipping ?? true,
+            rating: p.rating || 5.0,
+            rating_count: p.rating_count || 45,
+            sold_count: p.sold_count || 120,
+          }));
+          setProducts(formatted);
+          try {
+            const savedProdId = localStorage.getItem('tusko_selected_product_id');
+            if (savedProdId) {
+              const found = formatted.find(p => String(p.id) === String(savedProdId));
+              if (found) setSelectedProduct(found);
+            }
+          } catch {}
+        }
+      })
+      .catch(err => console.warn('products initial load:', err));
   }, []);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -526,7 +556,7 @@ export default function App() {
 
     // Filter by category
     if (selectedCategoryId) {
-      result = result.filter((p) => p.category_id === selectedCategoryId);
+      result = result.filter((p) => Number(p.category_id) === Number(selectedCategoryId));
     }
 
     // Filter by search query
@@ -534,9 +564,9 @@ export default function App() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.location.toLowerCase().includes(query) ||
+          (p.name && p.name.toLowerCase().includes(query)) ||
+          (p.description && p.description.toLowerCase().includes(query)) ||
+          (p.location && p.location.toLowerCase().includes(query)) ||
           (p.seller_name && p.seller_name.toLowerCase().includes(query))
       );
     }
