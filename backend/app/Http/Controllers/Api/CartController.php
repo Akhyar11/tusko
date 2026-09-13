@@ -22,7 +22,39 @@ class CartController extends Controller
         $user = $request->user();
 
         if ($user) {
-            return Cart::firstOrCreate(['user_id' => $user->id]);
+            $userCart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+            // Merge guest cart items if session_id provided
+            $guestSessionId = $request->input('session_id')
+                ?: $request->header('X-Session-ID')
+                ?: $request->cookie('cart_session');
+
+            if ($guestSessionId) {
+                $guestCart = Cart::where('session_id', $guestSessionId)
+                    ->whereNull('user_id')
+                    ->first();
+
+                if ($guestCart && $guestCart->id !== $userCart->id) {
+                    foreach ($guestCart->items as $guestItem) {
+                        $existingItem = CartItem::where('cart_id', $userCart->id)
+                            ->where('product_id', $guestItem->product_id)
+                            ->first();
+
+                        if ($existingItem) {
+                            $existingItem->update([
+                                'quantity' => $existingItem->quantity + $guestItem->quantity,
+                                'notes' => $existingItem->notes ?: $guestItem->notes,
+                            ]);
+                            $guestItem->delete();
+                        } else {
+                            $guestItem->update(['cart_id' => $userCart->id]);
+                        }
+                    }
+                    $guestCart->delete();
+                }
+            }
+
+            return $userCart;
         }
 
         $sessionId = $request->input('session_id') 

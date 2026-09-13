@@ -400,15 +400,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView, selectedProduct]);
 
-  // Auth guard: Jika belum login dan mencoba membuka keranjang, alihkan ke login
-  useEffect(() => {
-    if (currentView === 'cart' && !currentUser) {
-      setPendingCartAction(prev => prev || { type: 'open_cart', returnView: 'cart' });
-      showToast('Silakan masuk ke akun (Login) terlebih dahulu untuk mengakses keranjang belanja.');
-      setCurrentView('login');
-    }
-  }, [currentView, currentUser]);
-
   // Total quantity in cart
   const cartItemCount = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0);
@@ -620,35 +611,13 @@ export default function App() {
     setCurrentView('login');
   };
 
-  // Safe cart opener with auth check
+  // Safe cart opener (supports both guest and authenticated sessions)
   const handleOpenCart = () => {
-    if (!currentUser) {
-      handleRequireLogin(
-        { type: 'open_cart', returnView: 'cart' },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk membuka keranjang belanja.'
-      );
-      return;
-    }
     setCurrentView('cart');
   };
 
   // Cart operations with backend database and session sync
   const handleAddToCart = async (product, quantity = 1, notes = '') => {
-    // Jika belum login, simpan aksi pending dan arahkan login terlebih dahulu
-    if (!currentUser) {
-      handleRequireLogin(
-        { 
-          type: 'add_to_cart', 
-          product, 
-          quantity, 
-          notes, 
-          returnView: currentView === 'detail' ? 'detail' : 'catalog' 
-        },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk menambahkan produk ke keranjang.'
-      );
-      return;
-    }
-
     try {
       await cartService.addItem(product.id, quantity, notes);
       await refreshCartFromBackend();
@@ -678,19 +647,6 @@ export default function App() {
   };
 
   const handleBuyNow = async (product, quantity = 1, notes = '') => {
-    if (!currentUser) {
-      handleRequireLogin(
-        { 
-          type: 'buy_now', 
-          product, 
-          quantity, 
-          notes, 
-          returnView: 'cart' 
-        },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk melakukan pembelian produk.'
-      );
-      return;
-    }
     await handleAddToCart(product, quantity, notes);
     setCurrentView('cart');
   };
@@ -1289,17 +1245,20 @@ export default function App() {
             availableExpeditions={expeditions}
             initialVoucher={appliedCheckoutVoucher}
             onBackToCart={() => setCurrentView('cart')}
+            onShowToast={showToast}
+            onRefreshCart={refreshCartFromBackend}
             onFinishOrder={(order) => {
               // Remove checked out items from cart
               setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
               setLastCompletedOrder(order);
+              refreshCartFromBackend();
 
               // Add to orders list
               const newFormattedOrder = {
-                id: Date.now(),
-                order_number: order.invoiceNumber,
-                invoice_number: order.invoiceNumber,
-                created_at: new Date().toISOString(),
+                id: order.id || Date.now(),
+                order_number: order.invoiceNumber || order.order_number,
+                invoice_number: order.invoiceNumber || order.order_number,
+                created_at: order.createdAt || new Date().toISOString(),
                 status: 'pending',
                 payment_status: 'pending',
                 payment_method: order.paymentMethod?.id || 'midtrans',
@@ -1309,7 +1268,7 @@ export default function App() {
                 expedition: order.expedition,
                 items: (order.items || []).map(item => ({
                   id: item.id,
-                  product_id: item.id,
+                  product_id: item.product_id || item.id,
                   product_name: item.name,
                   product_image: item.image_url,
                   product_price: item.price,
@@ -1320,8 +1279,8 @@ export default function App() {
                 totals: {
                   subtotal: (order.items || []).reduce((s, i) => s + (i.price * i.quantity), 0),
                   shipping_cost: order.expedition?.cost || 0,
-                  insurance_cost: 1000,
-                  service_fee: 1000,
+                  insurance_cost: order.insuranceCost || 0,
+                  service_fee: order.appHandlingFee || 1000,
                   discount_amount: order.totalSavings || 0,
                   grand_total: order.totalAmount
                 }
@@ -1347,7 +1306,7 @@ export default function App() {
               setTransactions(prev => [newFinancialTx, ...prev]);
 
               setCurrentView('order-success');
-              setToastMessage(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);
+              showToast(`Pesanan ${order.invoiceNumber} berhasil dibuat!`);
             }}
           />
         ) : currentView === 'cart' ? (
@@ -1357,6 +1316,8 @@ export default function App() {
             onRemoveItem={handleRemoveCartItem}
             onClearCart={handleClearCart}
             onBackToShopping={() => setCurrentView('catalog')}
+            onShowToast={showToast}
+            onRefreshCart={refreshCartFromBackend}
             onProceedToCheckout={({ selectedItems, appliedVoucher }) => {
               setCheckoutItems(selectedItems);
               setAppliedCheckoutVoucher(appliedVoucher || null);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Trash2, 
   Minus, 
@@ -24,12 +24,53 @@ export default function CartPage({
   onRemoveItem = () => {},
   onClearCart = () => {},
   onBackToShopping = () => {},
-  onProceedToCheckout = () => {}
+  onProceedToCheckout = () => {},
+  onRefreshCart = () => {},
+  onShowToast = () => {}
 }) {
   // Selection state for items (default all selected)
   const [selectedItemIds, setSelectedItemIds] = useState(() => 
     cart.map(item => item.id)
   );
+
+  // Dynamic shipping and fees from backend (0 hardcode)
+  const [baseShippingFee, setBaseShippingFee] = useState(15000);
+  const [appServiceFee, setAppServiceFee] = useState(1000);
+
+  // Sync cart from backend when CartPage mounts
+  useEffect(() => {
+    onRefreshCart();
+  }, [onRefreshCart]);
+
+  // Sync selectedItemIds when cart changes
+  useEffect(() => {
+    setSelectedItemIds(prev => {
+      const valid = prev.filter(id => cart.some(item => item.id === id));
+      if (valid.length === 0 && cart.length > 0) {
+        return cart.map(item => item.id);
+      }
+      return valid;
+    });
+  }, [cart]);
+
+  // Fetch real-time active expeditions to derive dynamic shipping fee
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await apiClient.get('/api/expeditions');
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          const defaultCourier = list.find(c => c.is_default) || list[0];
+          if (defaultCourier && defaultCourier.cost !== undefined) {
+            setBaseShippingFee(Number(defaultCourier.cost));
+          }
+        }
+      } catch {
+        // preserve fallback
+      }
+    };
+    fetchRates();
+  }, []);
 
   const [promoCode, setPromoCode] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState(null);
@@ -41,14 +82,16 @@ export default function CartPage({
   // Confirmation modal state for deleting items
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'single', item } | { type: 'bulk', ids, count }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
 
     if (deleteTarget.type === 'single') {
       onRemoveItem(deleteTarget.item.id);
       setSelectedItemIds(prev => prev.filter(id => id !== deleteTarget.item.id));
     } else if (deleteTarget.type === 'bulk') {
-      deleteTarget.ids.forEach(id => onRemoveItem(id));
+      for (const id of deleteTarget.ids) {
+        await onRemoveItem(id);
+      }
       setSelectedItemIds(prev => prev.filter(id => !deleteTarget.ids.includes(id)));
     }
 
@@ -85,8 +128,9 @@ export default function CartPage({
   }, [selectedItems]);
 
   const totalProductDiscount = Math.max(0, totalOriginalPrice - subtotal);
-  const estimatedShipping = selectedItems.length > 0 ? (selectedItems.some(i => i.free_shipping) ? 0 : 15000) : 0;
-  const grandTotal = Math.max(0, subtotal - promoDiscount + estimatedShipping);
+  const estimatedShipping = selectedItems.length > 0 ? (selectedItems.some(i => i.free_shipping) ? 0 : baseShippingFee) : 0;
+  const currentAppFee = selectedItems.length > 0 ? appServiceFee : 0;
+  const grandTotal = Math.max(0, subtotal - promoDiscount + estimatedShipping + currentAppFee);
 
   // Apply promo code dynamically via backend API (VoucherController)
   const handleApplyPromo = async (e) => {
@@ -496,7 +540,7 @@ export default function CartPage({
               <div className="flex justify-between items-center text-neutral-500 text-xs">
                 <span>Biaya Layanan Aplikasi</span>
                 <span className="font-sport font-bold text-neutral-700">
-                  {selectedItems.length > 0 ? formatRupiah(1000) : formatRupiah(0)}
+                  {formatRupiah(currentAppFee)}
                 </span>
               </div>
             </div>
@@ -516,7 +560,7 @@ export default function CartPage({
               <div>
                 <span className="text-[11px] font-sport font-bold uppercase text-neutral-500 block">Total Pembayaran:</span>
                 <span className="text-2xl sm:text-3xl font-sport font-black text-black tracking-tight">
-                  {formatRupiah(selectedItems.length > 0 ? grandTotal + 1000 : 0)}
+                  {formatRupiah(selectedItems.length > 0 ? grandTotal : 0)}
                 </span>
               </div>
             </div>
@@ -529,7 +573,7 @@ export default function CartPage({
                 selectedItems, 
                 appliedVoucher,
                 promoDiscount,
-                grandTotal: selectedItems.length > 0 ? grandTotal + 1000 : 0 
+                grandTotal: selectedItems.length > 0 ? grandTotal : 0 
               })}
               className="w-full py-3.5 px-4 bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 -skew-x-3 hover:skew-x-0"
             >

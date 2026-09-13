@@ -252,4 +252,36 @@ class CartApiTest extends TestCase
 
         $this->assertDatabaseEmpty('cart_items');
     }
+
+    public function test_authenticated_user_automatically_merges_guest_session_cart(): void
+    {
+        $guestSessionId = 'guest_merge_test_123';
+
+        // Guest adds product
+        $this->postJson('/api/cart/items', [
+            'product_id' => $this->product->id,
+            'quantity' => 3,
+            'session_id' => $guestSessionId,
+        ])->assertStatus(201);
+
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        // User views cart with session_id header
+        $response = $this->withHeaders([
+            'X-Session-ID' => $guestSessionId,
+        ])->getJson('/api/cart');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.user_id', $user->id)
+            ->assertJsonPath('data.total_quantity', 3)
+            ->assertJsonPath('data.items.0.product_id', $this->product->id);
+
+        $this->assertDatabaseHas('carts', [
+            'user_id' => $user->id,
+        ]);
+        $this->assertDatabaseMissing('carts', [
+            'session_id' => $guestSessionId,
+        ]);
+    }
 }

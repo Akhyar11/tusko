@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { apiClient } from '../services/apiClient';
+import { getCartSessionId } from '../services/cartService';
 import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import AddressModal from './AddressModal';
 import ExpeditionModal from './ExpeditionModal';
@@ -34,12 +35,32 @@ export default function CheckoutPage({
   onBackToCart = () => {},
   onFinishOrder = () => {},
   availableExpeditions = null,
-  initialVoucher = null
+  initialVoucher = null,
+  onShowToast = () => {},
+  onRefreshCart = () => {}
 }) {
   const [addresses, setAddresses] = useState(mockAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
+
+  // Load saved addresses from database if available
+  useEffect(() => {
+    const loadAddresses = async () => {
+      try {
+        const res = await apiClient.get('/api/addresses');
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          setAddresses(list);
+          const def = list.find(a => a.is_default) || list[0];
+          setSelectedAddressId(def.id);
+        }
+      } catch {
+        // preserve fallback
+      }
+    };
+    loadAddresses();
+  }, []);
 
   // Real-time calculated shipping rates from KiriminAja backend service
   const [calculatedExpeditions, setCalculatedExpeditions] = useState([]);
@@ -284,20 +305,53 @@ export default function CheckoutPage({
     return Object.values(groups);
   }, [checkoutItems]);
 
-  // Handle Pay Now
-  const handlePayNow = () => {
+  // Handle Pay Now with real backend API POST /api/checkout
+  const handlePayNow = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      const invoiceNumber = `INV/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/TK/${Math.floor(100000 + Math.random() * 900000)}`;
-      const vaNumber = `8808${Math.floor(1000000000 + Math.random() * 9000000000)}`;
-      const trackingResi = `TK${new Date().getFullYear()}${Math.floor(100000000 + Math.random() * 900000000)}`;
+    try {
+      const itemsPayload = checkoutItems.map(item => ({
+        product_id: Number(item.product_id || item.id),
+        quantity: Number(item.quantity || 1),
+        notes: item.notes || ''
+      }));
+
+      const isManual = selectedPayment.type === 'manual' || selectedPayment.id === 'manual_transfer';
+
+      const payload = {
+        items: itemsPayload,
+        recipient_name: currentAddress.recipient_name || 'Pembeli Tusko',
+        phone: currentAddress.phone || currentAddress.phone_number || '081234567890',
+        full_address: currentAddress.full_address || currentAddress.address || 'Alamat Pengiriman',
+        province: currentAddress.province || 'DKI Jakarta',
+        city: currentAddress.city || 'Jakarta Pusat',
+        district: currentAddress.district || currentAddress.city || 'Gambir',
+        postal_code: currentAddress.postal_code || '10110',
+        address_label: currentAddress.label || 'Alamat Utama',
+        expedition_name: selectedExpedition?.name || 'KiriminAja Logistics',
+        expedition_service: selectedExpedition?.service || 'Reguler',
+        expedition_etd: selectedExpedition?.etd || '2-3 hari',
+        shipping_cost: Number(shippingCost || 0),
+        insurance_cost: Number(insuranceCost || 0),
+        service_fee: Number(totalAppFees || 1000),
+        discount_amount: Number(discountAmount || 0),
+        coupon_code: appliedCoupon ? appliedCoupon.code : null,
+        payment_method: isManual ? 'manual_transfer' : 'midtrans',
+        payment_channel: selectedPayment.code || selectedPayment.id || 'bca_va',
+        session_id: getCartSessionId(),
+        notes: checkoutItems.map(i => i.notes).filter(Boolean).join('; ') || null,
+      };
+
+      const res = await apiClient.post('/api/checkout', payload);
+      const orderRes = res?.data?.data || res?.data || {};
 
       const orderData = {
-        invoiceNumber,
-        vaNumber,
-        trackingResi,
-        totalAmount: grandTotal,
+        id: orderRes.id || Date.now(),
+        order_number: orderRes.order_number,
+        invoiceNumber: orderRes.invoice_number || orderRes.order_number || `INV/${Date.now()}`,
+        vaNumber: orderRes.va_number || `8808${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        trackingResi: orderRes.tracking_number || `TK${new Date().getFullYear()}${orderRes.id || Math.floor(100000000 + Math.random() * 900000000)}`,
+        midtransSnapToken: orderRes.midtrans_snap_token || null,
+        totalAmount: orderRes.totals?.grand_total || grandTotal,
         totalSavings,
         appliedCoupon,
         paymentMethod: selectedPayment,
@@ -305,14 +359,23 @@ export default function CheckoutPage({
         expedition: selectedExpedition,
         shippingDistanceKm,
         shippingProvider,
-        appHandlingFee,
+        appHandlingFee: totalAppFees,
         items: checkoutItems,
-        createdAt: new Date().toISOString()
+        createdAt: orderRes.timestamps?.created_at || new Date().toISOString()
       };
 
+      onShowToast(`Pesanan ${orderData.invoiceNumber} berhasil dibuat!`);
       setOrderSuccessData(orderData);
       onFinishOrder(orderData);
-    }, 600);
+    } catch (err) {
+      const errMsg = err?.data?.message 
+        || (err?.data?.errors ? Object.values(err.data.errors).flat().join(', ') : null)
+        || err?.message 
+        || 'Gagal memproses pesanan checkout. Silakan periksa koneksi dan ketersediaan stok barang.';
+      onShowToast(errMsg, { type: 'error' });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (checkoutItems.length === 0) {
