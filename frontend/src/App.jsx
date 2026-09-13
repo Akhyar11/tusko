@@ -1078,6 +1078,7 @@ export default function App() {
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
             onUpdateStatus={handleUpdateOrderStatus}
+            onShowToast={showToast}
           />
         ) : currentView === 'orders' ? (
           <OrderListPage
@@ -1112,10 +1113,10 @@ export default function App() {
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
             onUpdateStatus={handleUpdateOrderStatus}
-            onOpenFinancialTransactions={() => setCurrentView('transactions')}
-            onOpenStock={() => setCurrentView('stock')}
-            onOpenTemplates={() => setCurrentView('templates')}
-            onOpenExpeditions={() => setCurrentView('expeditions')}
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
           />
         ) : currentView === 'transactions' ? (
           <FinancialTransactionsPage
@@ -1135,6 +1136,10 @@ export default function App() {
                 setCurrentView('orders');
               }
             }}
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
           />
         ) : currentView === 'stock' ? (
           <StockManagementPage
@@ -1143,6 +1148,10 @@ export default function App() {
             onBackToShopping={() => setCurrentView('catalog')}
             onViewOrders={() => setCurrentView('orders')}
             onViewTransactions={() => setCurrentView('transactions')}
+            onShowToast={(msg) => {
+              setToastMessage(msg);
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
             onAddExpenseTransaction={(tx) => {
               const newFinancialTx = {
                 id: Date.now(),

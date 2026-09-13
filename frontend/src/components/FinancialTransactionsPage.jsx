@@ -1,43 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-  DollarSign,
+  Wallet,
   TrendingUp,
   TrendingDown,
-  Clock,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Search,
-  Filter,
-  Download,
-  PlusCircle,
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  ChevronRight,
-  Calendar,
-  Wallet,
-  Building2,
-  ShoppingBag,
-  CreditCard,
-  Printer,
-  X,
-  Sparkles,
-  RefreshCw,
-  Boxes,
-  PieChart,
-  BookOpen,
-  ArrowRightLeft,
   Landmark,
-  Layers
+  Plus,
+  ArrowRightLeft,
+  SlidersHorizontal,
+  Printer,
+  ExternalLink,
+  MoreVertical,
+  X,
+  RotateCcw,
+  CheckCircle2,
+  FileText
 } from 'lucide-react';
+import IconButton from './atoms/IconButton';
+import ServerSideTable from './ServerSideTable';
+import FinancialFilterDrawer from './organisms/FinancialFilterDrawer';
 import { formatRupiah } from '../utils/formatters';
 import { 
   mockTransactions, 
   transactionCategories,
-  mockFinancialAccounts,
-  mockChartOfAccounts,
-  mockCogsAnalytics
+  mockFinancialAccounts 
 } from '../data/mockTransactions';
 
 export default function FinancialTransactionsPage({
@@ -45,21 +30,25 @@ export default function FinancialTransactionsPage({
   onBackToShopping = () => {},
   onViewOrders = () => {},
   onViewOrderDetail = () => {},
-  onOpenStock = () => {}
+  onShowToast = () => {}
 }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [financialAccounts, setFinancialAccounts] = useState(mockFinancialAccounts);
-  const [chartOfAccounts] = useState(mockChartOfAccounts);
-  const [cogsAnalytics] = useState(mockCogsAnalytics);
 
-  // Active Main Tab: 'cashbook' | 'accounts' | 'coa' | 'cogs'
-  const [activeMainTab, setActiveMainTab] = useState('cashbook');
-
-  // Sub-filter for cashbook: 'all' | 'income' | 'expense' | 'pending'
-  const [cashbookFilter, setCashbookFilter] = useState('all');
+  // Filter drawer & active filters
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [cashbookFilter, setCashbookFilter] = useState('all'); // 'all' | 'income' | 'expense' | 'pending'
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateRange, setDateRange] = useState('all'); // 'all' | 'this_month' | '30days' | '7days'
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Table pagination, sorting & selection
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [selectedTxIds, setSelectedTxIds] = useState([]);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -72,13 +61,19 @@ export default function FinancialTransactionsPage({
   const [formAmount, setFormAmount] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPaymentMethod, setFormPaymentMethod] = useState('BCA Bisnis Transfer');
-  const [formSuccessMessage, setFormSuccessMessage] = useState('');
 
   // Internal transfer form state
   const [transferFrom, setTransferFrom] = useState(1);
   const [transferTo, setTransferTo] = useState(3);
   const [transferAmount, setTransferAmount] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
+
+  // Close action popup when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveActionMenuId(null);
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   // Hitung KPI Keuangan Global
   const stats = useMemo(() => {
@@ -114,10 +109,28 @@ export default function FinancialTransactionsPage({
     };
   }, [transactions, financialAccounts]);
 
+  // Active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (cashbookFilter !== 'all') count++;
+    if (selectedCategory !== 'all') count++;
+    if (dateRange !== 'all') count++;
+    if (searchQuery.trim() !== '') count++;
+    return count;
+  }, [cashbookFilter, selectedCategory, dateRange, searchQuery]);
+
+  const handleResetFilters = () => {
+    setCashbookFilter('all');
+    setSelectedCategory('all');
+    setDateRange('all');
+    setSearchQuery('');
+    setPage(1);
+  };
+
   // Filtered transactions for cashbook
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
-      // 1. Tab filter
+      // 1. Tipe filter
       if (cashbookFilter === 'income' && tx.type !== 'income') return false;
       if (cashbookFilter === 'expense' && tx.type !== 'expense') return false;
       if (cashbookFilter === 'pending' && tx.status !== 'pending') return false;
@@ -151,8 +164,45 @@ export default function FinancialTransactionsPage({
       }
 
       return true;
+    }).sort((a, b) => {
+      if (sortBy === 'created_at') {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+      }
+      if (sortBy === 'amount') {
+        const amtA = Number(a.amount || 0);
+        const amtB = Number(b.amount || 0);
+        return sortDirection === 'asc' ? amtA - amtB : amtB - amtA;
+      }
+      return 0;
     });
-  }, [transactions, cashbookFilter, selectedCategory, dateRange, searchQuery]);
+  }, [transactions, cashbookFilter, selectedCategory, dateRange, searchQuery, sortBy, sortDirection]);
+
+  // Paginated records
+  const paginatedTransactions = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filteredTransactions.slice(start, start + limit);
+  }, [filteredTransactions, page, limit]);
+
+  // Selection handlers
+  const handleSelectRow = (id) => {
+    setSelectedTxIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const currentPageIds = paginatedTransactions.map(tx => tx.id);
+    const allSelected = currentPageIds.every(id => selectedTxIds.includes(id));
+
+    if (allSelected) {
+      setSelectedTxIds(prev => prev.filter(id => !currentPageIds.includes(id)));
+    } else {
+      const merged = new Set([...selectedTxIds, ...currentPageIds]);
+      setSelectedTxIds(Array.from(merged));
+    }
+  };
 
   // Simpan Transaksi Baru Manual
   const handleSaveTransaction = (e) => {
@@ -177,14 +227,10 @@ export default function FinancialTransactionsPage({
     };
 
     setTransactions((prev) => [newTx, ...prev]);
-    setFormSuccessMessage(`Berhasil mencatat transaksi ${newTx.transaction_number}!`);
-
-    setTimeout(() => {
-      setFormSuccessMessage('');
-      setIsAddModalOpen(false);
-      setFormAmount('');
-      setFormDescription('');
-    }, 1200);
+    setIsAddModalOpen(false);
+    setFormAmount('');
+    setFormDescription('');
+    onShowToast(`Berhasil mencatat transaksi ${newTx.transaction_number}!`);
   };
 
   // Transfer Antar Rekening
@@ -227,206 +273,381 @@ export default function FinancialTransactionsPage({
     setIsTransferModalOpen(false);
     setTransferAmount('');
     setTransferNotes('');
+    onShowToast(`Transfer internal ${formatRupiah(amt)} berhasil dicatat.`);
   };
 
+  // Table Columns Definition
+  const tableColumns = useMemo(() => [
+    {
+      key: 'transaction_number',
+      label: 'No. Transaksi & Waktu',
+      sortable: true,
+      width: 'min-w-[220px]',
+      render: (_, tx) => {
+        return (
+          <div>
+            <div className="font-mono font-black text-neutral-950 text-xs">{tx.transaction_number}</div>
+            <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
+              {new Date(tx.created_at).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+            {tx.order_number && (
+              <button
+                type="button"
+                onClick={() => onViewOrderDetail({ order_number: tx.order_number })}
+                className="text-[10px] font-mono text-amber-700 hover:underline flex items-center gap-1 mt-0.5 cursor-pointer"
+              >
+                <span>Ref: {tx.order_number}</span>
+                <ExternalLink size={10} />
+              </button>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'category',
+      label: 'Kategori & Keterangan',
+      width: 'min-w-[240px]',
+      render: (_, tx) => {
+        return (
+          <div>
+            <div className="font-bold text-neutral-900 text-xs font-sport uppercase tracking-tight">
+              {tx.category_label}
+            </div>
+            <div className="text-[11px] text-neutral-600 line-clamp-1 max-w-sm mt-0.5">
+              {tx.description}
+            </div>
+            {tx.customer_name && (
+              <div className="text-[10px] text-neutral-400 font-mono mt-0.5">
+                Entitas: {tx.customer_name}
+              </div>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'payment_method',
+      label: 'Metode Bayar / Rekening',
+      width: 'w-44',
+      render: (method) => (
+        <span className="text-xs font-semibold text-neutral-800">
+          {method}
+        </span>
+      )
+    },
+    {
+      key: 'amount',
+      label: 'Nominal (Rp)',
+      sortable: true,
+      align: 'right',
+      width: 'w-36',
+      render: (amount, tx) => {
+        const isIncome = tx.type === 'income';
+        return (
+          <div className={`font-mono font-black text-sm ${isIncome ? 'text-emerald-700' : 'text-rose-700'}`}>
+            {isIncome ? '+' : '-'} {formatRupiah(amount)}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      align: 'center',
+      width: 'w-32',
+      render: (status) => {
+        const isSettled = status === 'settled';
+        return (
+          <span className={`inline-block px-2.5 py-1 text-[10px] font-sport font-black uppercase rounded-none border tracking-wider ${
+            isSettled
+              ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+              : 'bg-amber-50 text-amber-900 border-amber-300'
+          }`}>
+            {isSettled ? 'Berhasil' : 'Pending'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      label: 'Aksi',
+      sortable: false,
+      align: 'right',
+      width: 'w-24',
+      render: (_, tx, rowIdx) => {
+        const isOpen = activeActionMenuId === tx.id;
+        const isNearBottom = rowIdx >= paginatedTransactions.length - 2 && paginatedTransactions.length > 3;
+
+        return (
+          <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setActiveActionMenuId(isOpen ? null : tx.id)}
+              className={`p-1.5 rounded-none border transition-colors cursor-pointer ${
+                isOpen 
+                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
+                  : 'text-neutral-700 hover:text-black hover:bg-neutral-100 border-neutral-300 bg-white shadow-2xs'
+              }`}
+              title="Menu Aksi Transaksi"
+            >
+              <MoreVertical size={16} />
+            </button>
+
+            {isOpen && (
+              <div 
+                className={`absolute right-0 ${
+                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
+                } w-48 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100`}
+              >
+                {/* 1. Cetak Kuitansi */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    setReceiptModalTx(tx);
+                  }}
+                  className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Printer size={14} className="text-neutral-500" />
+                  <span>Cetak Bukti Kuitansi</span>
+                </button>
+
+                {/* 2. Referensi Pesanan */}
+                {tx.order_number && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveActionMenuId(null);
+                      onViewOrderDetail({ order_number: tx.order_number });
+                    }}
+                    className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <ExternalLink size={14} className="text-neutral-500" />
+                    <span>Buka Ref Pesanan</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      }
+    }
+  ], [paginatedTransactions, activeActionMenuId]);
+
   return (
-    <div className="space-y-6 pb-12">
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 border border-gray-200">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight">
-            Buku Kas, Akun & Laporan Keuangan
-          </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Pencatatan arus kas, rekening bank, bagan akun (COA), dan analisis margin laba kotor toko olahraga.
-          </p>
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      
+      {/* 1. Header Bar Bersih (Icon-only Controls, 1 Halaman 1 Entitas) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+            <Wallet size={22} />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
+              Buku Kas &amp; Jurnal Mutasi
+            </h1>
+            <p className="text-xs text-neutral-600 mt-0.5">
+              Pencatatan arus kas masuk, pengeluaran operasional toko, dan saldo konsolidasi kas &amp; bank.
+            </p>
+          </div>
         </div>
 
-        {/* Top Header Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setIsTransferModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            <ArrowRightLeft size={14} className="text-gray-600" />
-            <span>Transfer Rekening</span>
-          </button>
-
-          <button
-            type="button"
+        {/* Action Controls: [Catat Transaksi] -> [Transfer Rekening] -> [Filter] */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <IconButton
+            icon={Plus}
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-neutral-950 bg-amber-400 hover:bg-amber-300 border border-amber-500 shadow-xs transition-all cursor-pointer"
-          >
-            <PlusCircle size={15} />
-            <span>+ Catat Transaksi Baru</span>
-          </button>
+            tooltip="Catat Transaksi Kas Baru"
+            variant="primary"
+          />
+          <IconButton
+            icon={ArrowRightLeft}
+            onClick={() => setIsTransferModalOpen(true)}
+            tooltip="Transfer Antar Rekening Kas & Bank"
+            variant="secondary"
+          />
+          <IconButton
+            icon={SlidersHorizontal}
+            onClick={() => setIsFilterDrawerOpen(true)}
+            tooltip="Buka Filter Buku Kas"
+            variant={activeFilterCount > 0 ? 'dark' : 'secondary'}
+            badge={activeFilterCount > 0 ? activeFilterCount : null}
+          />
         </div>
       </div>
 
-      {/* 4 KPI Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 2. 4 Kartu KPI Ringkasan Kas */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Net Cashflow */}
-        <div className="bg-neutral-900 text-white p-5 border border-neutral-800 relative overflow-hidden">
+        <div className="bg-neutral-950 text-white p-4 sm:p-5 rounded-none border border-neutral-800 relative overflow-hidden shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+            <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-400">
               Arus Kas Bersih (Net)
             </span>
-            <Wallet size={18} className="text-amber-400" />
+            <Wallet size={16} className="text-amber-400" />
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-amber-400 truncate">
             {formatRupiah(stats.netCashflow)}
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1 truncate">
-            Selisih penerimaan vs pengeluaran kas
+          <p className="text-[10px] text-neutral-400 mt-1 truncate">
+            Penerimaan kas vs beban pengeluaran
           </p>
         </div>
 
         {/* Total Income */}
-        <div className="bg-white p-5 border border-gray-200">
+        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Total Pemasukan Kas
             </span>
-            <TrendingUp size={18} className="text-emerald-600" />
+            <TrendingUp size={16} className="text-emerald-600" />
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-emerald-700 truncate">
             {formatRupiah(stats.totalIncome)}
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">Pembayaran order & setoran modal</p>
+          <p className="text-[10px] text-neutral-500 mt-1">Order terbayar &amp; modal toko</p>
         </div>
 
         {/* Total Expense */}
-        <div className="bg-white p-5 border border-gray-200">
+        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Total Pengeluaran Kas
             </span>
-            <TrendingDown size={18} className="text-rose-600" />
+            <TrendingDown size={16} className="text-rose-600" />
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-rose-700 truncate">
             {formatRupiah(stats.totalExpense)}
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">Restock, ongkir, gateway & ops</p>
+          <p className="text-[10px] text-neutral-500 mt-1">Restock, pengadaan &amp; operasional</p>
         </div>
 
         {/* Total Liquid Bank Balances */}
-        <div className="bg-neutral-50 p-5 border border-gray-200">
+        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-700">
-              Saldo Bank & Kas Riil
+            <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
+              Saldo Kas &amp; Bank Riil
             </span>
-            <Landmark size={18} className="text-blue-600" />
+            <Landmark size={16} className="text-blue-600" />
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-black font-mono text-neutral-950 truncate">
             {formatRupiah(stats.totalLiquidBalance)}
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">Konsolidasi 4 rekening aktif</p>
+          <p className="text-[10px] text-neutral-500 mt-1">Konsolidasi 4 rekening aktif</p>
         </div>
       </div>
 
-      {/* Main Tabs Container */}
-      <div className="bg-white border border-gray-200 overflow-hidden">
-        {/* Tab Headers */}
-        <div className="flex items-center border-b border-gray-200 overflow-x-auto bg-gray-50">
-          <button
-            type="button"
-            onClick={() => setActiveMainTab('cashbook')}
-            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
-              activeMainTab === 'cashbook'
-                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
-                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <Wallet size={16} />
-            <span>Buku Kas & Jurnal Mutasi ({filteredTransactions.length})</span>
-          </button>
+      {/* 3. Main Data Table: Single Table View Only */}
+      <ServerSideTable
+        columns={tableColumns}
+        data={paginatedTransactions}
+        total={filteredTransactions.length}
+        page={page}
+        limit={limit}
+        limitOptions={[10, 25, 50, 100]}
+        onPageChange={setPage}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+        }}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
+          setSortBy(newSortBy);
+          setSortDirection(newDir);
+        }}
+        selectable={true}
+        selectedIds={selectedTxIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        idKey="id"
+        emptyMessage="Tidak Ada Mutasi Kas Ditemukan"
+        emptyDescription="Sesuaikan kata kunci pencarian atau ubah filter periode transaksi."
+      />
 
-          <button
-            type="button"
-            onClick={() => setActiveMainTab('accounts')}
-            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
-              activeMainTab === 'accounts'
-                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
-                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <Landmark size={16} />
-            <span>Rekening Kas & Bank ({financialAccounts.length})</span>
-          </button>
+      {/* 4. Centralized Filter Sidebar Organism */}
+      <FinancialFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        activeFilterCount={activeFilterCount}
+        totalFiltered={filteredTransactions.length}
+        totalTransactions={transactions.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        cashbookFilter={cashbookFilter}
+        onCashbookFilterChange={setCashbookFilter}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        categories={transactionCategories}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        onResetFilters={handleResetFilters}
+      />
 
-          <button
-            type="button"
-            onClick={() => setActiveMainTab('coa')}
-            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
-              activeMainTab === 'coa'
-                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
-                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <BookOpen size={16} />
-            <span>Bagan Akun (Chart of Accounts) ({chartOfAccounts.length})</span>
-          </button>
+      {/* 5. Modal Tambah Transaksi Manual */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
+          <div className="bg-white border border-neutral-300 w-full max-w-lg rounded-none shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
+              <h3 className="font-sport font-black text-base uppercase text-neutral-950">
+                Catat Transaksi Kas Baru
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-neutral-400 hover:text-black cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveMainTab('cogs')}
-            className={`px-5 py-3.5 text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer border-b-2 transition-all shrink-0 ${
-              activeMainTab === 'cogs'
-                ? 'bg-white text-neutral-950 border-neutral-950 shadow-xs'
-                : 'text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <PieChart size={16} />
-            <span>Analisis HPP & Margin Kotor</span>
-          </button>
-        </div>
-
-        {/* Tab 1: Cashbook & Transactions */}
-        {activeMainTab === 'cashbook' && (
-          <div>
-            {/* Filter Bar */}
-            <div className="p-4 sm:p-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white">
-              {/* Search input */}
-              <div className="relative flex-1 max-w-md">
-                <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari nomor TRX, invoice, keterangan, atau pelanggan..."
-                  className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
-                />
-                {searchQuery && (
+            <form onSubmit={handleSaveTransaction} className="space-y-4">
+              <div>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Arah Aliran Kas
+                </label>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
+                    onClick={() => setFormType('income')}
+                    className={`py-2 text-xs font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
+                      formType === 'income'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-neutral-50 text-neutral-700 border-neutral-300'
+                    }`}
                   >
-                    <X size={14} />
+                    + Kas Masuk (Income)
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setFormType('expense')}
+                    className={`py-2 text-xs font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
+                      formType === 'expense'
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : 'bg-neutral-50 text-neutral-700 border-neutral-300'
+                    }`}
+                  >
+                    - Kas Keluar (Expense)
+                  </button>
+                </div>
               </div>
 
-              {/* Controls */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Cashbook Sub-Filter */}
+              <div>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Kategori Transaksi
+                </label>
                 <select
-                  value={cashbookFilter}
-                  onChange={(e) => setCashbookFilter(e.target.value)}
-                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
-                >
-                  <option value="all">Semua Tipe Kas</option>
-                  <option value="income">Kas Masuk (Income)</option>
-                  <option value="expense">Kas Keluar (Expense)</option>
-                  <option value="pending">Menunggu Pembayaran (Pending)</option>
-                </select>
-
-                {/* Category Filter */}
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
                 >
                   {transactionCategories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -434,470 +655,64 @@ export default function FinancialTransactionsPage({
                     </option>
                   ))}
                 </select>
+              </div>
 
-                {/* Date Filter */}
+              <div>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Nominal Transaksi (Rp)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1000"
+                  value={formAmount}
+                  onChange={(e) => setFormAmount(e.target.value)}
+                  placeholder="Contoh: 150000"
+                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Keterangan / Memo Transaksi
+                </label>
+                <textarea
+                  rows="2"
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="Rincian catatan transaksi..."
+                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Rekening Pembayaran / Sumber Kas
+                </label>
                 <select
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                  className="px-3 py-2 text-xs font-semibold bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-700 cursor-pointer"
+                  value={formPaymentMethod}
+                  onChange={(e) => setFormPaymentMethod(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
                 >
-                  <option value="all">Semua Tanggal</option>
-                  <option value="this_month">Bulan Ini</option>
-                  <option value="30days">30 Hari Terakhir</option>
-                  <option value="7days">7 Hari Terakhir</option>
-                </select>
-
-                {(cashbookFilter !== 'all' || selectedCategory !== 'all' || dateRange !== 'all' || searchQuery) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCashbookFilter('all');
-                      setSelectedCategory('all');
-                      setDateRange('all');
-                      setSearchQuery('');
-                    }}
-                    className="px-2.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-rose-200"
-                  >
-                    Reset Filter
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-gray-600">
-                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">No. Transaksi & Waktu</th>
-                    <th className="py-3 px-4">Kategori & Keterangan</th>
-                    <th className="py-3 px-4">Metode Bayar / Rekening</th>
-                    <th className="py-3 px-4 text-right">Nominal (Rp)</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-center">Bukti / Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredTransactions.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500">
-                        Tidak ada transaksi yang cocok dengan filter yang dipilih.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredTransactions.map((tx) => {
-                      const isIncome = tx.type === 'income';
-                      const isSettled = tx.status === 'settled';
-
-                      return (
-                        <tr key={tx.id} className="hover:bg-neutral-50 transition-colors">
-                          {/* No TRX & Waktu */}
-                          <td className="py-3.5 px-4">
-                            <div className="font-mono font-bold text-gray-900">{tx.transaction_number}</div>
-                            <div className="text-[11px] text-gray-500">
-                              {new Date(tx.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                            {tx.order_number && (
-                              <button
-                                type="button"
-                                onClick={() => onViewOrderDetail({ order_number: tx.order_number })}
-                                className="text-[10px] font-mono text-blue-700 hover:underline flex items-center gap-0.5 mt-0.5"
-                              >
-                                <span>Ref: {tx.order_number}</span>
-                                <ExternalLink size={10} />
-                              </button>
-                            )}
-                          </td>
-
-                          {/* Kategori & Deskripsi */}
-                          <td className="py-3.5 px-4">
-                            <div className="font-bold text-gray-900">{tx.category_label}</div>
-                            <div className="text-[11px] text-gray-600 line-clamp-1 max-w-sm">
-                              {tx.description}
-                            </div>
-                            {tx.customer_name && (
-                              <div className="text-[10px] text-gray-400 mt-0.5">Oleh: {tx.customer_name}</div>
-                            )}
-                          </td>
-
-                          {/* Metode Pembayaran */}
-                          <td className="py-3.5 px-4">
-                            <div className="font-semibold text-gray-800">{tx.payment_method}</div>
-                          </td>
-
-                          {/* Nominal */}
-                          <td className="py-3.5 px-4 text-right font-mono font-black text-sm">
-                            <span className={isIncome ? 'text-emerald-700' : 'text-rose-700'}>
-                              {isIncome ? '+' : '-'} {formatRupiah(tx.amount)}
-                            </span>
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-3.5 px-4 text-center">
-                            {isSettled ? (
-                              <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">
-                                Berhasil
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">
-                                Pending
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Aksi */}
-                          <td className="py-3.5 px-4 text-center">
-                            <button
-                              type="button"
-                              onClick={() => setReceiptModalTx(tx)}
-                              className="p-1.5 text-gray-600 hover:text-neutral-950 hover:bg-gray-100 border border-gray-300 transition-colors cursor-pointer"
-                              title="Cetak Kuitansi / Bukti Kas"
-                            >
-                              <Printer size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Rekening Kas & Bank */}
-        {activeMainTab === 'accounts' && (
-          <div className="p-5 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50 p-4 border border-gray-200">
-              <div>
-                <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
-                  Daftar Rekening Kas & Rekening Bank Toko
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Saldo riil tersimpan pada rekening koran dan gateway yang siap digunakan untuk operasional.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsTransferModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 text-amber-400 hover:bg-neutral-800 font-extrabold text-xs transition-colors cursor-pointer shrink-0"
-              >
-                <ArrowRightLeft size={14} />
-                <span>Pindah Dana / Transfer</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {financialAccounts.map((acc) => (
-                <div key={acc.id} className="bg-white border border-gray-300 p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-neutral-900 text-amber-400">
-                        <Landmark size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-neutral-950">{acc.name}</h4>
-                        <div className="text-[11px] font-mono text-gray-500">{acc.bank_name}</div>
-                      </div>
-                    </div>
-                    {acc.is_default_payout && (
-                      <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300">
-                        Utama Payout
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-3 bg-neutral-50 border border-gray-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-400 uppercase font-semibold">No. Rekening / ID:</span>
-                      <div className="font-mono font-bold text-gray-900 text-xs">{acc.account_number}</div>
-                      <div className="text-[10px] text-gray-500">a.n {acc.account_holder}</div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] text-gray-400 uppercase font-semibold">Saldo Likuid:</span>
-                      <div className="font-mono font-black text-lg text-emerald-700">{formatRupiah(acc.balance)}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-2 border-t border-gray-150">
-                    <span>Status Rekening: <span className="font-bold text-emerald-700 uppercase">Aktif & Siap Pakai</span></span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTransferFrom(acc.id);
-                        setIsTransferModalOpen(true);
-                      }}
-                      className="text-neutral-900 font-bold hover:underline cursor-pointer"
-                    >
-                      Kirim Dana &rarr;
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: Chart of Accounts (COA) */}
-        {activeMainTab === 'coa' && (
-          <div className="p-5 space-y-5">
-            <div className="bg-neutral-50 p-4 border border-gray-200">
-              <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
-                Bagan Akun Standar (Standard Chart of Accounts)
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Struktur klasifikasi buku besar akuntansi ganda (*double-entry*) untuk menyusun Neraca dan Laporan Laba Rugi toko.
-              </p>
-            </div>
-
-            <div className="border border-gray-200 overflow-x-auto">
-              <table className="w-full text-xs text-left text-gray-600">
-                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">Kode Akun</th>
-                    <th className="py-3 px-4">Nama Akun Buku Besar</th>
-                    <th className="py-3 px-4">Kelompok Laporan</th>
-                    <th className="py-3 px-4 text-center">Posisi Normal</th>
-                    <th className="py-3 px-4 text-right">Saldo Terakhir</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {chartOfAccounts.map((coa, idx) => (
-                    <tr key={idx} className="hover:bg-neutral-50">
-                      <td className="py-3 px-4 font-mono font-bold text-neutral-950">{coa.code}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900">{coa.name}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-gray-100 text-gray-800 border border-gray-300">
-                          {coa.group}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {coa.type === 'debit' ? (
-                          <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-blue-800 bg-blue-50 border border-blue-200">
-                            DEBIT
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-purple-800 bg-purple-50 border border-purple-200">
-                            KREDIT
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right font-mono font-black text-gray-900">
-                        {formatRupiah(coa.balance)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Analisis HPP & Margin Laba Kotor */}
-        {activeMainTab === 'cogs' && (
-          <div className="p-5 space-y-6">
-            <div className="bg-neutral-50 p-4 border border-gray-200">
-              <h3 className="text-sm font-black text-neutral-950 uppercase tracking-wide">
-                Analisis Laba Kotor & Biaya Pokok Penjualan (COGS / HPP)
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Perhitungan keuntungan kotor toko setelah memperhitungkan modal pembelian produk olahraga dari pabrik/vendor.
-              </p>
-            </div>
-
-            {/* 3 Metric Cards for COGS */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white p-5 border border-gray-200">
-                <span className="text-[11px] font-bold text-gray-500 uppercase">Total Omset Penjualan</span>
-                <div className="text-2xl font-black font-mono text-neutral-950 mt-1">
-                  {formatRupiah(cogsAnalytics.grossRevenue)}
-                </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">Nilai transaksi produk terjual</p>
-              </div>
-
-              <div className="bg-white p-5 border border-gray-200">
-                <span className="text-[11px] font-bold text-rose-700 uppercase">Beban Pokok Penjualan (HPP)</span>
-                <div className="text-2xl font-black font-mono text-rose-700 mt-1">
-                  {formatRupiah(cogsAnalytics.totalCogs)}
-                </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">Modal beli produk dari vendor</p>
-              </div>
-
-              <div className="bg-neutral-900 text-white p-5 border border-neutral-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-amber-400 uppercase">Laba Kotor (Gross Profit)</span>
-                  <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-500 text-white">
-                    {cogsAnalytics.grossMarginPct}% Margin
-                  </span>
-                </div>
-                <div className="text-2xl font-black font-mono text-amber-400 mt-1">
-                  {formatRupiah(cogsAnalytics.grossProfit)}
-                </div>
-                <p className="text-[10px] text-neutral-400 mt-0.5">Omset dikurangi HPP modal</p>
-              </div>
-            </div>
-
-            {/* Category Performance Table */}
-            <div className="border border-gray-200 overflow-x-auto">
-              <table className="w-full text-xs text-left text-gray-600">
-                <thead className="bg-neutral-900 text-white uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4">Kategori Produk</th>
-                    <th className="py-3 px-4 text-right">Unit Terjual</th>
-                    <th className="py-3 px-4 text-right">Omset Penjualan</th>
-                    <th className="py-3 px-4 text-right">Beban Pokok (HPP)</th>
-                    <th className="py-3 px-4 text-right">Laba Kotor (Profit)</th>
-                    <th className="py-3 px-4 text-center">Margin %</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {cogsAnalytics.categoryBreakdown.map((cat, idx) => (
-                    <tr key={idx} className="hover:bg-neutral-50">
-                      <td className="py-3.5 px-4 font-bold text-gray-900">{cat.category_name}</td>
-                      <td className="py-3.5 px-4 text-right font-mono">{cat.units_sold} unit</td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-neutral-950">
-                        {formatRupiah(cat.revenue)}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-rose-700">
-                        {formatRupiah(cat.cogs)}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-black text-emerald-700">
-                        {formatRupiah(cat.gross_profit)}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-2 py-0.5 text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">
-                          {cat.margin_pct}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Modal: Tambah Transaksi Manual */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-lg border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <h3 className="font-black text-sm uppercase tracking-wide text-neutral-950">
-                Pencatatan Transaksi Manual
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-gray-400 hover:text-gray-700 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {formSuccessMessage && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-600" />
-                <span>{formSuccessMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveTransaction} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Tipe Transaksi</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormType('income')}
-                    className={`py-2 text-center font-bold border transition-colors cursor-pointer ${
-                      formType === 'income' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-gray-300 text-gray-700'
-                    }`}
-                  >
-                    + Pemasukan (Income)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormType('expense')}
-                    className={`py-2 text-center font-bold border transition-colors cursor-pointer ${
-                      formType === 'expense' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-gray-300 text-gray-700'
-                    }`}
-                  >
-                    - Pengeluaran (Expense)
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Kategori Transaksi</label>
-                <select
-                  value={formCategory}
-                  onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
-                >
-                  {transactionCategories.filter(c => c.id !== 'all').map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
+                  {financialAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.name}>
+                      {acc.name} ({acc.account_number}) - Saldo {formatRupiah(acc.balance)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Nominal (Rp)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
-                  placeholder="Contoh: 150000"
-                  required
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-black text-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Rekening / Kas Sumber</label>
-                <select
-                  value={formPaymentMethod}
-                  onChange={(e) => setFormPaymentMethod(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
-                >
-                  <option value="BCA Bisnis Transfer">BCA Bisnis Giro Operasional</option>
-                  <option value="Mandiri Transfer">Mandiri Utama Settlement Gateway</option>
-                  <option value="Kas Toko / Tunai">Kas Kecil Kasir Toko & Gudang</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Keterangan Transaksi</label>
-                <textarea
-                  rows={2}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Jelaskan kebutuhan pengeluaran/pemasukan..."
-                  required
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-sport font-black uppercase text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-none cursor-pointer transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-sport font-black uppercase text-white bg-neutral-950 hover:bg-neutral-900 rounded-none cursor-pointer transition-colors"
                 >
                   Simpan Transaksi
                 </button>
@@ -907,91 +722,101 @@ export default function FinancialTransactionsPage({
         </div>
       )}
 
-      {/* Modal: Transfer Antar Rekening */}
+      {/* 6. Modal Transfer Antar Rekening */}
       {isTransferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <h3 className="font-black text-sm uppercase tracking-wide text-neutral-950">
-                Transfer Antar Rekening Internal
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
+          <div className="bg-white border border-neutral-300 w-full max-w-lg rounded-none shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
+              <h3 className="font-sport font-black text-base uppercase text-neutral-950">
+                Pindah Dana / Transfer Antar Rekening
               </h3>
               <button
                 type="button"
                 onClick={() => setIsTransferModalOpen(false)}
-                className="text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-neutral-400 hover:text-black cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleTransfer} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Dari Rekening Asal</label>
-                <select
-                  value={transferFrom}
-                  onChange={(e) => setTransferFrom(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
-                >
-                  {financialAccounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} (Saldo: {formatRupiah(acc.balance)})
-                    </option>
-                  ))}
-                </select>
+            <form onSubmit={handleTransfer} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                    Dari Rekening
+                  </label>
+                  <select
+                    value={transferFrom}
+                    onChange={(e) => setTransferFrom(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
+                  >
+                    {financialAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} ({formatRupiah(acc.balance)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                    Ke Rekening
+                  </label>
+                  <select
+                    value={transferTo}
+                    onChange={(e) => setTransferTo(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
+                  >
+                    {financialAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} ({formatRupiah(acc.balance)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Ke Rekening Tujuan</label>
-                <select
-                  value={transferTo}
-                  onChange={(e) => setTransferTo(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-semibold text-gray-900"
-                >
-                  {financialAccounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} (Saldo: {formatRupiah(acc.balance)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Jumlah Nominal Transfer (Rp)</label>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Nominal Transfer (Rp)
+                </label>
                 <input
                   type="number"
+                  required
                   min="1000"
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
-                  placeholder="Contoh: 5000000"
-                  required
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 font-black text-gray-900"
+                  placeholder="Contoh: 500000"
+                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Catatan Mutasi Internal</label>
+                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
+                  Catatan Transfer
+                </label>
                 <input
                   type="text"
                   value={transferNotes}
                   onChange={(e) => setTransferNotes(e.target.value)}
-                  placeholder="Contoh: Isi kas kecil toko Cakung"
-                  className="w-full p-2.5 bg-white border border-gray-300 focus:outline-none focus:border-amber-500 text-gray-900"
+                  placeholder="Tujuan pemindahan saldo dana..."
+                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsTransferModalOpen(false)}
-                  className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-sport font-black uppercase text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-none cursor-pointer transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-sport font-black uppercase text-white bg-neutral-950 hover:bg-neutral-900 rounded-none cursor-pointer transition-colors"
                 >
-                  Konfirmasi Transfer
+                  Konfirmasi Pindah Dana
                 </button>
               </div>
             </form>
@@ -999,64 +824,65 @@ export default function FinancialTransactionsPage({
         </div>
       )}
 
-      {/* Modal: Cetak Bukti Kas / Kuitansi */}
+      {/* 7. Modal Kuitansi Transaksi */}
       {receiptModalTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <div>
-                <span className="font-black text-xs uppercase tracking-widest text-neutral-900">TUSKO ATHLETICS</span>
-                <h3 className="font-bold text-sm text-gray-700 mt-0.5">Bukti Transaksi Kas Masuk/Keluar</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
+          <div className="bg-white border border-neutral-300 w-full max-w-md rounded-none shadow-2xl p-6 space-y-4 font-mono text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
+              <span className="font-sport font-black text-sm uppercase text-neutral-950">
+                Bukti Transaksi Kas Tusko
+              </span>
               <button
                 type="button"
                 onClick={() => setReceiptModalTx(null)}
-                className="text-gray-400 hover:text-gray-700 cursor-pointer"
+                className="text-neutral-400 hover:text-black cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="bg-neutral-50 p-4 border border-gray-200 space-y-2 text-xs">
+            <div className="space-y-2 py-2 border-b border-neutral-200">
               <div className="flex justify-between">
-                <span className="text-gray-500">Nomor Transaksi:</span>
-                <span className="font-mono font-bold text-gray-900">{receiptModalTx.transaction_number}</span>
+                <span className="text-neutral-500">No. TRX:</span>
+                <span className="font-bold text-neutral-950">{receiptModalTx.transaction_number}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Tanggal:</span>
-                <span className="font-mono text-gray-800">{new Date(receiptModalTx.created_at).toLocaleString('id-ID')}</span>
+                <span className="text-neutral-500">Waktu:</span>
+                <span>{new Date(receiptModalTx.created_at).toLocaleString('id-ID')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Tipe / Kategori:</span>
-                <span className="font-bold text-gray-900">{receiptModalTx.category_label}</span>
+                <span className="text-neutral-500">Tipe / Kategori:</span>
+                <span className="uppercase font-bold">{receiptModalTx.type} • {receiptModalTx.category_label}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Keterangan:</span>
-                <span className="text-gray-800 text-right max-w-[200px]">{receiptModalTx.description}</span>
+                <span className="text-neutral-500">Rekening:</span>
+                <span>{receiptModalTx.payment_method}</span>
               </div>
-              <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-black">
-                <span>Total Nominal:</span>
-                <span className="text-amber-950 font-mono">{formatRupiah(receiptModalTx.amount)}</span>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Nominal:</span>
+                <span className="text-sm font-black text-neutral-950">{formatRupiah(receiptModalTx.amount)}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+            <p className="text-[11px] text-neutral-600 italic">
+              {receiptModalTx.description}
+            </p>
+
+            <div className="pt-2 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setReceiptModalTx(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="px-4 py-2 font-sport font-black uppercase text-xs text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-none cursor-pointer"
               >
                 Tutup
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  window.print();
-                }}
-                className="px-4 py-2 text-xs font-extrabold bg-neutral-900 text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer flex items-center gap-1.5"
+                onClick={() => window.print()}
+                className="px-4 py-2 font-sport font-black uppercase text-xs text-white bg-neutral-950 hover:bg-neutral-900 rounded-none cursor-pointer flex items-center gap-1.5"
               >
-                <Printer size={14} />
-                <span>Cetak Bukti</span>
+                <Printer size={13} />
+                <span>Cetak</span>
               </button>
             </div>
           </div>

@@ -191,20 +191,13 @@ export default function TemplateManagementPage({
     <div className="max-w-6xl mx-auto py-6 px-4 space-y-6">
       
       {/* Header & Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5">
         <div className="space-y-1">
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-emerald-700 transition-colors cursor-pointer mb-2"
-          >
-            <ArrowLeft size={16} />
-            <span>Kembali ke Daftar Transaksi</span>
-          </button>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase flex items-center gap-2.5">
+            <Mail className="text-amber-600" size={24} />
             <span>Kelola Template Email & Resi</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-neutral-500">
             Kustomisasi formulir pesan notifikasi email pembeli dan tata letak stiker label resi thermal kurir.
           </p>
         </div>

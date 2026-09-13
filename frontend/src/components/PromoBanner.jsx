@@ -45,7 +45,7 @@ export default function PromoBanner() {
   }, [banners.length]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-md my-4 bg-neutral-950 border border-neutral-800">
+    <div className="relative w-full overflow-hidden rounded-none shadow-md my-4 bg-neutral-950 border border-neutral-800">
       <div 
         className="flex transition-transform duration-500 ease-out"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -58,7 +58,7 @@ export default function PromoBanner() {
               className={`min-w-full h-52 sm:h-64 md:h-72 bg-gradient-to-r ${banner.bgGradient} p-6 sm:p-10 flex flex-col justify-center text-white relative`}
             >
               <div className="max-w-xl z-10">
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-2.5 ${banner.badgeColor}`}>
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1 rounded-none uppercase tracking-wider mb-2.5 ${banner.badgeColor}`}>
                   <IconTag size={13} className="fill-current" />
                   {banner.tag}
                 </span>
@@ -68,7 +68,7 @@ export default function PromoBanner() {
                 <p className="text-xs sm:text-sm text-neutral-300 mt-3 line-clamp-2 max-w-lg leading-relaxed font-medium">
                   {banner.subtitle}
                 </p>
-                <button className="mt-5 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs sm:text-sm font-extrabold uppercase tracking-wide rounded-xl shadow-md w-fit transition-all active:scale-95 cursor-pointer">
+                <button className="mt-5 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs sm:text-sm font-extrabold uppercase tracking-wide rounded-none shadow-md w-fit transition-all active:scale-95 cursor-pointer">
                   {banner.actionText}
                 </button>
               </div>
@@ -87,14 +87,14 @@ export default function PromoBanner() {
       {/* Nav buttons */}
       <button
         onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-none bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
         aria-label="Previous slide"
       >
         <ChevronLeft size={20} />
       </button>
       <button
         onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
+        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-none bg-neutral-900/80 hover:bg-neutral-900 text-white flex items-center justify-center shadow-lg backdrop-blur-xs border border-neutral-700 transition-opacity cursor-pointer z-20"
         aria-label="Next slide"
       >
         <ChevronRight size={20} />
@@ -106,7 +106,7 @@ export default function PromoBanner() {
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`h-2 rounded-full transition-all cursor-pointer ${
+            className={`h-2 rounded-none transition-all cursor-pointer ${
               currentSlide === idx ? 'w-7 bg-amber-400' : 'w-2 bg-neutral-600 hover:bg-neutral-400'
             }`}
             aria-label={`Slide ${idx + 1}`}

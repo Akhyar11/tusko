@@ -35,7 +35,8 @@ export default function OrderDetailPage({
   onCancelOrder = () => {},
   onCompleteOrder = () => {},
   onUpdateStatus = () => {},
-  onPrintReceipt = null
+  onPrintReceipt = null,
+  onShowToast = () => {}
 }) {
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
@@ -45,7 +46,6 @@ export default function OrderDetailPage({
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
   const [isBookingPickup, setIsBookingPickup] = useState(false);
-  const [pickupSuccessMsg, setPickupSuccessMsg] = useState('');
 
   if (!order) {
     return (
@@ -179,17 +179,14 @@ export default function OrderDetailPage({
     } else {
       setIsPrintReceiptModalOpen(true);
     }
-  };
-
-  // KiriminAja pickup booking action
+  };  // KiriminAja pickup booking action
   const handleBookingPickup = () => {
     setIsBookingPickup(true);
     setTimeout(() => {
       const generatedTracking = trackingNumber || `KRA-JNT-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
       onUpdateStatus(order.id, 'shipped', { tracking_number: generatedTracking });
       setIsBookingPickup(false);
-      setPickupSuccessMsg(`Pickup berhasil di-booking via KiriminAja! No. Resi: ${generatedTracking}`);
-      setTimeout(() => setPickupSuccessMsg(''), 6000);
+      onShowToast(`Pickup berhasil di-booking via KiriminAja! No. Resi: ${generatedTracking}`);
     }, 1000);
   };
 
@@ -256,23 +253,6 @@ export default function OrderDetailPage({
           </button>
         </div>
       </div>
-
-      {/* Pickup Success Alert Banner */}
-      {pickupSuccessMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-none flex items-center justify-between animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
-            <span>{pickupSuccessMsg}</span>
-          </div>
-          <button 
-            type="button"
-            onClick={() => setPickupSuccessMsg('')}
-            className="text-emerald-700 hover:text-emerald-900 font-mono text-sm cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* Main Status Header Card */}
       <div className={`p-5 sm:p-6 rounded-none border ${statusConfig.bg} ${statusConfig.border} shadow-2xs space-y-3`}>

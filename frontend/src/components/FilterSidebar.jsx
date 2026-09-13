@@ -57,7 +57,7 @@ export default function FilterSidebar({
     selectedLocation !== '';
 
   const content = (
-    <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 sm:p-5 shadow-xs space-y-5">
+    <div className="bg-white rounded-none border border-neutral-200/90 p-4 sm:p-5 shadow-xs space-y-5">
       {/* Sidebar Header */}
       <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
         <h3 className="font-black text-neutral-900 text-xs uppercase tracking-wider flex items-center gap-2">
@@ -92,7 +92,7 @@ export default function FilterSidebar({
             <button
               type="button"
               onClick={() => onSelectCategory(null)}
-              className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+              className={`w-full text-left px-2.5 py-1.5 rounded-none text-xs flex items-center justify-between transition-colors cursor-pointer ${
                 selectedCategoryId === null
                   ? 'bg-neutral-900 text-amber-400 font-bold'
                   : 'text-neutral-700 hover:bg-neutral-100 font-medium'
@@ -110,7 +110,7 @@ export default function FilterSidebar({
                   key={cat.id}
                   type="button"
                   onClick={() => onSelectCategory(isSelected ? null : cat.id)}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-none text-xs flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-neutral-900 text-amber-400 font-bold'
                       : 'text-neutral-700 hover:bg-neutral-100 font-medium'
@@ -200,7 +200,7 @@ export default function FilterSidebar({
                 placeholder="Minimum"
                 value={minPrice}
                 onChange={(e) => onPriceChange('min', e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-none focus:outline-none focus:border-amber-500 focus:bg-white"
               />
             </div>
             <div className="relative">
@@ -210,7 +210,7 @@ export default function FilterSidebar({
                 placeholder="Maksimum"
                 value={maxPrice}
                 onChange={(e) => onPriceChange('max', e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-none focus:outline-none focus:border-amber-500 focus:bg-white"
               />
             </div>
 
@@ -219,21 +219,21 @@ export default function FilterSidebar({
               <button
                 type="button"
                 onClick={() => { onPriceChange('min', ''); onPriceChange('max', '250000'); }}
-                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-lg text-[10px] font-semibold cursor-pointer"
+                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-none text-[10px] font-semibold cursor-pointer"
               >
                 &lt; 250 rb
               </button>
               <button
                 type="button"
                 onClick={() => { onPriceChange('min', '250000'); onPriceChange('max', '500000'); }}
-                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-lg text-[10px] font-semibold cursor-pointer"
+                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-none text-[10px] font-semibold cursor-pointer"
               >
                 250 rb - 500 rb
               </button>
               <button
                 type="button"
                 onClick={() => { onPriceChange('min', '500000'); onPriceChange('max', ''); }}
-                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-lg text-[10px] font-semibold cursor-pointer"
+                className="px-2 py-1 bg-neutral-100 hover:bg-amber-50 hover:text-amber-800 text-neutral-700 rounded-none text-[10px] font-semibold cursor-pointer"
               >
                 &gt; 500 rb
               </button>
@@ -260,7 +260,7 @@ export default function FilterSidebar({
                 key={starVal}
                 type="button"
                 onClick={() => onSelectMinRating(minRating === starVal ? 0 : starVal)}
-                className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-none transition-colors cursor-pointer ${
                   minRating === starVal
                     ? 'bg-neutral-900 text-amber-400 font-bold'
                     : 'text-neutral-700 hover:bg-neutral-100 font-medium'
@@ -297,7 +297,7 @@ export default function FilterSidebar({
                     key={loc}
                     type="button"
                     onClick={() => onSelectLocation(isSelected ? '' : loc)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs truncate transition-colors cursor-pointer ${
+                    className={`w-full text-left px-2.5 py-1.5 rounded-none text-xs truncate transition-colors cursor-pointer ${
                       isSelected
                         ? 'bg-neutral-900 text-amber-400 font-bold'
                         : 'text-neutral-700 hover:bg-neutral-100 font-medium'
@@ -339,7 +339,7 @@ export default function FilterSidebar({
                 <h3 className="font-black text-neutral-900 text-xs uppercase tracking-wider">Filter Olahraga</h3>
                 <button
                   onClick={onCloseMobile}
-                  className="p-1.5 rounded-xl text-neutral-500 hover:bg-neutral-100 cursor-pointer"
+                  className="p-1.5 rounded-none text-neutral-500 hover:bg-neutral-100 cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -351,7 +351,7 @@ export default function FilterSidebar({
               <button
                 type="button"
                 onClick={onCloseMobile}
-                className="w-full py-2.5 bg-neutral-900 text-white hover:bg-amber-500 hover:text-neutral-950 font-black uppercase tracking-wider text-xs rounded-xl shadow-md cursor-pointer transition-colors"
+                className="w-full py-2.5 bg-neutral-900 text-white hover:bg-amber-500 hover:text-neutral-950 font-black uppercase tracking-wider text-xs rounded-none shadow-md cursor-pointer transition-colors"
               >
                 Terapkan Filter
               </button>

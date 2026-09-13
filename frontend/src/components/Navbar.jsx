@@ -239,7 +239,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-1.5 -ml-1 text-black hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+              className="lg:hidden p-1.5 -ml-1 text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer"
               title="Buka Menu Navigasi"
               aria-label="Buka Menu"
             >
@@ -406,7 +406,7 @@ export default function Navbar({
             >
               <ShoppingBag size={24} className="group-hover:scale-105 transition-transform" />
               {cartCount > 0 && (
-                <span className="bg-black text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center -ml-2 -mt-3 shadow-xs">
+                <span className="bg-black text-white text-[10px] font-bold w-4 h-4 rounded-none flex items-center justify-center -ml-2 -mt-3 shadow-xs">
                   {cartCount}
                 </span>
               )}
@@ -481,7 +481,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1.5 text-neutral-600 hover:text-black rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer"
+                className="p-1.5 text-neutral-600 hover:text-black rounded-none hover:bg-neutral-200 transition-colors cursor-pointer"
                 title="Tutup Menu"
               >
                 <X size={20} />
@@ -500,10 +500,10 @@ export default function Navbar({
                         <img 
                           src={currentUser.avatar} 
                           alt={currentUser.name} 
-                          className="w-10 h-10 rounded-full object-cover border border-amber-500 shrink-0" 
+                          className="w-10 h-10 rounded-none object-cover border border-amber-500 shrink-0" 
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-amber-500 text-black font-black text-sm flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-none bg-amber-500 text-black font-black text-sm flex items-center justify-center shrink-0">
                           {currentUser.name.charAt(0)}
                         </div>
                       )}
@@ -623,7 +623,7 @@ export default function Navbar({
                           handleNavCategoryClick(item.actionName);
                           setIsMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer ${
                           item.isSale 
                             ? 'bg-red-50 text-red-600 hover:bg-red-100' 
                             : 'hover:bg-neutral-100 text-neutral-900'

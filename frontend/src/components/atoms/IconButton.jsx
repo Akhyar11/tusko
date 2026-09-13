@@ -31,6 +31,7 @@ export default function IconButton({
         onClick={onClick}
         disabled={disabled}
         aria-label={tooltipText}
+        title={tooltipText}
         className={`w-10 h-10 rounded-none border transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant] || variantClasses.secondary} ${className}`}
       >
         {Icon && <Icon size={18} strokeWidth={2.2} />}
