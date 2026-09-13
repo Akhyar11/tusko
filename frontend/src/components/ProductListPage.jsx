@@ -29,6 +29,7 @@ import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
 import ProductFilterDrawer from './organisms/ProductFilterDrawer';
 import CategoryMasterModal from './organisms/CategoryMasterModal';
+import { useProductTableStore } from '../stores/useProductTableStore';
 
 export default function ProductListPage({
   products = [],
@@ -45,25 +46,34 @@ export default function ProductListPage({
 }) {
   const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   const handleOpenCategoryMaster = onNavigateToCategories || onOpenCategoryMaster || (() => setIsCategoryMasterOpen(true));
-  // Filter & Search states
-  const [searchName, setSearchName] = useState('');
-  const [searchSku, setSearchSku] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all'); // 'all' | 'active' | 'inactive'
-  const [stockCondition, setStockCondition] = useState('all'); // 'all' | 'low' | 'empty' | 'ready'
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  // Centralized Zustand Table Store (100% Server-Side Filtering, Pagination, Limit & Sorting)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeData,
+    total: storeTotal,
+    summary: storeSummary,
+    isLoading: isTableLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useProductTableStore();
+
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-
-  // Server-side Table Pagination & Sorting states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState('desc');
   const [selectedProductIds, setSelectedProductIds] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+
+  // Initial Fetch on Mount
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Close action popup when clicking outside
   useEffect(() => {
@@ -85,39 +95,34 @@ export default function ProductListPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFilterSidebarOpen]);
 
-  // Reset pagination on filter/search change with simulated short transition
-  useEffect(() => {
-    setPage(1);
-    setActiveActionMenuId(null);
-  }, [searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
-
   // Active filters & search count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (searchName.trim() !== '') count++;
-    if (searchSku.trim() !== '') count++;
-    if (selectedCategory !== 'all') count++;
-    if (selectedStatus !== 'all') count++;
-    if (stockCondition !== 'all') count++;
-    if (minPrice.trim() !== '') count++;
-    if (maxPrice.trim() !== '') count++;
+    if (filters.searchName && filters.searchName.trim() !== '') count++;
+    if (filters.searchSku && filters.searchSku.trim() !== '') count++;
+    if (filters.category_id && filters.category_id !== 'all') count++;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.stockCondition && filters.stockCondition !== 'all') count++;
+    if (filters.minPrice !== undefined && String(filters.minPrice).trim() !== '') count++;
+    if (filters.maxPrice !== undefined && String(filters.maxPrice).trim() !== '') count++;
     return count;
-  }, [searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice]);
+  }, [filters]);
 
-  // Reset all filters & search helper
-  const handleResetFilters = () => {
-    setSearchName('');
-    setSearchSku('');
-    setSelectedCategory('all');
-    setSelectedStatus('all');
-    setStockCondition('all');
-    setMinPrice('');
-    setMaxPrice('');
-  };
-
-  // Metric summaries
+  // Metric summaries from server or fallback
   const metrics = useMemo(() => {
-    const total = products.length;
+    if (storeSummary) {
+      const totalSku = storeSummary.total_sku ?? storeTotal;
+      const activeCount = storeSummary.active_count ?? 0;
+      return {
+        total: totalSku,
+        activeCount,
+        inactiveCount: Math.max(0, totalSku - activeCount),
+        lowStockCount: storeSummary.low_stock_count ?? 0,
+        totalAssetValue: storeSummary.total_asset_value ?? 0,
+        totalSoldCount: storeSummary.total_sold_count ?? 0,
+      };
+    }
+    const total = products.length || storeTotal;
     const activeCount = products.filter(p => p.status === 'active' || p.active).length;
     const lowStockCount = products.filter(p => Number(p.stock) <= Number(p.stock_minimum || 5)).length;
     const totalAssetValue = products.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.stock || 0)), 0);
@@ -126,90 +131,16 @@ export default function ProductListPage({
     return {
       total,
       activeCount,
-      inactiveCount: total - activeCount,
+      inactiveCount: Math.max(0, total - activeCount),
       lowStockCount,
       totalAssetValue,
-      totalSoldCount
+      totalSoldCount,
     };
-  }, [products]);
+  }, [storeSummary, storeTotal, products]);
 
-  // Filtered and sorted products (Server-side simulation engine)
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      // Search by Product Name
-      if (searchName.trim()) {
-        const qName = searchName.toLowerCase();
-        if (!p.name?.toLowerCase().includes(qName)) return false;
-      }
-
-      // Search by Product SKU
-      if (searchSku.trim()) {
-        const qSku = searchSku.toLowerCase();
-        const matchSku = p.sku?.toLowerCase().includes(qSku);
-        const matchVariantSku = p.variants?.some(v => v.sku?.toLowerCase().includes(qSku));
-        if (!matchSku && !matchVariantSku) return false;
-      }
-
-      // Category filter
-      if (selectedCategory !== 'all') {
-        const targetCatId = Number(selectedCategory);
-        const matchPrimary = p.category_id === targetCatId;
-        const matchIds = Array.isArray(p.category_ids) && p.category_ids.some(id => Number(id) === targetCatId);
-        const matchCategories = Array.isArray(p.categories) && p.categories.some(c => Number(c.id) === targetCatId);
-        if (!matchPrimary && !matchIds && !matchCategories) {
-          return false;
-        }
-      }
-
-      // Status filter
-      if (selectedStatus === 'active' && !(p.status === 'active' || p.active)) return false;
-      if (selectedStatus === 'inactive' && (p.status === 'active' || p.active)) return false;
-
-      // Stock condition filter
-      if (stockCondition === 'low') {
-        const minStock = Number(p.stock_minimum || 5);
-        if (!(Number(p.stock) <= minStock && Number(p.stock) > 0)) return false;
-      } else if (stockCondition === 'empty') {
-        if (Number(p.stock) !== 0) return false;
-      } else if (stockCondition === 'ready') {
-        const minStock = Number(p.stock_minimum || 5);
-        if (Number(p.stock) <= minStock) return false;
-      }
-
-      // Price range filter
-      if (minPrice.trim() !== '' && Number(p.price) < Number(minPrice)) return false;
-      if (maxPrice.trim() !== '' && Number(p.price) > Number(maxPrice)) return false;
-
-      return true;
-    }).sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-
-      if (sortBy === 'created_at') {
-        valA = new Date(a.created_at || 0).getTime();
-        valB = new Date(b.created_at || 0).getTime();
-      } else if (sortBy === 'price' || sortBy === 'stock' || sortBy === 'sold_count') {
-        valA = Number(valA || 0);
-        valB = Number(valB || 0);
-      } else if (typeof valA === 'string') {
-        valA = valA.toLowerCase();
-        valB = (valB || '').toLowerCase();
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [products, searchName, searchSku, selectedCategory, selectedStatus, stockCondition, minPrice, maxPrice, sortBy, sortDirection]);
-
-  // Total filtered records
-  const totalFiltered = filteredProducts.length;
-
-  // Paginated records for current view
-  const paginatedProducts = useMemo(() => {
-    const startIdx = (page - 1) * limit;
-    return filteredProducts.slice(startIdx, startIdx + limit);
-  }, [filteredProducts, page, limit]);
+  // Server-side paginated products list directly from store (zero client-side slice/filter)
+  const paginatedProducts = storeData.length > 0 || storeTotal === 0 ? storeData : (products || []);
+  const totalFiltered = storeTotal > 0 || storeData.length > 0 ? storeTotal : (products ? products.length : 0);
 
   // Helper category name lookup
   const getCategoryName = (catId) => {
@@ -237,33 +168,36 @@ export default function ProductListPage({
   };
 
   // Bulk actions handlers
-  const handleBulkActivate = () => {
-    selectedProductIds.forEach(id => {
-      const prod = products.find(p => p.id === id);
+  const handleBulkActivate = async () => {
+    for (const id of selectedProductIds) {
+      const prod = paginatedProducts.find(p => p.id === id) || products.find(p => p.id === id);
       if (prod && !(prod.status === 'active' || prod.active)) {
-        onToggleStatus(prod);
+        await onToggleStatus(prod);
       }
-    });
+    }
     setSelectedProductIds([]);
+    fetchData();
   };
 
-  const handleBulkDeactivate = () => {
-    selectedProductIds.forEach(id => {
-      const prod = products.find(p => p.id === id);
+  const handleBulkDeactivate = async () => {
+    for (const id of selectedProductIds) {
+      const prod = paginatedProducts.find(p => p.id === id) || products.find(p => p.id === id);
       if (prod && (prod.status === 'active' || prod.active)) {
-        onToggleStatus(prod);
+        await onToggleStatus(prod);
       }
-    });
+    }
     setSelectedProductIds([]);
+    fetchData();
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (window.confirm(`Yakin ingin menghapus ${selectedProductIds.length} produk terpilih?`)) {
-      selectedProductIds.forEach(id => {
-        const prod = products.find(p => p.id === id);
-        if (prod) onDeleteProduct(prod);
-      });
+      for (const id of selectedProductIds) {
+        const prod = paginatedProducts.find(p => p.id === id) || products.find(p => p.id === id);
+        if (prod) await onDeleteProduct(prod);
+      }
       setSelectedProductIds([]);
+      fetchData();
     }
   };
 
@@ -643,17 +577,13 @@ export default function ProductListPage({
         limit={limit}
         limitOptions={[10, 25, 50, 100]}
         onPageChange={setPage}
-        onLimitChange={(newLimit) => {
-          setLimit(newLimit);
-          setPage(1);
-        }}
+        onLimitChange={setLimit}
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
         }}
-        isLoading={isLoading}
+        isLoading={isTableLoading}
         selectable={true}
         selectedIds={selectedProductIds}
         onSelectRow={handleSelectRow}
@@ -694,30 +624,29 @@ export default function ProductListPage({
         onClose={() => setIsFilterSidebarOpen(false)}
         activeFilterCount={activeFilterCount}
         totalFiltered={totalFiltered}
-        totalProducts={products.length}
-        searchName={searchName}
-        onSearchNameChange={setSearchName}
-        searchSku={searchSku}
-        onSearchSkuChange={setSearchSku}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        totalProducts={storeSummary?.total_sku ?? totalFiltered}
+        searchName={filters.searchName || ''}
+        onSearchNameChange={(val) => setFilter('searchName', val)}
+        searchSku={filters.searchSku || ''}
+        onSearchSkuChange={(val) => setFilter('searchSku', val)}
+        selectedStatus={filters.status || 'all'}
+        onStatusChange={(val) => setFilter('status', val)}
+        selectedCategory={filters.category_id || 'all'}
+        onCategoryChange={(val) => setFilter('category_id', val)}
         categories={categories}
-        products={products}
-        stockCondition={stockCondition}
-        onStockConditionChange={setStockCondition}
-        minPrice={minPrice}
-        onMinPriceChange={setMinPrice}
-        maxPrice={maxPrice}
-        onMaxPriceChange={setMaxPrice}
+        products={paginatedProducts}
+        stockCondition={filters.stockCondition || 'all'}
+        onStockConditionChange={(val) => setFilter('stockCondition', val)}
+        minPrice={filters.minPrice || ''}
+        onMinPriceChange={(val) => setFilter('minPrice', val)}
+        maxPrice={filters.maxPrice || ''}
+        onMaxPriceChange={(val) => setFilter('maxPrice', val)}
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={(newSort, newDir) => {
-          setSortBy(newSort);
-          setSortDirection(newDir);
+          setSort(newSort, newDir);
         }}
-        onResetFilters={handleResetFilters}
+        onResetFilters={resetFilters}
       />
 
       {/* Delete Confirmation Modal */}
@@ -725,13 +654,15 @@ export default function ProductListPage({
         isOpen={Boolean(productToDelete)}
         product={productToDelete}
         onClose={() => setProductToDelete(null)}
-        onConfirmDelete={(p) => {
-          onDeleteProduct(p);
+        onConfirmDelete={async (p) => {
+          await onDeleteProduct(p);
           setProductToDelete(null);
+          fetchData();
         }}
-        onDeactivateInstead={(p) => {
-          onToggleStatus(p);
+        onDeactivateInstead={async (p) => {
+          await onToggleStatus(p);
           setProductToDelete(null);
+          fetchData();
         }}
       />
 

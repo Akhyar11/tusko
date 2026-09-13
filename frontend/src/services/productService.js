@@ -31,18 +31,46 @@ export const productService = {
   async fetchProducts(params = {}) {
     try {
       const searchParams = new URLSearchParams();
-      if (params.search) searchParams.append('search', params.search);
-      if (params.category_id) searchParams.append('category_id', params.category_id);
-      if (params.category) searchParams.append('category', params.category);
-      if (params.status) searchParams.append('status', params.status);
-      if (params.active !== undefined) searchParams.append('active', params.active);
-      if (params.stock_status) searchParams.append('stock_status', params.stock_status);
-      if (params.min_price) searchParams.append('min_price', params.min_price);
-      if (params.max_price) searchParams.append('max_price', params.max_price);
-      if (params.sort_by) searchParams.append('sort_by', params.sort_by);
-      if (params.page) searchParams.append('page', params.page);
-      if (params.per_page) searchParams.append('per_page', params.per_page);
-      if (params.include_inactive) searchParams.append('include_inactive', '1');
+      const search = params.search || params.searchName;
+      if (search) searchParams.append('search', search);
+
+      const sku = params.sku || params.searchSku;
+      if (sku) searchParams.append('sku', sku);
+
+      const catId = params.category_id || params.category;
+      if (catId && catId !== 'all') searchParams.append('category_id', catId);
+
+      const status = params.status;
+      if (status && status !== 'all') searchParams.append('status', status);
+
+      if (params.active !== undefined && params.active !== 'all') searchParams.append('active', params.active);
+
+      const stockStatus = params.stock_status || params.stockCondition;
+      if (stockStatus && stockStatus !== 'all') searchParams.append('stock_status', stockStatus);
+
+      const minPrice = params.min_price || params.minPrice;
+      if (minPrice !== undefined && minPrice !== '') searchParams.append('min_price', minPrice);
+
+      const maxPrice = params.max_price || params.maxPrice;
+      if (maxPrice !== undefined && maxPrice !== '') searchParams.append('max_price', maxPrice);
+
+      const sortBy = params.sort_by || params.sortBy;
+      if (sortBy) searchParams.append('sort_by', sortBy);
+
+      const sortDir = params.sort_direction || params.sortDirection || params.order;
+      if (sortDir) searchParams.append('sort_direction', sortDir);
+
+      const page = params.page || 1;
+      searchParams.append('page', page);
+
+      const perPage = params.per_page || params.limit || 10;
+      searchParams.append('per_page', perPage);
+
+      if (params.include_inactive !== undefined) {
+        searchParams.append('include_inactive', params.include_inactive ? '1' : '0');
+      } else {
+        searchParams.append('include_inactive', '1');
+      }
 
       const queryString = searchParams.toString();
       const url = queryString ? `/api/products?${queryString}` : '/api/products';
@@ -54,6 +82,7 @@ export const productService = {
       }
       return {
         data: list,
+        total: res.meta?.total !== undefined ? res.meta.total : list.length,
         summary: res.summary || null,
         meta: res.meta || null,
       };

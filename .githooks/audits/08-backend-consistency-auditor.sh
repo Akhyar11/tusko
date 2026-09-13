@@ -28,6 +28,9 @@ STANDAR KONSISTENSI BACKEND TUSKO:
    - Setiap file migrasi baru atau yang diubah di `backend/database/migrations/` WAJIB memiliki kedua method: `public function up()` dan `public function down()` untuk menjamin rollback integrity.
 3. Larangan Sisa Debugging Output:
    - DILARANG KERAS meninggalkan fungsi debug seperti `dd(...)`, `dump(...)`, `var_dump(...)`, atau `print_r(...)` pada kode production `backend/app/`.
+4. Standardisasi Server-Side Query (Filter, Pagination, Limit, dan Sorting):
+   - Controller data listing (seperti `ProductController@index`, `OrderController@index`, dll.) WAJIB menangani filtering, limit/per_page, pagination, dan sorting secara dinamis langsung pada Eloquent Query Builder (`$query->where(...)`, `$query->orderBy(...)`, `$query->paginate(...)`).
+   - DILARANG membebankan pemotongan data (pagination) atau penyaringan ke client-side dengan mengembalikan seluruh dataset tanpa pagination.
 
 Git Diff (Staged Backend Changes):
 ```diff

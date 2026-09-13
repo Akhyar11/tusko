@@ -31,13 +31,24 @@ class ProductController extends Controller
         }
 
         // Pencarian kata kunci pada nama, SKU, atau deskripsi
-        $search = $request->input('search') ?? $request->input('q');
+        $search = $request->input('search') ?? $request->input('q') ?? $request->input('searchName');
         if (!empty($search)) {
             $query->search($search);
         }
 
+        // Pencarian spesifik SKU produk atau varian
+        $skuSearch = $request->input('sku') ?? $request->input('searchSku');
+        if (!empty($skuSearch)) {
+            $query->where(function ($q) use ($skuSearch) {
+                $q->where('sku', 'like', "%{$skuSearch}%")
+                  ->orWhereHas('variants', function ($vq) use ($skuSearch) {
+                      $vq->where('sku', 'like', "%{$skuSearch}%");
+                  });
+            });
+        }
+
         // Filter berdasarkan kategori (mendukung single category_id dan multi-kategori)
-        if ($request->filled('category_id')) {
+        if ($request->filled('category_id') && $request->category_id !== 'all') {
             $query->where(function ($q) use ($request) {
                 $q->where('category_id', $request->category_id)
                   ->orWhereHas('categories', function ($sub) use ($request) {
@@ -49,8 +60,9 @@ class ProductController extends Controller
         }
 
         // Filter status stok (low_stock, out_of_stock, safe)
-        if ($request->filled('stock_status')) {
-            match ($request->stock_status) {
+        $stockCondition = $request->input('stock_status') ?? $request->input('stockCondition');
+        if (!empty($stockCondition) && $stockCondition !== 'all') {
+            match ($stockCondition) {
                 'low', 'low_stock' => $query->lowStock(),
                 'out_of_stock', 'empty' => $query->outOfStock(),
                 'safe', 'in_stock' => $query->safeStock(),
@@ -59,30 +71,38 @@ class ProductController extends Controller
         }
 
         // Filter rentang harga
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (float) $request->min_price);
+        $minPrice = $request->input('min_price') ?? $request->input('minPrice');
+        if ($minPrice !== null && $minPrice !== '') {
+            $query->where('price', '>=', (float) $minPrice);
         }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (float) $request->max_price);
+        $maxPrice = $request->input('max_price') ?? $request->input('maxPrice');
+        if ($maxPrice !== null && $maxPrice !== '') {
+            $query->where('price', '<=', (float) $maxPrice);
         }
 
         // Sorting urutan data
-        $sortBy = $request->get('sort_by', 'latest');
-        match ($sortBy) {
-            'price_asc' => $query->orderBy('price', 'asc'),
-            'price_desc' => $query->orderBy('price', 'desc'),
-            'name_asc' => $query->orderBy('name', 'asc'),
-            'name_desc' => $query->orderBy('name', 'desc'),
-            'stock_asc' => $query->orderBy('stock', 'asc'),
-            'stock_desc' => $query->orderBy('stock', 'desc'),
-            'best_selling', 'popular' => $query->orderBy('sold_count', 'desc'),
-            'rating' => $query->orderBy('rating', 'desc'),
-            'oldest' => $query->orderBy('created_at', 'asc'),
-            default => $query->orderBy('created_at', 'desc'),
-        };
+        $sortBy = $request->get('sort_by', $request->get('sortBy', 'latest'));
+        $sortDir = strtolower($request->get('sort_direction', $request->get('sortDirection', $request->get('order', 'desc')))) === 'asc' ? 'asc' : 'desc';
+
+        if (in_array($sortBy, ['price', 'name', 'stock', 'created_at', 'sold_count', 'rating', 'id'])) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            match ($sortBy) {
+                'price_asc' => $query->orderBy('price', 'asc'),
+                'price_desc' => $query->orderBy('price', 'desc'),
+                'name_asc' => $query->orderBy('name', 'asc'),
+                'name_desc' => $query->orderBy('name', 'desc'),
+                'stock_asc' => $query->orderBy('stock', 'asc'),
+                'stock_desc' => $query->orderBy('stock', 'desc'),
+                'best_selling', 'popular' => $query->orderBy('sold_count', 'desc'),
+                'rating' => $query->orderBy('rating', 'desc'),
+                'oldest' => $query->orderBy('created_at', 'asc'),
+                default => $query->orderBy('created_at', 'desc'),
+            };
+        }
 
         // Pagination
-        $perPage = min((int) $request->get('per_page', 12), 100);
+        $perPage = min(max((int) ($request->get('per_page') ?: $request->get('limit') ?: 10), 1), 100);
         $products = $query->paginate($perPage);
 
         // Ringkasan metrik inventaris produk

@@ -88,6 +88,10 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 18. **Proteksi Mutlak dari Potensi Infinite Re-render Loop di React (Anti-Infinite Loop Guard)**:
     - DILARANG KERAS memanggil setter state yang menghasilkan referensi objek/array/Set/Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`) di dalam `useEffect` jika state tersebut menjadi dependency dari `useEffect` yang sama TANPA bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
     - DILARANG menggunakan default parameter inline (seperti `vendors = []`) pada props komponen jika menjadi dependency `useEffect` yang memicu re-fetch/update saat kosong. WAJIB menggunakan referensi stabil (seperti `const EMPTY_ARRAY = [];`) atau menjalankan fetch hanya sekali saat mount (`[]`).
+19. **Standarisasi Manajemen State Tabel dengan Zustand & Server-Side Execution**:
+    - Seluruh pengelolaan state tabel data admin (filter, pagination, limit/per_page, dan sorting) WAJIB menggunakan state management store terpusat berbasis Zustand (`src/stores/*`).
+    - DILARANG KERAS melakukan pemotongan data (client-side pagination via `.slice()`), penyaringan array in-memory (`.filter()`), atau pengurutan in-memory (`.sort()`) pada komponen tabel admin.
+    - Seluruh operasi pagination, limit, filter pencarian, dan sorting WAJIB dieksekusi secara Server-Side melalui query API ke backend Laravel Eloquent (`$query->paginate()`). Komponen antarmuka tabel WAJIB langsung mengonsumsi data dari server.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

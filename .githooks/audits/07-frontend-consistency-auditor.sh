@@ -90,6 +90,10 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
     - DILARANG KERAS memanggil setter state yang menghasilkan referensi objek/array/Set/Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`, `setMap(new Map())`) di dalam `useEffect` di mana state tersebut (atau turunannya) dimasukkan ke dalam dependency array `useEffect` yang sama TANPA pengecekan bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
     - DILARANG KERAS menggunakan default parameter array/objek inline baru (seperti `items = []`, `vendors = []`) pada props komponen jika parameter tersebut dimasukkan ke dalam dependency array `useEffect` yang memicu pembaruan state atau fetch data asinkron saat kosong. WAJIB menggunakan konstanta referensi stabil (misalnya `const EMPTY_ARRAY = [];`) atau menjalankan efek inisialisasi/fetch asinkron hanya sekali saat komponen mount (`[]`).
     - DILARANG mendefinisikan dependency `useEffect` yang menyebabkan circular re-render loop (Maximum update depth exceeded).
+21. Standardisasi Manajemen State Tabel dengan Zustand & Server-Side Execution:
+    - Seluruh pengelolaan state query tabel admin (filter, pagination, limit/per_page, dan sorting) WAJIB menggunakan state management store terpusat seperti Zustand (`src/stores/*`).
+    - DILARANG KERAS melakukan pemotongan data (client-side pagination dengan `.slice()`), penyaringan array in-memory (`.filter()`), atau pengurutan data in-memory (`.sort()`) pada komponen tabel halaman admin. Seluruh pagination, limit, filter, dan sorting WAJIB dieksekusi secara Server-Side melalui query API backend.
+    - Tabel WAJIB mengonsumsi data langsung dari store Zustand yang disinkronkan dengan response paginasi dari server.
 
 Git Diff (Staged Frontend Changes):
 ```
