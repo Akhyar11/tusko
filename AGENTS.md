@@ -1,4 +1,3 @@
-
 <RULE[team_feature_division]>
 # Kebijakan Pembagian Fitur Tim (Feature-Based Team Division)
 
@@ -41,6 +40,51 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
    - DILARANG KERAS menyisipkan class sudut melengkung `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-lg` pada komponen storefront Tusko.
 2. **Branding & Label**:
    - DILARANG menggunakan teks/badge "GOLD MEMBER VIP". Label keanggotaan wajib disederhanakan menjadi "Member" atau "Admin".
+3. **Arsitektur Atomic Design**:
+   - Seluruh komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan prinsip Atomic Design (`atoms/`, `molecules/`, `organisms/`, `templates/pages`).
+4. **Icon-Only Header Controls dengan Tooltip**:
+   - Tombol kontrol/aksi navigasi pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku (`rounded-none`), memanfaatkan komponen reusable `IconButton`, dan dilengkapi tooltip keterangan fungsi saat di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header.
+5. **Sentralisasi Kontrol Filter & Pencarian**:
+   - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
+   - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks pada kanvas halaman utama di antara kartu metrik dan tabel. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (`ServerSideTable`) setelah kartu metrik/header.
+6. **Wajib Penggunaan Komponen Reusable (Mandatory Reusable Component Reuse)**:
+   - Pengembang dan Agen WAJIB mengimpor dan memanfaatkan komponen reusable yang telah dibuat sebelumnya (`atoms/IconButton`, `molecules/SearchBar`, `molecules/ServerSideSelect`, `ServerSideTable`, `organisms/ProductFilterDrawer`, dll.).
+   - DILARANG KERAS membuat elemen UI mentah berulang atau mengabaikan komponen reusable yang sudah ada di codebase.
+7. **Standar Kontrol Filter & Pencarian (Filter & Search Rules)**:
+   - **Pemisahan Pencarian Nama & SKU**: Pencarian nama produk dan pencarian kode SKU WAJIB dipisah menjadi input mandiri masing-masing (`SearchBar` Nama Produk terpisah dari `SearchBar` Kode SKU). Dilarang menyatukan nama dan SKU ke dalam satu input gabungan.
+   - **Larangan Counter Redundant**: Dilarang menampilkan teks hitungan redundant seperti "Ditemukan X dari Y produk" di bawah kotak input pencarian filter.
+   - **Wajib Dropdown ServerSideSelect**: Seluruh dropdown filter (Kategori, Status Publikasi, Kondisi Stok, Urutan Katalog) WAJIB menggunakan `ServerSideSelect` dengan fitur pencarian dan scroll padding.
+   - **Format Teks Placeholder**: Placeholder filter wajib berupa kalimat ajakan deskriptif (contoh: "Pilih status publikasi...", "Pilih kategori olahraga...", "Pilih kondisi stok...", "Pilih urutan katalog..."), BUKAN langsung menampilkan nilai opsi seperti "Semua ..." saat filter belum dipilih.
+   - **Kontras Warna Placeholder**: Warna teks placeholder WAJIB dibedakan jelas dari label atasnya menggunakan warna abu-abu lembut `text-neutral-400 font-normal` (bukan teks hitam tebal seperti judul/label).
+8. **Standar Header Modul Bersih (Clean Header & No Redundant Breadcrumbs)**:
+   - DILARANG menampilkan baris navigasi teks/breadcrumb manual yang redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") jika navigasi dan aksi sudah disediakan oleh tombol kontrol header (`ProductHeaderActions`).
+   - Kartu header halaman WAJIB bersih dan langsung berfokus pada identitas modul (ikon besar, judul, deskripsi) di sisi kiri serta kelompok tombol kontrol di sisi kanan.
+9. **Larangan Baris Toolbar/Container Tambahan Sebelum Tabel (No Extra Toolbar/Container Before Table)**:
+   - Pada halaman list/tabel admin, DILARANG menambahkan baris toolbar ekstra (seperti input pencarian SearchBar atau tombol aksi teks) ataupun container card pembungkus sebelum tabel data. Seluruh tindakan navigasi/tambah/filter diwadahi oleh tombol icon-only di kartu header, pencarian/filter diwadahi oleh Sidebar Filter kanan, dan tabel data (`ServerSideTable`) langsung dirender pada hierarki halaman utama.
+10. **Wajib Checkbox List pada Tabel Admin (Mandatory Table Row Checkbox List)**:
+    - Seluruh tabel daftar data admin WAJIB menyertakan kolom checkbox list (multi-selection) dengan checkbox Select All di kolom pertama `thead` dan checkbox baris di setiap baris `tbody` (memanfaatkan prop `selectable={true}` pada `ServerSideTable`).
+11. **Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah (Filter Button Placed Right of Add Button)**:
+    - Tombol kontrol filter (baik pada icon-only header controls maupun toolbar di atas tabel) WAJIB selalu diposisikan di **samping kanan tombol tambah** (`[Tombol Tambah] [Tombol Filter]`). Dilarang meletakkan tombol filter di sebelah kiri tombol tambah.
+12. **Standar Tampilan Tunggal Tabel Admin (Single Table View Only)**:
+    - Seluruh daftar data pada modul admin (seperti Produk dan Master Kategori) WAJIB disajikan secara eksklusif menggunakan tampilan tabel tunggal (`ServerSideTable`). Dilarang menampilkan tombol pengalih tampilan (`ViewModeToggle` / list vs grid) atau menyediakan variasi layout grid pada halaman data admin.
+13. **Standar Kolom Aksi Tabel Admin (MoreVertical Dropdown Action Menu)**:
+    - Seluruh kolom "Aksi" pada tabel data admin (`ServerSideTable`) WAJIB menggunakan tombol menu titik tiga (`MoreVertical`) bersudut siku (`rounded-none`) yang memicu floating dropdown popup menu aksi. DILARANG KERAS menampilkan tombol aksi mentah secara telanjang/sejajar (seperti icon pensil edit dan tempat sampah delete berdampingan langsung di dalam baris sel tabel).
+14. **Standar 1 Halaman 1 Entitas Mandiri (Single-Purpose Dedicated Page - No Multi-Module Tabs)**:
+    - Seluruh halaman admin WAJIB berdiri sendiri untuk satu entitas/modul bisnis spesifik (1 halaman untuk 1 entitas mandiri).
+    - DILARANG KERAS menggabungkan modul/entitas yang berbeda ke dalam sistem navigasi tab horizontal dalam 1 halaman (seperti PO, Supplier, GRN, dan Bills dijadikan tab-taban dalam 1 layar).
+    - Setiap entitas bisnis wajib memiliki file halaman tersendiri (`src/components/*Page.jsx`), URL rute mandiri, kartu header modul terfokus, metrik KPI yang relevan, dan tabel data tunggal yang langsung disajikan tanpa tab switcher.
+15. **Standar Sistem Notifikasi Toast (Unified Toast Notification Consistency)**:
+    - Seluruh modul dan tabel admin WAJIB menggunakan sistem Toast yang sudah ada secara konsisten melalui prop/fungsi `onShowToast` atau `showToast` untuk memberikan feedback operasional (tambah data, perbarui perubahan, hapus, toggle status, dan error).
+    - DILARANG KERAS merender alertbox sukses lokal atau banner notifikasi hijau/merah inline di atas kanvas halaman utama (seperti banner `successMessage` di antara header dan kartu metrik) agar kanvas utama tetap bersih.
+    - DILARANG menampilkan tombol shortcut belanja ('Lihat Keranjang' / Cart Shortcut) pada toast modul admin. Tombol keranjang hanya boleh ditampilkan secara selektif pada aksi penambahan produk ke keranjang belanja storefront (`showCart: true`).
+16. **Larangan Mutlak Label/Badge Header Redundant (No Header Badges / Category Pills on Any Page)**:
+    - DILARANG KERAS menyertakan label badge, tag, chip, atau pill kategori/modul (seperti badge hitam/amber "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP ORDER FULFILLMENT", atau label sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
+    - Header kartu modul WAJIB bersih dan langsung berfokus pada judul halaman (`<h1>`) serta deskripsi fungsi tanpa label penanda modul redundant di atasnya.
+17. **Standar Pewarnaan Aksi Menu Dropdown Tabel Admin (Clean Neutral Action Menu with Red Destructive Only)**:
+    - Pada menu aksi baris tabel (`MoreVertical` dropdown popup):
+      - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
+      - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
+      - Dilarang mewarnai aksi non-destruktif dengan warna-warni berlebihan di dalam dropdown menu agar antarmuka admin tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>
@@ -53,9 +97,10 @@ Repository ini dilengkapi dengan sistem auditor otomatis berbasis **OpenCode AI*
 4. `04-zero-secret-and-hardcode.sh`: OpenCode AI Auditor yang menganalisis git diff secara cerdas untuk mencegah kebocoran kredensial rahasia (.env, token, private key) dan **MENOLAK segala bentuk hardcode** (seperti lokasi gudang toko, koordinat GPS statis, biaya penanganan/handling fee, atau URL gateway pihak ketiga yang seharusnya dapat diatur secara dinamis oleh Admin melalui database).
 5. `05-backend-laravel-test-integrity.sh`: Menjalankan PHP syntax check, `php artisan test` (100% lolos), dan OpenCode AI Auditor untuk integritas test backend (larangan test dummy/tanpa assertion).
 6. `06-frontend-build-integrity.sh`: Menjalankan `npm run build` dan OpenCode AI Auditor untuk kebersihan import/export JSX bundling.
-7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib menggunakan formatter `formatRupiah`, dan arsitektur tajam).
+7. `07-frontend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Frontend (standardisasi pustaka icon `lucide-react`, prefix wajib `tusko_*` pada localStorage, wajib formatter `formatRupiah`, kepatuhan Atomic Design, icon-only header controls dengan tooltip, sentralisasi filter sidebar kanan, kewajiban penggunaan komponen reusable, dan arsitektur tajam).
 8. `08-backend-consistency-auditor.sh`: OpenCode AI Auditor untuk konsistensi Backend (namespace `App\Http\Controllers\Api`, pewarisan `Controller`, integritas up()/down() pada seluruh file migrasi, dan larangan sisa fungsi debug `dd`/`dump`).
-9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, dan 0 duplikasi komponen.
+9. `09-zero-duplication-scanner.sh`: OpenCode AI Duplication Auditor (bebas script JS eksternal) yang memindai git diff dan file perubahan untuk menjamin 0 duplikasi rute API, 0 duplikasi tabel migrasi, 0 duplikasi helper/formatter, 0 duplikasi komponen, dan penolakan duplikasi elemen UI mentah yang membypass komponen reusable yang sudah ada.
+10. **Kewajiban Lokasi Berkas pada Rejection**: Setiap penolakan (`REJECTED`) dari seluruh modul auditor OpenCode AI WAJIB menyertakan lokasi berkas konkret dan nomor baris (`path/ke/file:baris`) yang harus diperbaiki oleh pengembang, bukan hanya alasan abstrak semata.
 
 Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang wajib memperbaiki masalah yang dilaporkan.
 </RULE[pre_commit_auditor]>

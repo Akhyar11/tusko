@@ -1,6 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 import { X, RotateCcw, PackageSearch } from 'lucide-react';
+import ServerSideSelect from './molecules/ServerSideSelect';
 
 export default function ProductGrid({
   products = [],
@@ -57,18 +58,22 @@ export default function ProductGrid({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-neutral-500 font-bold uppercase">Urutkan:</span>
-            <select 
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value)}
-              className="bg-white border border-neutral-300 font-bold text-xs py-1.5 px-2.5 focus:outline-none focus:border-black cursor-pointer"
-            >
-              <option value="relevant">Paling Sesuai</option>
-              <option value="price-asc">Harga: Rendah ke Tinggi</option>
-              <option value="price-desc">Harga: Tinggi ke Rendah</option>
-              <option value="newest">Produk Terbaru</option>
-              <option value="rating">Rating Tertinggi</option>
-            </select>
+            <span className="text-[11px] text-neutral-500 font-bold uppercase shrink-0">Urutkan:</span>
+            <div className="w-48 sm:w-56">
+              <ServerSideSelect 
+                value={sortBy}
+                onChange={(val) => onSortChange(val)}
+                options={[
+                  { value: 'relevant', label: 'Paling Sesuai' },
+                  { value: 'price-asc', label: 'Harga: Rendah ke Tinggi' },
+                  { value: 'price-desc', label: 'Harga: Tinggi ke Rendah' },
+                  { value: 'newest', label: 'Produk Terbaru' },
+                  { value: 'rating', label: 'Rating Tertinggi' }
+                ]}
+                className="py-1.5 px-2.5 text-xs font-bold"
+                scrollPadding={30}
+              />
+            </div>
           </div>
         </div>
 

@@ -45,7 +45,10 @@ Tugas Audit:
 1. Periksa apakah ada konflik kepemilikan file yang bertentangan dengan branch developer yang bersangkutan.
 2. Jawab:
 - PASSED jika branch dan file yang disentuh sesuai dengan boundary atau merupakan file bersama (shared layout, routing, migrasi umum).
-- WARNING: [Sebutkan file yang berpotensi melanggar boundary antar developer dan ingatkan untuk koordinasi]
+- WARNING
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap yang melanggar boundary tim, contoh: frontend/src/components/ProfilePage.jsx]
+  - Pelanggaran: [Developer pemilik fitur berkas tersebut dan alasan mengapa tidak boleh disentuh pada branch ini]
+  - Tindakan: [Lakukan koordinasi dengan Developer 1/2 sebelum melanjutkan]
 EOF
 
 AUDITOR_RESULT=""
@@ -56,11 +59,11 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "WARNING"; then
+if grep -E -q "(^|[[:space:]]|\*\*)WARNING([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo "⚠️ ======================================================================"
     echo "⚠️ [Audit Feature Ownership] PERINGATAN BOUNDARY FITUR OLEH OPENCODE AI:"
     echo "⚠️ ======================================================================"
-    echo "$AUDITOR_RESULT" | grep -i "WARNING"
+    echo "$AUDITOR_RESULT" | sed -n -E '/WARNING/,$p'
     echo "💡 Pastikan Anda telah berkoordinasi antar pengembang untuk mencegah merge conflict."
     echo ""
 fi

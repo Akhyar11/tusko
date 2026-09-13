@@ -190,3 +190,110 @@ export const mockTransactions = [
     customer_name: 'Owner Toko'
   }
 ];
+
+export const mockFinancialAccounts = [
+  {
+    id: 1,
+    code: 'ACC-BCA-01',
+    name: 'BCA Bisnis Giro Operasional',
+    account_number: '820-192-8811',
+    bank_name: 'Bank Central Asia (BCA)',
+    account_holder: 'PT TUSKO PERFORMANCE INDONESIA',
+    type: 'bank',
+    balance: 84500000,
+    currency: 'IDR',
+    status: 'active',
+    is_default_payout: true
+  },
+  {
+    id: 2,
+    code: 'ACC-MDR-02',
+    name: 'Mandiri Utama Settlement Gateway',
+    account_number: '142-00-992182-1',
+    bank_name: 'Bank Mandiri',
+    account_holder: 'PT TUSKO PERFORMANCE INDONESIA',
+    type: 'bank',
+    balance: 42150000,
+    currency: 'IDR',
+    status: 'active',
+    is_default_payout: false
+  },
+  {
+    id: 3,
+    code: 'ACC-CASH-01',
+    name: 'Kas Kecil Kasir Toko & Gudang',
+    account_number: 'PETTY-CASH-01',
+    bank_name: 'Tunai Fisik / Petty Cash',
+    account_holder: 'Kasir & Admin Gudang',
+    type: 'cash',
+    balance: 6850000,
+    currency: 'IDR',
+    status: 'active',
+    is_default_payout: false
+  },
+  {
+    id: 4,
+    code: 'ACC-MDT-GW',
+    name: 'Midtrans Settlement Holding Escrow',
+    account_number: 'MIDTRANS-MERCHANT-TUSKO',
+    bank_name: 'Midtrans Payment Gateway',
+    account_holder: 'Holding Escrow Account',
+    type: 'gateway',
+    balance: 12340000,
+    currency: 'IDR',
+    status: 'active',
+    is_default_payout: false
+  }
+];
+
+export const mockChartOfAccounts = [
+  { code: '1-1010', name: 'Kas Tunai Toko / Brankas', group: 'Aset Lancar', type: 'debit', balance: 6850000 },
+  { code: '1-1020', name: 'Bank BCA Bisnis Operasional', group: 'Aset Lancar', type: 'debit', balance: 84500000 },
+  { code: '1-1030', name: 'Bank Mandiri Gateway Escrow', group: 'Aset Lancar', type: 'debit', balance: 42150000 },
+  { code: '1-1040', name: 'Persediaan Produk Olahraga (Gudang)', group: 'Aset Lancar', type: 'debit', balance: 65420000 },
+  { code: '2-2010', name: 'Utang Usaha / Vendor Supplier', group: 'Kewajiban', type: 'credit', balance: 28500000 },
+  { code: '2-2020', name: 'Beban Operasional Harus Dibayar', group: 'Kewajiban', type: 'credit', balance: 4200000 },
+  { code: '3-3010', name: 'Modal Disetor Pemilik Toko', group: 'Ekuitas', type: 'credit', balance: 150000000 },
+  { code: '3-3020', name: 'Saldo Laba Ditahan', group: 'Ekuitas', type: 'credit', balance: 28560000 },
+  { code: '4-4010', name: 'Pendapatan Penjualan Ritel & Web', group: 'Pendapatan', type: 'credit', balance: 48920000 },
+  { code: '4-4020', name: 'Pendapatan Ongkos Kirim Pelanggan', group: 'Pendapatan', type: 'credit', balance: 1450000 },
+  { code: '5-5010', name: 'Harga Pokok Penjualan (HPP) Produk', group: 'Beban Pokok', type: 'debit', balance: 26850000 },
+  { code: '5-5020', name: 'Beban Selisih Stok Opname Defect', group: 'Beban Pokok', type: 'debit', balance: 390000 },
+  { code: '6-6010', name: 'Beban Sewa Gudang & Operasional', group: 'Beban Operasional', type: 'debit', balance: 4500000 },
+  { code: '6-6020', name: 'Beban Payment Gateway MDR', group: 'Beban Operasional', type: 'debit', balance: 345000 },
+  { code: '6-6030', name: 'Beban Kemasan, Mailer Box & Bubble', group: 'Beban Operasional', type: 'debit', balance: 680000 }
+];
+
+export const mockCogsAnalytics = {
+  grossRevenue: 48920000,
+  totalCogs: 26850000,
+  grossProfit: 22070000,
+  grossMarginPct: 45.1,
+  categoryBreakdown: [
+    {
+      category_name: 'Jersey & Apparel',
+      revenue: 24500000,
+      cogs: 12800000,
+      gross_profit: 11700000,
+      margin_pct: 47.8,
+      units_sold: 72
+    },
+    {
+      category_name: 'Sepatu Olahraga',
+      revenue: 18200000,
+      cogs: 10920000,
+      gross_profit: 7280000,
+      margin_pct: 40.0,
+      units_sold: 14
+    },
+    {
+      category_name: 'Peralatan & Gym',
+      revenue: 6220000,
+      cogs: 3130000,
+      gross_profit: 3090000,
+      margin_pct: 49.7,
+      units_sold: 38
+    }
+  ]
+};
+

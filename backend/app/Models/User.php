@@ -131,4 +131,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(ShippingAddress::class)->where('is_default', true);
     }
+
+    /**
+     * User's lifetime loyalty points ledger.
+     */
+    public function loyaltyPointsLedgers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LoyaltyPointsLedger::class);
+    }
+
+    /**
+     * User's RBAC roles.
+     */
+    public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
 }

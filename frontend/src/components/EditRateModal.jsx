@@ -66,12 +66,12 @@ export default function EditRateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-200 overflow-hidden my-auto">
+      <div className="bg-white w-full max-w-lg rounded-none shadow-2xl border border-gray-200 overflow-hidden my-auto">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-none bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <DollarSign size={20} />
             </div>
             <div>
@@ -86,7 +86,7 @@ export default function EditRateModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-none transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -108,7 +108,7 @@ export default function EditRateModal({
                   setRateType('per_kg');
                   setError(null);
                 }}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-1.5 ${
+                className={`p-3.5 rounded-none border transition-all cursor-pointer space-y-1.5 ${
                   rateType === 'per_kg'
                     ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500 shadow-xs'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -120,7 +120,7 @@ export default function EditRateModal({
                     <span>Per Kilogram</span>
                   </span>
                   {rateType === 'per_kg' && (
-                    <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
+                    <div className="w-4 h-4 rounded-none bg-emerald-600 text-white flex items-center justify-center text-[10px]">
                       &check;
                     </div>
                   )}
@@ -136,7 +136,7 @@ export default function EditRateModal({
                   setRateType('flat');
                   setError(null);
                 }}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-1.5 ${
+                className={`p-3.5 rounded-none border transition-all cursor-pointer space-y-1.5 ${
                   rateType === 'flat'
                     ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500 shadow-xs'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -148,7 +148,7 @@ export default function EditRateModal({
                     <span>Tarif Flat (Tetap)</span>
                   </span>
                   {rateType === 'flat' && (
-                    <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
+                    <div className="w-4 h-4 rounded-none bg-emerald-600 text-white flex items-center justify-center text-[10px]">
                       &check;
                     </div>
                   )}
@@ -185,7 +185,7 @@ export default function EditRateModal({
                   setBaseRate(e.target.value);
                   if (error) setError(null);
                 }}
-                className={`w-full pl-12 pr-4 py-2.5 bg-gray-50 border rounded-2xl font-mono font-bold text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                className={`w-full pl-12 pr-4 py-2.5 bg-gray-50 border rounded-none font-mono font-bold text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                   error 
                     ? 'border-red-400 focus:ring-red-500/20' 
                     : 'border-gray-300 focus:ring-emerald-500/20 focus:border-emerald-500'
@@ -209,7 +209,7 @@ export default function EditRateModal({
                   key={preset}
                   type="button"
                   onClick={() => handlePresetClick(preset)}
-                  className={`px-2.5 py-1 rounded-lg font-mono text-[11px] border transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-none font-mono text-[11px] border transition-colors cursor-pointer ${
                     Number(baseRate) === preset
                       ? 'bg-emerald-600 text-white font-bold border-emerald-600'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200'
@@ -228,7 +228,7 @@ export default function EditRateModal({
                   key={inc}
                   type="button"
                   onClick={() => handleIncrement(inc)}
-                  className="px-2 py-0.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded text-[10.5px] font-mono border border-gray-200 cursor-pointer"
+                  className="px-2 py-0.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-none text-[10.5px] font-mono border border-gray-200 cursor-pointer"
                 >
                   +{inc.toLocaleString('id-ID')}
                 </button>
@@ -237,7 +237,7 @@ export default function EditRateModal({
           </div>
 
           {/* Live Simulation Box */}
-          <div className="bg-neutral-900 text-white p-4 rounded-2xl space-y-2.5 shadow-sm">
+          <div className="bg-neutral-900 text-white p-4 rounded-none space-y-2.5 shadow-sm">
             <div className="flex items-center justify-between text-xs border-b border-neutral-800 pb-2">
               <div className="flex items-center gap-1.5 font-bold text-amber-400">
                 <Calculator size={14} />
@@ -255,7 +255,7 @@ export default function EditRateModal({
                   : Number(baseRate || 0);
 
                 return (
-                  <div key={w} className="bg-neutral-800/80 p-2 rounded-xl border border-neutral-700 space-y-0.5">
+                  <div key={w} className="bg-neutral-800/80 p-2 rounded-none border border-neutral-700 space-y-0.5">
                     <span className="text-[10px] text-neutral-400 block font-medium">
                       Paket {w} Kg
                     </span>
@@ -273,13 +273,13 @@ export default function EditRateModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs rounded-xl border border-gray-200 transition-colors cursor-pointer"
+              className="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs rounded-none border border-gray-200 transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-none transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
             >
               <Check size={14} />
               <span>Simpan Tarif</span>

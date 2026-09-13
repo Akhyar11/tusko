@@ -203,9 +203,6 @@ export default function TemplateManagementPage({
           </button>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
             <span>Kelola Template Email & Resi</span>
-            <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">
-              Fulfillment & Notifikasi
-            </span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-500">
             Kustomisasi formulir pesan notifikasi email pembeli dan tata letak stiker label resi thermal kurir.
@@ -213,11 +210,11 @@ export default function TemplateManagementPage({
         </div>
 
         {/* Main Navigation Tab Switches */}
-        <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 self-start sm:self-auto shadow-2xs">
+        <div className="flex items-center bg-gray-100 p-1 rounded-none border border-gray-200 self-start sm:self-auto shadow-2xs">
           <button
             type="button"
             onClick={() => setActiveMainTab('email')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-none transition-all cursor-pointer ${
               activeMainTab === 'email'
                 ? 'bg-white text-gray-900 shadow-xs'
                 : 'text-gray-600 hover:text-gray-900'
@@ -230,7 +227,7 @@ export default function TemplateManagementPage({
           <button
             type="button"
             onClick={() => setActiveMainTab('receipt')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-none transition-all cursor-pointer ${
               activeMainTab === 'receipt'
                 ? 'bg-white text-gray-900 shadow-xs'
                 : 'text-gray-600 hover:text-gray-900'
@@ -243,7 +240,7 @@ export default function TemplateManagementPage({
           <button
             type="button"
             onClick={() => setActiveMainTab('logs')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-none transition-all cursor-pointer ${
               activeMainTab === 'logs'
                 ? 'bg-white text-gray-900 shadow-xs'
                 : 'text-gray-600 hover:text-gray-900'
@@ -273,14 +270,14 @@ export default function TemplateManagementPage({
                   <div
                     key={tpl.id}
                     onClick={() => setSelectedTemplateId(tpl.id)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    className={`p-3.5 rounded-none border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-emerald-50/80 border-emerald-500 shadow-xs ring-1 ring-emerald-500'
                         : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-none ${
                         tpl.category === 'Shipping' ? 'bg-purple-100 text-purple-700' :
                         tpl.category === 'Billing' ? 'bg-blue-100 text-blue-700' :
                         'bg-gray-100 text-gray-700'
@@ -290,7 +287,7 @@ export default function TemplateManagementPage({
                       <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
                         tpl.isActive ? 'text-emerald-700' : 'text-gray-400'
                       }`}>
-                        <span className={`w-2 h-2 rounded-full ${tpl.isActive ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                        <span className={`w-2 h-2 rounded-none ${tpl.isActive ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                         {tpl.isActive ? 'Aktif' : 'Nonaktif'}
                       </span>
                     </div>
@@ -307,7 +304,7 @@ export default function TemplateManagementPage({
             </div>
 
             {/* Variable Placeholders Helper Box */}
-            <div className="bg-neutral-900 text-white p-4 rounded-2xl space-y-3 mt-4 shadow-sm">
+            <div className="bg-neutral-900 text-white p-4 rounded-none space-y-3 mt-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
                   <Sparkles size={15} />
@@ -324,7 +321,7 @@ export default function TemplateManagementPage({
                     key={ph.key}
                     type="button"
                     onClick={() => handleInsertPlaceholder(ph.key)}
-                    className="px-2 py-1 bg-neutral-800 hover:bg-amber-400 hover:text-neutral-950 text-neutral-200 rounded-lg text-[10.5px] font-mono border border-neutral-700 transition-all cursor-pointer shadow-2xs"
+                    className="px-2 py-1 bg-neutral-800 hover:bg-amber-400 hover:text-neutral-950 text-neutral-200 rounded-none text-[10.5px] font-mono border border-neutral-700 transition-all cursor-pointer shadow-2xs"
                     title={`Contoh isi: ${ph.example}`}
                   >
                     {ph.key}
@@ -338,14 +335,14 @@ export default function TemplateManagementPage({
           <div className="lg:col-span-8 space-y-5">
             
             {/* Action Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white p-4 rounded-none border border-gray-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={currentEmailTemplate.isActive}
                     onChange={(e) => handleUpdateEmailField('isActive', e.target.checked)}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span className="text-xs font-bold text-gray-800">
                     Aktifkan Notifikasi Otomatis
@@ -366,7 +363,7 @@ export default function TemplateManagementPage({
                       key={clr.id}
                       type="button"
                       onClick={() => handleUpdateEmailField('colorTheme', clr.id)}
-                      className={`w-5 h-5 rounded-full ${clr.bg} transition-all cursor-pointer ${
+                      className={`w-5 h-5 rounded-none ${clr.bg} transition-all cursor-pointer ${
                         currentEmailTemplate.colorTheme === clr.id ? 'ring-2 ring-offset-2 ring-gray-700 scale-110' : 'opacity-60 hover:opacity-100'
                       }`}
                       title={`Tema ${clr.name}`}
@@ -379,7 +376,7 @@ export default function TemplateManagementPage({
                 <button
                   type="button"
                   onClick={() => setIsTestEmailModalOpen(true)}
-                  className="px-3.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs rounded-xl border border-blue-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  className="px-3.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs rounded-none border border-blue-200 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <Send size={13} />
                   <span>Kirim Email Tes</span>
@@ -387,7 +384,7 @@ export default function TemplateManagementPage({
                 <button
                   type="button"
                   onClick={handleResetEmailTemplate}
-                  className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                  className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-none transition-colors cursor-pointer"
                   title="Kembalikan ke Default Pabrik"
                 >
                   <RotateCcw size={15} />
@@ -395,7 +392,7 @@ export default function TemplateManagementPage({
                 <button
                   type="button"
                   onClick={handleSaveEmailTemplate}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Save size={14} />
                   <span>Simpan Template</span>
@@ -404,7 +401,7 @@ export default function TemplateManagementPage({
             </div>
 
             {/* Form Fields Card */}
-            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+            <div className="bg-white p-5 sm:p-6 rounded-none border border-gray-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
                   <FileText size={16} className="text-emerald-600" />
@@ -418,7 +415,7 @@ export default function TemplateManagementPage({
               <div className="space-y-3.5 text-xs">
                 
                 {/* Sender Name & Reply-To */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-none border border-gray-200">
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">
                       Nama Pengirim (From Name)
@@ -427,7 +424,7 @@ export default function TemplateManagementPage({
                       type="text"
                       value={currentEmailTemplate.fromName || 'Tusko Official Store'}
                       onChange={(e) => handleUpdateEmailField('fromName', e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg font-medium text-gray-900 focus:outline-none focus:border-emerald-500 text-xs"
+                      className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-none font-medium text-gray-900 focus:outline-none focus:border-emerald-500 text-xs"
                     />
                   </div>
                   <div>
@@ -438,7 +435,7 @@ export default function TemplateManagementPage({
                       type="email"
                       value={currentEmailTemplate.replyTo || 'support@tusko.com'}
                       onChange={(e) => handleUpdateEmailField('replyTo', e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg font-medium text-gray-900 focus:outline-none focus:border-emerald-500 text-xs"
+                      className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-none font-medium text-gray-900 focus:outline-none focus:border-emerald-500 text-xs"
                     />
                   </div>
                 </div>
@@ -459,7 +456,7 @@ export default function TemplateManagementPage({
                     type="text"
                     value={currentEmailTemplate.subject}
                     onChange={(e) => handleUpdateEmailField('subject', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
                     placeholder="Contoh: Pesanan {order_number} Sedang Dikirim"
                   />
                 </div>
@@ -474,7 +471,7 @@ export default function TemplateManagementPage({
                       type="text"
                       value={currentEmailTemplate.preheader}
                       onChange={(e) => handleUpdateEmailField('preheader', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
                       placeholder="Snippet teks pratinjau inbox..."
                     />
                   </div>
@@ -486,7 +483,7 @@ export default function TemplateManagementPage({
                       type="text"
                       value={currentEmailTemplate.headline}
                       onChange={(e) => handleUpdateEmailField('headline', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
                       placeholder="Judul besar dalam email..."
                     />
                   </div>
@@ -502,7 +499,7 @@ export default function TemplateManagementPage({
                       <button
                         type="button"
                         onClick={() => handleInsertFormat('**', '**')}
-                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded text-[11px] font-bold"
+                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded-none text-[11px] font-bold"
                         title="Tebal"
                       >
                         <Bold size={12} />
@@ -510,7 +507,7 @@ export default function TemplateManagementPage({
                       <button
                         type="button"
                         onClick={() => handleInsertFormat('*', '*')}
-                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded text-[11px]"
+                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded-none text-[11px]"
                         title="Miring"
                       >
                         <Italic size={12} />
@@ -518,7 +515,7 @@ export default function TemplateManagementPage({
                       <button
                         type="button"
                         onClick={() => handleInsertFormat('• ')}
-                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded text-[11px]"
+                        className="p-1 text-gray-600 hover:text-black hover:bg-gray-100 rounded-none text-[11px]"
                         title="Poin Daftar"
                       >
                         <List size={12} />
@@ -529,7 +526,7 @@ export default function TemplateManagementPage({
                     rows={6}
                     value={currentEmailTemplate.body}
                     onChange={(e) => handleUpdateEmailField('body', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl font-sans text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs leading-relaxed"
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-none font-sans text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs leading-relaxed"
                   />
                 </div>
 
@@ -543,7 +540,7 @@ export default function TemplateManagementPage({
                       type="text"
                       value={currentEmailTemplate.buttonText}
                       onChange={(e) => handleUpdateEmailField('buttonText', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs"
                       placeholder="Contoh: Lacak Pengiriman"
                     />
                   </div>
@@ -555,7 +552,7 @@ export default function TemplateManagementPage({
                       type="text"
                       value={currentEmailTemplate.buttonLink}
                       onChange={(e) => handleUpdateEmailField('buttonLink', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs font-mono"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none font-medium text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs font-mono"
                       placeholder="https://..."
                     />
                   </div>
@@ -565,7 +562,7 @@ export default function TemplateManagementPage({
             </div>
 
             {/* Live Client Email Preview */}
-            <div className="bg-gray-100 p-5 rounded-2xl border border-gray-300 space-y-3">
+            <div className="bg-gray-100 p-5 rounded-none border border-gray-300 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Eye size={16} className="text-gray-600" />
@@ -573,11 +570,11 @@ export default function TemplateManagementPage({
                     Pratinjau Nyata di Email Pembeli
                   </h3>
                 </div>
-                <div className="flex items-center bg-white rounded-xl p-1 border border-gray-200 shadow-2xs">
+                <div className="flex items-center bg-white rounded-none p-1 border border-gray-200 shadow-2xs">
                   <button
                     type="button"
                     onClick={() => setPreviewDevice('desktop')}
-                    className={`p-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`p-1.5 rounded-none text-xs font-bold transition-colors cursor-pointer ${
                       previewDevice === 'desktop' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-400 hover:text-gray-700'
                     }`}
                     title="Pratinjau Desktop"
@@ -587,7 +584,7 @@ export default function TemplateManagementPage({
                   <button
                     type="button"
                     onClick={() => setPreviewDevice('mobile')}
-                    className={`p-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`p-1.5 rounded-none text-xs font-bold transition-colors cursor-pointer ${
                       previewDevice === 'mobile' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-400 hover:text-gray-700'
                     }`}
                     title="Pratinjau Smartphone"
@@ -598,7 +595,7 @@ export default function TemplateManagementPage({
               </div>
 
               {/* Email Client Shell */}
-              <div className={`mx-auto bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden transition-all ${
+              <div className={`mx-auto bg-white rounded-none shadow-md border border-gray-200 overflow-hidden transition-all ${
                 previewDevice === 'mobile' ? 'max-w-xs' : 'w-full'
               }`}>
                 {/* Email Client Header bar */}
@@ -617,7 +614,7 @@ export default function TemplateManagementPage({
                   {/* Brand Header */}
                   <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-neutral-900 text-amber-400 rounded-lg flex items-center justify-center font-black text-xs">
+                      <div className="w-7 h-7 bg-neutral-900 text-amber-400 rounded-none flex items-center justify-center font-black text-xs">
                         T
                       </div>
                       <span className="font-black text-sm tracking-tight text-neutral-900">
@@ -640,7 +637,7 @@ export default function TemplateManagementPage({
                   </div>
 
                   {/* Body Paragraphs */}
-                  <div className="text-xs leading-relaxed text-gray-700 whitespace-pre-line bg-gray-50/60 p-4 rounded-xl border border-gray-100 font-sans">
+                  <div className="text-xs leading-relaxed text-gray-700 whitespace-pre-line bg-gray-50/60 p-4 rounded-none border border-gray-100 font-sans">
                     {renderPreviewText(currentEmailTemplate.body)}
                   </div>
 
@@ -650,7 +647,7 @@ export default function TemplateManagementPage({
                       href={currentEmailTemplate.buttonLink}
                       target="_blank"
                       rel="noreferrer"
-                      className={`inline-block px-5 py-2.5 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors ${currentTheme.primary}`}
+                      className={`inline-block px-5 py-2.5 text-white font-extrabold text-xs rounded-none shadow-xs transition-colors ${currentTheme.primary}`}
                     >
                       {currentEmailTemplate.buttonText}
                     </a>
@@ -677,7 +674,7 @@ export default function TemplateManagementPage({
           
           {/* Form Edit Resi Thermal Settings */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4 text-xs">
+            <div className="bg-white p-5 sm:p-6 rounded-none border border-gray-200 shadow-xs space-y-4 text-xs">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div className="flex items-center gap-2 font-black text-sm text-gray-900">
                   <Sliders size={16} className="text-emerald-600" />
@@ -687,7 +684,7 @@ export default function TemplateManagementPage({
                   <button
                     type="button"
                     onClick={handleResetReceiptTemplate}
-                    className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 text-gray-400 hover:text-gray-700 rounded-none transition-colors cursor-pointer"
                     title="Kembalikan ke Default"
                   >
                     <RotateCcw size={14} />
@@ -695,7 +692,7 @@ export default function TemplateManagementPage({
                   <button
                     type="button"
                     onClick={handleSaveReceiptTemplate}
-                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-xs"
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-none transition-colors cursor-pointer shadow-xs"
                   >
                     Simpan
                   </button>
@@ -717,7 +714,7 @@ export default function TemplateManagementPage({
                       key={sz.id}
                       type="button"
                       onClick={() => setReceiptConfig(prev => ({ ...prev, paperSize: sz.id }))}
-                      className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`p-2 rounded-none border text-center transition-all cursor-pointer ${
                         receiptConfig.paperSize === sz.id
                           ? 'border-emerald-600 bg-emerald-50/70 font-bold text-emerald-900 ring-1 ring-emerald-600'
                           : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -739,7 +736,7 @@ export default function TemplateManagementPage({
                   <select
                     value={receiptConfig.barcodeType}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, barcodeType: e.target.value }))}
-                    className="w-full px-2.5 py-2 bg-gray-50 border border-gray-300 rounded-xl font-semibold text-gray-800"
+                    className="w-full px-2.5 py-2 bg-gray-50 border border-gray-300 rounded-none font-semibold text-gray-800"
                   >
                     <option value="code128">Code 128 (Standar Kurir)</option>
                     <option value="qrcode">QR Code 2D</option>
@@ -753,7 +750,7 @@ export default function TemplateManagementPage({
                   <select
                     value={receiptConfig.barcodeHeight || 'medium'}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, barcodeHeight: e.target.value }))}
-                    className="w-full px-2.5 py-2 bg-gray-50 border border-gray-300 rounded-xl font-semibold text-gray-800"
+                    className="w-full px-2.5 py-2 bg-gray-50 border border-gray-300 rounded-none font-semibold text-gray-800"
                   >
                     <option value="small">Rendah (40px)</option>
                     <option value="medium">Standar (55px)</option>
@@ -771,7 +768,7 @@ export default function TemplateManagementPage({
                   <button
                     type="button"
                     onClick={() => setReceiptConfig(prev => ({ ...prev, addressFontSize: 'normal' }))}
-                    className={`py-1.5 px-3 rounded-xl border text-center font-bold text-xs cursor-pointer ${
+                    className={`py-1.5 px-3 rounded-none border text-center font-bold text-xs cursor-pointer ${
                       receiptConfig.addressFontSize === 'normal'
                         ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600'
                         : 'border-gray-200 text-gray-600'
@@ -782,7 +779,7 @@ export default function TemplateManagementPage({
                   <button
                     type="button"
                     onClick={() => setReceiptConfig(prev => ({ ...prev, addressFontSize: 'large' }))}
-                    className={`py-1.5 px-3 rounded-xl border text-center font-bold text-xs cursor-pointer ${
+                    className={`py-1.5 px-3 rounded-none border text-center font-bold text-xs cursor-pointer ${
                       receiptConfig.addressFontSize === 'large'
                         ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600'
                         : 'border-gray-200 text-gray-600'
@@ -802,7 +799,7 @@ export default function TemplateManagementPage({
                     type="checkbox"
                     checked={receiptConfig.showItemsList}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, showItemsList: e.target.checked }))}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span>Tampilkan Daftar Barang & Checklist QC Gudang</span>
                 </label>
@@ -812,7 +809,7 @@ export default function TemplateManagementPage({
                     type="checkbox"
                     checked={receiptConfig.showSortingCode}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, showSortingCode: e.target.checked }))}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span>Tampilkan Kotak Kode Sortir Hub Ekspedisi (Contoh: CGK)</span>
                 </label>
@@ -822,7 +819,7 @@ export default function TemplateManagementPage({
                     type="checkbox"
                     checked={receiptConfig.showCodBadge}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, showCodBadge: e.target.checked }))}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span>Tampilkan Badge Status Pembayaran (NON-COD / LUNAS)</span>
                 </label>
@@ -832,7 +829,7 @@ export default function TemplateManagementPage({
                     type="checkbox"
                     checked={receiptConfig.showUnboxingNotice}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, showUnboxingNotice: e.target.checked }))}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-none text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span>Tampilkan Peringatan Wajib Video Unboxing di Footer</span>
                 </label>
@@ -848,7 +845,7 @@ export default function TemplateManagementPage({
                     type="text"
                     value={receiptConfig.senderName}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, senderName: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-xl text-xs font-semibold"
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-none text-xs font-semibold"
                   />
                 </div>
 
@@ -858,7 +855,7 @@ export default function TemplateManagementPage({
                     type="text"
                     value={receiptConfig.senderPhone}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, senderPhone: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono"
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-none text-xs font-mono"
                   />
                 </div>
 
@@ -868,7 +865,7 @@ export default function TemplateManagementPage({
                     rows={2}
                     value={receiptConfig.senderAddress}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, senderAddress: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-xl text-xs"
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-none text-xs"
                   />
                 </div>
 
@@ -878,7 +875,7 @@ export default function TemplateManagementPage({
                     type="text"
                     value={receiptConfig.footerNote}
                     onChange={(e) => setReceiptConfig(prev => ({ ...prev, footerNote: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-xl text-xs italic"
+                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-none text-xs italic"
                   />
                 </div>
               </div>
@@ -888,7 +885,7 @@ export default function TemplateManagementPage({
 
           {/* Real-time Thermal Label Preview */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="bg-gray-100 p-5 rounded-2xl border border-gray-300 space-y-3">
+            <div className="bg-gray-100 p-5 rounded-none border border-gray-300 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Printer size={16} className="text-gray-700" />
@@ -899,7 +896,7 @@ export default function TemplateManagementPage({
                 <button
                   type="button"
                   onClick={handleTestPrintReceipt}
-                  className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
                   <Printer size={13} />
                   <span>Uji Cetak Thermal</span>
@@ -907,16 +904,16 @@ export default function TemplateManagementPage({
               </div>
 
               {/* Thermal Label Card Container */}
-              <div className="bg-white p-5 rounded-2xl shadow-xl border-2 border-black max-w-md mx-auto space-y-3 font-sans text-black">
+              <div className="bg-white p-5 rounded-none shadow-xl border-2 border-black max-w-md mx-auto space-y-3 font-sans text-black">
                 
                 {/* Header Kurir Baris 1 */}
                 <div className="flex items-center justify-between border-b-2 border-black pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 bg-black text-white font-black text-lg tracking-wider rounded uppercase">
+                    <span className="px-2.5 py-1 bg-black text-white font-black text-lg tracking-wider rounded-none uppercase">
                       J&amp;T Express
                     </span>
                     <div>
-                      <span className="px-2 py-0.5 border border-black text-black font-black text-[10px] rounded uppercase">
+                      <span className="px-2 py-0.5 border border-black text-black font-black text-[10px] rounded-none uppercase">
                         EZ (Reguler)
                       </span>
                       <span className="text-[9px] text-gray-700 block mt-0.5 font-medium">
@@ -927,7 +924,7 @@ export default function TemplateManagementPage({
 
                   {receiptConfig.showSortingCode && (
                     <div className="text-right">
-                      <div className="px-2.5 py-1 bg-black text-white font-mono font-black text-sm tracking-widest rounded text-center">
+                      <div className="px-2.5 py-1 bg-black text-white font-mono font-black text-sm tracking-widest rounded-none text-center">
                         CGK
                       </div>
                       <span className="text-[8.5px] font-bold text-gray-600 block mt-0.5">KODE SORTIR</span>
@@ -936,7 +933,7 @@ export default function TemplateManagementPage({
                 </div>
 
                 {/* Barcode & Tracking Number Area */}
-                <div className="py-2.5 border-b-2 border-black flex flex-col items-center justify-center text-center space-y-1 bg-neutral-50/70 rounded-lg">
+                <div className="py-2.5 border-b-2 border-black flex flex-col items-center justify-center text-center space-y-1 bg-neutral-50/70 rounded-none">
                   {receiptConfig.barcodeType !== 'qrcode' && (
                     <div className={`w-full max-w-[280px] ${getBarcodeHeightClass(receiptConfig.barcodeHeight)} flex items-stretch justify-center gap-[2px] px-2`}>
                       {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 4, 1, 2, 3, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3].map((w, i) => (
@@ -978,7 +975,7 @@ export default function TemplateManagementPage({
                     <p className={`text-gray-800 leading-tight ${receiptConfig.addressFontSize === 'large' ? 'text-[11.5px]' : 'text-[10px]'}`}>
                       Jl. Sudirman No. 45, RT 01/RW 02, Kebayoran Baru, Jakarta Selatan
                     </p>
-                    <div className="inline-block mt-1 px-1.5 py-0.2 border border-black font-mono font-bold text-[10px] rounded bg-gray-50">
+                    <div className="inline-block mt-1 px-1.5 py-0.2 border border-black font-mono font-bold text-[10px] rounded-none bg-gray-50">
                       KODEPOS: 12190
                     </div>
                   </div>
@@ -998,7 +995,7 @@ export default function TemplateManagementPage({
                 {/* Items & Checklist */}
                 {receiptConfig.showItemsList && (
                   <div className="space-y-1.5 border-b-2 border-black pb-3 text-[10.5px]">
-                    <div className="grid grid-cols-3 gap-2 bg-gray-50 p-1.5 rounded border border-black/20 text-center font-bold text-[10px]">
+                    <div className="grid grid-cols-3 gap-2 bg-gray-50 p-1.5 rounded-none border border-black/20 text-center font-bold text-[10px]">
                       <div>
                         <span className="text-[8px] text-gray-600 block">INVOICE</span>
                         <span className="font-mono text-[9.5px]">INV/2026/001</span>
@@ -1048,7 +1045,7 @@ export default function TemplateManagementPage({
 
       {/* ================= TAB 3: LOG RIWAYAT NOTIFIKASI ================= */}
       {activeMainTab === 'logs' && (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-none border border-gray-200 shadow-xs overflow-hidden">
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
             <div>
               <h3 className="font-black text-sm text-gray-900">
@@ -1058,7 +1055,7 @@ export default function TemplateManagementPage({
                 Pencatatan riwayat email notifikasi otomatis yang dikirimkan ke pembeli.
               </p>
             </div>
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200">
+            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-none border border-emerald-200">
               {mockNotificationLogs.length} Terkirim
             </span>
           </div>
@@ -1094,7 +1091,7 @@ export default function TemplateManagementPage({
                       {log.subject}
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-[10px]">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-none font-bold text-[10px]">
                         <CheckCircle2 size={11} />
                         <span>Terkirim</span>
                       </span>
@@ -1110,10 +1107,10 @@ export default function TemplateManagementPage({
       {/* Test Email Modal Popup */}
       {isTestEmailModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in">
+          <div className="bg-white rounded-none max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-none bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Send size={16} />
                 </div>
                 <div>
@@ -1128,7 +1125,7 @@ export default function TemplateManagementPage({
               <button
                 type="button"
                 onClick={() => setIsTestEmailModalOpen(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="p-1 rounded-none text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 ✕
               </button>
@@ -1143,12 +1140,12 @@ export default function TemplateManagementPage({
                   type="email"
                   value={testEmailAddress}
                   onChange={(e) => setTestEmailAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-none text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="nama@email.com"
                 />
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-blue-800 text-[11px] space-y-1">
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-none text-blue-800 text-[11px] space-y-1">
                 <p className="font-bold">Template yang Dikirim:</p>
                 <p className="italic">{currentEmailTemplate.name}</p>
                 <p className="text-[10.5px] text-blue-600">
@@ -1161,7 +1158,7 @@ export default function TemplateManagementPage({
               <button
                 type="button"
                 onClick={() => setIsTestEmailModalOpen(false)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-none transition-colors cursor-pointer"
               >
                 Batal
               </button>
@@ -1169,7 +1166,7 @@ export default function TemplateManagementPage({
                 type="button"
                 onClick={handleSendTestEmail}
                 disabled={isSendingTest}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-none transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 disabled:opacity-50"
               >
                 <Send size={13} />
                 <span>{isSendingTest ? 'Mengirim...' : 'Kirim Sekarang'}</span>

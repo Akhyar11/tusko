@@ -40,14 +40,17 @@ ATURAN INTEGRITAS BACKEND & TEST:
 Git Diff:
 ```diff
 EOF
-    echo "$STAGED_PHP_DIFF" | head -n 120 >> "$PROMPT_FILE"
+    sed -n '1,120p' <<< "$STAGED_PHP_DIFF" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 
 FORMAT JAWABAN:
 - Jika kode backend dan test memenuhi standar: Jawab HANYA kata "PASSED".
 - Jika melanggar:
-  REJECTED: [alasan singkat kegagalan integritas backend/test]
+  REJECTED
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: backend/tests/Feature/VendorApiTest.php:45]
+  - Pelanggaran: [Detail kegagalan integritas backend/test, misal: method test tanpa assertion konkret atau penanganan error fatal]
+  - Solusi: [Tindakan perbaikan yang harus dilakukan pengembang]
 EOF
 
     AI_RESULT=""
@@ -58,9 +61,9 @@ EOF
     fi
     rm -f "$PROMPT_FILE"
 
-    if echo "$AI_RESULT" | grep -qi "REJECTED"; then
+    if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AI_RESULT"; then
         echo "❌ [Audit Backend Test Integrity] DITOLAK OLEH OPENCODE AI:"
-        echo "$AI_RESULT" | grep -i "REJECTED"
+        echo "$AI_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
         exit 1
     fi
 fi

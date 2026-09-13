@@ -26,7 +26,7 @@ Git Diff (Staged Frontend Changes):
 ```diff
 EOF
 
-echo "$STAGED_DIFF" | head -n 120 >> "$PROMPT_FILE"
+sed -n '1,120p' <<< "$STAGED_DIFF" >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
 ```
@@ -36,8 +36,9 @@ FORMAT JAWABAN:
   Jawab HANYA kata "PASSED".
 - Jika melanggar:
   REJECTED
-  - Pelanggaran: [Sebutkan file, baris, dan elemen yang melanggar rounded-none atau VIP]
-  - Solusi: [Ganti dengan rounded-none atau sesuaikan label]
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: frontend/src/components/MyComponent.jsx:88]
+  - Pelanggaran: [Sebutkan elemen, class sudut melengkung, atau label VIP yang melanggar aturan]
+  - Solusi: [Tindakan perbaikan konkret dengan rounded-none atau penyesuaian label]
 EOF
 
 AUDITOR_RESULT=""
@@ -48,12 +49,12 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ ======================================================================"
     echo "❌ [Audit Design System] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
     echo "❌ ======================================================================"
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     exit 1
 fi

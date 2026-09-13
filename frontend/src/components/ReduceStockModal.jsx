@@ -104,7 +104,7 @@ export default function ReduceStockModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+      <div className="bg-white w-full max-w-xl rounded-none shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 bg-neutral-900 text-white shrink-0">
           <div className="flex items-center gap-2">
@@ -126,14 +126,14 @@ export default function ReduceStockModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs sm:text-sm">
           {successMessage && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-none text-emerald-800 text-xs font-semibold flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-none text-rose-800 text-xs font-semibold flex items-center gap-2">
               <AlertTriangle size={16} className="text-rose-600 shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -145,7 +145,7 @@ export default function ReduceStockModal({
             <select
               value={selectedProductId}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 font-medium text-gray-900 text-xs sm:text-sm"
+              className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 font-medium text-gray-900 text-xs sm:text-sm"
               required
             >
               {inventory.map((item) => (
@@ -158,11 +158,11 @@ export default function ReduceStockModal({
 
           {/* Product Preview Card */}
           {currentSelectedProduct && (
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-3">
+            <div className="p-3 bg-gray-50 rounded-none border border-gray-200 flex items-center gap-3">
               <img
                 src={currentSelectedProduct.image_url}
                 alt={currentSelectedProduct.name}
-                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 bg-white"
+                className="w-12 h-12 rounded-none object-cover border border-gray-200 shrink-0 bg-white"
               />
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-gray-900 line-clamp-1">{currentSelectedProduct.name}</div>
@@ -192,7 +192,7 @@ export default function ReduceStockModal({
                     key={reason.id}
                     type="button"
                     onClick={() => handleReasonChange(reason.id)}
-                    className={`p-2.5 rounded-xl border text-left flex items-start gap-2 transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-none border text-left flex items-start gap-2 transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-500/20 text-rose-900'
                         : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -224,14 +224,14 @@ export default function ReduceStockModal({
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder={`Maks ${maxAvailable} unit`}
                   required
-                  className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 font-bold text-gray-900"
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 font-bold text-gray-900"
                 />
                 <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-medium">unit</span>
               </div>
             </div>
 
             {/* Impact Calculation Preview */}
-            <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col justify-center">
+            <div className="p-2.5 bg-neutral-50 rounded-none border border-neutral-200 flex flex-col justify-center">
               <div className="text-[11px] text-gray-500 flex justify-between">
                 <span>Stok Sebelum:</span>
                 <span className="font-bold text-gray-800">{maxAvailable} unit</span>
@@ -268,7 +268,7 @@ export default function ReduceStockModal({
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="BA-DED/..."
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 text-gray-900 font-mono text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 text-gray-900 font-mono text-xs"
               />
             </div>
 
@@ -279,7 +279,7 @@ export default function ReduceStockModal({
                 value={operator}
                 onChange={(e) => setOperator(e.target.value)}
                 placeholder="Nama pemeriksa"
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
               />
             </div>
           </div>
@@ -292,7 +292,7 @@ export default function ReduceStockModal({
                 type="date"
                 value={deductionDate}
                 onChange={(e) => setDeductionDate(e.target.value)}
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
               />
             </div>
 
@@ -303,14 +303,14 @@ export default function ReduceStockModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Jelaskan alasan dan kondisi fisik..."
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-none focus:outline-none focus:border-rose-500 text-gray-900 text-xs"
               />
             </div>
           </div>
 
           {/* Alert if remaining stock reaches low or zero */}
           {remainingAfter <= (currentSelectedProduct?.stock_minimum || 0) && qtyNumber > 0 && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 text-xs text-amber-800">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-none flex items-start gap-2 text-xs text-amber-800">
               <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">Peringatan Safety Stock:</span> Pengurangan ini akan membuat sisa stok produk ({remainingAfter} unit) berada di bawah batas stok minimum ({currentSelectedProduct.stock_minimum} unit).
@@ -323,14 +323,14 @@ export default function ReduceStockModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-none transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={maxAvailable <= 0}
-              className="px-5 py-2 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-none shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <MinusCircle size={15} />
               <span>Konfirmasi Pengurangan Stok</span>

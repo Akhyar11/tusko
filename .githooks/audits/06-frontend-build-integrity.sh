@@ -26,14 +26,17 @@ ATURAN INTEGRITAS FRONTEND BUILD:
 Git Diff:
 ```diff
 EOF
-    echo "$STAGED_FE_DIFF" | head -n 120 >> "$PROMPT_FILE"
+    sed -n '1,120p' <<< "$STAGED_FE_DIFF" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 
 FORMAT JAWABAN:
 - Jika struktur kode frontend bersih dan siap build: Jawab HANYA kata "PASSED".
 - Jika berpotensi merusak build:
-  REJECTED: [alasan singkat potensi kegagalan build/bundling]
+  REJECTED
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: frontend/src/components/ProductCard.jsx:15]
+  - Pelanggaran: [Detail impor modul hilang, variabel belum terdefinisi, atau kesalahan sintaks JSX]
+  - Solusi: [Tindakan perbaikan konkret yang harus dilakukan pengembang]
 EOF
 
     AI_RESULT=""
@@ -44,9 +47,9 @@ EOF
     fi
     rm -f "$PROMPT_FILE"
 
-    if echo "$AI_RESULT" | grep -qi "REJECTED"; then
+    if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AI_RESULT"; then
         echo "❌ [Audit Frontend Build] DITOLAK OLEH OPENCODE AI:"
-        echo "$AI_RESULT" | grep -i "REJECTED"
+        echo "$AI_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
         exit 1
     fi
 fi

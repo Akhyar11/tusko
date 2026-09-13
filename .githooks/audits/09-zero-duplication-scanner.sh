@@ -26,6 +26,9 @@ Tugasmu adalah menganalisis Git Diff dan daftar berkas yang di-stage berikut unt
    - Dilarang mendefinisikan ulang fungsi formatting mata uang Rupiah lokal (seperti formatRupiah, formatIDR, toIDR) di dalam komponen. Wajib mengimpor dan menggunakan `formatRupiah` dari `@/utils/formatters.js`.
 4. Duplikasi Komponen & Export (frontend/src/components/):
    - Dilarang membuat komponen dengan nama yang sama atau mengekspor ulang komponen yang sudah ada di direktori komponen.
+5. Duplikasi Elemen UI & Kewajiban Menggunakan Komponen Reusable:
+   - DILARANG menduplikasi atau membuat ulang elemen UI mentah secara inline jika sudah ada komponen reusable yang menyediakannya (contoh: wajib menggunakan `atoms/IconButton` untuk tombol aksi, `molecules/SearchBar` untuk input pencarian, `molecules/ServerSideSelect` untuk dropdown filter, `ServerSideTable` untuk tabel ber-pagination/limit, `organisms/ProductFilterDrawer` untuk filter katalog).
+   - Pengembang WAJIB mengimpor dan memanfaatkan kembali (reuse) komponen-komponen yang telah dibuat sebelumnya.
 
 Berkas Ter-stage:
 EOF
@@ -34,7 +37,7 @@ echo "$STAGED_FILES" >> "$PROMPT_FILE"
 echo "" >> "$PROMPT_FILE"
 echo "Git Diff (Staged Changes):" >> "$PROMPT_FILE"
 echo '```diff' >> "$PROMPT_FILE"
-echo "$STAGED_DIFF" | head -n 140 >> "$PROMPT_FILE"
+sed -n '1,140p' <<< "$STAGED_DIFF" >> "$PROMPT_FILE"
 echo '```' >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
@@ -44,7 +47,8 @@ FORMAT JAWABAN:
   Jawab HANYA kata "PASSED".
 - Jika ditemukan duplikasi:
   REJECTED
-  - Pelanggaran: [Sebutkan kategori duplikasi, file, dan baris yang menduplikasi kode]
+  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris kedua lokasi yang saling menduplikasi, contoh: frontend/src/utils/myHelper.js:15 vs frontend/src/utils/formatters.js:30]
+  - Pelanggaran: [Detail apa yang terduplikasi (rute API, skema tabel, helper, komponen, atau UI mentah)]
   - Solusi: [Tindakan konsolidasi atau penghapusan duplikasi]
 EOF
 
@@ -56,12 +60,12 @@ elif command -v agy &> /dev/null; then
 fi
 rm -f "$PROMPT_FILE"
 
-if echo "$AUDITOR_RESULT" | grep -qi "REJECTED"; then
+if grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" <<< "$AUDITOR_RESULT"; then
     echo ""
     echo "❌ =========================================================================="
     echo "❌ [Audit Zero Duplication] DITOLAK OLEH OPENCODE AI CODE AUDITOR!"
     echo "❌ =========================================================================="
-    echo "$AUDITOR_RESULT" | sed -n '/REJECTED/,$p'
+    echo "$AUDITOR_RESULT" | sed -n -E '/(REJECTED|DITOLAK)/,$p'
     echo ""
     echo "💡 Sesuai arsitektur Tusko: Rute API, migrasi tabel database, helper/formatter, dan komponen wajib tunggal & bebas duplikasi."
     echo ""

@@ -83,7 +83,8 @@ export default function LoginPage({
 
     try {
       const result = await authService.login(email, password);
-      setSuccessMessage(`✓ ${result.message || 'Login Berhasil!'} Selamat datang kembali, ${result.user?.name}`);
+      const isAdmin = result.user?.role === 'admin';
+      setSuccessMessage(`✓ ${result.message || 'Login Berhasil!'} Selamat datang kembali, ${result.user?.name}${isAdmin ? ' (Mengalihkan ke /admin/dashboard...)' : ''}`);
       setTimeout(() => {
         onLoginSuccess(result.user);
       }, 500);

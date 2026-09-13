@@ -2,10 +2,19 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']);
+    Route::post('/', [CategoryController::class, 'store']);
+    Route::get('/{idOrSlug}', [CategoryController::class, 'show']);
+    Route::match(['put', 'patch'], '/{idOrSlug}', [CategoryController::class, 'update']);
+    Route::delete('/{idOrSlug}', [CategoryController::class, 'destroy']);
+});
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -116,6 +125,11 @@ Route::prefix('templates/receipt')->group(function () {
     Route::post('/reset', [\App\Http\Controllers\Api\ReceiptTemplateController::class, 'reset']);
 });
 
-
-
-
+Route::prefix('vendors')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\VendorController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\VendorController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\VendorController::class, 'show']);
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\VendorController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\VendorController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\VendorController::class, 'toggleStatus']);
+});
