@@ -908,7 +908,7 @@ export default function App() {
       {/* Navigation Header: Hanya ditampilkan di storefront, disembunyikan di Panel Admin */}
       {!isAdminView && (
         <Navbar
-          cartCount={cartTotalCount}
+          cartCount={cartItemCount}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           selectedCategory={selectedCategoryId}
