@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Expedition;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -243,9 +244,63 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // 8. If checked out from cart, clear cart items
+            // 8. Clear checked out items from user's or guest's active cart
+            $cartQuery = Cart::query();
+            if ($user) {
+                $activeCarts = $cartQuery->where(function ($q) use ($user, $sessionId) {
+                    $q->where('user_id', $user->id);
+                    if ($sessionId) {
+                        $q->orWhere('session_id', $sessionId);
+                    }
+                })->get();
+            } elseif ($sessionId) {
+                $activeCarts = $cartQuery->where('session_id', $sessionId)->get();
+            } else {
+                $activeCarts = collect();
+            }
+
             if ($cartToClear) {
                 $cartToClear->items()->delete();
+            } elseif ($activeCarts->isNotEmpty() && !empty($checkoutItemsData)) {
+                // If raw cart_item_ids were explicitly supplied in request, delete them directly
+                if ($request->has('items') && is_array($request->input('items'))) {
+                    $rawCartItemIds = collect($request->input('items'))
+                        ->pluck('cart_item_id')
+                        ->filter()
+                        ->unique()
+                        ->all();
+
+                    if (!empty($rawCartItemIds)) {
+                        CartItem::whereIn('id', $rawCartItemIds)->delete();
+                    }
+                }
+
+                // Delete or deduct matching products from the user's / session's active cart
+                foreach ($checkoutItemsData as $itemData) {
+                    $prodId = $itemData['product_id'];
+                    $qtyToDeduct = (int) $itemData['quantity'];
+
+                    foreach ($activeCarts as $activeCart) {
+                        $matchingItems = $activeCart->items()->where('product_id', $prodId)->get();
+                        foreach ($matchingItems as $cItem) {
+                            if ($cItem->quantity <= $qtyToDeduct) {
+                                $qtyToDeduct -= $cItem->quantity;
+                                $cItem->delete();
+                            } else {
+                                $cItem->decrement('quantity', $qtyToDeduct);
+                                $qtyToDeduct = 0;
+                            }
+
+                            if ($qtyToDeduct <= 0) {
+                                break;
+                            }
+                        }
+
+                        if ($qtyToDeduct <= 0) {
+                            break;
+                        }
+                    }
+                }
             }
 
             // 9. Generate Midtrans Snap Token if payment method is midtrans

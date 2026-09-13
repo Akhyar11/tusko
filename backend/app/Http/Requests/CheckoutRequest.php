@@ -16,6 +16,7 @@ class CheckoutRequest extends FormRequest
         return [
             'items' => ['nullable', 'array'],
             'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
+            'items.*.cart_item_id' => ['nullable', 'integer'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.notes' => ['nullable', 'string', 'max:255'],
 

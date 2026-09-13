@@ -314,8 +314,9 @@ export default function App() {
   const refreshCartFromBackend = async () => {
     try {
       const cartData = await cartService.getCart();
-      if (cartData && Array.isArray(cartData.items)) {
-        const formattedItems = cartData.items.map((item) => ({
+      const rawItems = cartData?.items || cartData?.data?.items || [];
+      if (Array.isArray(rawItems)) {
+        const formattedItems = rawItems.map((item) => ({
           id: item.id,
           cart_item_id: item.id,
           product_id: item.product_id,
@@ -332,6 +333,8 @@ export default function App() {
           notes: item.notes || '',
         }));
         setCart(formattedItems);
+      } else {
+        setCart([]);
       }
     } catch {
       // Backend offline or empty cart
@@ -1339,8 +1342,30 @@ export default function App() {
             onRefreshCart={refreshCartFromBackend}
             paymentSettings={paymentSettings}
             onFinishOrder={(order) => {
-              // Remove checked out items from cart
-              setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
+              // Remove checked out items from cart (matching either cart_item_id or product_id)
+              setCart(prev => {
+                const remaining = [];
+                for (const item of prev) {
+                  const matchingCi = checkoutItems.find(ci => 
+                    ci.id === item.id || 
+                    ci.product_id === item.product_id || 
+                    ci.id === item.product_id || 
+                    ci.product_id === item.id ||
+                    (ci.cart_item_id && item.cart_item_id && ci.cart_item_id === item.cart_item_id)
+                  );
+                  if (!matchingCi) {
+                    remaining.push(item);
+                  } else if (item.quantity > matchingCi.quantity) {
+                    remaining.push({
+                      ...item,
+                      quantity: item.quantity - matchingCi.quantity
+                    });
+                  }
+                }
+                return remaining;
+              });
+
+              setCheckoutItems([]);
               setLastCompletedOrder(order);
               refreshCartFromBackend();
 

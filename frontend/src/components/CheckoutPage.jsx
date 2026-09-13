@@ -313,6 +313,7 @@ export default function CheckoutPage({
     try {
       const itemsPayload = checkoutItems.map(item => ({
         product_id: Number(item.product_id || item.id),
+        cart_item_id: item.cart_item_id ? Number(item.cart_item_id) : null,
         quantity: Number(item.quantity || 1),
         notes: item.notes || ''
       }));

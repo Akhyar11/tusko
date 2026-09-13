@@ -211,4 +211,124 @@ class CheckoutApiTest extends TestCase
             ->assertJsonCount(3, 'data')
             ->assertJsonPath('meta.total', 3);
     }
+
+    public function test_checkout_with_explicit_items_clears_matching_items_from_user_cart(): void
+    {
+        $user = User::factory()->create();
+        $cart = Cart::factory()->create(['user_id' => $user->id]);
+        $productA = Product::factory()->create(['price' => 100000, 'stock' => 10]);
+        $productB = Product::factory()->create(['price' => 200000, 'stock' => 10]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $productA->id,
+            'quantity' => 2,
+        ]);
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $productB->id,
+            'quantity' => 1,
+        ]);
+
+        $payload = [
+            'items' => [
+                ['product_id' => $productA->id, 'quantity' => 2],
+            ],
+            'recipient_name' => 'Budi Santoso',
+            'phone' => '08123456789',
+            'full_address' => 'Jl. Kebon Jeruk No. 12',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'shipping_cost' => 10000,
+        ];
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', $payload);
+        $response->assertCreated();
+
+        // Product A was checked out, so it must be removed from the user's cart
+        $this->assertDatabaseMissing('cart_items', [
+            'cart_id' => $cart->id,
+            'product_id' => $productA->id,
+        ]);
+
+        // Product B was NOT checked out, so it must still remain in the cart
+        $this->assertDatabaseHas('cart_items', [
+            'cart_id' => $cart->id,
+            'product_id' => $productB->id,
+            'quantity' => 1,
+        ]);
+    }
+
+    public function test_guest_checkout_with_explicit_items_clears_matching_items_from_session_cart(): void
+    {
+        $sessionId = 'guest_session_test_9988';
+        $cart = Cart::factory()->create([
+            'user_id' => null,
+            'session_id' => $sessionId,
+        ]);
+        $product = Product::factory()->create(['price' => 150000, 'stock' => 10]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+
+        $payload = [
+            'session_id' => $sessionId,
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'recipient_name' => 'Tamu Tusko',
+            'phone' => '08129876543',
+            'full_address' => 'Jl. Senayan No. 1',
+            'expedition_name' => 'SiCepat',
+            'expedition_service' => 'REG',
+            'shipping_cost' => 12000,
+        ];
+
+        $response = $this->postJson('/api/checkout', $payload);
+        $response->assertCreated();
+
+        // Product must be removed from session cart
+        $this->assertDatabaseMissing('cart_items', [
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
+    public function test_checkout_with_partial_quantity_decrements_cart_item(): void
+    {
+        $user = User::factory()->create();
+        $cart = Cart::factory()->create(['user_id' => $user->id]);
+        $product = Product::factory()->create(['price' => 100000, 'stock' => 20]);
+
+        CartItem::factory()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 5,
+        ]);
+
+        $payload = [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 2],
+            ],
+            'recipient_name' => 'Budi Santoso',
+            'phone' => '08123456789',
+            'full_address' => 'Jl. Kebon Jeruk No. 12',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'shipping_cost' => 10000,
+        ];
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', $payload);
+        $response->assertCreated();
+
+        // Product quantity in cart must be decremented from 5 to 3
+        $this->assertDatabaseHas('cart_items', [
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 3,
+        ]);
+    }
 }
