@@ -72,6 +72,16 @@ Route::prefix('expeditions')->group(function () {
     Route::post('/{id}/set-default', [\App\Http\Controllers\Api\ExpeditionController::class, 'setDefault']);
 });
 
+Route::prefix('warehouses')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\WarehouseController::class, 'index']);
+    Route::get('/primary', [\App\Http\Controllers\Api\WarehouseController::class, 'primary']);
+    Route::post('/', [\App\Http\Controllers\Api\WarehouseController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'show']);
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
+    Route::post('/{id}/set-primary', [\App\Http\Controllers\Api\WarehouseController::class, 'setPrimary']);
+    Route::post('/tracking-labels', [\App\Http\Controllers\Api\WarehouseController::class, 'updateTrackingLabels']);
+});
+
 
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout']);
 Route::prefix('orders')->group(function () {

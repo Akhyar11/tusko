@@ -109,5 +109,56 @@ class MasterReferenceSeeder extends Seeder
         foreach ($attributes as $attr) {
             DB::table('attributes')->updateOrInsert(['code' => $attr['code']], array_merge($attr, ['created_at' => now(), 'updated_at' => now()]));
         }
+
+        // 8. Seed Default Tracking Checkpoint Labels (KiriminAja)
+        $checkpointLabels = [
+            [
+                'stage_key' => 'at_warehouse',
+                'stage_name' => 'Diproses di Gudang Pusat',
+                'custom_label' => 'Paket sedang disiapkan dan dikemas di Gudang Pusat',
+                'description_template' => 'Paket telah selesai diperiksa dan siap dijemput kurir di :warehouse_name (:city)',
+                'sort_order' => 1,
+                'is_active' => true,
+            ],
+            [
+                'stage_key' => 'courier_pickup',
+                'stage_name' => 'Diserahkan ke Kurir',
+                'custom_label' => 'Paket telah diserahkan kepada kurir pengiriman',
+                'description_template' => 'Kurir :courier_name (:service) telah menerima paket dari Gudang Pusat :city',
+                'sort_order' => 2,
+                'is_active' => true,
+            ],
+            [
+                'stage_key' => 'transit_hub',
+                'stage_name' => 'Pusat Sortir Ekspedisi',
+                'custom_label' => 'Tiba di fasilitas transit sortir ekspedisi',
+                'description_template' => 'Paket dalam proses sortasi di Sorting Hub :location untuk diteruskan ke wilayah tujuan',
+                'sort_order' => 3,
+                'is_active' => true,
+            ],
+            [
+                'stage_key' => 'out_for_delivery',
+                'stage_name' => 'Kurir Mengantar Paket',
+                'custom_label' => 'Paket dibawa kurir menuju alamat penerima',
+                'description_template' => 'Kurir sedang dalam perjalanan mengantar paket ke alamat tujuan :destination',
+                'sort_order' => 4,
+                'is_active' => true,
+            ],
+            [
+                'stage_key' => 'delivered',
+                'stage_name' => 'Paket Diterima',
+                'custom_label' => 'Paket telah berhasil diterima',
+                'description_template' => 'Paket telah diterima dengan baik di alamat tujuan oleh penerima yang bersangkutan',
+                'sort_order' => 5,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($checkpointLabels as $label) {
+            DB::table('tracking_checkpoint_labels')->updateOrInsert(
+                ['stage_key' => $label['stage_key']],
+                array_merge($label, ['created_at' => now(), 'updated_at' => now()])
+            );
+        }
     }
 }

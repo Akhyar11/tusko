@@ -41,10 +41,10 @@ export default function CheckoutPage({
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
 
-  // Real-time calculated shipping rates from api.co.id backend service
+  // Real-time calculated shipping rates from KiriminAja backend service
   const [calculatedExpeditions, setCalculatedExpeditions] = useState([]);
   const [shippingDistanceKm, setShippingDistanceKm] = useState(null);
-  const [shippingProvider, setShippingProvider] = useState('api.co.id Multi-Kurir Gateway');
+  const [shippingProvider, setShippingProvider] = useState('KiriminAja Logistics & Multi-Courier Gateway');
   const [appHandlingFee, setAppHandlingFee] = useState(1000);
   const [isLoadingShippingRates, setIsLoadingShippingRates] = useState(false);
 

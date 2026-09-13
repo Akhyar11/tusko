@@ -4,50 +4,68 @@ namespace App\Services;
 
 use App\Models\Expedition;
 use App\Models\Order;
+use App\Models\TrackingCheckpointLabel;
+use App\Models\Warehouse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ShippingRateService
 {
     /**
-     * Default origin store coordinates (Tusko Performance Storefront - Jakarta Pusat).
+     * Dynamic origin warehouse instance (Gudang Pusat Utama Toko).
      */
+    protected ?Warehouse $primaryWarehouse = null;
     protected float $originLat;
     protected float $originLng;
     protected string $originCity;
     protected string $originDistrict;
-    
-    // api.co.id Integration Config
-    protected ?string $apiCoIdKey;
-    protected string $apiCoIdBaseUrl;
+    protected string $warehouseName;
 
-    // RajaOngkir Config (Secondary / Fallback)
-    protected ?string $rajaOngkirApiKey;
-    protected string $rajaOngkirBaseUrl;
-    protected string $originCityId;
+    // KiriminAja Integration Config
+    protected ?string $kiriminAjaApiKey;
+    protected string $kiriminAjaBaseUrl;
 
     // Biaya Tambahan Penanganan Aplikasi (Handling Fee)
-    // Untuk mitigasi lonjakan request kuota check ongkir & live tracking berulang
     protected float $handlingFee;
 
     public function __construct()
     {
-        $this->originLat = (float) config('services.shipping.origin_lat', -6.2088);
-        $this->originLng = (float) config('services.shipping.origin_lng', 106.8456);
-        $this->originCity = config('services.shipping.origin_city', 'Jakarta Pusat');
-        $this->originDistrict = config('services.shipping.origin_district', 'Gambir');
+        // 1. Ambil Gudang Pusat secara dinamis dari database (Warehouse primary)
+        $this->resolvePrimaryWarehouse();
 
-        // https://api.co.id/integrasi-api-pengiriman/
-        $this->apiCoIdKey = config('services.apicoid.api_key', env('APICOID_API_KEY'));
-        $this->apiCoIdBaseUrl = rtrim(config('services.apicoid.base_url', env('APICOID_BASE_URL', 'https://api.co.id')), '/');
+        // 2. KiriminAja API Configuration (https://kiriminaja.com / api.kiriminaja.com)
+        $this->kiriminAjaApiKey = config('services.kiriminaja.api_key', env('KIRIMINAJA_API_KEY'));
+        $this->kiriminAjaBaseUrl = rtrim(config('services.kiriminaja.base_url', env('KIRIMINAJA_BASE_URL', 'https://api.kiriminaja.com')), '/');
 
-        // RajaOngkir fallback
-        $this->rajaOngkirApiKey = config('services.rajaongkir.api_key', env('RAJAONGKIR_API_KEY'));
-        $this->rajaOngkirBaseUrl = config('services.rajaongkir.base_url', env('RAJAONGKIR_BASE_URL', 'https://api.rajaongkir.com/starter'));
-        $this->originCityId = config('services.rajaongkir.origin_city_id', env('RAJAONGKIR_ORIGIN_CITY_ID', '152'));
+        // 3. Biaya proteksi penanganan request berulang & pelacakan live kurir
+        $this->handlingFee = (float) config('services.shipping.handling_fee', env('SHIPPING_HANDLING_FEE', 1000));
+    }
 
-        // Biaya proteksi penanganan request berulang & pelacakan live kurir (Rp 1.000)
-        $this->handlingFee = (float) config('services.shipping.handling_fee', 1000);
+    /**
+     * Resolve data lokasi gudang pusat toko secara dinamis dari tabel warehouses.
+     */
+    public function resolvePrimaryWarehouse(): void
+    {
+        try {
+            $this->primaryWarehouse = Warehouse::where('is_primary', true)->first()
+                ?? Warehouse::where('is_active', true)->first();
+        } catch (\Throwable $e) {
+            $this->primaryWarehouse = null;
+        }
+
+        if ($this->primaryWarehouse) {
+            $this->warehouseName = $this->primaryWarehouse->name;
+            $this->originCity = $this->primaryWarehouse->city;
+            $this->originDistrict = $this->primaryWarehouse->address ? explode(',', $this->primaryWarehouse->address)[0] : $this->primaryWarehouse->city;
+            $this->originLat = $this->primaryWarehouse->latitude ? (float) $this->primaryWarehouse->latitude : 0.0;
+            $this->originLng = $this->primaryWarehouse->longitude ? (float) $this->primaryWarehouse->longitude : 0.0;
+        } else {
+            $this->warehouseName = 'Gudang Pusat Tusko';
+            $this->originCity = 'Jakarta Pusat';
+            $this->originDistrict = 'Gambir';
+            $this->originLat = 0.0;
+            $this->originLng = 0.0;
+        }
     }
 
     /**
@@ -70,59 +88,56 @@ class ShippingRateService
     }
 
     /**
-     * Mengambil tarif langsung dari REST API api.co.id (/courier/v2/rates)
-     * Format header: x-api-co-id: YOUR_API_KEY
-     * Cek ongkir Rp 5 per panggilan sukses, menyatukan 10 kurir Indonesia.
+     * Mengambil tarif langsung dari REST API KiriminAja (/api/v2/shipping/rates)
      */
-    public function fetchApiCoIdRates(string $originDistrict, string $destinationDistrict, int $weightGrams): ?array
+    public function fetchKiriminAjaRates(string $originDistrict, string $destinationDistrict, int $weightGrams): ?array
     {
-        if (empty($this->apiCoIdKey)) {
+        if (empty($this->kiriminAjaApiKey)) {
             return null;
         }
 
         try {
             $response = Http::timeout(6)
                 ->withHeaders([
-                    'x-api-co-id' => $this->apiCoIdKey,
+                    'Authorization' => "Bearer {$this->kiriminAjaApiKey}",
                     'Accept' => 'application/json',
                 ])
-                ->get("{$this->apiCoIdBaseUrl}/courier/v2/rates", [
+                ->post("{$this->kiriminAjaBaseUrl}/api/v2/shipping/rates", [
                     'origin' => $originDistrict,
                     'destination' => $destinationDistrict,
                     'weight' => max(100, $weightGrams),
                 ]);
 
-            if ($response->successful() && $response->json('is_success')) {
+            if ($response->successful() && $response->json('status') === true) {
                 return $response->json('data');
             }
         } catch (\Throwable $e) {
-            Log::warning("Gagal terhubung ke api.co.id rates: " . $e->getMessage());
+            Log::warning("Gagal terhubung ke KiriminAja shipping rates: " . $e->getMessage());
         }
 
         return null;
     }
 
     /**
-     * Melacak posisi paket langsung dari endpoint api.co.id (/courier/v1/orders/track/{resi})
-     * Jika live API offline atau mode sandbox, informasi dinamis di-generate berdasarkan
-     * record pesanan aktual di database (order tracking number, status, kota pengirim, dan kota tujuan).
+     * Melacak posisi paket langsung dari endpoint KiriminAja (/api/v2/shipping/tracking/{resi})
+     * Memanfaatkan kustomisasi label respons pelacakan yang dapat diatur oleh Admin toko di database.
      */
     public function trackPackage(string $resi): array
     {
-        if (!empty($this->apiCoIdKey)) {
+        if (!empty($this->kiriminAjaApiKey)) {
             try {
                 $response = Http::timeout(6)
                     ->withHeaders([
-                        'x-api-co-id' => $this->apiCoIdKey,
+                        'Authorization' => "Bearer {$this->kiriminAjaApiKey}",
                         'Accept' => 'application/json',
                     ])
-                    ->get("{$this->apiCoIdBaseUrl}/courier/v1/orders/track/{$resi}");
+                    ->get("{$this->kiriminAjaBaseUrl}/api/v2/shipping/tracking/{$resi}");
 
-                if ($response->successful() && $response->json('is_success') && is_array($response->json('data'))) {
+                if ($response->successful() && $response->json('status') === true && is_array($response->json('data'))) {
                     return $response->json('data');
                 }
             } catch (\Throwable $e) {
-                Log::warning("Gagal melacak resi {$resi} lewat api.co.id: " . $e->getMessage());
+                Log::warning("Gagal melacak resi {$resi} lewat KiriminAja: " . $e->getMessage());
             }
         }
 
@@ -132,31 +147,53 @@ class ShippingRateService
             ->first();
 
         $destinationCity = $order?->city ?? 'Kota Tujuan';
-        $courierName = $order?->expedition_name ?? 'Kurir Ekspedisi';
+        $courierName = $order?->expedition_name ?? 'Kurir KiriminAja';
         $courierService = $order?->expedition_service ?? 'Reguler';
         $orderStatus = $order?->status ?? 'shipping';
 
+        // Ambil label kustom respons pelacakan dari database (TrackingCheckpointLabel)
+        $customLabels = [];
+        try {
+            $customLabels = TrackingCheckpointLabel::where('is_active', true)->pluck('custom_label', 'stage_key')->toArray();
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
+        $labelWarehouse = $customLabels['at_warehouse'] ?? "Paket sedang disiapkan di {$this->warehouseName} ({$this->originCity})";
+        $labelPickup = $customLabels['courier_pickup'] ?? "Paket telah diserahkan kepada kurir {$courierName} ({$courierService})";
+        $labelTransit = $customLabels['transit_hub'] ?? "Paket tiba di pusat sortir hub transit ekspedisi";
+        $labelOutDelivery = $customLabels['out_for_delivery'] ?? "Kurir sedang dalam perjalanan mengantar paket ke alamat penerima";
+        $labelDelivered = $customLabels['delivered'] ?? "Paket telah berhasil diterima di alamat tujuan";
+
         $statusLabelMap = [
-            'pending' => 'Menunggu penjemputan paket oleh kurir',
-            'processing' => 'Paket sedang diproses dan dikemas di gudang',
-            'shipping' => 'Paket dalam pengiriman ke alamat tujuan penerima',
-            'delivered' => 'Paket telah berhasil diterima oleh penerima',
+            'pending' => 'Menunggu penjemputan paket oleh kurir KiriminAja',
+            'processing' => $labelWarehouse,
+            'shipping' => $labelOutDelivery,
+            'delivered' => $labelDelivered,
             'completed' => 'Pengiriman paket telah selesai',
             'cancelled' => 'Pengiriman dibatalkan',
         ];
 
-        $statusLabel = $statusLabelMap[$orderStatus] ?? 'Paket dalam perjalanan ekspedisi';
+        $statusLabel = $statusLabelMap[$orderStatus] ?? 'Paket dalam perjalanan ekspedisi KiriminAja';
 
         $history = [
             [
                 'time' => now()->format('Y-m-d H:i'),
                 'location' => $this->originCity,
-                'note' => "Paket [{$resi}] telah diserahkan kepada {$courierName} ({$courierService}) di gudang {$this->originCity}",
+                'stage' => 'at_warehouse',
+                'note' => "{$labelWarehouse} - No. Resi: [{$resi}]",
+            ],
+            [
+                'time' => now()->subHours(3)->format('Y-m-d H:i'),
+                'location' => $this->originCity,
+                'stage' => 'courier_pickup',
+                'note' => "{$labelPickup} dari {$this->warehouseName}",
             ],
             [
                 'time' => now()->subHours(2)->format('Y-m-d H:i'),
-                'location' => 'Sorting Center ' . $this->originCity,
-                'note' => 'Paket telah tiba di pusat transit sortir ekspedisi',
+                'location' => 'Sorting Hub ' . $this->originCity,
+                'stage' => 'transit_hub',
+                'note' => $labelTransit,
             ],
         ];
 
@@ -164,7 +201,8 @@ class ShippingRateService
             $history[] = [
                 'time' => now()->subHours(1)->format('Y-m-d H:i'),
                 'location' => $destinationCity,
-                'note' => "Paket dalam perjalanan menuju hub transit {$destinationCity}",
+                'stage' => 'out_for_delivery',
+                'note' => "{$labelOutDelivery} ({$destinationCity})",
             ];
         }
 
@@ -172,7 +210,8 @@ class ShippingRateService
             $history[] = [
                 'time' => now()->format('Y-m-d H:i'),
                 'location' => $destinationCity,
-                'note' => 'Paket telah diterima di alamat tujuan oleh penerima yang bersangkutan',
+                'stage' => 'delivered',
+                'note' => $labelDelivered,
             ];
         }
 
@@ -183,8 +222,9 @@ class ShippingRateService
             'courier' => $courierName,
             'service' => $courierService,
             'origin' => $this->originCity,
+            'warehouse' => $this->warehouseName,
             'destination' => $destinationCity,
-            'provider' => !empty($this->apiCoIdKey) ? 'api.co.id Multi-Courier Gateway' : 'Tusko Indonesia Courier Tracking Engine',
+            'provider' => 'KiriminAja Logistics & Multi-Courier Gateway',
             'history' => $history,
         ];
     }
@@ -206,7 +246,7 @@ class ShippingRateService
 
         // Hitung jarak jika koordinat tersedia
         $distanceKm = null;
-        if ($destinationLat !== null && $destinationLng !== null) {
+        if ($destinationLat !== null && $destinationLng !== null && $this->originLat != 0.0 && $this->originLng != 0.0) {
             $distanceKm = $this->calculateHaversineDistance(
                 $this->originLat,
                 $this->originLng,
@@ -218,10 +258,7 @@ class ShippingRateService
             $distanceKm = 25.0;
         }
 
-        $activeProvider = 'Tusko Indonesia Multi-Courier Engine (api.co.id compatible)';
-        if (!empty($this->apiCoIdKey)) {
-            $activeProvider = 'api.co.id (Multi-Kurir Indonesia)';
-        }
+        $activeProvider = 'KiriminAja Logistics & Multi-Courier Gateway';
 
         $query = Expedition::active();
         if ($category && $category !== 'Semua') {
@@ -238,6 +275,7 @@ class ShippingRateService
 
         return [
             'origin' => [
+                'warehouse_name' => $this->warehouseName,
                 'city' => $this->originCity,
                 'district' => $this->originDistrict,
                 'latitude' => $this->originLat,

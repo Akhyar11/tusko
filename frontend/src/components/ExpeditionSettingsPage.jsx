@@ -24,6 +24,8 @@ import { formatRupiah } from '../utils/formatters';
 import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
 import AddExpeditionModal from './AddExpeditionModal';
 import EditRateModal from './EditRateModal';
+import CentralWarehouseModal from './CentralWarehouseModal';
+import { Building2 } from 'lucide-react';
 
 export default function ExpeditionSettingsPage({
   expeditions = initialExpeditions,
@@ -39,6 +41,7 @@ export default function ExpeditionSettingsPage({
   const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
   const [deleteTargetExpedition, setDeleteTargetExpedition] = useState(null);
   const [editRateExpedition, setEditRateExpedition] = useState(null);
 
@@ -111,6 +114,16 @@ export default function ExpeditionSettingsPage({
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsWarehouseModalOpen(true)}
+            className="px-3.5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-amber-400 font-black text-xs rounded-none transition-all cursor-pointer shadow-xs flex items-center gap-2 border border-neutral-700"
+            title="Atur lokasi Gudang Pusat & Kustomisasi respons pelacakan KiriminAja"
+          >
+            <Building2 size={16} />
+            <span>Gudang Pusat &amp; KiriminAja</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
@@ -551,6 +564,15 @@ export default function ExpeditionSettingsPage({
           onEditRate(updatedData);
           onShowToast(`Pengaturan tarif "${editRateExpedition.name} - ${editRateExpedition.service}" berhasil disimpan!`);
           setEditRateExpedition(null);
+        }}
+      />
+
+      {/* Central Warehouse & KiriminAja Tracking Settings Modal */}
+      <CentralWarehouseModal
+        isOpen={isWarehouseModalOpen}
+        onClose={() => setIsWarehouseModalOpen(false)}
+        onSuccess={(msg) => {
+          onShowToast(msg);
         }}
       />
 

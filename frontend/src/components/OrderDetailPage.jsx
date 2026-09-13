@@ -23,6 +23,7 @@ import {
   Send
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import { apiClient } from '../services/apiClient';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
@@ -41,6 +42,8 @@ export default function OrderDetailPage({
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [liveTrackingData, setLiveTrackingData] = useState(null);
+  const [isLoadingTracking, setIsLoadingTracking] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
@@ -339,7 +342,20 @@ export default function OrderDetailPage({
             {trackingNumber && (
               <button
                 type="button"
-                onClick={() => setIsTrackingModalOpen(true)}
+                onClick={async () => {
+                  setIsTrackingModalOpen(true);
+                  setIsLoadingTracking(true);
+                  try {
+                    const res = await apiClient.get(`/api/expeditions/track/${trackingNumber}`);
+                    if (res?.data) {
+                      setLiveTrackingData(res.data);
+                    }
+                  } catch {
+                    // ignore fallback to order info
+                  } finally {
+                    setIsLoadingTracking(false);
+                  }
+                }}
                 className="text-xs font-sport font-black text-neutral-900 hover:text-amber-700 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 px-2.5 py-1 rounded-none uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <span>Live Tracking</span>
@@ -645,40 +661,75 @@ export default function OrderDetailPage({
             </div>
 
             <div className="space-y-3 pt-2 text-xs">
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-3 h-3 rounded-none bg-amber-500 ring-4 ring-amber-100" />
-                  <div className="w-0.5 h-12 bg-neutral-300" />
+              {isLoadingTracking ? (
+                <div className="py-6 flex flex-col items-center justify-center text-neutral-400 gap-1.5">
+                  <Clock className="animate-spin text-neutral-900" size={20} />
+                  <span className="text-[11px] font-mono">Menghubungi Gateway KiriminAja...</span>
                 </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Paket sedang diantar ke alamat tujuan</p>
-                  <p className="text-[10px] text-neutral-500">Kurir sedang menuju lokasi penerima</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">07 Sep 2026, 08:30 WIB</span>
-                </div>
-              </div>
+              ) : liveTrackingData?.history && liveTrackingData.history.length > 0 ? (
+                liveTrackingData.history.map((step, sIdx) => {
+                  const isLatest = sIdx === 0;
+                  const isLast = sIdx === liveTrackingData.history.length - 1;
+                  return (
+                    <div key={sIdx} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-none ${
+                          isLatest ? 'bg-amber-500 ring-4 ring-amber-100' : 'bg-neutral-400'
+                        }`} />
+                        {!isLast && <div className="w-0.5 h-12 bg-neutral-200" />}
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className={`font-bold ${isLatest ? 'text-neutral-950' : 'text-neutral-800'}`}>
+                          {step.note}
+                        </p>
+                        <p className="text-[10px] text-neutral-500 font-medium">
+                          Lokasi: {step.location}
+                        </p>
+                        <span className="text-[10px] text-neutral-400 font-mono">
+                          {step.time} WIB
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 rounded-none bg-amber-500 ring-4 ring-amber-100" />
+                      <div className="w-0.5 h-12 bg-neutral-300" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-900">Paket sedang diantar ke alamat tujuan</p>
+                      <p className="text-[10px] text-neutral-500">Kurir sedang menuju lokasi penerima</p>
+                      <span className="text-[10px] text-neutral-400 font-mono">Hari ini, 08:30 WIB</span>
+                    </div>
+                  </div>
 
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
-                  <div className="w-0.5 h-12 bg-neutral-200" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Tiba di Sorting Hub Jakarta Selatan</p>
-                  <p className="text-[10px] text-neutral-500">Paket dalam proses penyortiran</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">06 Sep 2026, 21:15 WIB</span>
-                </div>
-              </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
+                      <div className="w-0.5 h-12 bg-neutral-200" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-900">Tiba di Sorting Hub KiriminAja</p>
+                      <p className="text-[10px] text-neutral-500">Paket dalam proses penyortiran</p>
+                      <span className="text-[10px] text-neutral-400 font-mono">Kemarin, 21:15 WIB</span>
+                    </div>
+                  </div>
 
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Pesanan telah diserahkan ke kurir (Pickup Booked)</p>
-                  <p className="text-[10px] text-neutral-500">Pengirim telah menyerahkan paket di Gudang Sentral</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">05 Sep 2026, 17:45 WIB</span>
-                </div>
-              </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-900">Pesanan telah diserahkan ke kurir (Pickup Booked)</p>
+                      <p className="text-[10px] text-neutral-500">Pengirim telah menyerahkan paket di Gudang Pusat</p>
+                      <span className="text-[10px] text-neutral-400 font-mono">Kemarin, 17:45 WIB</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <button
