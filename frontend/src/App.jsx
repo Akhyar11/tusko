@@ -517,9 +517,14 @@ export default function App() {
     // Hanya produk yang aktif yang tampil di etalase publik pembeli
     let result = products.filter((p) => p.status === 'active' || (p.status !== 'inactive' && p.active !== false));
 
-    // Filter by category
+    // Filter by category (supports primary category, category_ids array, and categories relationship)
     if (selectedCategoryId) {
-      result = result.filter((p) => p.category_id === selectedCategoryId);
+      result = result.filter((p) => {
+        if (p.category_id === selectedCategoryId) return true;
+        if (Array.isArray(p.category_ids) && p.category_ids.some(id => Number(id) === Number(selectedCategoryId))) return true;
+        if (Array.isArray(p.categories) && p.categories.some(c => Number(c.id) === Number(selectedCategoryId))) return true;
+        return false;
+      });
     }
 
     // Filter by search query

@@ -23,9 +23,15 @@ class ProductDetailResource extends JsonResource
             ->limit(4)
             ->get();
 
+        $allCategories = $this->relationLoaded('categories') ? $this->categories : $this->categories()->get();
+        $categoryIds = $allCategories->isNotEmpty()
+            ? $allCategories->pluck('id')->values()->all()
+            : ($this->category_id ? [$this->category_id] : []);
+
         return [
             'id' => $this->id,
             'category_id' => $this->category_id,
+            'category_ids' => $categoryIds,
             'category' => [
                 'id' => $this->category?->id,
                 'name' => $this->category?->name,
@@ -36,6 +42,11 @@ class ProductDetailResource extends JsonResource
                     'slug' => $this->category->parent->slug,
                 ] : null,
             ],
+            'categories' => $allCategories->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+            ]),
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,

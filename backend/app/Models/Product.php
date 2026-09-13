@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -68,9 +69,23 @@ class Product extends Model
         'effective_stock_minimum',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function ($product) {
+            if (!empty($product->category_id)) {
+                $product->categories()->syncWithoutDetaching([$product->category_id]);
+            }
+        });
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_product');
     }
 
     public function images(): HasMany
@@ -179,7 +194,7 @@ class Product extends Model
     }
 
     /**
-     * Scope filter berdasarkan kategori ID atau slug.
+     * Scope filter berdasarkan kategori ID atau slug (mendukung kategori utama dan multi-kategori).
      */
     public function scopeByCategory($query, $categoryIdOrSlug)
     {
@@ -188,11 +203,20 @@ class Product extends Model
         }
 
         if (is_numeric($categoryIdOrSlug)) {
-            return $query->where('category_id', $categoryIdOrSlug);
+            return $query->where(function ($q) use ($categoryIdOrSlug) {
+                $q->where('category_id', $categoryIdOrSlug)
+                  ->orWhereHas('categories', function ($sub) use ($categoryIdOrSlug) {
+                      $sub->where('categories.id', $categoryIdOrSlug);
+                  });
+            });
         }
 
-        return $query->whereHas('category', function ($q) use ($categoryIdOrSlug) {
-            $q->where('slug', $categoryIdOrSlug);
+        return $query->where(function ($q) use ($categoryIdOrSlug) {
+            $q->whereHas('category', function ($sub) use ($categoryIdOrSlug) {
+                $sub->where('slug', $categoryIdOrSlug);
+            })->orWhereHas('categories', function ($sub) use ($categoryIdOrSlug) {
+                $sub->where('slug', $categoryIdOrSlug);
+            });
         });
     }
 

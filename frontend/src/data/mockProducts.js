@@ -147,6 +147,10 @@ export function createMockProduct(productData) {
   return {
     id: newId,
     category_id: Number(productData.category_id) || null,
+    category_ids: Array.isArray(productData.category_ids) 
+      ? productData.category_ids 
+      : (productData.category_id ? [Number(productData.category_id)] : []),
+    categories: productData.categories || [],
     vendor_id: Number(productData.vendor_id) || null,
     vendor_name: productData.vendor_name || null,
     sku,

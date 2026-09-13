@@ -151,8 +151,14 @@ export default function ProductListPage({
       }
 
       // Category filter
-      if (selectedCategory !== 'all' && p.category_id !== Number(selectedCategory)) {
-        return false;
+      if (selectedCategory !== 'all') {
+        const targetCatId = Number(selectedCategory);
+        const matchPrimary = p.category_id === targetCatId;
+        const matchIds = Array.isArray(p.category_ids) && p.category_ids.some(id => Number(id) === targetCatId);
+        const matchCategories = Array.isArray(p.categories) && p.categories.some(c => Number(c.id) === targetCatId);
+        if (!matchPrimary && !matchIds && !matchCategories) {
+          return false;
+        }
       }
 
       // Status filter
@@ -307,12 +313,27 @@ export default function ProductListPage({
       key: 'category_id',
       label: 'Kategori',
       sortable: true,
-      width: 'w-36',
-      render: (catId) => (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-none text-[10px] font-sport font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300">
-          {getCategoryName(catId)}
-        </span>
-      )
+      width: 'w-44',
+      render: (catId, product) => {
+        const prodCategories = (product.categories && product.categories.length > 0)
+          ? product.categories
+          : (product.category_ids && product.category_ids.length > 0)
+          ? product.category_ids.map(id => categories.find(c => c.id === id) || { id, name: getCategoryName(id) })
+          : [{ id: catId, name: getCategoryName(catId) }];
+
+        return (
+          <div className="flex flex-wrap gap-1 items-center">
+            {prodCategories.map((c, i) => (
+              <span
+                key={c.id || i}
+                className="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-sport font-bold uppercase tracking-wider bg-neutral-100 text-neutral-800 border border-neutral-300"
+              >
+                {c.name || getCategoryName(c.id || c)}
+              </span>
+            ))}
+          </div>
+        );
+      }
     },
     {
       key: 'price',

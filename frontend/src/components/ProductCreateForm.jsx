@@ -43,7 +43,8 @@ export default function ProductCreateForm({
 }) {
   // Basic Information (Starts Clean / Blank)
   const [name, setName] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [categoryIds, setCategoryIds] = useState([]);
+  const categoryId = categoryIds[0] || '';
   const [vendorId, setVendorId] = useState('');
   const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   const [categoryList, setCategoryList] = useState(categories);
@@ -76,6 +77,16 @@ export default function ProductCreateForm({
   useEffect(() => {
     if (categories && categories.length > 0) {
       setCategoryList(categories);
+    } else {
+      let isMounted = true;
+      categoryService.fetchCategories().then(res => {
+        if (isMounted && res?.data && res.data.length > 0) {
+          setCategoryList(res.data);
+        }
+      }).catch(() => {});
+      return () => {
+        isMounted = false;
+      };
     }
   }, [categories]);
 
@@ -479,7 +490,7 @@ export default function ProductCreateForm({
   // Fill Quick Demo Data
   const handleFillDemoData = () => {
     setName('Tusko AirSprint Lightweight Carbon Marathon Singlet');
-    setCategoryId(5); // Running
+    setCategoryIds([6, 2]); // Running & Marathon (6) and Jersey & Apparel (2)
     setSku('TSK-RUN-SGL-2026');
     setWeightValue('95');
     setWeightUnit('g');
@@ -523,8 +534,8 @@ export default function ProductCreateForm({
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    if (!categoryId) {
-      setErrorMessage('Kategori produk wajib dipilih!');
+    if (!categoryIds || categoryIds.length === 0) {
+      setErrorMessage('Pilih minimal satu kategori produk!');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -604,7 +615,9 @@ export default function ProductCreateForm({
     const selectedVendor = (vendorList || []).find(v => v.id === Number(vendorId));
     const newProduct = createMockProduct({
       name: name.trim(),
-      category_id: Number(categoryId),
+      category_id: Number(categoryIds[0] || categoryId),
+      category_ids: categoryIds.map(id => Number(id)),
+      categories: (categories || categoryList || []).filter(c => categoryIds.some(id => Number(id) === Number(c.id))),
       vendor_id: Number(vendorId) || null,
       vendor_name: selectedVendor?.company_name || null,
       sku: sku.trim() || generateProductSku(selectedCat?.slug || selectedCat?.name || 'prd', name, products),
@@ -736,7 +749,7 @@ export default function ProductCreateForm({
               <div>
                 <div className="flex items-center justify-between mb-1.5 gap-2">
                   <label className="text-xs font-sport font-black uppercase tracking-wider text-neutral-900 whitespace-nowrap">
-                    Kategori Produk <span className="text-rose-500">*</span>
+                    Kategori Produk (Bisa Pilih Lebih Dari Satu) <span className="text-rose-500">*</span>
                   </label>
                   <button
                     type="button"
@@ -748,13 +761,42 @@ export default function ProductCreateForm({
                   </button>
                 </div>
                 <ServerSideSelect
-                  value={categoryId}
-                  onChange={(val) => setCategoryId(val)}
+                  isMulti={true}
+                  value={categoryIds}
+                  onChange={(val) => setCategoryIds(val)}
                   loadOptions={categoryService.loadOptions.bind(categoryService)}
                   options={categoryList.map((c) => ({ value: c.id, label: c.name }))}
-                  placeholder="Pilih kategori produk..."
+                  placeholder="Pilih satu atau beberapa kategori produk..."
                   scrollPadding={35}
                 />
+                {categoryList.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+                    <span className="text-[10px] text-neutral-400 font-sport uppercase tracking-wider">Kategori Cepat:</span>
+                    {categoryList.slice(0, 6).map(c => {
+                      const isSelected = categoryIds.some(id => Number(id) === Number(c.id));
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setCategoryIds(categoryIds.filter(id => Number(id) !== Number(c.id)));
+                            } else {
+                              setCategoryIds([...categoryIds, c.id]);
+                            }
+                          }}
+                          className={`px-2 py-0.5 text-[10px] font-sport uppercase tracking-wider rounded-none border transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                              : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400'
+                          }`}
+                        >
+                          {isSelected ? `✓ ${c.name}` : `+ ${c.name}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div>

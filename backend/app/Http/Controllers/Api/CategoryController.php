@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -155,7 +156,11 @@ class CategoryController extends Controller
             ->withCount('products')
             ->firstOrFail();
 
-        if ($category->products_count > 0) {
+        $hasProducts = $category->products_count > 0
+            || Product::where('category_id', $category->id)->exists()
+            || Product::whereHas('categories', fn ($q) => $q->where('categories.id', $category->id))->exists();
+
+        if ($hasProducts) {
             return response()->json([
                 'message' => 'Kategori tidak dapat dihapus karena masih digunakan oleh produk aktif.',
             ], 422);

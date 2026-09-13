@@ -6,8 +6,9 @@ import { Search, ChevronDown, ChevronUp, Check, X, Loader2 } from 'lucide-react'
  * Reusable server-side select component with debounced server search and infinite scroll padding.
  * 
  * @param {Object} props
- * @param {string|number} props.value - Selected value
+ * @param {string|number|Array} props.value - Selected value or array of values for multi-select
  * @param {function} props.onChange - Callback when value changes: (value, selectedOption) => void
+ * @param {boolean} props.isMulti - Whether multi-select is enabled (default: false)
  * @param {Array} props.options - Static options array [{ value, label, ... }]
  * @param {function} props.loadOptions - Async function: async (searchQuery, page) => { options, hasMore }
  * @param {string} props.placeholder - Placeholder text
@@ -21,6 +22,7 @@ import { Search, ChevronDown, ChevronUp, Check, X, Loader2 } from 'lucide-react'
 export default function ServerSideSelect({
   value,
   onChange = () => {},
+  isMulti = false,
   options: staticOptions = [],
   loadOptions = null,
   placeholder = 'Pilih opsi...',
@@ -170,22 +172,78 @@ export default function ServerSideSelect({
     };
   }, [isOpen]);
 
-  // Find currently selected option object
-  const hasValidValue = value !== undefined && value !== null && value !== '';
-  const selectedOption = hasValidValue
+  // Find currently selected option(s)
+  const selectedValues = isMulti
+    ? (Array.isArray(value) ? value.map(v => String(v)) : (value ? [String(value)] : []))
+    : [];
+
+  const hasValidValue = isMulti
+    ? selectedValues.length > 0
+    : (value !== undefined && value !== null && value !== '');
+
+  const selectedOption = !isMulti && hasValidValue
     ? (displayedOptions.find(o => String(o.value) === String(value))
         || normalizedStaticOptions().find(o => String(o.value) === String(value))
         || { value, label: String(value) })
     : null;
 
+  const selectedOptionsList = isMulti
+    ? selectedValues.map(val => {
+        return (displayedOptions.find(o => String(o.value) === String(val))
+          || normalizedStaticOptions().find(o => String(o.value) === String(val))
+          || { value: val, label: String(val) });
+      })
+    : [];
+
   const handleSelect = (option) => {
-    onChange(option.value, option);
-    setIsOpen(false);
+    if (isMulti) {
+      const optValStr = String(option.value);
+      const isAlreadySelected = selectedValues.includes(optValStr);
+      let newValues;
+      if (isAlreadySelected) {
+        newValues = selectedValues.filter(v => v !== optValStr);
+      } else {
+        newValues = [...selectedValues, optValStr];
+      }
+
+      const allKnown = [...displayedOptions, ...normalizedStaticOptions()];
+      const mappedValues = newValues.map(v => {
+        const found = allKnown.find(o => String(o.value) === v);
+        return found ? found.value : (isNaN(Number(v)) ? v : Number(v));
+      });
+      const mappedOptions = newValues.map(v => {
+        return allKnown.find(o => String(o.value) === v) || { value: v, label: String(v) };
+      });
+      onChange(mappedValues, mappedOptions);
+    } else {
+      onChange(option.value, option);
+      setIsOpen(false);
+    }
+  };
+
+  const handleRemoveItem = (e, valToRemove) => {
+    e.stopPropagation();
+    if (!isMulti) return;
+    const optValStr = String(valToRemove);
+    const newValues = selectedValues.filter(v => v !== optValStr);
+    const allKnown = [...displayedOptions, ...normalizedStaticOptions()];
+    const mappedValues = newValues.map(v => {
+      const found = allKnown.find(o => String(o.value) === v);
+      return found ? found.value : (isNaN(Number(v)) ? v : Number(v));
+    });
+    const mappedOptions = newValues.map(v => {
+      return allKnown.find(o => String(o.value) === v) || { value: v, label: String(v) };
+    });
+    onChange(mappedValues, mappedOptions);
   };
 
   const handleClear = (e) => {
     e.stopPropagation();
-    onChange('', null);
+    if (isMulti) {
+      onChange([], []);
+    } else {
+      onChange('', null);
+    }
   };
 
   return (
@@ -195,30 +253,72 @@ export default function ServerSideSelect({
         <input 
           type="hidden" 
           name={name} 
-          value={value || ''} 
+          value={isMulti ? JSON.stringify(value || []) : (value || '')} 
           required={required} 
         />
       )}
 
       {/* Select Trigger Box */}
-      <button
-        type="button"
-        disabled={disabled}
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
         onClick={() => (isOpen ? handleClose() : handleOpen())}
-        className={`w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 hover:bg-neutral-100/80 focus:bg-white border rounded-none flex items-center justify-between gap-2 transition-all cursor-pointer text-left disabled:opacity-50 disabled:cursor-not-allowed ${
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
+            e.preventDefault();
+            if (isOpen) handleClose(); else handleOpen();
+          }
+        }}
+        className={`w-full min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-neutral-50 hover:bg-neutral-100/80 focus:bg-white border rounded-none flex items-center justify-between gap-2 transition-all cursor-pointer text-left ${
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        } ${
           isOpen ? 'border-black ring-1 ring-black bg-white' : 'border-neutral-300'
         } ${className}`}
       >
-        <span className={`truncate ${selectedOption ? 'text-neutral-950 font-semibold' : 'text-neutral-400 font-normal'}`}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
+        <div className="flex-1 flex flex-wrap items-center gap-1.5 overflow-hidden">
+          {isMulti ? (
+            selectedOptionsList.length > 0 ? (
+              selectedOptionsList.map((opt) => (
+                <span
+                  key={opt.value}
+                  className="inline-flex items-center gap-1 bg-neutral-900 text-white text-[11px] font-sport uppercase tracking-wider px-2 py-0.5 rounded-none"
+                >
+                  <span className="truncate max-w-[140px]">{opt.label}</span>
+                  {!disabled && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => handleRemoveItem(e, opt.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          handleRemoveItem(e, opt.value);
+                        }
+                      }}
+                      className="hover:text-amber-400 p-0.5 rounded-none cursor-pointer"
+                      title={`Hapus ${opt.label}`}
+                    >
+                      <X size={11} />
+                    </span>
+                  )}
+                </span>
+              ))
+            ) : (
+              <span className="text-neutral-400 font-normal text-xs">{placeholder}</span>
+            )
+          ) : (
+            <span className={`truncate ${selectedOption ? 'text-neutral-950 font-semibold' : 'text-neutral-400 font-normal'}`}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          {isClearable && value && !disabled && (
+          {isClearable && hasValidValue && !disabled && (
             <span
               onClick={handleClear}
               className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none transition-colors"
-              title="Hapus Pilihan"
+              title="Hapus Semua Pilihan"
             >
               <X size={13} />
             </span>
@@ -227,7 +327,7 @@ export default function ServerSideSelect({
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </span>
         </div>
-      </button>
+      </div>
 
       {/* Dropdown Floating Panel */}
       {isOpen && (
@@ -278,7 +378,10 @@ export default function ServerSideSelect({
               </div>
             ) : (
               displayedOptions.map((opt) => {
-                const isSelected = String(opt.value) === String(value);
+                const isSelected = isMulti
+                  ? selectedValues.includes(String(opt.value))
+                  : String(opt.value) === String(value);
+
                 return (
                   <button
                     key={opt.value}
@@ -286,17 +389,32 @@ export default function ServerSideSelect({
                     onClick={() => handleSelect(opt)}
                     className={`w-full px-3.5 py-2.5 text-xs text-left flex items-center justify-between gap-2 transition-colors cursor-pointer rounded-none ${
                       isSelected
-                        ? 'bg-neutral-950 text-white font-bold'
+                        ? isMulti
+                          ? 'bg-neutral-100 text-neutral-950 font-bold border-l-2 border-black'
+                          : 'bg-neutral-950 text-white font-bold'
                         : 'hover:bg-neutral-100 text-neutral-800'
                     }`}
                   >
-                    {renderOption ? (
-                      renderOption(opt, isSelected)
-                    ) : (
-                      <span className="truncate">{opt.label}</span>
-                    )}
+                    <div className="flex items-center gap-2 truncate">
+                      {isMulti && (
+                        <div
+                          className={`w-3.5 h-3.5 border rounded-none flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? 'bg-neutral-900 border-neutral-900 text-white'
+                              : 'border-neutral-400 bg-white'
+                          }`}
+                        >
+                          {isSelected && <Check size={10} strokeWidth={3} />}
+                        </div>
+                      )}
+                      {renderOption ? (
+                        renderOption(opt, isSelected)
+                      ) : (
+                        <span className="truncate">{opt.label}</span>
+                      )}
+                    </div>
 
-                    {isSelected && (
+                    {!isMulti && isSelected && (
                       <Check size={14} className="text-amber-400 shrink-0" strokeWidth={2.5} />
                     )}
                   </button>

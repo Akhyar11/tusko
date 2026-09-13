@@ -14,14 +14,25 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $allCategories = $this->relationLoaded('categories') ? $this->categories : $this->categories()->get();
+        $categoryIds = $allCategories->isNotEmpty()
+            ? $allCategories->pluck('id')->values()->all()
+            : ($this->category_id ? [$this->category_id] : []);
+
         return [
             'id' => $this->id,
             'category_id' => $this->category_id,
+            'category_ids' => $categoryIds,
             'category' => [
                 'id' => $this->category?->id,
                 'name' => $this->category?->name,
                 'slug' => $this->category?->slug,
             ],
+            'categories' => $allCategories->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+            ]),
             'name' => $this->name,
             'slug' => $this->slug,
             'sku' => $this->sku ?: ('TSK-SKU-' . str_pad((string) $this->id, 5, '0', STR_PAD_LEFT)),

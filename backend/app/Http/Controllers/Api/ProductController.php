@@ -19,7 +19,7 @@ class ProductController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Product::query()->with(['category', 'images']);
+        $query = Product::query()->with(['category', 'categories', 'images']);
 
         // Filter status aktif / inaktif
         if ($request->has('status') && $request->status !== 'all') {
@@ -36,9 +36,14 @@ class ProductController extends Controller
             $query->search($search);
         }
 
-        // Filter berdasarkan kategori
+        // Filter berdasarkan kategori (mendukung single category_id dan multi-kategori)
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where(function ($q) use ($request) {
+                $q->where('category_id', $request->category_id)
+                  ->orWhereHas('categories', function ($sub) use ($request) {
+                      $sub->where('categories.id', $request->category_id);
+                  });
+            });
         } elseif ($request->filled('category') && $request->category !== 'all') {
             $query->byCategory($request->category);
         }
@@ -109,7 +114,7 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug): JsonResponse
     {
-        $product = Product::with(['category.parent', 'images'])
+        $product = Product::with(['category.parent', 'categories', 'images'])
             ->where(function ($q) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
                     $q->where('id', (int) $idOrSlug)->orWhere('slug', $idOrSlug);
@@ -139,8 +144,16 @@ class ProductController extends Controller
     public function store(Request $request): JsonResponse
     {
         // Normalisasi camelCase dari frontend React
+        if ($request->has('categoryIds') && !$request->has('category_ids')) {
+            $request->merge(['category_ids' => $request->input('categoryIds')]);
+        }
         if ($request->has('categoryId') && !$request->has('category_id')) {
             $request->merge(['category_id' => $request->input('categoryId')]);
+        }
+        if ($request->has('category_ids') && is_array($request->input('category_ids')) && count($request->input('category_ids')) > 0) {
+            if (!$request->has('category_id')) {
+                $request->merge(['category_id' => $request->input('category_ids')[0]]);
+            }
         }
         if ($request->has('originalPrice') && !$request->has('original_price')) {
             $request->merge(['original_price' => $request->input('originalPrice')]);
@@ -170,6 +183,8 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
             'sku' => 'nullable|string|max:100|unique:products,sku',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -270,10 +285,21 @@ class ProductController extends Controller
             ]);
         }
 
+        // Sinkronisasi kategori multi-choice ke tabel pivot
+        $syncCategoryIds = [];
+        if (!empty($validated['category_ids']) && is_array($validated['category_ids'])) {
+            $syncCategoryIds = $validated['category_ids'];
+        } elseif (!empty($validated['category_id'])) {
+            $syncCategoryIds = [$validated['category_id']];
+        }
+        if (!empty($syncCategoryIds)) {
+            $product->categories()->sync($syncCategoryIds);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Produk baru berhasil ditambahkan.',
-            'data' => new ProductResource($product->load(['category', 'images'])),
+            'data' => new ProductResource($product->load(['category', 'categories', 'images'])),
         ], 201);
     }
 
@@ -300,6 +326,12 @@ class ProductController extends Controller
         // Normalisasi camelCase dari frontend React
         if ($request->has('categoryId') && !$request->has('category_id')) {
             $request->merge(['category_id' => $request->input('categoryId')]);
+        }
+        if ($request->has('categoryIds') && !$request->has('category_ids')) {
+            $request->merge(['category_ids' => $request->input('categoryIds')]);
+        }
+        if ($request->has('category_ids') && is_array($request->input('category_ids')) && !empty($request->input('category_ids')) && !$request->has('category_id')) {
+            $request->merge(['category_id' => $request->input('category_ids')[0]]);
         }
         if ($request->has('originalPrice') && !$request->has('original_price')) {
             $request->merge(['original_price' => $request->input('originalPrice')]);
@@ -329,6 +361,8 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'category_id' => 'sometimes|required|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
             'sku' => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
@@ -438,6 +472,16 @@ class ProductController extends Controller
 
         $product->save();
 
+        // Sync kategori many-to-many jika dikirim
+        if ($request->has('category_ids')) {
+            $syncCategoryIds = $request->input('category_ids');
+            if (is_array($syncCategoryIds)) {
+                $product->categories()->sync($syncCategoryIds);
+            }
+        } elseif ($request->has('category_id') && !empty($validated['category_id'])) {
+            $product->categories()->sync([$validated['category_id']]);
+        }
+
         // Sync gambar galeri jika dikirim
         if ($request->has('images') || $request->has('galleryUrls')) {
             $imagesList = $validated['images'] ?? [];
@@ -455,7 +499,7 @@ class ProductController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Produk berhasil diperbarui.',
-            'data' => new ProductResource($product->fresh(['category', 'images'])),
+            'data' => new ProductResource($product->fresh(['category', 'categories', 'images'])),
         ]);
     }
 
