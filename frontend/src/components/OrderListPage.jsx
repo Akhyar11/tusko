@@ -23,7 +23,7 @@ import {
   Mail
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { orderStatuses, mockOrders } from '../data/mockOrders';
+import { orderStatuses } from '../data/mockOrders';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
@@ -31,7 +31,9 @@ import OrderFulfillmentStepper from './molecules/OrderFulfillmentStepper';
 import { apiClient } from '../services/apiClient';
 
 export default function OrderListPage({
-  orders = mockOrders,
+  orders = [],
+  isLoading = false,
+  onRefresh = () => {},
   onBackToShopping = () => {},
   onViewOrderDetail = () => {},
   onPayOrder = () => {},
@@ -223,6 +225,15 @@ export default function OrderListPage({
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <button
             type="button"
+            onClick={onRefresh}
+            className="px-3 py-1.5 bg-white hover:bg-neutral-100 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="Segarkan data antrean pesanan dari database"
+          >
+            <RotateCcw size={14} className={`text-neutral-700 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Segarkan</span>
+          </button>
+          <button
+            type="button"
             onClick={onOpenFinancialTransactions}
             className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-sport font-black text-xs uppercase tracking-wider rounded-none border border-neutral-300 transition-colors cursor-pointer flex items-center gap-1.5"
             title="Buka Catatan Transaksi Arus Kas Keuangan"
@@ -332,7 +343,17 @@ export default function OrderListPage({
 
       {/* Order Cards List */}
       <div className="space-y-4">
-        {filteredOrders.length === 0 ? (
+        {isLoading && orders.length === 0 ? (
+          <div className="bg-white rounded-none border border-neutral-300 p-12 text-center shadow-2xs space-y-3">
+            <Clock className="animate-spin text-neutral-900 mx-auto" size={28} />
+            <p className="font-sport font-black text-xs uppercase text-neutral-800 tracking-wider">
+              Memuat Data Pesanan dari Database...
+            </p>
+            <p className="text-[11px] text-neutral-500 font-mono">
+              Sinkronisasi realtime via Laravel REST API
+            </p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className="bg-white rounded-none border border-neutral-300 p-12 text-center shadow-2xs space-y-4">
             <div className="w-16 h-16 bg-neutral-100 text-neutral-400 rounded-none flex items-center justify-center mx-auto border border-neutral-200">
               <ShoppingBag size={32} />

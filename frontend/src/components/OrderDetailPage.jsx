@@ -30,7 +30,7 @@ import PrintInvoiceModal from './PrintInvoiceModal';
 import OrderFulfillmentStepper from './molecules/OrderFulfillmentStepper';
 
 export default function OrderDetailPage({
-  order = null,
+  order: propOrder = null,
   onBack = () => {},
   onPayOrder = () => {},
   onBuyAgain = () => {},
@@ -61,6 +61,24 @@ export default function OrderDetailPage({
       })
       .catch(() => {});
   }, []);
+
+  const [currentOrder, setCurrentOrder] = useState(propOrder);
+
+  React.useEffect(() => {
+    setCurrentOrder(propOrder);
+    const orderKey = propOrder?.order_number || propOrder?.invoice_number || propOrder?.id;
+    if (orderKey) {
+      apiClient.get(`/api/orders/${encodeURIComponent(orderKey)}`)
+        .then(res => {
+          if (res?.data) {
+            setCurrentOrder(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [propOrder?.id, propOrder?.order_number, propOrder?.invoice_number]);
+
+  const order = currentOrder || propOrder;
 
   if (!order) {
     return (

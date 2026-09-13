@@ -21,10 +21,16 @@ class OrderController extends Controller
         $query = Order::with(['items', 'shippingAddress', 'expedition']);
 
         // 1. Scoping by User / Guest Session
+        $sessionId = $request->query('session_id') ?: $request->header('X-Session-ID');
         if ($user && (! $user->role || $user->role !== 'admin')) {
-            $query->where('user_id', $user->id);
-        } elseif ($request->filled('session_id')) {
-            $query->where('guest_session_id', $request->query('session_id'));
+            $query->where(function (Builder $q) use ($user, $sessionId) {
+                $q->where('user_id', $user->id);
+                if ($sessionId) {
+                    $q->orWhere('guest_session_id', $sessionId);
+                }
+            });
+        } elseif ($sessionId) {
+            $query->where('guest_session_id', $sessionId);
         }
 
         // Base query for counting status tabs before applying status filter

@@ -18,6 +18,8 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'order_number' => $this->order_number,
             'invoice_number' => $this->order_number,
+            'created_at' => $this->created_at?->toISOString(),
+            'grand_total' => (float) $this->grand_total,
             'status' => $this->status,
             'tracking_number' => $this->tracking_number,
             'payment_status' => $this->payment_status,

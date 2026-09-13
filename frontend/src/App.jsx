@@ -34,13 +34,12 @@ import VendorBillListPage from './components/VendorBillListPage';
 import SupplierListPage from './components/SupplierListPage';
 import PaymentSettingsPage from './components/PaymentSettingsPage';
 import { loadMidtransSnap, triggerMidtransPayment } from './utils/midtransSnap';
-import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
-import { cartService } from './services/cartService';
+import { cartService, getCartSessionId } from './services/cartService';
 import { categoryService } from './services/categoryService';
 import { apiClient } from './services/apiClient';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
@@ -236,7 +235,8 @@ export default function App() {
   const [appliedCheckoutVoucher, setAppliedCheckoutVoucher] = useState(null);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
   const [stockLogs, setStockLogs] = useState(initialStockLogs);
@@ -343,6 +343,25 @@ export default function App() {
 
   useEffect(() => {
     refreshCartFromBackend();
+  }, [currentUser]);
+
+  // Fetch orders directly from Laravel backend database via /api/orders
+  const fetchOrders = async () => {
+    setIsLoadingOrders(true);
+    try {
+      const sessionId = getCartSessionId();
+      const res = await apiClient.get(`/api/orders?per_page=100&session_id=${encodeURIComponent(sessionId)}`);
+      const rawOrders = res?.data || [];
+      setOrders(Array.isArray(rawOrders) ? rawOrders : []);
+    } catch (err) {
+      console.warn('Orders initial load error:', err);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, [currentUser]);
 
   // Sinkronisasi selectedProduct ke localStorage
@@ -771,7 +790,7 @@ export default function App() {
     setSearchQuery('');
   };
 
-  const handleUpdateOrderStatus = (orderId, newStatus, additionalData = {}) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus, additionalData = {}) => {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === orderId || (o.order_number && o.order_number === orderId)) {
@@ -809,6 +828,19 @@ export default function App() {
           : (newStatus === 'cancelled' ? 'cancelled' : prev.payment_status),
         ...(additionalData.tracking_number ? { tracking_number: additionalData.tracking_number } : {}),
       }));
+    }
+
+    // Persist status change to backend database
+    try {
+      await apiClient.patch(`/api/orders/${encodeURIComponent(orderId)}/status`, {
+        status: newStatus,
+        tracking_number: additionalData.tracking_number || undefined,
+        notes: additionalData.notes || undefined,
+        cancel_reason: additionalData.cancel_reason || undefined,
+      });
+      fetchOrders();
+    } catch (err) {
+      console.warn('Gagal sinkronisasi status pesanan ke backend database:', err);
     }
 
     setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
@@ -1135,35 +1167,30 @@ export default function App() {
         ) : currentView === 'order-detail' ? (
           <OrderDetailPage
             order={selectedOrderForDetail}
-            onBack={() => setCurrentView('orders')}
+            onBack={() => {
+              fetchOrders();
+              setCurrentView('orders');
+            }}
             onPayOrder={handlePayOrder}
             onBuyAgain={(item) => {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
               handleBuyNow(foundProd, 1);
             }}
             onCancelOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
-                  : o
-              ));
-              setSelectedOrderForDetail(prev => ({ ...prev, status: 'cancelled', payment_status: 'cancelled' }));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
+              const orderId = order.id || order.order_number;
+              handleUpdateOrderStatus(orderId, 'cancelled');
             }}
             onCompleteOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'completed' } 
-                  : o
-              ));
-              setSelectedOrderForDetail(prev => ({ ...prev, status: 'completed' }));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
+              const orderId = order.id || order.order_number;
+              handleUpdateOrderStatus(orderId, 'completed');
             }}
             onUpdateStatus={handleUpdateOrderStatus}
           />
         ) : currentView === 'orders' ? (
           <OrderListPage
             orders={orders}
+            isLoading={isLoadingOrders}
+            onRefresh={fetchOrders}
             onBackToShopping={() => setCurrentView('catalog')}
             onViewOrderDetail={(order) => {
               setSelectedOrderForDetail(order);
@@ -1175,20 +1202,12 @@ export default function App() {
               handleBuyNow(foundProd, 1);
             }}
             onCancelOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
-                  : o
-              ));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
+              const orderId = order.id || order.order_number;
+              handleUpdateOrderStatus(orderId, 'cancelled');
             }}
             onCompleteOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'completed' } 
-                  : o
-              ));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
+              const orderId = order.id || order.order_number;
+              handleUpdateOrderStatus(orderId, 'completed');
             }}
             onUpdateStatus={handleUpdateOrderStatus}
             onOpenFinancialTransactions={() => setCurrentView('transactions')}
@@ -1368,6 +1387,7 @@ export default function App() {
               setCheckoutItems([]);
               setLastCompletedOrder(order);
               refreshCartFromBackend();
+              fetchOrders();
 
               // Add to orders list
               const newFormattedOrder = {
