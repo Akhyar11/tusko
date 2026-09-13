@@ -22,6 +22,7 @@ import {
   FolderKanban,
   Building2,
   Scale,
+  Ruler,
   ChevronDown,
   UploadCloud,
   Camera,

@@ -39,6 +39,7 @@ import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { categoryService } from './services/categoryService';
+import { productService } from './services/productService';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -74,25 +75,31 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/dashboard' || rawPath === '/admin') {
       return 'admin-dashboard';
     }
-    if (rawPath === '/admin/products') return 'products-admin';
-    if (rawPath === '/admin/categories') return 'categories-admin';
-    if (rawPath === '/admin/suppliers') return 'suppliers-admin';
-    if (rawPath === '/admin/stock') return 'stock';
-    if (rawPath === '/admin/orders') return 'orders';
+    if (rawPath === '/admin/products' || rawPath === '/admin/product') return 'products-admin';
+    if (rawPath === '/admin/categories' || rawPath === '/admin/category') return 'categories-admin';
+    if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
+    if (rawPath === '/admin/stock' || rawPath === '/admin/stocks' || rawPath === '/admin/inventory') return 'stock';
+    if (rawPath === '/admin/orders' || rawPath === '/admin/order') return 'orders';
     if (rawPath === '/admin/procurement') return 'procurement-pos';
-    if (rawPath === '/admin/procurement/pos') return 'procurement-pos';
+    if (rawPath === '/admin/procurement/pos' || rawPath === '/admin/procurement/po') return 'procurement-pos';
     if (rawPath === '/admin/procurement/grn') return 'procurement-grn';
-    if (rawPath === '/admin/procurement/bills') return 'procurement-bills';
-    if (rawPath === '/admin/procurement/vendors') return 'suppliers-admin';
-    if (rawPath === '/admin/transactions') return 'transactions';
-    if (rawPath === '/admin/expeditions') return 'expeditions';
-    if (rawPath === '/admin/templates') return 'templates';
-    if (rawPath === '/admin/products/create') return 'product-create';
+    if (rawPath === '/admin/procurement/bills' || rawPath === '/admin/procurement/bill') return 'procurement-bills';
+    if (rawPath === '/admin/procurement/vendors' || rawPath === '/admin/procurement/vendor') return 'suppliers-admin';
+    if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
+    if (rawPath === '/admin/expeditions' || rawPath === '/admin/expedition') return 'expeditions';
+    if (rawPath === '/admin/templates' || rawPath === '/admin/template') return 'templates';
+    if (rawPath === '/admin/products/create' || rawPath === '/admin/product/create') return 'product-create';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/register') return 'register';
     if (rawPath === '/profile') return 'profile';
     if (rawPath === '/cart') return 'cart';
     if (rawPath === '/checkout') return 'checkout';
+    if (rawPath === '') {
+      const hashCheck = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
+      if (!hashCheck || hashCheck === 'catalog') {
+        return 'catalog';
+      }
+    }
 
     const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
     if (rawHash === 'admin/dashboard' || rawHash === 'admin') {
@@ -177,6 +184,17 @@ export default function App() {
         }
       })
       .catch(err => console.warn('categoryService initial load:', err));
+  }, []);
+
+  // Fetch products from server on mount
+  useEffect(() => {
+    productService.fetchProducts({ include_inactive: true })
+      .then(res => {
+        if (res && res.data && res.data.length > 0) {
+          setProducts(res.data);
+        }
+      })
+      .catch(err => console.warn('productService initial load:', err));
   }, []);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -899,7 +917,7 @@ export default function App() {
       {/* Navigation Header: Hanya ditampilkan di storefront, disembunyikan di Panel Admin */}
       {!isAdminView && (
         <Navbar
-          cartCount={cartTotalCount}
+          cartCount={cartItemCount}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           selectedCategory={selectedCategoryId}
@@ -1256,9 +1274,12 @@ export default function App() {
                 items: (order.items || []).map(item => ({
                   id: item.id,
                   product_id: item.id,
+                  name: item.name,
                   product_name: item.name,
                   product_image: item.image_url,
+                  price: item.price,
                   product_price: item.price,
+                  unit_price: item.price,
                   quantity: item.quantity,
                   subtotal: item.price * item.quantity,
                   notes: item.notes

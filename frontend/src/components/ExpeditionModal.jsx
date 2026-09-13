@@ -158,12 +158,12 @@ export default function ExpeditionModal({
                             Gratis
                           </span>
                           <span className="text-[10px] text-neutral-400 line-through font-sport font-bold">
-                            {formatRupiah(exp.baseCost)}
+                            {formatRupiah(exp.baseCost ?? exp.baseRate ?? 0)}
                           </span>
                         </div>
                       ) : (
                         <span className="text-xs sm:text-sm font-sport font-black text-black">
-                          {formatRupiah(exp.cost)}
+                          {formatRupiah(exp.cost ?? exp.baseRate ?? 0)}
                         </span>
                       )}
                     </div>

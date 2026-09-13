@@ -20,7 +20,8 @@ import {
   Ruler,
   ChevronDown,
   UploadCloud,
-  Camera
+  Camera,
+  Info
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { createMockProduct, generateProductSku, generateVariantSku } from '../data/mockProducts';

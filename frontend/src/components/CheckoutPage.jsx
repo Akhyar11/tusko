@@ -107,19 +107,38 @@ export default function CheckoutPage({
   }, [checkoutItems]);
 
   // Active expeditions list
+  // Active expeditions list with normalized cost and baseCost
   const activeExpeditions = useMemo(() => {
-    if (availableExpeditions && availableExpeditions.length > 0) {
-      return availableExpeditions.filter(e => e.isActive);
-    }
-    return mockExpeditions;
+    const rawList = (availableExpeditions && availableExpeditions.length > 0)
+      ? availableExpeditions.filter(e => e.isActive)
+      : mockExpeditions;
+
+    return rawList.map(e => {
+      const isFree = e.is_free !== undefined ? e.is_free : (e.cost === 0 || e.baseRate === 0);
+      const costVal = isFree ? 0 : Number(e.cost !== undefined ? e.cost : (e.baseRate || 0));
+      const baseCostVal = Number(e.baseCost !== undefined ? e.baseCost : (e.baseRate || 15000));
+      return {
+        ...e,
+        is_free: isFree,
+        cost: costVal,
+        baseCost: baseCostVal,
+      };
+    });
   }, [availableExpeditions]);
 
   const [selectedExpedition, setSelectedExpedition] = useState(() => {
     if (availableExpeditions && availableExpeditions.length > 0) {
       const def = availableExpeditions.find(e => e.isDefault && e.isActive);
-      if (def) return def;
-      const firstActive = availableExpeditions.find(e => e.isActive);
-      if (firstActive) return firstActive;
+      const active = def || availableExpeditions.find(e => e.isActive);
+      if (active) {
+        const isFree = active.is_free !== undefined ? active.is_free : (active.cost === 0 || active.baseRate === 0);
+        return {
+          ...active,
+          is_free: isFree,
+          cost: isFree ? 0 : Number(active.cost !== undefined ? active.cost : (active.baseRate || 0)),
+          baseCost: Number(active.baseCost !== undefined ? active.baseCost : (active.baseRate || 15000)),
+        };
+      }
     }
     return mockExpeditions[0];
   });
@@ -177,12 +196,13 @@ export default function CheckoutPage({
     return checkoutItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   }, [checkoutItems]);
 
-  const shippingCost = selectedExpedition.is_free ? 0 : selectedExpedition.cost;
+  const expeditionCost = selectedExpedition?.is_free ? 0 : (selectedExpedition?.cost ?? selectedExpedition?.baseRate ?? 0);
+  const shippingCost = Number(expeditionCost) || 0;
   const insuranceCost = withInsurance ? 2500 : 0;
   const serviceFee = 1000;
-  const paymentFee = selectedPayment.fee || 0;
+  const paymentFee = selectedPayment?.fee || 0;
   const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
-  const shippingSavings = selectedExpedition.is_free ? (selectedExpedition.baseCost || 15000) : 0;
+  const shippingSavings = selectedExpedition?.is_free ? Number(selectedExpedition?.baseCost ?? selectedExpedition?.baseRate ?? 15000) : 0;
   const totalSavings = discountAmount + shippingSavings;
 
   const grandTotal = Math.max(
@@ -395,10 +415,10 @@ export default function CheckoutPage({
                     {selectedExpedition.is_free ? (
                       <div>
                         <span className="text-xs sm:text-sm font-sport font-black text-black bg-amber-400 px-2 py-0.5 rounded-none uppercase block">Gratis</span>
-                        <span className="text-[10px] text-neutral-400 line-through font-sport font-bold">{formatRupiah(selectedExpedition.baseCost)}</span>
+                        <span className="text-[10px] text-neutral-400 line-through font-sport font-bold">{formatRupiah(selectedExpedition.baseCost ?? selectedExpedition.baseRate ?? 0)}</span>
                       </div>
                     ) : (
-                      <span className="text-xs sm:text-sm font-sport font-black text-black">{formatRupiah(selectedExpedition.cost)}</span>
+                      <span className="text-xs sm:text-sm font-sport font-black text-black">{formatRupiah(selectedExpedition.cost ?? selectedExpedition.baseRate ?? 0)}</span>
                     )}
                     <span className="text-[10px] text-neutral-500 font-sport font-bold uppercase block mt-0.5">Ubah</span>
                   </div>
@@ -593,10 +613,10 @@ export default function CheckoutPage({
                 <span className="font-sport font-bold text-black">
                   {selectedExpedition.is_free ? (
                     <span className="line-through text-neutral-400 font-normal mr-1.5">
-                      {formatRupiah(selectedExpedition.baseCost)}
+                      {formatRupiah(selectedExpedition.baseCost ?? selectedExpedition.baseRate ?? 0)}
                     </span>
                   ) : null}
-                  <span>{selectedExpedition.is_free ? 'Gratis' : formatRupiah(selectedExpedition.cost)}</span>
+                  <span>{selectedExpedition.is_free ? 'Gratis' : formatRupiah(selectedExpedition.cost ?? selectedExpedition.baseRate ?? 0)}</span>
                 </span>
               </div>
 

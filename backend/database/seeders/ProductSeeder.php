@@ -33,7 +33,7 @@ class ProductSeeder extends Seeder
 
         $categories = [];
         foreach ($categoriesData as $c) {
-            $categories[$c['slug']] = Category::create($c);
+            $categories[$c['slug']] = Category::firstOrCreate(['slug' => $c['slug']], $c);
         }
 
         $productsData = [

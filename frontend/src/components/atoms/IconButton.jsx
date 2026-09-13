@@ -7,6 +7,7 @@ export default function IconButton({
   icon: Icon,
   label,
   title,
+  tooltip,
   onClick,
   variant = 'secondary', // 'primary' | 'secondary' | 'dark' | 'outline'
   badge = null,
@@ -14,7 +15,7 @@ export default function IconButton({
   className = '',
   type = 'button'
 }) {
-  const tooltipText = label || title;
+  const tooltipText = label || title || tooltip;
 
   const variantClasses = {
     primary: 'bg-amber-400 hover:bg-amber-300 text-black border-amber-500 shadow-xs',

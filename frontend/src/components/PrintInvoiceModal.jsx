@@ -45,10 +45,10 @@ export default function PrintInvoiceModal({
   const trackingNumber = order.expedition?.tracking_number || order.tracking_number || 'TRK-98827391823';
 
   const items = order.items || [];
-  const subtotal = order.subtotal || items.reduce((acc, it) => acc + ((it.price || it.unit_price || 0) * (it.quantity || 1)), 0);
-  const shippingCost = order.shipping_cost || 18000;
-  const discountAmount = order.discount_amount || 0;
-  const grandTotal = order.grand_total || order.total_amount || (subtotal + shippingCost - discountAmount);
+  const subtotal = order.totals?.subtotal || order.subtotal || items.reduce((acc, it) => acc + ((it.price || it.unit_price || it.product_price || 0) * (it.quantity || 1)), 0);
+  const shippingCost = order.totals?.shipping_cost ?? order.shipping_cost ?? (order.expedition?.cost || 18000);
+  const discountAmount = order.totals?.discount_amount ?? order.discount_amount ?? 0;
+  const grandTotal = order.totals?.grand_total || order.grand_total || order.total_amount || order.totalAmount || (subtotal + shippingCost - discountAmount);
 
   const handlePrint = () => {
     const originalTitle = document.title;
@@ -240,7 +240,7 @@ export default function PrintInvoiceModal({
               <tbody className="divide-y divide-neutral-200 font-sans text-xs">
                 {items.length > 0 ? (
                   items.map((it, idx) => {
-                    const price = it.price || it.unit_price || 0;
+                    const price = it.price || it.unit_price || it.product_price || 0;
                     const qty = it.quantity || 1;
                     const lineTotal = price * qty;
                     return (
