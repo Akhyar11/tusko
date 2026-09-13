@@ -27,6 +27,8 @@ import { orderStatuses, mockOrders } from '../data/mockOrders';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
+import OrderFulfillmentStepper from './molecules/OrderFulfillmentStepper';
+import { apiClient } from '../services/apiClient';
 
 export default function OrderListPage({
   orders = mockOrders,
@@ -47,9 +49,43 @@ export default function OrderListPage({
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | '30days' | '90days'
   const [copiedInvoice, setCopiedInvoice] = useState(null);
   const [trackingModalOrder, setTrackingModalOrder] = useState(null);
+  const [liveTrackingData, setLiveTrackingData] = useState(null);
+  const [isLoadingTracking, setIsLoadingTracking] = useState(false);
+  const [primaryWarehouseName, setPrimaryWarehouseName] = useState('Gudang Pusat Tusko');
   const [statusModalOrder, setStatusModalOrder] = useState(null);
   const [printReceiptOrder, setPrintReceiptOrder] = useState(null);
   const [printInvoiceOrder, setPrintInvoiceOrder] = useState(null);
+
+  React.useEffect(() => {
+    apiClient.get('/api/warehouses/primary')
+      .then(res => {
+        if (res?.data?.warehouse?.name) {
+          setPrimaryWarehouseName(res.data.warehouse.name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleOpenTracking = async (order) => {
+    setTrackingModalOrder(order);
+    setIsLoadingTracking(true);
+    setLiveTrackingData(null);
+    const trackingQuery = order.expedition?.tracking_number || order.tracking_number || order.order_number || order.invoice_number;
+    if (trackingQuery) {
+      try {
+        const res = await apiClient.get(`/api/expeditions/track/${encodeURIComponent(trackingQuery)}`);
+        if (res?.data) {
+          setLiveTrackingData(res.data);
+        }
+      } catch {
+        // fallback
+      } finally {
+        setIsLoadingTracking(false);
+      }
+    } else {
+      setIsLoadingTracking(false);
+    }
+  };
 
   const handleCopy = (invoice) => {
     navigator.clipboard?.writeText(invoice);
@@ -433,19 +469,24 @@ export default function OrderListPage({
                   </div>
                 </div>
 
+                {/* 5-Step Order Fulfillment Stepper */}
+                <OrderFulfillmentStepper
+                  order={order}
+                  warehouseName={primaryWarehouseName}
+                  onTrackClick={() => handleOpenTracking(order)}
+                />
+
                 {/* Card Action Buttons */}
                 <div className="pt-3 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="text-[11px] text-neutral-500 flex items-center gap-1.5">
-                    {trackingNo && (
-                      <button
-                        type="button"
-                        onClick={() => setTrackingModalOrder(order)}
-                        className="text-neutral-900 hover:text-amber-700 font-sport font-black uppercase flex items-center gap-1 cursor-pointer"
-                      >
-                        <Truck size={13} className="text-amber-600" />
-                        <span>Live Tracking</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenTracking(order)}
+                      className="text-neutral-900 hover:text-amber-700 font-sport font-black uppercase flex items-center gap-1 cursor-pointer"
+                    >
+                      <Truck size={13} className="text-amber-600" />
+                      <span>{trackingNo ? 'Live Tracking Kurir' : 'Lacak Status Gudang'}</span>
+                    </button>
                   </div>
 
                   <div className="flex items-center gap-2 self-end flex-wrap">
@@ -544,40 +585,77 @@ export default function OrderListPage({
 
             {/* Tracking Timeline */}
             <div className="space-y-3 pt-2 text-xs">
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-3 h-3 rounded-none bg-amber-500 ring-4 ring-amber-100" />
-                  <div className="w-0.5 h-12 bg-neutral-300" />
+              {isLoadingTracking ? (
+                <div className="py-6 flex flex-col items-center justify-center text-neutral-400 gap-1.5">
+                  <Clock className="animate-spin text-neutral-900" size={20} />
+                  <span className="text-[11px] font-mono">Menghubungi Gateway KiriminAja & Gudang...</span>
                 </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Paket sedang diantar ke alamat penerima</p>
-                  <p className="text-[10px] text-neutral-500">Kurir sedang dalam rute antar</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">07 Sep 2026, 08:30 WIB</span>
-                </div>
-              </div>
+              ) : liveTrackingData?.history && liveTrackingData.history.length > 0 ? (
+                liveTrackingData.history.map((step, sIdx) => {
+                  const isLatest = sIdx === 0;
+                  const isLast = sIdx === liveTrackingData.history.length - 1;
+                  return (
+                    <div key={sIdx} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-none ${
+                          isLatest ? 'bg-amber-500 ring-4 ring-amber-100' : 'bg-neutral-400'
+                        }`} />
+                        {!isLast && <div className="w-0.5 h-12 bg-neutral-200" />}
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className={`font-bold ${isLatest ? 'text-neutral-950' : 'text-neutral-800'}`}>
+                          {step.note}
+                        </p>
+                        <p className="text-[10px] text-neutral-500 font-medium">
+                          Lokasi: {step.location}
+                        </p>
+                        <span className="text-[10px] text-neutral-400 font-mono">
+                          {step.time} WIB
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 rounded-none bg-amber-500 ring-4 ring-amber-100" />
+                      <div className="w-0.5 h-12 bg-neutral-300" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-900">
+                        {trackingModalOrder.status === 'completed' ? 'Paket telah diterima pelanggan' :
+                         trackingModalOrder.status === 'shipped' ? 'Paket dalam perjalanan ekspedisi ke alamat tujuan' :
+                         trackingModalOrder.status === 'processing' ? `Sedang dikemas & disiapkan di ${trackingModalOrder.warehouse_name || primaryWarehouseName}` :
+                         'Menunggu verifikasi pembayaran'}
+                      </p>
+                      <p className="text-[10px] text-neutral-500">
+                        Status sistem: {trackingModalOrder.status || 'pending'}
+                      </p>
+                      <span className="text-[10px] text-neutral-400 font-mono">Diperbarui secara otomatis</span>
+                    </div>
+                  </div>
 
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
-                  <div className="w-0.5 h-12 bg-neutral-200" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Tiba di Sorting Hub Jakarta Selatan</p>
-                  <p className="text-[10px] text-neutral-500">Paket dalam proses penyortiran</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">06 Sep 2026, 21:15 WIB</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-neutral-900">Pesanan telah diserahkan ke kurir</p>
-                  <p className="text-[10px] text-neutral-500">Pickup kurir selesai di Warehouse Sentral</p>
-                  <span className="text-[10px] text-neutral-400 font-mono">05 Sep 2026, 17:45 WIB</span>
-                </div>
-              </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2.5 h-2.5 rounded-none bg-neutral-400" />
+                      <div className="w-0.5 h-12 bg-neutral-200" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-neutral-900">
+                        {trackingModalOrder.status === 'pending'
+                          ? 'Pesanan dibuat di checkout storefront'
+                          : `Pesanan dialokasikan ke ${trackingModalOrder.warehouse_name || primaryWarehouseName}`}
+                      </p>
+                      <p className="text-[10px] text-neutral-500">
+                        {trackingModalOrder.expedition?.name || 'KiriminAja Logistics'} - {trackingModalOrder.expedition?.service || 'Reguler'}
+                      </p>
+                      <span className="text-[10px] text-neutral-400 font-mono">{trackingModalOrder.warehouse_name || primaryWarehouseName}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <button

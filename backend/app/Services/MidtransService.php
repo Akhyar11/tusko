@@ -17,10 +17,26 @@ class MidtransService
 
     public function __construct()
     {
-        $this->serverKey = config('midtrans.server_key', 'SB-Mid-server-sandbox-test-key-12345');
-        $this->clientKey = config('midtrans.client_key', 'SB-Mid-client-sandbox-test-key-12345');
-        $this->isProduction = (bool) config('midtrans.is_production', false);
-        $this->snapUrl = config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/v1/transactions');
+        $setting = null;
+        try {
+            $setting = \App\Models\PaymentGatewaySetting::first();
+        } catch (\Throwable $e) {
+            // fallback to config
+        }
+
+        if ($setting) {
+            $this->isProduction = (bool) $setting->is_production;
+            $this->clientKey = $setting->client_key ?: (string) config('midtrans.client_key', '');
+            $this->serverKey = $setting->server_key ?: (string) config('midtrans.server_key', '');
+        } else {
+            $this->serverKey = (string) config('midtrans.server_key', '');
+            $this->clientKey = (string) config('midtrans.client_key', '');
+            $this->isProduction = (bool) config('midtrans.is_production', false);
+        }
+
+        $this->snapUrl = $this->isProduction
+            ? 'https://app.midtrans.com/snap/v1/transactions'
+            : config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/v1/transactions');
     }
 
     /**

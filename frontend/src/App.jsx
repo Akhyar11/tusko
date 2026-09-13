@@ -32,6 +32,8 @@ import PurchaseOrderListPage from './components/PurchaseOrderListPage';
 import GoodsReceiptListPage from './components/GoodsReceiptListPage';
 import VendorBillListPage from './components/VendorBillListPage';
 import SupplierListPage from './components/SupplierListPage';
+import PaymentSettingsPage from './components/PaymentSettingsPage';
+import { loadMidtransSnap, triggerMidtransPayment } from './utils/midtransSnap';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
@@ -61,6 +63,7 @@ const VALID_VIEWS = [
   'stock',
   'templates',
   'expeditions',
+  'payment-settings',
   'products-admin',
   'categories-admin',
   'product-create',
@@ -89,6 +92,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/transactions') return 'transactions';
     if (rawPath === '/admin/expeditions') return 'expeditions';
     if (rawPath === '/admin/templates') return 'templates';
+    if (rawPath === '/admin/payment-settings' || rawPath === '/admin/payments') return 'payment-settings';
     if (rawPath === '/admin/products/create') return 'product-create';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/register') return 'register';
@@ -208,6 +212,21 @@ export default function App() {
         }
       })
       .catch(err => console.warn('products initial load:', err));
+  }, []);
+
+  const [paymentSettings, setPaymentSettings] = useState(null);
+
+  useEffect(() => {
+    apiClient.get('/api/payment-settings')
+      .then(res => {
+        if (res?.data) {
+          setPaymentSettings(res.data);
+          if (res.data.payment_mode === 'midtrans_popup' && res.data.client_key) {
+            loadMidtransSnap(res.data.client_key, res.data.is_production);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -451,6 +470,7 @@ export default function App() {
       'procurement-bills',
       'templates', 
       'expeditions', 
+      'payment-settings',
       'transactions'
     ];
     if (adminCoreViews.includes(currentView)) return true;
@@ -791,6 +811,47 @@ export default function App() {
     setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
   };
 
+  const handlePayOrder = async (order) => {
+    const snapToken = order.midtrans_snap_token || order.snap_token || order.midtransSnapToken;
+    const mode = paymentSettings?.payment_mode || 'midtrans_popup';
+
+    if (mode === 'midtrans_popup' && snapToken) {
+      showToast('Membuka modal pembayaran Midtrans Snap...');
+      const opened = await triggerMidtransPayment({
+        snapToken,
+        clientKey: paymentSettings?.client_key,
+        isProduction: paymentSettings?.is_production,
+        onSuccess: () => {
+          handleUpdateOrderStatus(order.id, 'paid');
+          showToast(`Pembayaran pesanan ${order.order_number || order.invoice_number} berhasil diverifikasi!`);
+        },
+        onPending: () => {
+          setLastCompletedOrder(order);
+          setCurrentView('order-success');
+          showToast('Menunggu penyelesaian pembayaran.');
+        },
+        onError: () => {
+          showToast('Pembayaran tidak berhasil diselesaikan.', { type: 'error' });
+        },
+        onClose: () => {
+          setLastCompletedOrder(order);
+          setCurrentView('order-success');
+        }
+      });
+
+      if (opened) return;
+    }
+
+    if (mode === 'midtrans_redirect' && (order.midtrans_pdf_url || order.redirect_url)) {
+      window.open(order.midtrans_pdf_url || order.redirect_url, '_blank');
+      return;
+    }
+
+    // Default / store_custom: Go to order-success page
+    setLastCompletedOrder(order);
+    setCurrentView('order-success');
+  };
+
   const handleAuthSuccess = (user, successPrefix = 'Berhasil masuk') => {
     handleUpdateUser(user);
     showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
@@ -1072,10 +1133,7 @@ export default function App() {
           <OrderDetailPage
             order={selectedOrderForDetail}
             onBack={() => setCurrentView('orders')}
-            onPayOrder={(order) => {
-              setLastCompletedOrder(order);
-              setCurrentView('order-success');
-            }}
+            onPayOrder={handlePayOrder}
             onBuyAgain={(item) => {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
               handleBuyNow(foundProd, 1);
@@ -1108,10 +1166,7 @@ export default function App() {
               setSelectedOrderForDetail(order);
               setCurrentView('order-detail');
             }}
-            onPayOrder={(order) => {
-              setLastCompletedOrder(order);
-              setCurrentView('order-success');
-            }}
+            onPayOrder={handlePayOrder}
             onBuyAgain={(item) => {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
               handleBuyNow(foundProd, 1);
@@ -1260,6 +1315,11 @@ export default function App() {
               setTimeout(() => setToastMessage(null), 3000);
             }}
           />
+        ) : currentView === 'payment-settings' ? (
+          <PaymentSettingsPage
+            onShowToast={showToast}
+            onBackToDashboard={() => setCurrentView('admin-dashboard')}
+          />
         ) : currentView === 'order-success' ? (
           <OrderSuccessPage
             orderData={lastCompletedOrder}
@@ -1277,6 +1337,7 @@ export default function App() {
             onBackToCart={() => setCurrentView('cart')}
             onShowToast={showToast}
             onRefreshCart={refreshCartFromBackend}
+            paymentSettings={paymentSettings}
             onFinishOrder={(order) => {
               // Remove checked out items from cart
               setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));

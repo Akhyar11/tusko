@@ -29,6 +29,7 @@ import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategori
 import AddressModal from './AddressModal';
 import ExpeditionModal from './ExpeditionModal';
 import PaymentInstructionModal from './PaymentInstructionModal';
+import { triggerMidtransPayment } from '../utils/midtransSnap';
 
 export default function CheckoutPage({
   checkoutItems = [],
@@ -37,7 +38,8 @@ export default function CheckoutPage({
   availableExpeditions = null,
   initialVoucher = null,
   onShowToast = () => {},
-  onRefreshCart = () => {}
+  onRefreshCart = () => {},
+  paymentSettings = null
 }) {
   const [addresses, setAddresses] = useState(mockAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
@@ -363,6 +365,46 @@ export default function CheckoutPage({
         items: checkoutItems,
         createdAt: orderRes.timestamps?.created_at || new Date().toISOString()
       };
+
+      const isMidtransPayment = selectedPayment?.type === 'midtrans' || selectedPayment?.category?.includes('Midtrans');
+      const snapToken = orderRes.midtrans_snap_token || orderData.midtransSnapToken;
+      const mode = paymentSettings?.payment_mode || 'midtrans_popup';
+
+      if (isMidtransPayment && snapToken && mode === 'midtrans_popup') {
+        onShowToast('Membuka modal pembayaran Midtrans Snap...');
+        const opened = await triggerMidtransPayment({
+          snapToken,
+          clientKey: paymentSettings?.client_key,
+          isProduction: paymentSettings?.is_production,
+          onSuccess: () => {
+            onShowToast(`Pembayaran pesanan ${orderData.invoiceNumber} berhasil diverifikasi!`);
+            orderData.status = 'paid';
+            orderData.payment_status = 'paid';
+            setOrderSuccessData(orderData);
+            onFinishOrder(orderData);
+          },
+          onPending: () => {
+            onShowToast(`Pesanan ${orderData.invoiceNumber} menunggu penyelesaian pembayaran.`);
+            setOrderSuccessData(orderData);
+            onFinishOrder(orderData);
+          },
+          onError: () => {
+            onShowToast('Pembayaran tidak berhasil diselesaikan.', { type: 'error' });
+            setOrderSuccessData(orderData);
+            onFinishOrder(orderData);
+          },
+          onClose: () => {
+            setOrderSuccessData(orderData);
+            onFinishOrder(orderData);
+          }
+        });
+
+        if (opened) return;
+      }
+
+      if (isMidtransPayment && mode === 'midtrans_redirect' && orderRes.midtrans_pdf_url) {
+        window.open(orderRes.midtrans_pdf_url, '_blank');
+      }
 
       onShowToast(`Pesanan ${orderData.invoiceNumber} berhasil dibuat!`);
       setOrderSuccessData(orderData);

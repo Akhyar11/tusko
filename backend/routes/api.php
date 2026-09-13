@@ -102,6 +102,11 @@ Route::prefix('orders')->group(function () {
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
 
+Route::prefix('payment-settings')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\PaymentGatewayController::class, 'index']);
+    Route::match(['put', 'patch'], '/', [\App\Http\Controllers\Api\PaymentGatewayController::class, 'update']);
+});
+
 Route::prefix('transactions')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
     Route::get('/categories', fn () => response()->json(['data' => \App\Http\Controllers\Api\TransactionController::CATEGORIES]));

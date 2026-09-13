@@ -27,6 +27,7 @@ import { apiClient } from '../services/apiClient';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
+import OrderFulfillmentStepper from './molecules/OrderFulfillmentStepper';
 
 export default function OrderDetailPage({
   order = null,
@@ -44,11 +45,22 @@ export default function OrderDetailPage({
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [liveTrackingData, setLiveTrackingData] = useState(null);
   const [isLoadingTracking, setIsLoadingTracking] = useState(false);
+  const [primaryWarehouseName, setPrimaryWarehouseName] = useState('Gudang Pusat Tusko');
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
   const [isBookingPickup, setIsBookingPickup] = useState(false);
   const [pickupSuccessMsg, setPickupSuccessMsg] = useState('');
+
+  React.useEffect(() => {
+    apiClient.get('/api/warehouses/primary')
+      .then(res => {
+        if (res?.data?.warehouse?.name) {
+          setPrimaryWarehouseName(res.data.warehouse.name);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (!order) {
     return (
@@ -328,6 +340,27 @@ export default function OrderDetailPage({
           </div>
         </div>
       </div>
+
+      {/* 5-Step Fulfillment Stepper */}
+      <OrderFulfillmentStepper
+        order={order}
+        warehouseName={primaryWarehouseName}
+        onTrackClick={async () => {
+          setIsTrackingModalOpen(true);
+          setIsLoadingTracking(true);
+          try {
+            const query = trackingNumber || invoice;
+            const res = await apiClient.get(`/api/expeditions/track/${encodeURIComponent(query)}`);
+            if (res?.data) {
+              setLiveTrackingData(res.data);
+            }
+          } catch {
+            // fallback
+          } finally {
+            setIsLoadingTracking(false);
+          }
+        }}
+      />
 
       {/* Two Column Grid: Shipping & Address */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -724,7 +757,7 @@ export default function OrderDetailPage({
                     </div>
                     <div>
                       <p className="font-bold text-neutral-900">Pesanan telah diserahkan ke kurir (Pickup Booked)</p>
-                      <p className="text-[10px] text-neutral-500">Pengirim telah menyerahkan paket di Gudang Pusat</p>
+                      <p className="text-[10px] text-neutral-500">Pengirim telah menyerahkan paket di {primaryWarehouseName}</p>
                       <span className="text-[10px] text-neutral-400 font-mono">Kemarin, 17:45 WIB</span>
                     </div>
                   </div>

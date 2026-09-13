@@ -19,7 +19,8 @@ import {
   FolderKanban,
   Building2,
   PackageCheck,
-  Receipt
+  Receipt,
+  CreditCard
 } from 'lucide-react';
 
 export default function AdminSidebar({
@@ -152,6 +153,13 @@ export default function AdminSidebar({
       sublabel: 'Format surat jalan & invoice',
       icon: Mail,
       activeViews: ['templates']
+    },
+    {
+      id: 'payment-settings',
+      label: 'Pengaturan Pembayaran',
+      sublabel: 'Midtrans Snap & gateway mode',
+      icon: CreditCard,
+      activeViews: ['payment-settings']
     }
   ];
 
