@@ -67,6 +67,7 @@ export default function ProductListPage({
 
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
@@ -190,15 +191,9 @@ export default function ProductListPage({
     fetchData();
   };
 
-  const handleBulkDelete = async () => {
-    if (window.confirm(`Yakin ingin menghapus ${selectedProductIds.length} produk terpilih?`)) {
-      for (const id of selectedProductIds) {
-        const prod = paginatedProducts.find(p => p.id === id) || products.find(p => p.id === id);
-        if (prod) await onDeleteProduct(prod);
-      }
-      setSelectedProductIds([]);
-      fetchData();
-    }
+  const handleBulkDelete = () => {
+    if (selectedProductIds.length === 0) return;
+    setIsBulkDeleteOpen(true);
   };
 
   // Server-Side Table Columns Definition
@@ -649,19 +644,47 @@ export default function ProductListPage({
         onResetFilters={resetFilters}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal (Single or Bulk) */}
       <DeleteProductModal
-        isOpen={Boolean(productToDelete)}
+        isOpen={Boolean(productToDelete) || isBulkDeleteOpen}
         product={productToDelete}
-        onClose={() => setProductToDelete(null)}
-        onConfirmDelete={async (p) => {
-          await onDeleteProduct(p);
+        products={
+          isBulkDeleteOpen
+            ? selectedProductIds
+                .map((id) => paginatedProducts.find((p) => p.id === id) || products.find((p) => p.id === id))
+                .filter(Boolean)
+            : null
+        }
+        onClose={() => {
           setProductToDelete(null);
+          setIsBulkDeleteOpen(false);
+        }}
+        onConfirmDelete={async (target) => {
+          if (Array.isArray(target)) {
+            for (const prod of target) {
+              await onDeleteProduct(prod);
+            }
+            setSelectedProductIds([]);
+            setIsBulkDeleteOpen(false);
+          } else if (target) {
+            await onDeleteProduct(target);
+            setProductToDelete(null);
+          }
           fetchData();
         }}
-        onDeactivateInstead={async (p) => {
-          await onToggleStatus(p);
-          setProductToDelete(null);
+        onDeactivateInstead={async (target) => {
+          if (Array.isArray(target)) {
+            for (const prod of target) {
+              if (prod.status === 'active' || prod.active) {
+                await onToggleStatus(prod);
+              }
+            }
+            setSelectedProductIds([]);
+            setIsBulkDeleteOpen(false);
+          } else if (target) {
+            await onToggleStatus(target);
+            setProductToDelete(null);
+          }
           fetchData();
         }}
       />
