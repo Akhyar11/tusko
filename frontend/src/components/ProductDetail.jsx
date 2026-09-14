@@ -31,40 +31,29 @@ export default function ProductDetail({
 }) {
   if (!product) return null;
 
-  // Prepare full gallery of at least 4-6 images for rich Adidas PDP layout
+  // Prepare full gallery of real images belonging to this product only
   const displayImages = useMemo(() => {
-    const original = product.gallery && product.gallery.length > 0 
-      ? [...product.gallery] 
-      : [product.image_url].filter(Boolean);
-
-    // Complement with high-resolution angle shots if fewer than 6
-    const fallbacks = [
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=1200&q=80'
-    ];
-
-    const result = [...original];
-    for (const fb of fallbacks) {
-      if (result.length >= 6) break;
-      if (!result.includes(fb)) {
-        result.push(fb);
-      }
+    const list = [];
+    if (product.image_url) {
+      list.push(product.image_url);
     }
-    return result;
+    if (Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && typeof img === 'string' && !list.includes(img)) {
+          list.push(img);
+        }
+      });
+    }
+    if (Array.isArray(product.images)) {
+      product.images.forEach((img) => {
+        const url = typeof img === 'string' ? img : img?.image_url;
+        if (url && !list.includes(url)) {
+          list.push(url);
+        }
+      });
+    }
+    return list.length > 0 ? list : [product.image_url || ''].filter(Boolean);
   }, [product]);
-
-  const photoAngleLabels = [
-    '1/6 • Samping Luar (Lateral)',
-    '2/6 • Samping Dalam (Medial)',
-    '3/6 • Tampak Atas & Tali Mesh',
-    '4/6 • Outsole & Heel Counter',
-    '5/6 • Detail Midsole EVA',
-    '6/6 • Penggunaan di Lintasan'
-  ];
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -296,51 +285,48 @@ export default function ProductDetail({
 
               {/* Photo angle indicator badge */}
               <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider">
-                {photoAngleLabels[activePhotoIndex] || `${activePhotoIndex + 1}/${displayImages.length} • Sudut Foto`}
+                {displayImages.length > 1 
+                  ? `${activePhotoIndex + 1}/${displayImages.length} • Foto Produk` 
+                  : 'Foto Utama Produk'}
               </div>
             </div>
 
-            {/* Thumbnails Selector Row (Swipeable on Mobile, Grid on Desktop) */}
-            <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1">
-              {displayImages.map((img, idx) => (
-                <button 
-                  key={idx}
-                  type="button"
-                  onClick={() => setActivePhotoIndex(idx)}
-                  className={`w-16 sm:w-20 aspect-square flex-shrink-0 border-2 overflow-hidden bg-neutral-100 cursor-pointer transition-all ${
-                    activePhotoIndex === idx 
-                      ? 'border-black' 
-                      : 'border-transparent hover:border-neutral-400'
-                  }`}
-                >
-                  <img src={img} className="w-full h-full object-cover" alt={`Thumb ${idx + 1}`} />
-                </button>
-              ))}
-            </div>
+            {/* Thumbnails Selector Row (Hanya muncul jika produk memiliki lebih dari 1 foto) */}
+            {displayImages.length > 1 && (
+              <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                {displayImages.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(idx)}
+                    className={`w-16 sm:w-20 aspect-square flex-shrink-0 border-2 overflow-hidden bg-neutral-100 cursor-pointer transition-all ${
+                      activePhotoIndex === idx 
+                        ? 'border-black' 
+                        : 'border-transparent hover:border-neutral-400'
+                    }`}
+                  >
+                    <img src={img} className="w-full h-full object-cover" alt={`Thumb ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
 
-            {/* Extra Desktop 2x2 Gallery Grid (Visible on Large Screens) */}
-            {displayImages.length > 2 && (
+            {/* Extra Desktop Gallery Grid (Hanya jika produk memiliki foto galeri tambahan asli) */}
+            {displayImages.length > 1 && (
               <div className="hidden sm:grid grid-cols-2 gap-3 pt-4">
-                <div 
-                  onClick={() => setActivePhotoIndex(1)}
-                  className="aspect-square bg-neutral-100 border border-neutral-200 overflow-hidden cursor-pointer group"
-                >
-                  <img 
-                    src={displayImages[1] || displayImages[0]} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                    alt="Detail 2" 
-                  />
-                </div>
-                <div 
-                  onClick={() => setActivePhotoIndex(2)}
-                  className="aspect-square bg-neutral-100 border border-neutral-200 overflow-hidden cursor-pointer group"
-                >
-                  <img 
-                    src={displayImages[2] || displayImages[0]} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                    alt="Detail 3" 
-                  />
-                </div>
+                {displayImages.slice(1, 5).map((img, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => setActivePhotoIndex(idx + 1)}
+                    className="aspect-square bg-neutral-100 border border-neutral-200 overflow-hidden cursor-pointer group"
+                  >
+                    <img 
+                      src={img} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                      alt={`Foto Galeri ${idx + 2}`} 
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -352,7 +338,7 @@ export default function ProductDetail({
             {/* Category, Rating & Title */}
             <div>
               <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-neutral-500 mb-1.5">
-                <span>{product.category_id === 1 ? 'PRIA • APPAREL PRO' : 'PRIA • RUNNING PERFORMANCE'}</span>
+                <span>{product.category?.name?.toUpperCase() || product.category_subtitle?.toUpperCase() || 'PERFORMANCE ATHLETIC'}</span>
                 <div className="flex items-center gap-1 text-black font-bold">
                   <Star size={14} className="fill-amber-500 text-amber-500" />
                   <span>{product.rating || 4.8} ({product.rating_count || 128} Ulasan)</span>
@@ -889,7 +875,7 @@ export default function ProductDetail({
               className="max-h-[80vh] w-auto object-contain border border-neutral-800 shadow-2xl"
             />
             <div className="text-white text-xs font-bold uppercase tracking-wider mt-3">
-              {photoAngleLabels[activePhotoIndex] || `Foto ${activePhotoIndex + 1}`}
+              {displayImages.length > 1 ? `${activePhotoIndex + 1}/${displayImages.length} • Foto Produk` : 'Foto Utama'}
             </div>
           </div>
         </div>
