@@ -99,14 +99,53 @@ class FileStorageService
     }
 
     /**
-     * Delete a file from the active storage disk.
+     * Extract the relative storage path from a relative path or full URL.
+     * Returns null if the value is empty or invalid.
      */
-    public static function delete(?string $path): bool
+    public static function extractStoragePath(?string $pathOrUrl): ?string
     {
-        if (empty($path) || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        if (empty($pathOrUrl)) {
+            return null;
+        }
+
+        $trimmed = trim($pathOrUrl);
+
+        // If it's a full http(s) URL
+        if (str_starts_with($trimmed, 'http://') || str_starts_with($trimmed, 'https://')) {
+            $parsedPath = parse_url($trimmed, PHP_URL_PATH);
+            if (!$parsedPath) {
+                return null;
+            }
+            $cleanPath = ltrim($parsedPath, '/');
+
+            // If path contains 'storage/', strip it for public disk paths (e.g. /storage/products/xyz.png -> products/xyz.png)
+            if (str_starts_with($cleanPath, 'storage/')) {
+                $cleanPath = substr($cleanPath, 8);
+            }
+
+            return $cleanPath ?: null;
+        }
+
+        return ltrim($trimmed, '/');
+    }
+
+    /**
+     * Delete a file from the active storage disk.
+     * Supports both relative storage paths (e.g. 'products/abc.png')
+     * and absolute URLs (e.g. 'https://pub-r2.dev/products/abc.png').
+     */
+    public static function delete(?string $pathOrUrl): bool
+    {
+        $path = self::extractStoragePath($pathOrUrl);
+        if (empty($path)) {
             return false;
         }
 
-        return Storage::disk(self::disk())->delete($path);
+        $disk = self::disk();
+        if (Storage::disk($disk)->exists($path)) {
+            return Storage::disk($disk)->delete($path);
+        }
+
+        return false;
     }
 }
