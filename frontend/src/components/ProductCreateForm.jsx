@@ -479,8 +479,9 @@ export default function ProductCreateForm({
     try {
       setIsUploadingMainImage(true);
       const res = await productService.uploadImage(file);
-      if (res?.url) {
-        setImageUrl(res.url);
+      const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
+      if (uploadedUrl) {
+        setImageUrl(uploadedUrl);
       }
     } catch (err) {
       console.warn('Upload gambar langsung gagal, fallback ke Data URL:', err);
@@ -504,8 +505,9 @@ export default function ProductCreateForm({
         if (!file.type.startsWith('image/')) continue;
         try {
           const res = await productService.uploadImage(file);
-          if (res?.url) {
-            setGalleryUrls(prev => [...prev, res.url]);
+          const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
+          if (uploadedUrl) {
+            setGalleryUrls(prev => [...prev, uploadedUrl]);
           }
         } catch (err) {
           console.warn('Upload gambar galeri gagal, fallback ke Data URL:', err);

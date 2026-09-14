@@ -40,6 +40,7 @@ import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { categoryService } from './services/categoryService';
 import { productService } from './services/productService';
+import { useProductTableStore } from './stores/useProductTableStore';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -979,11 +980,17 @@ export default function App() {
             product={editingProduct}
             categories={categories}
             products={products}
-            onUpdateProduct={(updatedProduct) => {
+            onUpdateProduct={async (updatedProduct) => {
+              try {
+                await productService.updateProduct(updatedProduct.id, updatedProduct);
+              } catch (err) {
+                console.warn('API updateProduct error, continuing with local state:', err);
+              }
               setProducts(prev => prev.map(item => item.id === updatedProduct.id ? updatedProduct : item));
               if (selectedProduct && selectedProduct.id === updatedProduct.id) {
                 setSelectedProduct(updatedProduct);
               }
+              useProductTableStore.getState().fetchData();
               showToast(`Produk "${updatedProduct.name}" berhasil diperbarui!`);
               setCurrentView('products-admin');
             }}
@@ -996,8 +1003,17 @@ export default function App() {
           <ProductCreateForm
             categories={categories}
             products={products}
-            onSaveProduct={(newProduct) => {
+            onSaveProduct={async (newProduct) => {
+              try {
+                const created = await productService.createProduct(newProduct);
+                if (created && created.id) {
+                  newProduct = created;
+                }
+              } catch (err) {
+                console.warn('API createProduct error, continuing with local state:', err);
+              }
               setProducts(prev => [newProduct, ...prev]);
+              useProductTableStore.getState().fetchData();
               showToast(`Produk "${newProduct.name}" berhasil ditambahkan!`);
               setCurrentView('products-admin');
             }}
@@ -1026,14 +1042,26 @@ export default function App() {
               setEditingProduct(p);
               setCurrentView('product-edit');
             }}
-            onDeleteProduct={(p) => {
+            onDeleteProduct={async (p) => {
+              try {
+                await productService.deleteProduct(p.id);
+              } catch (err) {
+                console.warn('API deleteProduct error, continuing with local state:', err);
+              }
               setProducts(prev => prev.filter(item => item.id !== p.id));
+              useProductTableStore.getState().fetchData();
               showToast(`Produk "${p.name}" berhasil dihapus.`);
             }}
-            onToggleStatus={(p) => {
+            onToggleStatus={async (p) => {
               const currentActive = p.status === 'active' || p.active;
               const nextStatus = currentActive ? 'inactive' : 'active';
+              try {
+                await productService.toggleProductStatus(p.id);
+              } catch (err) {
+                console.warn('API toggleStatus error, continuing with local state:', err);
+              }
               setProducts(prev => prev.map(item => item.id === p.id ? { ...item, status: nextStatus, active: !currentActive } : item));
+              useProductTableStore.getState().fetchData();
               showToast(`Status "${p.name}" diubah menjadi ${!currentActive ? 'Aktif' : 'Nonaktif'}.`);
             }}
             onViewProductDetail={(p) => {
