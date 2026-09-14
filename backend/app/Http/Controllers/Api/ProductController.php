@@ -186,6 +186,9 @@ class ProductController extends Controller
         if ($request->has('stockMinimum') && !$request->has('stock_minimum')) {
             $request->merge(['stock_minimum' => $request->input('stockMinimum')]);
         }
+        if ($request->has('vendorId') && !$request->has('vendor_id')) {
+            $request->merge(['vendor_id' => $request->input('vendorId')]);
+        }
         if ($request->has('imageUrl') && !$request->has('image_url')) {
             $request->merge(['image_url' => $request->input('imageUrl')]);
         }
@@ -213,6 +216,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
+            'vendor_id' => 'nullable|exists:vendors,id',
             'sku' => 'nullable|string|max:100|unique:products,sku',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -302,6 +306,7 @@ class ProductController extends Controller
 
         $product = Product::create([
             'category_id' => $validated['category_id'],
+            'vendor_id' => $validated['vendor_id'] ?? null,
             'name' => $validated['name'],
             'slug' => $slug,
             'sku' => $sku,
@@ -325,6 +330,32 @@ class ProductController extends Controller
             'sold_count' => 0,
             'last_restock_at' => ($validated['stock'] ?? 0) > 0 ? now() : null,
         ]);
+
+        // Sinkronisasi record ProductVariant
+        if (!empty($validated['variants']) && is_array($validated['variants'])) {
+            foreach ($validated['variants'] as $varItem) {
+                if (is_array($varItem)) {
+                    $vSku = !empty($varItem['sku']) ? strtoupper(trim($varItem['sku'])) : null;
+                    $vName = $varItem['name'] ?? ($varItem['variant_name'] ?? 'Varian');
+                    $vPrice = $varItem['price'] ?? $product->price;
+                    $vStock = $varItem['stock'] ?? 0;
+                    if ($vSku) {
+                        $product->variants()->updateOrCreate(
+                            ['sku' => $vSku],
+                            [
+                                'variant_name' => $vName,
+                                'price' => $vPrice,
+                                'original_price' => $varItem['original_price'] ?? null,
+                                'current_cogs' => $varItem['cost_price'] ?? ($product->cost_price ?? 0),
+                                'stock' => $vStock,
+                                'is_active' => true,
+                            ]
+                        );
+                    }
+                }
+            }
+            $product->recalculateTotalStockFromVariants();
+        }
 
         // Simpan galeri gambar produk
         if (!empty($galleryImages)) {
@@ -410,6 +441,9 @@ class ProductController extends Controller
         if ($request->has('stockMinimum') && !$request->has('stock_minimum')) {
             $request->merge(['stock_minimum' => $request->input('stockMinimum')]);
         }
+        if ($request->has('vendorId') && !$request->has('vendor_id')) {
+            $request->merge(['vendor_id' => $request->input('vendorId')]);
+        }
         if ($request->has('imageUrl') && !$request->has('image_url')) {
             $request->merge(['image_url' => $request->input('imageUrl')]);
         }
@@ -437,6 +471,7 @@ class ProductController extends Controller
             'category_id' => 'sometimes|required|exists:categories,id',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
+            'vendor_id' => 'nullable|exists:vendors,id',
             'sku' => ['nullable', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product->id)],
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
@@ -498,6 +533,9 @@ class ProductController extends Controller
             $product->stock = $newStock;
         }
 
+        if (array_key_exists('vendor_id', $validated)) {
+            $product->vendor_id = $validated['vendor_id'];
+        }
         if (array_key_exists('category_id', $validated)) {
             $product->category_id = $validated['category_id'];
         }
@@ -573,6 +611,30 @@ class ProductController extends Controller
         }
         if (array_key_exists('variants', $validated)) {
             $product->variants = $validated['variants'];
+            if (!empty($validated['variants']) && is_array($validated['variants'])) {
+                foreach ($validated['variants'] as $varItem) {
+                    if (is_array($varItem)) {
+                        $vSku = !empty($varItem['sku']) ? strtoupper(trim($varItem['sku'])) : null;
+                        $vName = $varItem['name'] ?? ($varItem['variant_name'] ?? 'Varian');
+                        $vPrice = $varItem['price'] ?? $product->price;
+                        $vStock = $varItem['stock'] ?? 0;
+                        if ($vSku) {
+                            $product->variants()->updateOrCreate(
+                                ['sku' => $vSku],
+                                [
+                                    'variant_name' => $vName,
+                                    'price' => $vPrice,
+                                    'original_price' => $varItem['original_price'] ?? null,
+                                    'current_cogs' => $varItem['cost_price'] ?? ($product->cost_price ?? 0),
+                                    'stock' => $vStock,
+                                    'is_active' => true,
+                                ]
+                            );
+                        }
+                    }
+                }
+                $product->recalculateTotalStockFromVariants();
+            }
         }
 
         $product->save();

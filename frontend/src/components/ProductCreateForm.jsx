@@ -1159,29 +1159,27 @@ export default function ProductCreateForm({
             {/* Pemisah Manajemen Stok Fisik */}
             <div className="pt-4 border-t border-neutral-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Total Stok Fisik */}
+                {/* Total Stok Fisik — Dikelola via PO */}
                 <div>
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Total Stok Fisik {!hasVariants && <span className="text-rose-500">*</span>}
+                    Total Stok Fisik
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                    disabled={hasVariants}
-                    placeholder="0"
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono rounded-none border focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                      hasVariants 
-                        ? 'bg-neutral-100 border-neutral-200 text-neutral-500 cursor-not-allowed' 
-                        : 'bg-neutral-50 focus:bg-white border-neutral-300 focus:border-amber-500 text-neutral-950 font-black'
-                    }`}
-                  />
-                  <span className="text-[11px] text-neutral-500 mt-1 block">
-                    {hasVariants 
-                      ? 'Terkunci — dihitung otomatis dari akumulasi stok varian' 
-                      : 'Jumlah unit fisik produk yang tersedia di gudang'}
-                  </span>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      value={0}
+                      disabled={true}
+                      readOnly
+                      placeholder="0"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono rounded-none border bg-neutral-100 border-neutral-200 text-neutral-500 cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-none">
+                    <span className="text-amber-600 text-[10px] leading-tight">
+                      ⚠ Stok awal 0 unit — penambahan stok fisik dikelola terstruktur melalui Purchase Order (PO) &amp; Penerimaan Barang (GRN).
+                    </span>
+                  </div>
                 </div>
 
                 {/* Batas Stok Minimum */}
@@ -1399,9 +1397,11 @@ export default function ProductCreateForm({
                             <td className="py-2 px-3 text-right">
                               <input
                                 type="number"
-                                value={row.stock}
-                                onChange={(e) => handleUpdateMatrixRow(row.id, 'stock', e.target.value)}
-                                className="w-20 px-2 py-1 bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-neutral-950 rounded-none"
+                                value={0}
+                                disabled={true}
+                                readOnly
+                                title="Stok dikelola via Purchase Order (PO)"
+                                className="w-20 px-2 py-1 bg-neutral-100 border border-neutral-200 font-mono text-right text-neutral-400 cursor-not-allowed rounded-none"
                               />
                             </td>
                             <td className="py-2 px-3 text-center">

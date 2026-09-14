@@ -32,6 +32,11 @@ class Vendor extends Model
         return $this->hasMany(PurchaseOrder::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function bills(): HasMany
     {
         return $this->hasMany(VendorBill::class);

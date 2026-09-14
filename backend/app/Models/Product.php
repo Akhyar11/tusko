@@ -14,6 +14,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'vendor_id',
         'name',
         'slug',
         'sku',
@@ -52,6 +53,7 @@ class Product extends Model
     ];
 
     protected $casts = [
+        'vendor_id' => 'integer',
         'price' => 'decimal:2',
         'original_price' => 'decimal:2',
         'cost_price' => 'decimal:2',
@@ -104,6 +106,21 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function recalculateTotalStockFromVariants(): int
+    {
+        if ($this->variants()->exists()) {
+            $total = (int) $this->variants()->sum('stock');
+            $this->update(['stock' => $total]);
+            return $total;
+        }
+        return (int) $this->stock;
     }
 
     public function categories(): BelongsToMany

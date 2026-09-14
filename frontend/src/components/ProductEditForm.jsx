@@ -1021,29 +1021,26 @@ export default function ProductEditForm({
             {/* Pemisah Manajemen Stok Fisik */}
             <div className="pt-4 border-t border-neutral-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Total Stok Fisik */}
+                {/* Total Stok Fisik — Read-only, dikelola via PO/GRN */}
                 <div>
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Total Stok Fisik {!hasVariants && <span className="text-rose-500">*</span>}
+                    Total Stok Fisik
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                    disabled={hasVariants}
-                    placeholder="0"
-                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono rounded-none border focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                      hasVariants 
-                        ? 'bg-neutral-100 border-neutral-200 text-neutral-500 cursor-not-allowed' 
-                        : 'bg-neutral-50 focus:bg-white border-neutral-300 focus:border-amber-500 text-neutral-950 font-black'
-                    }`}
-                  />
-                  <span className="text-[11px] text-neutral-500 mt-1 block">
-                    {hasVariants 
-                      ? 'Terkunci — dihitung otomatis dari akumulasi stok varian' 
-                      : 'Jumlah unit fisik produk yang tersedia di gudang'}
-                  </span>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      value={stock}
+                      disabled={true}
+                      readOnly
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono rounded-none border bg-neutral-100 border-neutral-200 text-neutral-700 font-bold cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-none">
+                    <span className="text-amber-700 text-[10px] leading-tight">
+                      🔒 Dikelola via Purchase Order (PO) — Penambahan &amp; pengurangan stok hanya dilakukan melalui alur PO &amp; GRN.
+                    </span>
+                  </div>
                 </div>
 
                 {/* Batas Stok Minimum */}
@@ -1185,8 +1182,10 @@ export default function ProductEditForm({
                           <input
                             type="number"
                             value={v.stock || 0}
-                            onChange={(e) => handleUpdateVariant(idx, 'stock', e.target.value)}
-                            className="w-20 px-2 py-1 bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-neutral-950 rounded-none"
+                            disabled={true}
+                            readOnly
+                            title="Stok dikelola via Purchase Order (PO) & GRN"
+                            className="w-20 px-2 py-1 bg-neutral-100 border border-neutral-200 font-mono text-right font-bold text-neutral-600 cursor-not-allowed rounded-none"
                           />
                         </td>
                         <td className="py-2 px-3 text-center">

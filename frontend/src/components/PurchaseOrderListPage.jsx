@@ -22,6 +22,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { vendorService } from '../services/vendorService';
+import { productService } from '../services/productService';
 import { initialWarehouses } from '../data/mockStockData';
 import { usePOTableStore } from '../stores/useProcurementTableStores';
 
@@ -32,6 +33,8 @@ export default function PurchaseOrderListPage({
 }) {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [vendors, setVendors] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // all published products
+  const [vendorProducts, setVendorProducts] = useState([]); // products filtered by selected vendor
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [poToCancel, setPoToCancel] = useState(null);
 
@@ -89,6 +92,7 @@ export default function PurchaseOrderListPage({
       loadPOs();
     });
 
+    // Load all vendors
     vendorService.fetchVendors().then(res => {
       if (res?.data && res.data.length > 0) {
         setVendors(res.data);
@@ -97,6 +101,11 @@ export default function PurchaseOrderListPage({
           vendor_id: prev.vendor_id || res.data[0].id
         }));
       }
+    }).catch(() => {});
+
+    // Load all products (incl. inactive, large per_page for PO selector)
+    productService.fetchProducts({ per_page: 200, include_inactive: 1 }).then(res => {
+      if (res?.data) setAllProducts(res.data);
     }).catch(() => {});
 
     return () => unsubscribe();
@@ -116,13 +125,24 @@ export default function PurchaseOrderListPage({
     return { totalCount, ongoingCount, completedCount, totalProcurementValue };
   }, [purchaseOrders, paginatedPOs, totalFiltered]);
 
+  // Filter products by selected vendor_id whenever vendor or allProducts changes
+  useEffect(() => {
+    if (!newPO.vendor_id || allProducts.length === 0) {
+      setVendorProducts(allProducts);
+      return;
+    }
+    const filtered = allProducts.filter(p => String(p.vendor_id) === String(newPO.vendor_id));
+    // If no products linked to vendor, show all products as fallback
+    setVendorProducts(filtered.length > 0 ? filtered : allProducts);
+  }, [newPO.vendor_id, allProducts]);
+
   // Handle PO Creation
   const handleAddItemToPO = () => {
     setNewPO(prev => ({
       ...prev,
       items: [
         ...prev.items,
-        { product_name: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
+        { product_id: '', product_name: '', variant_id: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
       ]
     }));
   };
@@ -143,6 +163,67 @@ export default function PurchaseOrderListPage({
     });
   };
 
+  // When user selects a product in PO item row → auto-fill sku & unit_price & reset variant
+  const handleItemProductSelect = (idx, productId) => {
+    const product = vendorProducts.find(p => String(p.id) === String(productId));
+    if (!product) {
+      handleItemChange(idx, 'product_id', '');
+      return;
+    }
+    const variants = product.variants || [];
+    const hasVariants = variants.length > 0;
+
+    setNewPO(prev => {
+      const updated = [...prev.items];
+      if (hasVariants) {
+        // Let user pick variant — clear variant fields first
+        updated[idx] = {
+          ...updated[idx],
+          product_id: product.id,
+          product_name: product.name,
+          variant_id: '',
+          variant_name: '',
+          sku: '',
+          unit_price: Number(product.cost_price) || Number(product.price) || 0,
+        };
+      } else {
+        // No variants → self-variant: use product SKU and cost_price
+        updated[idx] = {
+          ...updated[idx],
+          product_id: product.id,
+          product_name: product.name,
+          variant_id: 'self',
+          variant_name: 'Unit Utama (Self-Variant)',
+          sku: product.sku || '',
+          unit_price: Number(product.cost_price) || Number(product.price) || 0,
+        };
+      }
+      return { ...prev, items: updated };
+    });
+  };
+
+  // When user selects a variant in PO item row → auto-fill sku & unit_price
+  const handleItemVariantSelect = (idx, variantId) => {
+    const item = newPO.items[idx];
+    const product = vendorProducts.find(p => String(p.id) === String(item?.product_id));
+    if (!product) return;
+    const variants = product.variants || [];
+    const variant = variants.find(v => String(v.id) === String(variantId));
+    if (!variant) return;
+
+    setNewPO(prev => {
+      const updated = [...prev.items];
+      updated[idx] = {
+        ...updated[idx],
+        variant_id: variant.id,
+        variant_name: variant.name || `${variant.color || ''} ${variant.size || ''}`.trim(),
+        sku: variant.sku || item.sku || '',
+        unit_price: Number(variant.price) || Number(product.cost_price) || 0,
+      };
+      return { ...prev, items: updated };
+    });
+  };
+
   const handleSavePO = (e) => {
     e.preventDefault();
     const vendor = vendors.find(v => String(v.id) === String(newPO.vendor_id)) || vendors[0];
@@ -159,7 +240,9 @@ export default function PurchaseOrderListPage({
       notes: newPO.notes || 'Pengadaan batch baru perlengkapan atletik.',
       items: newPO.items.map((it, idx) => ({
         id: Date.now() + idx,
+        product_id: it.product_id || null,
         product_name: it.product_name || 'Produk Tusko Performance',
+        variant_id: it.variant_id !== 'self' ? (it.variant_id || null) : null,
         variant_name: it.variant_name || '-',
         sku: it.sku || `TSK-GEN-${Date.now().toString().slice(-4)}`,
         ordered_quantity: Number(it.ordered_quantity) || 1,
@@ -172,12 +255,12 @@ export default function PurchaseOrderListPage({
     const created = procurementService.createPurchaseOrder(poRecord);
     setIsCreateModalOpen(false);
     setNewPO({
-      vendor_id: '',
+      vendor_id: vendors[0]?.id || '',
       expected_delivery_date: '',
       notes: '',
       warehouse_name: initialWarehouses[0] ? `${initialWarehouses[0].name} (${initialWarehouses[0].code})` : '',
       items: [
-        { product_name: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
+        { product_id: '', product_name: '', variant_id: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
       ]
     });
     onShowToast(`Purchase Order ${created.po_number} berhasil diterbitkan.`);
@@ -577,80 +660,124 @@ export default function PurchaseOrderListPage({
                   </button>
                 </div>
 
+                {vendorProducts.length === 0 && allProducts.length === 0 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-none text-[11px] text-amber-700 mb-2">
+                    ⚠ Memuat data produk... Pastikan backend berjalan.
+                  </div>
+                )}
+
                 <div className="space-y-3">
-                  {newPO.items.map((it, idx) => (
-                    <div key={idx} className="p-3 bg-neutral-50 border border-neutral-300 rounded-none space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-[11px] text-neutral-500">Item #{idx + 1}</span>
-                        {newPO.items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItemFromPO(idx)}
-                            className="text-red-500 hover:text-red-700 text-[11px] cursor-pointer"
+                  {newPO.items.map((it, idx) => {
+                    const selectedProduct = vendorProducts.find(p => String(p.id) === String(it.product_id));
+                    const productVariants = selectedProduct?.variants || [];
+                    const hasVariants = productVariants.length > 0;
+                    const isSelfVariant = !hasVariants && it.product_id;
+                    const subtotal = (Number(it.ordered_quantity) || 0) * (Number(it.unit_price) || 0);
+
+                    return (
+                      <div key={idx} className="p-3 bg-neutral-50 border border-neutral-300 rounded-none space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-[11px] text-neutral-500">Item #{idx + 1}</span>
+                          {newPO.items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItemFromPO(idx)}
+                              className="text-rose-500 hover:text-rose-700 text-[11px] cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Row 1: Product Selector */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Pilih Produk</label>
+                          <select
+                            required
+                            value={it.product_id || ''}
+                            onChange={(e) => handleItemProductSelect(idx, e.target.value)}
+                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs cursor-pointer"
                           >
-                            Hapus
-                          </button>
+                            <option value="">— Pilih produk vendor —</option>
+                            {vendorProducts.map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}{p.sku ? ` [${p.sku}]` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Row 2: Variant Selector (if product has variants) or Self-Variant Badge */}
+                        {it.product_id && (
+                          <div>
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Varian Produk</label>
+                            {hasVariants ? (
+                              <select
+                                required
+                                value={it.variant_id || ''}
+                                onChange={(e) => handleItemVariantSelect(idx, e.target.value)}
+                                className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs cursor-pointer"
+                              >
+                                <option value="">— Pilih varian —</option>
+                                {productVariants.map(v => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.name || `${v.color || ''} ${v.size || ''}`.trim()} {v.sku ? `[${v.sku}]` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className="flex items-center gap-2 p-1.5 bg-neutral-100 border border-neutral-200 rounded-none">
+                                <span className="text-[10px] font-mono font-bold text-neutral-600">Unit Utama (Self-Variant)</span>
+                                <span className="text-[10px] font-mono text-neutral-400">{it.sku}</span>
+                              </div>
+                            )}
+                          </div>
                         )}
-                      </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div className="sm:col-span-2">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Nama Produk (misal: Running Jersey)"
-                            value={it.product_name}
-                            onChange={(e) => handleItemChange(idx, 'product_name', e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Kode SKU"
-                            value={it.sku}
-                            onChange={(e) => handleItemChange(idx, 'sku', e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono uppercase"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Varian (misal: L / Merah)"
-                            value={it.variant_name}
-                            onChange={(e) => handleItemChange(idx, 'variant_name', e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="number"
-                            required
-                            min="1"
-                            placeholder="Qty Dipesan"
-                            value={it.ordered_quantity}
-                            onChange={(e) => handleItemChange(idx, 'ordered_quantity', e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="number"
-                            required
-                            min="0"
-                            placeholder="Harga Satuan (Rp)"
-                            value={it.unit_price}
-                            onChange={(e) => handleItemChange(idx, 'unit_price', e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
-                          />
+                        {/* Row 3: SKU (auto-filled), Qty, Unit Price, Subtotal */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">SKU</label>
+                            <input
+                              type="text"
+                              value={it.sku || ''}
+                              readOnly
+                              className="w-full p-1.5 bg-neutral-100 border border-neutral-200 rounded-none text-xs font-mono text-neutral-600 cursor-default"
+                              placeholder="—"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Qty Pesan</label>
+                            <input
+                              type="number"
+                              required
+                              min="1"
+                              value={it.ordered_quantity}
+                              onChange={(e) => handleItemChange(idx, 'ordered_quantity', e.target.value)}
+                              className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">HPP / Unit (Rp)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={it.unit_price}
+                              onChange={(e) => handleItemChange(idx, 'unit_price', e.target.value)}
+                              className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Subtotal</label>
+                            <div className="p-1.5 bg-neutral-100 border border-neutral-200 rounded-none text-xs font-mono font-bold text-neutral-700">
+                              {formatRupiah(subtotal)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

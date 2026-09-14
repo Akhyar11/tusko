@@ -133,3 +133,11 @@ Route::prefix('vendors')->group(function () {
     Route::delete('/{id}', [\App\Http\Controllers\Api\VendorController::class, 'destroy']);
     Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\VendorController::class, 'toggleStatus']);
 });
+
+Route::prefix('purchase-orders')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'store']);
+    Route::get('/{idOrPoNumber}', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'show']);
+    Route::post('/{idOrPoNumber}/receive', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'receive']);
+    Route::post('/{idOrPoNumber}/cancel', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'cancel']);
+});

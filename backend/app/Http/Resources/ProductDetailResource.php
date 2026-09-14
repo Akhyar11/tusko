@@ -32,6 +32,12 @@ class ProductDetailResource extends JsonResource
             'id' => $this->id,
             'category_id' => $this->category_id,
             'category_ids' => $categoryIds,
+            'vendor_id' => $this->vendor_id,
+            'vendor' => $this->vendor ? [
+                'id' => $this->vendor->id,
+                'code' => $this->vendor->code,
+                'company_name' => $this->vendor->company_name,
+            ] : null,
             'category' => [
                 'id' => $this->category?->id,
                 'name' => $this->category?->name,
