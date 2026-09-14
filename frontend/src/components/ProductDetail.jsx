@@ -18,7 +18,7 @@ import {
   Maximize2,
   AlertCircle
 } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
 
 export default function ProductDetail({ 
   product, 
@@ -31,28 +31,28 @@ export default function ProductDetail({
 }) {
   if (!product) return null;
 
-  // Prepare full gallery of real images belonging to this product only
+  // Prepare full gallery of real images belonging to this product only (strictly zero foreign/hardcoded dummy images)
   const displayImages = useMemo(() => {
     const list = [];
-    if (product.image_url) {
-      list.push(product.image_url);
+    if (product.image_url && typeof product.image_url === 'string' && product.image_url.trim()) {
+      list.push(product.image_url.trim());
     }
     if (Array.isArray(product.gallery)) {
       product.gallery.forEach((img) => {
-        if (img && typeof img === 'string' && !list.includes(img)) {
-          list.push(img);
+        if (img && typeof img === 'string' && img.trim() && !list.includes(img.trim())) {
+          list.push(img.trim());
         }
       });
     }
     if (Array.isArray(product.images)) {
       product.images.forEach((img) => {
-        const url = typeof img === 'string' ? img : img?.image_url;
+        const url = typeof img === 'string' ? img.trim() : img?.image_url?.trim();
         if (url && !list.includes(url)) {
           list.push(url);
         }
       });
     }
-    return list.length > 0 ? list : [product.image_url || ''].filter(Boolean);
+    return list.length > 0 ? list : [product.image_url || PRODUCT_PLACEHOLDER_IMAGE].filter(Boolean);
   }, [product]);
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -250,7 +250,7 @@ export default function ProductDetail({
             {/* Mobile & Desktop Hero Showcase Image */}
             <div className="relative aspect-square sm:aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden group">
               <img 
-                src={displayImages[activePhotoIndex] || product.image_url} 
+                src={displayImages[activePhotoIndex] || product.image_url || PRODUCT_PLACEHOLDER_IMAGE} 
                 alt={product.name} 
                 className="w-full h-full object-cover object-center transition-all duration-300 group-hover:scale-105"
               />
@@ -608,17 +608,15 @@ export default function ProductDetail({
               INSPIRASI &amp; PERFORMA TEKNIS
             </span>
             <h2 className="font-sport font-black text-2xl sm:text-4xl uppercase italic tracking-tight leading-tight text-black mb-4">
-              {product.category_id === 1 
-                ? 'JERSEY TANDING PRO DENGAN VENTILASI AEROTECH' 
-                : 'SEPATU LARI STABIL UNTUK PERFORMA SETIAP HARI'}
+              {product.name ? `${product.name.toUpperCase()} - EDISI RESMI` : 'PERFORMA ATLETIK TERUJI'}
             </h2>
             <p className="text-xs sm:text-sm text-neutral-700 leading-relaxed mb-4">
-              {product.description || 'Ketika kecepatan memanggil, jawab tantangan dengan Sepatu Tusko Ultimashow. Tidak peduli seberapa jauh atau seberapa cepat Anda melangkah, bantalan empuk midsole memberikan kenyamanan superior dari langkah pertama hingga garis finis.'}
+              {product.description || 'Didesain secara presisi untuk menunjang performa atletik dengan standar material terbaik dari Tusko Official Flagship.'}
             </p>
             <p className="text-xs sm:text-sm text-neutral-700 leading-relaxed">
-              {product.category_id === 1 
-                ? 'Didesain khusus untuk tuntutan pertandingan 90 menit penuh dengan mobilitas tanpa batas dan bobot ultra-ringan.' 
-                : 'Dilengkapi dengan outsole karet berdaya cengkeram tinggi serta TPU fit counter di bagian tumit yang mengunci posisi kaki secara stabil di berbagai medan lintasan jogging perkotaan.'}
+              {product.category?.name 
+                ? `Kategori ${product.category.name}: Menawarkan kenyamanan ergonomis dan durabilitas tinggi untuk kebutuhan aktivitas olahraga dan harian Anda.` 
+                : 'Menawarkan kenyamanan ergonomis dan durabilitas tinggi untuk kebutuhan aktivitas olahraga dan harian Anda.'}
             </p>
           </div>
 
@@ -785,7 +783,7 @@ export default function ProductDetail({
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-200 p-3 sm:hidden shadow-[0_-5px_15px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <img 
-            src={displayImages[activePhotoIndex] || product.image_url} 
+            src={displayImages[activePhotoIndex] || product.image_url || PRODUCT_PLACEHOLDER_IMAGE} 
             className="w-10 h-10 object-cover bg-neutral-100 border border-neutral-200" 
             alt="Thumb" 
           />
@@ -870,7 +868,7 @@ export default function ProductDetail({
               <span>Tutup</span>
             </button>
             <img 
-              src={displayImages[activePhotoIndex] || product.image_url} 
+              src={displayImages[activePhotoIndex] || product.image_url || PRODUCT_PLACEHOLDER_IMAGE} 
               alt="Zoomed product" 
               className="max-h-[80vh] w-auto object-contain border border-neutral-800 shadow-2xl"
             />

@@ -679,8 +679,8 @@ export default function ProductCreateForm({
       cost_price: Number(costPrice) || Math.round(numPrice * 0.6),
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
-      image_url: imageUrl.trim() || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80',
-      gallery: galleryUrls.length > 0 ? galleryUrls : [imageUrl.trim() || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80'],
+      image_url: imageUrl.trim() || '',
+      gallery: galleryUrls.length > 0 ? galleryUrls : (imageUrl.trim() ? [imageUrl.trim()] : []),
       specifications: specificationsObj,
       variant_levels: variantLevels,
       variants

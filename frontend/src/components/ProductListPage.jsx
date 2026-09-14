@@ -23,7 +23,7 @@ import {
   X,
   RotateCcw
 } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
 import DeleteProductModal from './DeleteProductModal';
 import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
@@ -207,7 +207,7 @@ export default function ProductListPage({
         return (
           <div className="flex items-center gap-3">
             <img
-              src={product.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300'}
+              src={product.image_url || PRODUCT_PLACEHOLDER_IMAGE}
               alt={product.name}
               className="w-12 h-12 rounded-none object-cover border border-neutral-300 shrink-0 bg-neutral-100"
             />

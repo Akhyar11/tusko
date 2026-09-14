@@ -555,7 +555,7 @@ export default function ProductEditForm({
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
       image_url: imageUrl.trim(),
-      gallery: galleryUrls.length > 0 ? galleryUrls : [imageUrl.trim()],
+      gallery: galleryUrls.length > 0 ? galleryUrls : (imageUrl.trim() ? [imageUrl.trim()] : []),
       specifications: specificationsObj,
       variants: hasVariants ? variantsList : []
     };

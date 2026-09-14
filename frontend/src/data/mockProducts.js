@@ -168,10 +168,8 @@ export function createMockProduct(productData) {
     stock_minimum: Number(productData.stock_minimum) || 5,
     status: productData.status || 'active',
     active: productData.status !== 'inactive',
-    image_url: productData.image_url || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
-    gallery: productData.gallery?.length ? productData.gallery : [
-      productData.image_url || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
-    ],
+    image_url: productData.image_url || '',
+    gallery: productData.gallery?.length ? productData.gallery : (productData.image_url ? [productData.image_url] : []),
     specifications: productData.specifications || {},
     variant_levels: productData.variant_levels || [],
     variants: productData.variants || [],
