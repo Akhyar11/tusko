@@ -3,7 +3,7 @@ services:
   # 1. Backend API Service (Laravel 12 + Docker)
   # ==========================================
   - type: web
-    name: tusko-backend
+    name: tusko-api
     runtime: docker
     dockerfilePath: backend/Dockerfile
     dockerContext: backend
@@ -59,7 +59,7 @@ services:
   # 2. Frontend Storefront (React Vite SPA)
   # ==========================================
   - type: web
-    name: tusko-frontend
+    name: tusko
     runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
@@ -72,5 +72,5 @@ services:
       - key: VITE_API_URL
         fromService:
           type: web
-          name: tusko-backend
+          name: tusko-api
           property: host
