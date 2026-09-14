@@ -21,6 +21,7 @@ import {
   PackageCheck,
   Receipt
 } from 'lucide-react';
+import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
 export default function AdminSidebar({
   currentView = 'admin-dashboard',
@@ -155,6 +156,13 @@ export default function AdminSidebar({
     }
   ];
 
+  // Modul operasional yang di-hide sementara pada branch production (master)
+  const HIDDEN_MODULE_IDS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
+
+  const visibleMenuItems = SHOW_OPERATIONAL_MODULES
+    ? menuItems
+    : menuItems.filter((item) => !HIDDEN_MODULE_IDS.includes(item.id));
+
   const handleItemClick = (viewId) => {
     setIsMobileOpen(false);
     onNavigate(viewId);
@@ -215,7 +223,7 @@ export default function AdminSidebar({
           Menu Operasional
         </div>
 
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const isActive = item.activeViews.includes(currentView);
           const IconComponent = item.icon;
 

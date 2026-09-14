@@ -5,3 +5,8 @@ dist/
 vendor/
 *.sqlite
 *.sqlite3
+
+# Invoices & Internal Billing Documents
+invoice_*.html
+INVOICE_*.pdf
+*.pdf

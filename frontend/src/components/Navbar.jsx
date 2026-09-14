@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import UserMenuDropdown from './UserMenuDropdown';
+import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
 export default function Navbar({ 
   cartCount = 0, 
@@ -702,50 +703,54 @@ export default function Navbar({
                         <ChevronRight size={15} className="text-neutral-400 shrink-0" />
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          onOpenStock();
-                        }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Boxes size={16} className="text-amber-600 shrink-0" />
-                          <span>Manajemen Stok &amp; Varian</span>
-                        </div>
-                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                      </button>
+                      {SHOW_OPERATIONAL_MODULES && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenStock();
+                            }}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Boxes size={16} className="text-amber-600 shrink-0" />
+                              <span>Manajemen Stok &amp; Varian</span>
+                            </div>
+                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          onOpenTemplates();
-                        }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Boxes size={16} className="text-amber-600 shrink-0" />
-                          <span>Template Master Produk</span>
-                        </div>
-                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenTemplates();
+                            }}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Boxes size={16} className="text-amber-600 shrink-0" />
+                              <span>Template Master Produk</span>
+                            </div>
+                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          onOpenExpeditions();
-                        }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Truck size={16} className="text-amber-600 shrink-0" />
-                          <span>Partner Ekspedisi (KiriminAja)</span>
-                        </div>
-                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              onOpenExpeditions();
+                            }}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Truck size={16} className="text-amber-600 shrink-0" />
+                              <span>Partner Ekspedisi (KiriminAja)</span>
+                            </div>
+                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

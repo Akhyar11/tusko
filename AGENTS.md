@@ -18,17 +18,21 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 </RULE[team_feature_division]>
 
 <RULE[git_branch_commit_policy]>
-# Kebijakan Git Branching & Commit
+# Kebijakan Git Branching & Commit (Produksi & Pengembangan)
 
-1. **Proteksi Branch Master**:
+1. **Struktur Branch Utama**:
+   - `master`: Branch **Production** (Live Deployment). Menu modul operasional fase lanjutan (Manajemen Stok, Daftar Pesanan, Buku Kas, Pengaturan Ekspedisi, Template Email & Resi) di-hide terlebih dahulu untuk kestabilan rilis saat ini.
+   - `main`: Branch **Development** (Pusat Pengembangan). Seluruh menu dan fitur operasional dibuka untuk iterasi dan pengetesan fitur lanjutan.
+2. **Alur Kerja Branching (Feature Workflow)**:
+   - Alur wajib: `branch fitur/fix` -> Pull Request / Merge ke `main` (Development) -> Validasi & Merge ke `master` (Production).
    - DILARANG melakukan `git commit` langsung di branch `master` atau `main`.
-   - Seluruh pekerjaan WAJIB dibuatkan branch baru dari `master`:
+   - Seluruh pekerjaan fitur WAJIB dibuatkan branch baru dari `main`:
      - Developer 1: `feat/auth-profile-address`, `feat/cart-checkout-payment`
      - Developer 2: `feat/catalog-product-admin`, `feat/orders-stock-operations`
      - Perbaikan bug: `fix/nama-masalah`
-2. **Git Push Policy**:
+3. **Git Push Policy**:
    - Agent DILARANG melakukan `git push` otomatis tanpa persetujuan eksplisit dari User.
-3. **Format Pesan Commit**:
+4. **Format Pesan Commit**:
    - Gunakan format konvensional: `feat(...)`, `fix(...)`, `refactor(...)`, `test(...)`, `style(...)`, `chore(...)`.
 </RULE[git_branch_commit_policy]>
 

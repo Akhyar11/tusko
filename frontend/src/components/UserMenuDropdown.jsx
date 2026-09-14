@@ -16,6 +16,7 @@ import {
   Package
 } from 'lucide-react';
 import { mockDemoUsers } from '../data/mockAuthData';
+import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
 export default function UserMenuDropdown({
   currentUser = null,
@@ -194,14 +195,16 @@ export default function UserMenuDropdown({
                   <span>Daftar Pesanan Toko</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleAction(onOpenTransactions)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                >
-                  <Wallet size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
-                  <span>Catatan Transaksi &amp; Kas</span>
-                </button>
+                {SHOW_OPERATIONAL_MODULES && (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(onOpenTransactions)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                  >
+                    <Wallet size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
+                    <span>Catatan Transaksi &amp; Kas</span>
+                  </button>
+                )}
               </div>
 
               {/* Admin Shortcuts (If admin) */}
@@ -219,30 +222,34 @@ export default function UserMenuDropdown({
                       <Package size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
                       <span>Manajemen Produk &amp; Katalog</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAction(onOpenStock)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                    >
-                      <Boxes size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                      <span>Manajemen Stok Gudang</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAction(onOpenTemplates)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                    >
-                      <Mail size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                      <span>Template Email &amp; Resi</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAction(onOpenExpeditions)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                    >
-                      <Truck size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                      <span>Pengaturan Ekspedisi &amp; Ongkir</span>
-                    </button>
+                    {SHOW_OPERATIONAL_MODULES && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleAction(onOpenStock)}
+                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                        >
+                          <Boxes size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                          <span>Manajemen Stok Gudang</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAction(onOpenTemplates)}
+                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                        >
+                          <Mail size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                          <span>Template Email &amp; Resi</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAction(onOpenExpeditions)}
+                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                        >
+                          <Truck size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
+                          <span>Pengaturan Ekspedisi &amp; Ongkir</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
