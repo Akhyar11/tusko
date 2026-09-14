@@ -192,6 +192,12 @@ class ProductController extends Controller
         if ($request->has('galleryUrls') && !$request->has('images')) {
             $request->merge(['images' => $request->input('galleryUrls')]);
         }
+        if ($request->has('pointType') && !$request->has('point_type')) {
+            $request->merge(['point_type' => $request->input('pointType')]);
+        }
+        if ($request->has('pointValue') && !$request->has('point_value')) {
+            $request->merge(['point_value' => $request->input('pointValue')]);
+        }
         if ($request->has('specList') && !$request->has('specifications')) {
             $specArray = [];
             foreach ($request->input('specList') as $item) {
@@ -212,6 +218,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
+            'point_type' => 'nullable|string|in:manual,percentage',
+            'point_value' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'stock_minimum' => 'nullable|integer|min:0',
             'weight' => 'nullable|integer|min:1',
@@ -301,6 +309,8 @@ class ProductController extends Controller
             'price' => $validated['price'],
             'original_price' => $validated['original_price'] ?? null,
             'cost_price' => $validated['cost_price'] ?? round($validated['price'] * 0.65),
+            'point_type' => $validated['point_type'] ?? 'manual',
+            'point_value' => $validated['point_value'] ?? 0.00,
             'stock' => $validated['stock'] ?? 0,
             'stock_minimum' => $validated['stock_minimum'] ?? 5,
             'min_stock' => $validated['stock_minimum'] ?? 5,
@@ -406,6 +416,12 @@ class ProductController extends Controller
         if ($request->has('galleryUrls') && !$request->has('images')) {
             $request->merge(['images' => $request->input('galleryUrls')]);
         }
+        if ($request->has('pointType') && !$request->has('point_type')) {
+            $request->merge(['point_type' => $request->input('pointType')]);
+        }
+        if ($request->has('pointValue') && !$request->has('point_value')) {
+            $request->merge(['point_value' => $request->input('pointValue')]);
+        }
         if ($request->has('specList') && !$request->has('specifications')) {
             $specArray = [];
             foreach ($request->input('specList') as $item) {
@@ -426,6 +442,8 @@ class ProductController extends Controller
             'price' => 'sometimes|required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
+            'point_type' => 'nullable|string|in:manual,percentage',
+            'point_value' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
             'stock_minimum' => 'nullable|integer|min:0',
             'weight' => 'nullable|integer|min:1',
@@ -497,6 +515,12 @@ class ProductController extends Controller
         }
         if (array_key_exists('cost_price', $validated)) {
             $product->cost_price = $validated['cost_price'];
+        }
+        if (array_key_exists('point_type', $validated)) {
+            $product->point_type = $validated['point_type'] ?: 'manual';
+        }
+        if (array_key_exists('point_value', $validated)) {
+            $product->point_value = $validated['point_value'] !== null ? (float) $validated['point_value'] : 0.00;
         }
         if (array_key_exists('stock_minimum', $validated)) {
             $product->stock_minimum = $validated['stock_minimum'];

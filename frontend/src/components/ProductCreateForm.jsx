@@ -170,6 +170,8 @@ export default function ProductCreateForm({
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [costPrice, setCostPrice] = useState('');
+  const [pointType, setPointType] = useState('manual');
+  const [pointValue, setPointValue] = useState('');
   const [stock, setStock] = useState('');
   const [stockMinimum, setStockMinimum] = useState(5);
 
@@ -205,6 +207,15 @@ export default function ProductCreateForm({
     const marginPercent = p > 0 ? Math.round((profit / p) * 100) : 0;
     return { profit, marginPercent };
   }, [price, costPrice]);
+
+  const calculatedRewardPoints = useMemo(() => {
+    const numVal = Number(pointValue) || 0;
+    const numPrice = Number(price) || 0;
+    if (pointType === 'percentage') {
+      return Math.round(numPrice * (numVal / 100));
+    }
+    return Math.round(numVal);
+  }, [pointType, pointValue, price]);
 
   // Variant Attribute Management
   const handleAddVariantAttribute = () => {
@@ -549,6 +560,8 @@ export default function ProductCreateForm({
     setPrice(229000);
     setOriginalPrice(299000);
     setCostPrice(115000);
+    setPointType('percentage');
+    setPointValue(2.5);
     setStock(60);
     setStockMinimum(10);
     setImageUrl('https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80');
@@ -677,6 +690,8 @@ export default function ProductCreateForm({
       price: numPrice,
       original_price: Number(originalPrice) || numPrice,
       cost_price: Number(costPrice) || Math.round(numPrice * 0.6),
+      point_type: pointType,
+      point_value: Number(pointValue) || 0,
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
       image_url: imageUrl.trim() || '',
@@ -1052,6 +1067,91 @@ export default function ProductCreateForm({
                       Harga Normal (Tidak Ada Diskon)
                     </span>
                   )}
+                </div>
+              </div>
+
+              {/* Reward Poin Pembeli (Loyalty Points) */}
+              <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-none space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200 pb-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-neutral-950 text-amber-400 font-sport font-black text-xs flex items-center justify-center rounded-none">
+                        ★
+                      </div>
+                      <label className="text-xs font-sport font-black uppercase tracking-wider text-neutral-950">
+                        Skema Reward Poin Pembeli
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">
+                      Tentukan reward poin loyalitas yang didapatkan pembeli untuk setiap 1 unit produk ini.
+                    </p>
+                  </div>
+
+                  {/* Selector Tipe Poin: Manual vs Persentase */}
+                  <div className="inline-flex border border-neutral-300 bg-white p-0.5 rounded-none self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setPointType('manual')}
+                      className={`px-3 py-1 text-xs font-sport font-black uppercase tracking-wider transition-all rounded-none cursor-pointer ${
+                        pointType === 'manual'
+                          ? 'bg-neutral-950 text-amber-400 shadow-2xs'
+                          : 'text-neutral-600 hover:text-neutral-950'
+                      }`}
+                    >
+                      Poin Manual / Tetap
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPointType('percentage')}
+                      className={`px-3 py-1 text-xs font-sport font-black uppercase tracking-wider transition-all rounded-none cursor-pointer ${
+                        pointType === 'percentage'
+                          ? 'bg-neutral-950 text-amber-400 shadow-2xs'
+                          : 'text-neutral-600 hover:text-neutral-950'
+                      }`}
+                    >
+                      Persentase Harga Jual (%)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                  <div className="sm:col-span-6">
+                    <label className="block text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                      {pointType === 'percentage' ? 'Persentase Poin dari Harga Jual' : 'Nominal Poin Tetap per Unit'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step={pointType === 'percentage' ? '0.1' : '1'}
+                        min="0"
+                        value={pointValue}
+                        onChange={(e) => setPointValue(e.target.value)}
+                        placeholder={pointType === 'percentage' ? 'contoh: 2 (untuk 2%)' : 'contoh: 50'}
+                        className="w-full pl-3 pr-12 py-2 text-xs sm:text-sm bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-black font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-mono font-black text-neutral-500 select-none">
+                        {pointType === 'percentage' ? '%' : 'PTS'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Live Estimation Badge */}
+                  <div className="sm:col-span-6 bg-white p-2.5 border border-dashed border-amber-400/80 rounded-none flex items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="text-[10px] font-sport font-bold uppercase tracking-wider text-neutral-500">
+                        Estimasi Perolehan Pembeli:
+                      </div>
+                      <div className="font-mono font-black text-sm text-neutral-950 flex items-center gap-1.5">
+                        <span className="text-amber-600 font-bold">+{calculatedRewardPoints.toLocaleString('id-ID')} PTS</span>
+                        <span className="text-[11px] font-normal text-neutral-500">/ unit</span>
+                      </div>
+                    </div>
+                    <div className="text-right text-[10px] font-sport text-neutral-500 max-w-[140px] leading-tight hidden sm:block">
+                      {pointType === 'percentage'
+                        ? `${pointValue || 0}% dari Rp ${(Number(price) || 0).toLocaleString('id-ID')}`
+                        : 'Reward flat per unit'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

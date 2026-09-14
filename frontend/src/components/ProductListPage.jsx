@@ -284,6 +284,24 @@ export default function ProductListPage({
                 <span className="text-emerald-700 font-bold">({marginPercent}%)</span>
               </div>
             )}
+            {(() => {
+              const pType = product.point_type || 'manual';
+              const pVal = Number(product.point_value);
+              const points = pType === 'percentage'
+                ? Math.round(Number(price || 0) * ((Number(pVal) || 0) / 100))
+                : (Number(product.reward_points) || Number(pVal) || 0);
+              if (points > 0) {
+                return (
+                  <div className="text-[10px] text-amber-700 font-mono font-bold flex items-center gap-1 mt-0.5">
+                    <span>★ +{points.toLocaleString('id-ID')} PTS</span>
+                    {pType === 'percentage' && (
+                      <span className="text-neutral-400 font-normal">({pVal}%)</span>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         );
       }

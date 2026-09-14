@@ -36,6 +36,7 @@ class CheckoutController extends Controller
             $checkoutItemsData = [];
             $totalWeight = 0.0;
             $subtotal = 0.0;
+            $totalLoyaltyPointsEarned = 0;
             $cartToClear = null;
 
             if ($request->has('items') && is_array($request->input('items')) && count($request->input('items')) > 0) {
@@ -53,6 +54,7 @@ class CheckoutController extends Controller
                     $itemSubtotal = $itemPrice * $qty;
                     $rawWeight = (float) ($product->weight ?? 1000);
                     $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
+                    $earnedPoints = $product->calculatePointsEarned($itemPrice) * $qty;
 
                     $checkoutItemsData[] = [
                         'product' => $product,
@@ -64,11 +66,13 @@ class CheckoutController extends Controller
                         'product_weight' => $weightPerUnit,
                         'quantity' => $qty,
                         'subtotal' => $itemSubtotal,
+                        'points_earned' => $earnedPoints,
                         'notes' => $item['notes'] ?? null,
                     ];
 
                     $subtotal += $itemSubtotal;
                     $totalWeight += ($weightPerUnit * $qty);
+                    $totalLoyaltyPointsEarned += $earnedPoints;
                 }
             } else {
                 // Checkout from active cart
@@ -103,6 +107,7 @@ class CheckoutController extends Controller
                     $itemSubtotal = $itemPrice * $qty;
                     $rawWeight = (float) ($product->weight ?? 1000);
                     $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
+                    $earnedPoints = $product->calculatePointsEarned($itemPrice) * $qty;
 
                     $checkoutItemsData[] = [
                         'product' => $product,
@@ -114,11 +119,13 @@ class CheckoutController extends Controller
                         'product_weight' => $weightPerUnit,
                         'quantity' => $qty,
                         'subtotal' => $itemSubtotal,
+                        'points_earned' => $earnedPoints,
                         'notes' => $cartItem->notes,
                     ];
 
                     $subtotal += $itemSubtotal;
                     $totalWeight += ($weightPerUnit * $qty);
+                    $totalLoyaltyPointsEarned += $earnedPoints;
                 }
             }
 
@@ -205,6 +212,7 @@ class CheckoutController extends Controller
                 'discount_amount' => $discountAmount,
                 'grand_total' => $grandTotal,
                 'total_weight' => $totalWeight,
+                'loyalty_points_earned' => $totalLoyaltyPointsEarned,
                 'coupon_code' => $request->input('coupon_code'),
                 'notes' => $request->input('notes'),
                 'expires_at' => Carbon::now()->addHours(24),
@@ -222,6 +230,7 @@ class CheckoutController extends Controller
                     'product_weight' => $itemData['product_weight'],
                     'quantity' => $itemData['quantity'],
                     'subtotal' => $itemData['subtotal'],
+                    'points_earned' => $itemData['points_earned'] ?? 0,
                     'notes' => $itemData['notes'],
                 ]);
 

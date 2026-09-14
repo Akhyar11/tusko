@@ -106,5 +106,61 @@ class OrderObserver
                 }
             }
         }
+
+        // 5. Perolehan Poin Loyalitas Otomatis saat Pesanan Terbayar Lunas
+        if ($isPaid && $order->user_id && (int) $order->loyalty_points_earned > 0) {
+            $alreadyCredited = \App\Models\LoyaltyPointsLedger::where('user_id', $order->user_id)
+                ->where('reference_type', 'order')
+                ->where('reference_id', $order->order_number)
+                ->where('points', '>', 0)
+                ->exists();
+
+            if (!$alreadyCredited) {
+                $customer = \App\Models\User::lockForUpdate()->find($order->user_id);
+                if ($customer) {
+                    $customer->increment('points', (int) $order->loyalty_points_earned);
+                    \App\Models\LoyaltyPointsLedger::create([
+                        'user_id' => $customer->id,
+                        'type' => 'earned',
+                        'points' => (int) $order->loyalty_points_earned,
+                        'balance_after' => (int) $customer->fresh()->points,
+                        'reference_type' => 'order',
+                        'reference_id' => $order->order_number,
+                        'description' => "Perolehan poin reward dari pesanan {$order->order_number}",
+                    ]);
+                }
+            }
+        }
+
+        // 6. Pembatalan Poin Loyalitas jika Pesanan Dibatalkan
+        if ($order->status === 'cancelled' && $order->user_id && (int) $order->loyalty_points_earned > 0) {
+            $hasCredited = \App\Models\LoyaltyPointsLedger::where('user_id', $order->user_id)
+                ->where('reference_type', 'order')
+                ->where('reference_id', $order->order_number)
+                ->where('type', 'earned')
+                ->exists();
+
+            $hasReversed = \App\Models\LoyaltyPointsLedger::where('user_id', $order->user_id)
+                ->where('reference_type', 'order_cancelled')
+                ->where('reference_id', $order->order_number)
+                ->exists();
+
+            if ($hasCredited && !$hasReversed) {
+                $customer = \App\Models\User::lockForUpdate()->find($order->user_id);
+                if ($customer) {
+                    $deductPoints = min((int) $customer->points, (int) $order->loyalty_points_earned);
+                    $customer->decrement('points', $deductPoints);
+                    \App\Models\LoyaltyPointsLedger::create([
+                        'user_id' => $customer->id,
+                        'type' => 'redeemed',
+                        'points' => -$deductPoints,
+                        'balance_after' => (int) $customer->fresh()->points,
+                        'reference_type' => 'order_cancelled',
+                        'reference_id' => $order->order_number,
+                        'description' => "Pembatalan perolehan poin dari pesanan dibatalkan {$order->order_number}",
+                    ]);
+                }
+            }
+        }
     }
 }

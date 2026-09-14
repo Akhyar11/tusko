@@ -69,6 +69,9 @@ class ProductDetailResource extends JsonResource
             'variants' => $this->variants ?: [],
             'rating' => (float) ($this->rating ?: 5.0),
             'sold_count' => (int) ($this->sold_count ?: 0),
+            'point_type' => $this->point_type ?: 'manual',
+            'point_value' => (float) ($this->point_value ?: 0),
+            'reward_points' => (int) $this->reward_points,
             'images' => $this->images->map(fn ($img) => [
                 'id' => $img->id,
                 'image_url' => $img->image_url,

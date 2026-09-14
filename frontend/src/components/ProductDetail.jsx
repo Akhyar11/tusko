@@ -110,7 +110,25 @@ export default function ProductDetail({
     return 0;
   }, [currentOriginalPrice, currentPrice]);
 
-  const loyaltyPointsEarned = Math.floor(currentPrice * 0.01);
+  const loyaltyPointsEarned = useMemo(() => {
+    const pointType = product?.point_type || 'manual';
+    const pointVal = Number(product?.point_value);
+
+    if (pointType === 'percentage') {
+      const pct = !isNaN(pointVal) && pointVal > 0 ? pointVal : 0;
+      return Math.round(currentPrice * (pct / 100));
+    }
+
+    if (!isNaN(pointVal) && pointVal > 0) {
+      return Math.round(pointVal);
+    }
+
+    if (product?.reward_points !== undefined && product?.reward_points !== null) {
+      return Number(product.reward_points) || 0;
+    }
+
+    return 0;
+  }, [product, currentPrice]);
 
   // Handle option selection
   const handleSelectOption = (code, val) => {

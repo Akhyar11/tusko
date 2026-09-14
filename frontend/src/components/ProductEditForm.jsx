@@ -214,6 +214,12 @@ export default function ProductEditForm({
   const [price, setPrice] = useState(product.price || 0);
   const [originalPrice, setOriginalPrice] = useState(product.original_price || product.price || 0);
   const [costPrice, setCostPrice] = useState(product.cost_price || Math.round((product.price || 0) * 0.6));
+  const [pointType, setPointType] = useState(product.point_type || 'manual');
+  const [pointValue, setPointValue] = useState(
+    product.point_value !== undefined && product.point_value !== null
+      ? product.point_value
+      : (product.reward_points !== undefined && product.reward_points !== null ? product.reward_points : 0)
+  );
   const [stock, setStock] = useState(product.stock || 0);
   const [stockMinimum, setStockMinimum] = useState(product.stock_minimum || 5);
 
@@ -247,6 +253,15 @@ export default function ProductEditForm({
     return { profit, marginPercent };
   }, [price, costPrice]);
 
+  const calculatedRewardPoints = useMemo(() => {
+    const numVal = Number(pointValue) || 0;
+    const numPrice = Number(price) || 0;
+    if (pointType === 'percentage') {
+      return Math.round(numPrice * (numVal / 100));
+    }
+    return Math.round(numVal);
+  }, [pointType, pointValue, price]);
+
   // Recalculate total stock when variant stocks change
   useEffect(() => {
     if (hasVariants && variantsList.length > 0) {
@@ -278,6 +293,12 @@ export default function ProductEditForm({
     setPrice(product.price || 0);
     setOriginalPrice(product.original_price || product.price || 0);
     setCostPrice(product.cost_price || Math.round((product.price || 0) * 0.6));
+    setPointType(product.point_type || 'manual');
+    setPointValue(
+      product.point_value !== undefined && product.point_value !== null
+        ? product.point_value
+        : (product.reward_points !== undefined && product.reward_points !== null ? product.reward_points : 0)
+    );
     setStock(product.stock || 0);
     setStockMinimum(product.stock_minimum || 5);
     setImageUrl(product.image_url || '');
@@ -552,6 +573,8 @@ export default function ProductEditForm({
       price: Number(price) || 0,
       original_price: Number(originalPrice) || Number(price) || 0,
       cost_price: Number(costPrice) || Math.round(Number(price) * 0.6),
+      point_type: pointType,
+      point_value: Number(pointValue) || 0,
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
       image_url: imageUrl.trim(),
@@ -906,6 +929,91 @@ export default function ProductEditForm({
                       Harga Normal (Tidak Ada Diskon)
                     </span>
                   )}
+                </div>
+              </div>
+
+              {/* Reward Poin Pembeli (Loyalty Points) */}
+              <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-none space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200 pb-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-neutral-950 text-amber-400 font-sport font-black text-xs flex items-center justify-center rounded-none">
+                        ★
+                      </div>
+                      <label className="text-xs font-sport font-black uppercase tracking-wider text-neutral-950">
+                        Skema Reward Poin Pembeli
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">
+                      Tentukan reward poin loyalitas yang didapatkan pembeli untuk setiap 1 unit produk ini.
+                    </p>
+                  </div>
+
+                  {/* Selector Tipe Poin: Manual vs Persentase */}
+                  <div className="inline-flex border border-neutral-300 bg-white p-0.5 rounded-none self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setPointType('manual')}
+                      className={`px-3 py-1 text-xs font-sport font-black uppercase tracking-wider transition-all rounded-none cursor-pointer ${
+                        pointType === 'manual'
+                          ? 'bg-neutral-950 text-amber-400 shadow-2xs'
+                          : 'text-neutral-600 hover:text-neutral-950'
+                      }`}
+                    >
+                      Poin Manual / Tetap
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPointType('percentage')}
+                      className={`px-3 py-1 text-xs font-sport font-black uppercase tracking-wider transition-all rounded-none cursor-pointer ${
+                        pointType === 'percentage'
+                          ? 'bg-neutral-950 text-amber-400 shadow-2xs'
+                          : 'text-neutral-600 hover:text-neutral-950'
+                      }`}
+                    >
+                      Persentase Harga Jual (%)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                  <div className="sm:col-span-6">
+                    <label className="block text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                      {pointType === 'percentage' ? 'Persentase Poin dari Harga Jual' : 'Nominal Poin Tetap per Unit'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step={pointType === 'percentage' ? '0.1' : '1'}
+                        min="0"
+                        value={pointValue}
+                        onChange={(e) => setPointValue(e.target.value)}
+                        placeholder={pointType === 'percentage' ? 'contoh: 2 (untuk 2%)' : 'contoh: 50'}
+                        className="w-full pl-3 pr-12 py-2 text-xs sm:text-sm bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-black font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-mono font-black text-neutral-500 select-none">
+                        {pointType === 'percentage' ? '%' : 'PTS'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Live Estimation Badge */}
+                  <div className="sm:col-span-6 bg-white p-2.5 border border-dashed border-amber-400/80 rounded-none flex items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="text-[10px] font-sport font-bold uppercase tracking-wider text-neutral-500">
+                        Estimasi Perolehan Pembeli:
+                      </div>
+                      <div className="font-mono font-black text-sm text-neutral-950 flex items-center gap-1.5">
+                        <span className="text-amber-600 font-bold">+{calculatedRewardPoints.toLocaleString('id-ID')} PTS</span>
+                        <span className="text-[11px] font-normal text-neutral-500">/ unit</span>
+                      </div>
+                    </div>
+                    <div className="text-right text-[10px] font-sport text-neutral-500 max-w-[140px] leading-tight hidden sm:block">
+                      {pointType === 'percentage'
+                        ? `${pointValue || 0}% dari Rp ${(Number(price) || 0).toLocaleString('id-ID')}`
+                        : 'Reward flat per unit'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

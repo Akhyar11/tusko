@@ -22,6 +22,7 @@ class OrderItem extends Model
         'unit_cogs',
         'quantity',
         'subtotal',
+        'points_earned',
         'notes',
     ];
 
@@ -31,6 +32,7 @@ class OrderItem extends Model
         'unit_cogs' => 'float',
         'quantity' => 'integer',
         'subtotal' => 'float',
+        'points_earned' => 'integer',
     ];
 
     /**

@@ -34,6 +34,8 @@ class Product extends Model
         'variants',
         'rating',
         'sold_count',
+        'point_type',
+        'point_value',
     ];
 
     protected $attributes = [
@@ -45,6 +47,8 @@ class Product extends Model
         'status' => 'active',
         'rating' => 5.00,
         'sold_count' => 0,
+        'point_type' => 'manual',
+        'point_value' => 0.00,
     ];
 
     protected $casts = [
@@ -61,12 +65,15 @@ class Product extends Model
         'variants' => 'array',
         'rating' => 'decimal:2',
         'sold_count' => 'integer',
+        'point_type' => 'string',
+        'point_value' => 'decimal:2',
     ];
 
     protected $appends = [
         'discount_percentage',
         'profit_margin',
         'effective_stock_minimum',
+        'reward_points',
     ];
 
     protected static function booted(): void
@@ -180,6 +187,37 @@ class Product extends Model
             return (float) ($this->price - $this->cost_price);
         }
         return 0.0;
+    }
+
+    /**
+     * Hitung perolehan poin reward per unit produk berdasarkan pengaturan manual atau persentase harga jual.
+     */
+    public function getRewardPointsAttribute(): int
+    {
+        return $this->calculatePointsEarned();
+    }
+
+    /**
+     * Hitung poin loyalitas yang diperoleh pembeli untuk 1 unit produk.
+     * Mendukung penentuan harga kustom saat checkout promo/diskon.
+     */
+    public function calculatePointsEarned(?float $customPrice = null): int
+    {
+        $effectivePrice = $customPrice !== null ? $customPrice : (float) $this->price;
+        $type = $this->point_type ?? 'manual';
+        $val = (float) ($this->point_value ?? 0);
+
+        if ($val <= 0) {
+            return 0;
+        }
+
+        if ($type === 'percentage') {
+            // Persentase dari harga jual: misal 2% dari Rp 100.000 = 2.000 poin
+            return (int) round(($effectivePrice * $val) / 100);
+        }
+
+        // Poin tetap (manual) per unit
+        return (int) round($val);
     }
 
     /**
