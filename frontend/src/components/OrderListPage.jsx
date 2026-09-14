@@ -15,7 +15,6 @@ import {
   FileText, 
   Printer, 
   SlidersHorizontal, 
-  RotateCcw,
   ExternalLink
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
@@ -476,14 +475,6 @@ export default function OrderListPage({
 
         {/* Action Buttons: Icon-Only with Tooltip */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {activeFilterCount > 0 && (
-            <IconButton
-              icon={RotateCcw}
-              onClick={handleResetFilters}
-              tooltip="Reset Semua Filter"
-              variant="secondary"
-            />
-          )}
           <IconButton
             icon={SlidersHorizontal}
             onClick={() => setIsFilterDrawerOpen(true)}

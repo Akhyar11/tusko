@@ -5,9 +5,7 @@ import {
   Edit2, 
   Trash2, 
   Eye, 
-  SlidersHorizontal, 
-  RotateCcw, 
-  RefreshCw,
+  SlidersHorizontal,
   MoreVertical, 
   Phone, 
   Mail, 
@@ -510,13 +508,18 @@ export default function SupplierListPage({
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* 1. Header Card (Icon-Only Controls with Tooltips) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">
-            Master Supplier &amp; Rekanan Vendor
-          </h1>
-          <p className="text-xs text-neutral-500 mt-1 max-w-2xl">
-            Direktori vendor terpusat untuk pengadaan bahan &amp; stok, kontak PIC, rekening bank, termin pembayaran, dan pemesanan PO.
-          </p>
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0 shadow-xs">
+            <Building2 size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">
+              Master Supplier &amp; Rekanan Vendor
+            </h1>
+            <p className="text-xs text-neutral-500 mt-0.5 max-w-2xl">
+              Direktori vendor terpusat untuk pengadaan bahan &amp; stok, kontak PIC, rekening bank, termin pembayaran, dan pemesanan PO.
+            </p>
+          </div>
         </div>
 
         {/* Header Action Controls (Icon-Only with Tooltip) */}
@@ -541,13 +544,6 @@ export default function SupplierListPage({
               </span>
             )}
           </div>
-
-          <IconButton
-            icon={RefreshCw}
-            onClick={loadVendors}
-            title="Muat Ulang Data"
-            variant="outline"
-          />
         </div>
       </div>
 

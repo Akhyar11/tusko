@@ -20,8 +20,7 @@ import {
   MoreVertical,
   Check,
   SlidersHorizontal,
-  X,
-  RotateCcw
+  X
 } from 'lucide-react';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
 import DeleteProductModal from './DeleteProductModal';

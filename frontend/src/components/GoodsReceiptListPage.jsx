@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   PackageCheck, 
-  RotateCcw, 
   Eye, 
   MoreVertical, 
   CheckCircle2, 
@@ -226,16 +225,6 @@ export default function GoodsReceiptListPage({
               Pencatatan fisik barang masuk, verifikasi nomor surat jalan vendor, dan mutasi stok otomatis ke gudang pusat.
             </p>
           </div>
-        </div>
-
-        {/* Header Action Controls */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <IconButton
-            icon={RotateCcw}
-            tooltip="Muat Ulang Riwayat GRN"
-            onClick={loadGRNs}
-            variant="secondary"
-          />
         </div>
       </div>
 

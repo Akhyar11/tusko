@@ -8,7 +8,6 @@ import {
   Plus,
   Minus,
   SlidersHorizontal,
-  RotateCcw,
   Edit3,
   MoreVertical,
   DollarSign,

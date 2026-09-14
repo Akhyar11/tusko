@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ClipboardList, 
   Plus, 
-  RotateCcw, 
   Eye, 
   PackageCheck, 
   XCircle, 
@@ -409,12 +408,6 @@ export default function PurchaseOrderListPage({
             tooltip="Buat Purchase Order Baru"
             onClick={() => setIsCreateModalOpen(true)}
             variant="primary"
-          />
-          <IconButton
-            icon={RotateCcw}
-            tooltip="Muat Ulang Data PO"
-            onClick={loadPOs}
-            variant="secondary"
           />
         </div>
       </div>

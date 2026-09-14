@@ -192,14 +192,18 @@ export default function TemplateManagementPage({
       
       {/* Header & Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5">
-        <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase flex items-center gap-2.5">
-            <Mail className="text-amber-600" size={24} />
-            <span>Kelola Template Email & Resi</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-500">
-            Kustomisasi formulir pesan notifikasi email pembeli dan tata letak stiker label resi thermal kurir.
-          </p>
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0 shadow-xs">
+            <Mail size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
+              Kelola Template Email &amp; Resi
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
+              Kustomisasi formulir pesan notifikasi email pembeli dan tata letak stiker label resi thermal kurir.
+            </p>
+          </div>
         </div>
 
         {/* Main Navigation Tab Switches */}

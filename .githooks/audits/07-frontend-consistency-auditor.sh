@@ -98,6 +98,15 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
     - DILARANG KERAS menggunakan dialog bawaan browser (`window.confirm`, `confirm(...)`, `window.alert`, `alert(...)`, `window.prompt`, `prompt(...)`) pada seluruh komponen antarmuka, halaman, dan form admin maupun storefront.
     - Seluruh dialog konfirmasi (seperti konfirmasi hapus data tunggal, hapus massal, pembatalan pesanan/PO, konfirmasi navigasi saat form kotor/belum disimpan, dll.) WAJIB menggunakan modal kustom terstandarisasi `ConfirmationModal` (`frontend/src/components/ConfirmationModal.jsx` atau `frontend/src/components/organisms/ConfirmationModal.jsx`) dengan sudut siku tajam `rounded-none`, header gelap atletis, varian yang relevan (`danger`, `warning`, `info`), dan tombol aksi terstandarisasi.
     - DILARANG membuat elemen dialog konfirmasi kustom mentah inline tanpa memanfaatkan komponen reusable `ConfirmationModal`.
+23. Standardisasi Larangan Mutlak Tombol Refresh di Halaman / Header (Strict Prohibition of Page Refresh/Reload Buttons):
+    - DILARANG KERAS menambahkan tombol manual untuk refresh/reload/segarkan data halaman (seperti menggunakan icon `RefreshCw`, `RotateCcw`, atau tombol dengan label/title/tooltip "Segarkan", "Muat Ulang", "Refresh", "Reload") pada header modul, toolbar, maupun kanvas halaman mana pun.
+    - Seluruh tabel dan komponen data admin bersifat reaktif (terintegrasi langsung dengan Zustand store atau otomatis re-fetch saat filter/parameter berubah).
+    - Tombol refresh manual di dalam halaman adalah redundant, melanggar konsistensi antarmuka Tusko, dan WAJIB DITOLAK (REJECTED).
+24. Standardisasi Wajib Ikon Modul pada Seluruh Header Halaman Admin (Mandatory Module Header Icon):
+    - Seluruh kartu header halaman/modul admin (termasuk Dashboard Utama Toko, Master Supplier & Vendor, Daftar Produk & Katalog, Master Kategori, Manajemen Stok, Antrean Pesanan, Buku Kas, Pengaturan Ekspedisi, PO, GRN, Bills, Template) WAJIB menyertakan wadah ikon modul (module icon container) di sisi kiri judul halaman (`<h1>`).
+    - Format wadah ikon WAJIB bersudut siku tegas (`rounded-none`, latar gelap `bg-neutral-950 text-amber-400` atau `text-white`, ukuran `w-10 h-10` atau `w-12 h-12`) memuat ikon Lucide modul terkait (seperti LayoutDashboard, Building2, Package, Boxes, dll.).
+    - DILARANG KERAS merender header modul admin hanya berupa teks judul polos tanpa wadah ikon modul di sebelah kirinya.
+
 
 Git Diff (Staged Frontend Changes):
 ```

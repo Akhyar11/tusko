@@ -14,7 +14,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-  RefreshCw,
+  LayoutDashboard,
   Clock,
   Award,
   Zap,
@@ -126,13 +126,18 @@ export default function AdminDashboardPage({
       
       {/* 1. Header Bar Dashboard Admin */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-neutral-950 font-sport tracking-tight uppercase">
-            Dashboard Utama Toko
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-600 mt-1">
-            Ringkasan performa finansial, ketersediaan multi-gudang, dan analitik Business Intelligence (BI).
-          </p>
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0 shadow-xs">
+            <LayoutDashboard size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
+              Dashboard Utama Toko
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-600 mt-0.5">
+              Ringkasan performa finansial, ketersediaan multi-gudang, dan analitik Business Intelligence (BI).
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">

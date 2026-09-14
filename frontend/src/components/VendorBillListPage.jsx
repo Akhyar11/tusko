@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Receipt, 
-  RotateCcw, 
   Eye, 
   CreditCard, 
   MoreVertical, 
@@ -246,16 +245,6 @@ export default function VendorBillListPage({
               Manajemen faktur hutang dagang supplier dari dokumen PO/GRN dan pencatatan riwayat pelunasan kas toko.
             </p>
           </div>
-        </div>
-
-        {/* Header Action Controls */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <IconButton
-            icon={RotateCcw}
-            tooltip="Muat Ulang Tagihan"
-            onClick={loadBills}
-            variant="secondary"
-          />
         </div>
       </div>
 

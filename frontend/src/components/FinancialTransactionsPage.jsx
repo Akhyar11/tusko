@@ -11,7 +11,6 @@ import {
   ExternalLink,
   MoreVertical,
   X,
-  RotateCcw,
   CheckCircle2,
   FileText
 } from 'lucide-react';
