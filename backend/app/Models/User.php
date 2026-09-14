@@ -70,7 +70,7 @@ class User extends Authenticatable
     {
         $totalSpent = (float) $this->orders()
             ->whereNotIn('status', ['cancelled', 'failed'])
-            ->sum('total_amount');
+            ->sum('grand_total');
 
         $completedOrdersCount = $this->orders()
             ->whereIn('status', ['delivered', 'completed', 'paid', 'processing'])
