@@ -20,6 +20,16 @@ class ProductImage extends Model
         'sort_order' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function ($image) {
+            $raw = $image->getRawOriginal('image_url');
+            if (!empty($raw)) {
+                \App\Services\FileStorageService::delete($raw);
+            }
+        });
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -508,19 +508,32 @@ class ProductController extends Controller
         if (array_key_exists('warehouse_bin', $validated)) {
             $product->warehouse_bin = $validated['warehouse_bin'];
         }
+        $oldRawImage = $product->getRawOriginal('image_url');
+        $imageChanged = false;
+
         if ($request->hasFile('image')) {
             $stored = FileStorageService::storeUploadedFile($request->file('image'), 'products');
             $product->image_url = $stored['path'];
+            $imageChanged = true;
         } elseif ($request->hasFile('image_file')) {
             $stored = FileStorageService::storeUploadedFile($request->file('image_file'), 'products');
             $product->image_url = $stored['path'];
+            $imageChanged = true;
         } elseif ($request->hasFile('file')) {
             $stored = FileStorageService::storeUploadedFile($request->file('file'), 'products');
             $product->image_url = $stored['path'];
+            $imageChanged = true;
         } elseif (array_key_exists('image_url', $validated)) {
             $stored = FileStorageService::storeBase64OrUrl($validated['image_url'], 'products');
-            $product->image_url = $stored['path'] ?: $stored['url'];
+            $newImageVal = $stored['path'] ?: $stored['url'];
+            $imageChanged = ($oldRawImage !== $newImageVal);
+            $product->image_url = $newImageVal;
         }
+
+        if ($imageChanged && !empty($oldRawImage)) {
+            FileStorageService::delete($oldRawImage);
+        }
+
         if (array_key_exists('status', $validated)) {
             $product->status = $validated['status'];
             $product->active = ($validated['status'] === 'active');
@@ -552,6 +565,8 @@ class ProductController extends Controller
 
         // Sync gambar galeri jika dikirim
         if ($request->has('images') || $request->has('galleryUrls') || $request->hasFile('images') || $request->hasFile('gallery_images')) {
+            $existingGalleryImages = $product->images()->get();
+
             $galleryImages = [];
             $rawGalleryFiles = $request->file('images') ?: $request->file('gallery_images') ?: [];
             if (is_array($rawGalleryFiles)) {
@@ -568,6 +583,20 @@ class ProductController extends Controller
                         $res = FileStorageService::storeBase64OrUrl($imgItem, 'products/gallery');
                         $galleryImages[] = $res['path'] ?: $res['url'];
                     }
+                }
+            }
+
+            // Ekstrak path storage dari semua gambar galeri baru/tersisa
+            $keptStoragePaths = array_values(array_filter(array_map(function ($val) {
+                return FileStorageService::extractStoragePath($val);
+            }, $galleryImages)));
+
+            // Hapus berkas fisik foto galeri lama yang tidak lagi dipertahankan
+            foreach ($existingGalleryImages as $oldGalleryItem) {
+                $oldRaw = $oldGalleryItem->getRawOriginal('image_url');
+                $oldPath = FileStorageService::extractStoragePath($oldRaw);
+                if ($oldPath && !in_array($oldPath, $keptStoragePaths, true)) {
+                    FileStorageService::delete($oldRaw);
                 }
             }
 
@@ -626,6 +655,18 @@ class ProductController extends Controller
         $deletedId = $product->id;
         $deletedName = $product->name;
         $deletedSku = $product->sku;
+
+        // Bersihkan file fisik foto utama dan galeri dari storage
+        $rawMainImage = $product->getRawOriginal('image_url');
+        if (!empty($rawMainImage)) {
+            FileStorageService::delete($rawMainImage);
+        }
+        foreach ($product->images as $galleryImg) {
+            $rawGal = $galleryImg->getRawOriginal('image_url');
+            if (!empty($rawGal)) {
+                FileStorageService::delete($rawGal);
+            }
+        }
 
         $product->delete();
 

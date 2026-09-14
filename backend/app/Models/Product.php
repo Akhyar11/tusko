@@ -76,6 +76,22 @@ class Product extends Model
                 $product->categories()->syncWithoutDetaching([$product->category_id]);
             }
         });
+
+        static::deleting(function ($product) {
+            // Bersihkan file foto utama dari storage
+            $rawImage = $product->getRawOriginal('image_url');
+            if (!empty($rawImage)) {
+                \App\Services\FileStorageService::delete($rawImage);
+            }
+
+            // Bersihkan seluruh foto galeri dari storage
+            foreach ($product->images as $galleryImg) {
+                $rawGallery = $galleryImg->getRawOriginal('image_url');
+                if (!empty($rawGallery)) {
+                    \App\Services\FileStorageService::delete($rawGallery);
+                }
+            }
+        });
     }
 
     public function category(): BelongsTo
