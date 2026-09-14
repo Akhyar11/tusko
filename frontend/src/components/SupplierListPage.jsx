@@ -614,7 +614,7 @@ export default function SupplierListPage({
       <ServerSideTable
         columns={columns}
         data={paginatedVendors}
-        total={filteredVendors.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50]}
