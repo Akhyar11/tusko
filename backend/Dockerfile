@@ -1,4 +1,4 @@
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 # Set working directory
 WORKDIR /var/www/html
@@ -34,8 +34,8 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # Copy application source code
 COPY . /var/www/html
 
-# Install Composer production dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install Composer production dependencies (use --no-scripts to prevent running artisan during image build)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Copy entrypoint script and set permissions
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

@@ -22,7 +22,9 @@ if [ "${RUN_MIGRATIONS}" = "true" ]; then
     php artisan migrate --force || true
 fi
 
-# Optimize Laravel routes and configuration in production
+# Discover packages and optimize Laravel in production
+php artisan package:discover --ansi || true
+
 if [ "${APP_ENV}" = "production" ] && [ -n "${APP_KEY}" ]; then
     echo "Optimizing Laravel for production..."
     php artisan config:cache || true
