@@ -24,6 +24,7 @@ import {
   transactionCategories,
   mockFinancialAccounts 
 } from '../data/mockTransactions';
+import { useTransactionTableStore } from '../stores/useTransactionTableStore';
 
 export default function FinancialTransactionsPage({
   transactions: initialTransactions = mockTransactions,
@@ -35,18 +36,30 @@ export default function FinancialTransactionsPage({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [financialAccounts, setFinancialAccounts] = useState(mockFinancialAccounts);
 
-  // Filter drawer & active filters
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [cashbookFilter, setCashbookFilter] = useState('all'); // 'all' | 'income' | 'expense' | 'pending'
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [dateRange, setDateRange] = useState('all'); // 'all' | 'this_month' | '30days' | '7days'
-  const [searchQuery, setSearchQuery] = useState('');
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeTransactions,
+    total: totalTransactionsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useTransactionTableStore();
 
-  // Table pagination, sorting & selection
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState('desc');
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Filter drawer & selection
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [selectedTxIds, setSelectedTxIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
@@ -75,6 +88,10 @@ export default function FinancialTransactionsPage({
     return () => window.removeEventListener('click', handleGlobalClick);
   }, []);
 
+  // Paginated records directly from server-side store
+  const paginatedTransactions = storeTransactions.length > 0 || totalTransactionsCount === 0 ? storeTransactions : transactions;
+  const totalFiltered = totalTransactionsCount > 0 || storeTransactions.length > 0 ? totalTransactionsCount : transactions.length;
+
   // Hitung KPI Keuangan Global
   const stats = useMemo(() => {
     let totalIncome = 0;
@@ -82,7 +99,7 @@ export default function FinancialTransactionsPage({
     let totalPending = 0;
     let settledCount = 0;
 
-    transactions.forEach((tx) => {
+    paginatedTransactions.forEach((tx) => {
       if (tx.status === 'settled') {
         settledCount++;
         if (tx.type === 'income') {
@@ -104,86 +121,24 @@ export default function FinancialTransactionsPage({
       totalPending,
       netCashflow,
       settledCount,
-      totalCount: transactions.length,
+      totalCount: totalFiltered,
       totalLiquidBalance
     };
-  }, [transactions, financialAccounts]);
+  }, [paginatedTransactions, financialAccounts, totalFiltered]);
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (cashbookFilter !== 'all') count++;
-    if (selectedCategory !== 'all') count++;
-    if (dateRange !== 'all') count++;
-    if (searchQuery.trim() !== '') count++;
+    if (filters.cashbookFilter && filters.cashbookFilter !== 'all') count++;
+    if (filters.selectedCategory && filters.selectedCategory !== 'all') count++;
+    if (filters.dateRange && filters.dateRange !== 'all') count++;
+    if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
     return count;
-  }, [cashbookFilter, selectedCategory, dateRange, searchQuery]);
+  }, [filters]);
 
   const handleResetFilters = () => {
-    setCashbookFilter('all');
-    setSelectedCategory('all');
-    setDateRange('all');
-    setSearchQuery('');
-    setPage(1);
+    resetFilters();
   };
-
-  // Filtered transactions for cashbook
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => {
-      // 1. Tipe filter
-      if (cashbookFilter === 'income' && tx.type !== 'income') return false;
-      if (cashbookFilter === 'expense' && tx.type !== 'expense') return false;
-      if (cashbookFilter === 'pending' && tx.status !== 'pending') return false;
-
-      // 2. Kategori filter
-      if (selectedCategory !== 'all' && tx.category !== selectedCategory) return false;
-
-      // 3. Tanggal filter
-      if (dateRange !== 'all') {
-        const txDate = new Date(tx.created_at);
-        const now = new Date();
-        const diffDays = (now - txDate) / (1000 * 60 * 60 * 24);
-        if (dateRange === '7days' && diffDays > 7) return false;
-        if (dateRange === '30days' && diffDays > 30) return false;
-        if (dateRange === 'this_month') {
-          if (txDate.getMonth() !== now.getMonth() || txDate.getFullYear() !== now.getFullYear()) {
-            return false;
-          }
-        }
-      }
-
-      // 4. Pencarian
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchNumber = tx.transaction_number?.toLowerCase().includes(q);
-        const matchOrder = tx.order_number?.toLowerCase().includes(q);
-        const matchDesc = tx.description?.toLowerCase().includes(q);
-        const matchCustomer = tx.customer_name?.toLowerCase().includes(q);
-        const matchCategory = tx.category_label?.toLowerCase().includes(q);
-        return matchNumber || matchOrder || matchDesc || matchCustomer || matchCategory;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === 'created_at') {
-        const timeA = new Date(a.created_at || 0).getTime();
-        const timeB = new Date(b.created_at || 0).getTime();
-        return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
-      }
-      if (sortBy === 'amount') {
-        const amtA = Number(a.amount || 0);
-        const amtB = Number(b.amount || 0);
-        return sortDirection === 'asc' ? amtA - amtB : amtB - amtA;
-      }
-      return 0;
-    });
-  }, [transactions, cashbookFilter, selectedCategory, dateRange, searchQuery, sortBy, sortDirection]);
-
-  // Paginated records
-  const paginatedTransactions = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredTransactions.slice(start, start + limit);
-  }, [filteredTransactions, page, limit]);
 
   // Selection handlers
   const handleSelectRow = (id) => {
@@ -549,7 +504,7 @@ export default function FinancialTransactionsPage({
       <ServerSideTable
         columns={tableColumns}
         data={paginatedTransactions}
-        total={filteredTransactions.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50, 100]}
@@ -561,9 +516,9 @@ export default function FinancialTransactionsPage({
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
         }}
+        isLoading={isLoading}
         selectable={true}
         selectedIds={selectedTxIds}
         onSelectRow={handleSelectRow}
@@ -578,17 +533,17 @@ export default function FinancialTransactionsPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        totalFiltered={filteredTransactions.length}
-        totalTransactions={transactions.length}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        cashbookFilter={cashbookFilter}
-        onCashbookFilterChange={setCashbookFilter}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        totalFiltered={totalFiltered}
+        totalTransactions={totalFiltered}
+        searchQuery={filters.searchQuery || ''}
+        onSearchChange={(val) => setFilter('searchQuery', val)}
+        cashbookFilter={filters.cashbookFilter || 'all'}
+        onCashbookFilterChange={(val) => setFilter('cashbookFilter', val)}
+        selectedCategory={filters.selectedCategory || 'all'}
+        onCategoryChange={(val) => setFilter('selectedCategory', val)}
         categories={transactionCategories}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
+        dateRange={filters.dateRange || 'all'}
+        onDateRangeChange={(val) => setFilter('dateRange', val)}
         onResetFilters={handleResetFilters}
       />
 

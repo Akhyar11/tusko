@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class OrderResource extends JsonResource
 {
@@ -27,7 +28,9 @@ class OrderResource extends JsonResource
             'midtrans_snap_token' => $this->midtrans_snap_token,
             'midtrans_transaction_id' => $this->midtrans_transaction_id,
             'midtrans_pdf_url' => $this->midtrans_pdf_url,
-            'payment_proof' => $this->payment_proof ? asset('storage/' . $this->payment_proof) : null,
+            'payment_proof' => $this->payment_proof
+                ? (str_starts_with($this->payment_proof, 'http') ? $this->payment_proof : Storage::disk(config('filesystems.default', 'public'))->url($this->payment_proof))
+                : null,
             'address' => [
                 'recipient_name' => $this->recipient_name,
                 'phone' => $this->phone ?: $this->phone_number,

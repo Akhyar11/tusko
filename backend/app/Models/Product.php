@@ -134,6 +134,11 @@ class Product extends Model
         return $this->stock <= 0;
     }
 
+    public function getImageUrlAttribute($value): ?string
+    {
+        return \App\Services\FileStorageService::url($value);
+    }
+
     public function getEffectiveStockMinimumAttribute(): int
     {
         return $this->stock_minimum ?: ($this->min_stock ?: 5);

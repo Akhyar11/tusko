@@ -28,36 +28,56 @@ function setCachedCategories(data) {
 
 export const categoryService = {
   /**
-   * Fetch categories from server-side with optional search and pagination.
+   * Fetch categories from server-side with optional search, sorting, and pagination.
    */
-  async fetchCategories({ search = '', all = true, page = 1, perPage = 20 } = {}) {
+  async fetchCategories(params = {}) {
     try {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (all) params.append('all', '1');
-      else {
-        params.append('page', page);
-        params.append('per_page', perPage);
+      const urlParams = new URLSearchParams();
+      const search = params.search || params.searchQuery;
+      if (search) urlParams.append('search', search);
+
+      const sortBy = params.sort_by || params.sortBy;
+      if (sortBy) urlParams.append('sort_by', sortBy);
+
+      const sortDir = params.sort_dir || params.sortDirection || params.order;
+      if (sortDir) urlParams.append('sort_dir', sortDir);
+
+      if (params.all && !params.page && !params.limit && !params.per_page) {
+        urlParams.append('all', '1');
+      } else {
+        const page = params.page || 1;
+        const perPage = params.per_page || params.limit || 10;
+        urlParams.append('page', page);
+        urlParams.append('per_page', perPage);
       }
 
-      const res = await apiClient.get(`/api/categories?${params.toString()}`);
+      const queryString = urlParams.toString();
+      const res = await apiClient.get(queryString ? `/api/categories?${queryString}` : '/api/categories');
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       
       setCachedCategories(list);
       return {
         data: list,
-        total: res.total || list.length
+        total: res.total !== undefined ? res.total : (res.meta?.total !== undefined ? res.meta.total : list.length),
+        meta: res.meta || {
+          current_page: res.current_page || params.page || 1,
+          last_page: res.last_page || 1,
+          per_page: res.per_page || params.limit || 10,
+          total: res.total !== undefined ? res.total : list.length
+        }
       };
     } catch (err) {
       console.warn('categoryService.fetchCategories: using cached/fallback data.', err.message);
       let list = getCachedCategories();
-      if (search.trim()) {
+      const search = params.search || params.searchQuery;
+      if (search && search.trim()) {
         const q = search.toLowerCase();
         list = list.filter(c => c.name.toLowerCase().includes(q) || c.slug?.toLowerCase().includes(q));
       }
       return {
         data: list,
-        total: list.length
+        total: list.length,
+        meta: { current_page: 1, last_page: 1, per_page: list.length, total: list.length }
       };
     }
   },

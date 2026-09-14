@@ -38,11 +38,13 @@ Route::prefix('vouchers')->group(function () {
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
     Route::post('/', [ProductController::class, 'store']);
+    Route::post('/upload-image', [ProductController::class, 'uploadImage']);
     Route::match(['put', 'patch'], '/{idOrSlug}', [ProductController::class, 'update']);
     Route::delete('/{idOrSlug}', [ProductController::class, 'destroy']);
     Route::post('/{idOrSlug}/toggle-status', [ProductController::class, 'toggleStatus']);
     Route::get('/{idOrSlug}', [ProductController::class, 'show']);
 });
+Route::post('/upload', [ProductController::class, 'uploadImage']);
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'index']);

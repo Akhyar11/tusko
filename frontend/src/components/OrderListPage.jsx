@@ -26,6 +26,7 @@ import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
 import { formatRupiah } from '../utils/formatters';
 import { orderStatuses, mockOrders } from '../data/mockOrders';
+import { useOrderTableStore } from '../stores/useOrderTableStore';
 
 export default function OrderListPage({
   orders = mockOrders,
@@ -38,19 +39,28 @@ export default function OrderListPage({
   onUpdateStatus = () => {},
   onShowToast = () => {}
 }) {
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: tableOrders,
+    total: totalOrdersCount,
+    summary,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useOrderTableStore();
+
   // Filter drawer & active filters state
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [dateFilter, setDateFilter] = useState('all'); // 'all' | '7days' | '30days' | '90days'
-  const [expeditionFilter, setExpeditionFilter] = useState('all');
   const [copiedInvoice, setCopiedInvoice] = useState(null);
-
-  // Table pagination, sorting & selection
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState('desc');
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
@@ -58,6 +68,11 @@ export default function OrderListPage({
   const [statusModalOrder, setStatusModalOrder] = useState(null);
   const [printReceiptOrder, setPrintReceiptOrder] = useState(null);
   const [printInvoiceOrder, setPrintInvoiceOrder] = useState(null);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Close action popup when clicking outside
   useEffect(() => {
@@ -110,6 +125,11 @@ export default function OrderListPage({
     }
   };
 
+  const activeTab = filters.activeTab || 'all';
+  const searchKeyword = filters.searchKeyword || '';
+  const dateFilter = filters.dateFilter || 'all';
+  const expeditionFilter = filters.expeditionFilter || 'all';
+
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -121,79 +141,22 @@ export default function OrderListPage({
   }, [activeTab, searchKeyword, dateFilter, expeditionFilter]);
 
   const handleResetFilters = () => {
-    setActiveTab('all');
-    setSearchKeyword('');
-    setDateFilter('all');
-    setExpeditionFilter('all');
-    setPage(1);
+    resetFilters();
   };
 
-  // Filtered orders calculation
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      // Tab/status filter
-      if (activeTab !== 'all' && order.status !== activeTab) {
-        return false;
-      }
-
-      // Keyword filter
-      if (searchKeyword.trim() !== '') {
-        const query = searchKeyword.toLowerCase();
-        const invoiceMatch = (order.order_number || order.invoice_number || '').toLowerCase().includes(query);
-        const expeditionMatch = (order.expedition?.name || order.expedition_name || '').toLowerCase().includes(query);
-        const itemMatch = (order.items || []).some((item) => 
-          (item.product_name || item.name || '').toLowerCase().includes(query)
-        );
-        const recipientMatch = (order.address?.recipient_name || order.recipient_name || '').toLowerCase().includes(query);
-
-        if (!invoiceMatch && !expeditionMatch && !itemMatch && !recipientMatch) {
-          return false;
-        }
-      }
-
-      // Date filter
-      if (dateFilter !== 'all' && order.created_at) {
-        const orderTime = new Date(order.created_at).getTime();
-        const now = new Date().getTime();
-        const diffDays = (now - orderTime) / (1000 * 3600 * 24);
-
-        if (dateFilter === '7days' && diffDays > 7) return false;
-        if (dateFilter === '30days' && diffDays > 30) return false;
-        if (dateFilter === '90days' && diffDays > 90) return false;
-      }
-
-      // Expedition filter
-      if (expeditionFilter !== 'all') {
-        const expName = order.expedition?.name || order.expedition_name || '';
-        if (!expName.toLowerCase().includes(expeditionFilter.toLowerCase())) {
-          return false;
-        }
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === 'created_at') {
-        const timeA = new Date(a.created_at || 0).getTime();
-        const timeB = new Date(b.created_at || 0).getTime();
-        return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
-      }
-      if (sortBy === 'grand_total') {
-        const valA = Number(a.totals?.grand_total ?? a.grand_total ?? 0);
-        const valB = Number(b.totals?.grand_total ?? b.grand_total ?? 0);
-        return sortDirection === 'asc' ? valA - valB : valB - valA;
-      }
-      return 0;
-    });
-  }, [orders, activeTab, searchKeyword, dateFilter, expeditionFilter, sortBy, sortDirection]);
+  // Paginated records directly from server-side store
+  const paginatedOrders = tableOrders.length > 0 || totalOrdersCount === 0 ? tableOrders : orders;
+  const totalFiltered = totalOrdersCount > 0 || tableOrders.length > 0 ? totalOrdersCount : orders.length;
 
   // Metric KPI calculation
   const metrics = useMemo(() => {
-    const total = orders.length;
-    const pending = orders.filter((o) => o.status === 'pending').length;
-    const processing = orders.filter((o) => ['paid', 'processing', 'shipped'].includes(o.status)).length;
-    const completed = orders.filter((o) => o.status === 'completed').length;
+    const list = paginatedOrders;
+    const total = totalFiltered;
+    const pending = list.filter((o) => o.status === 'pending').length;
+    const processing = list.filter((o) => ['paid', 'processing', 'shipped'].includes(o.status)).length;
+    const completed = list.filter((o) => o.status === 'completed').length;
     return { total, pending, processing, completed };
-  }, [orders]);
+  }, [paginatedOrders, totalFiltered]);
 
   // Available unique expeditions for filter
   const uniqueExpeditions = useMemo(() => {
@@ -208,12 +171,6 @@ export default function OrderListPage({
     });
     return list;
   }, [orders]);
-
-  // Paginated records
-  const paginatedOrders = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredOrders.slice(start, start + limit);
-  }, [filteredOrders, page, limit]);
 
   // Selection handlers
   const handleSelectRow = (id) => {
@@ -597,21 +554,18 @@ export default function OrderListPage({
       <ServerSideTable
         columns={tableColumns}
         data={paginatedOrders}
-        total={filteredOrders.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50, 100]}
         onPageChange={setPage}
-        onLimitChange={(newLimit) => {
-          setLimit(newLimit);
-          setPage(1);
-        }}
+        onLimitChange={setLimit}
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
         }}
+        isLoading={isLoading}
         selectable={true}
         selectedIds={selectedOrderIds}
         onSelectRow={handleSelectRow}
@@ -637,16 +591,16 @@ export default function OrderListPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        totalFiltered={filteredOrders.length}
-        totalOrders={orders.length}
+        totalFiltered={totalFiltered}
+        totalOrders={totalFiltered}
         searchKeyword={searchKeyword}
-        onSearchChange={setSearchKeyword}
+        onSearchChange={(val) => setFilter('searchKeyword', val)}
         statusFilter={activeTab}
-        onStatusFilterChange={setActiveTab}
+        onStatusFilterChange={(val) => setFilter('activeTab', val)}
         dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
+        onDateFilterChange={(val) => setFilter('dateFilter', val)}
         expeditionFilter={expeditionFilter}
-        onExpeditionFilterChange={setExpeditionFilter}
+        onExpeditionFilterChange={(val) => setFilter('expeditionFilter', val)}
         expeditions={uniqueExpeditions}
         onResetFilters={handleResetFilters}
       />

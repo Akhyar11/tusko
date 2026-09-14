@@ -31,6 +31,9 @@ STANDAR KONSISTENSI BACKEND TUSKO:
 4. Standardisasi Server-Side Query (Filter, Pagination, Limit, dan Sorting):
    - Controller data listing (seperti `ProductController@index`, `OrderController@index`, dll.) WAJIB menangani filtering, limit/per_page, pagination, dan sorting secara dinamis langsung pada Eloquent Query Builder (`$query->where(...)`, `$query->orderBy(...)`, `$query->paginate(...)`).
    - DILARANG membebankan pemotongan data (pagination) atau penyaringan ke client-side dengan mengembalikan seluruh dataset tanpa pagination.
+5. Standardisasi Penyimpanan File & Media ke Storage:
+   - Seluruh operasi penyimpanan atau pengunggahan berkas/media (bukti transfer, foto/gambar produk, avatar pengguna, dokumen, dsb.) WAJIB disimpan ke disk storage melalui Laravel Storage facade atau FileStorageService (`Storage::disk(config('filesystems.default', 'public'))`).
+   - DILARANG KERAS menyimpan file secara manual ke folder lokal statis atau menggunakan hardcoded disk `'local'`/`'public'` tanpa melalui dynamic storage disk configuration, dan DILARANG menyimpan string data base64 gambar langsung ke kolom database text/varchar tanpa dipindahkan ke Storage.
 
 Git Diff (Staged Backend Changes):
 ```diff

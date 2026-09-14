@@ -20,6 +20,7 @@ import AddExpeditionModal from './AddExpeditionModal';
 import EditRateModal from './EditRateModal';
 import { formatRupiah } from '../utils/formatters';
 import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
+import { useExpeditionTableStore } from '../stores/useExpeditionTableStore';
 
 export default function ExpeditionSettingsPage({
   expeditions = initialExpeditions,
@@ -31,17 +32,30 @@ export default function ExpeditionSettingsPage({
   onToggleActive = () => {},
   onShowToast = () => {}
 }) {
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeExpeditions,
+    total: totalExpeditionsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useExpeditionTableStore();
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   // Filter drawer & active filters
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
-
-  // Table pagination, sorting & selection
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [selectedExpeditionIds, setSelectedExpeditionIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
@@ -76,67 +90,30 @@ export default function ExpeditionSettingsPage({
     }
   };
 
+  // Paginated records directly from server-side store
+  const paginatedExpeditions = storeExpeditions.length > 0 || totalExpeditionsCount === 0 ? storeExpeditions : expeditions;
+  const totalFiltered = totalExpeditionsCount > 0 || storeExpeditions.length > 0 ? totalExpeditionsCount : expeditions.length;
+
   // Statistics
-  const totalCount = expeditions.length;
-  const activeCount = expeditions.filter(e => e.isActive).length;
-  const defaultExp = expeditions.find(e => e.isDefault) || expeditions[0];
-  const avgRate = expeditions.length > 0 
-    ? Math.round(expeditions.reduce((s, e) => s + (e.baseRate || e.cost || 0), 0) / expeditions.length)
+  const totalCount = totalFiltered;
+  const activeCount = paginatedExpeditions.filter(e => e.isActive || e.is_active).length;
+  const defaultExp = paginatedExpeditions.find(e => e.isDefault || e.is_default) || paginatedExpeditions[0];
+  const avgRate = paginatedExpeditions.length > 0 
+    ? Math.round(paginatedExpeditions.reduce((s, e) => s + (e.baseRate || e.cost || e.base_rate || 0), 0) / paginatedExpeditions.length)
     : 0;
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (searchQuery.trim() !== '') count++;
-    if (selectedCategory !== 'Semua Kategori') count++;
-    if (statusFilter !== 'all') count++;
+    if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
+    if (filters.selectedCategory && filters.selectedCategory !== 'Semua Kategori' && filters.selectedCategory !== 'all') count++;
+    if (filters.statusFilter && filters.statusFilter !== 'all') count++;
     return count;
-  }, [searchQuery, selectedCategory, statusFilter]);
+  }, [filters]);
 
   const handleResetFilters = () => {
-    setSearchQuery('');
-    setSelectedCategory('Semua Kategori');
-    setStatusFilter('all');
-    setPage(1);
+    resetFilters();
   };
-
-  // Filtered expeditions
-  const filteredExpeditions = useMemo(() => {
-    return expeditions.filter((exp) => {
-      const matchesCategory = selectedCategory === 'Semua Kategori' || exp.category === selectedCategory;
-      const matchesSearch = 
-        exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exp.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (exp.code && exp.code.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = 
-        statusFilter === 'all' || 
-        (statusFilter === 'active' && exp.isActive) || 
-        (statusFilter === 'inactive' && !exp.isActive);
-
-      return matchesCategory && matchesSearch && matchesStatus;
-    }).sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-
-      if (sortBy === 'baseRate') {
-        valA = Number(a.baseRate || a.cost || 0);
-        valB = Number(b.baseRate || b.cost || 0);
-      } else if (typeof valA === 'string') {
-        valA = valA.toLowerCase();
-        valB = (valB || '').toLowerCase();
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [expeditions, searchQuery, selectedCategory, statusFilter, sortBy, sortDirection]);
-
-  // Paginated records
-  const paginatedExpeditions = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredExpeditions.slice(start, start + limit);
-  }, [filteredExpeditions, page, limit]);
 
   // Selection handlers
   const handleSelectRow = (id) => {
@@ -448,7 +425,7 @@ export default function ExpeditionSettingsPage({
       <ServerSideTable
         columns={tableColumns}
         data={paginatedExpeditions}
-        total={filteredExpeditions.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50, 100]}
@@ -460,9 +437,9 @@ export default function ExpeditionSettingsPage({
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
         }}
+        isLoading={isLoading}
         selectable={true}
         selectedIds={selectedExpeditionIds}
         onSelectRow={handleSelectRow}
@@ -488,15 +465,15 @@ export default function ExpeditionSettingsPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        totalFiltered={filteredExpeditions.length}
-        totalExpeditions={expeditions.length}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        totalFiltered={totalFiltered}
+        totalExpeditions={totalFiltered}
+        searchQuery={filters.searchQuery || ''}
+        onSearchChange={(val) => setFilter('searchQuery', val)}
+        selectedCategory={filters.selectedCategory || 'Semua Kategori'}
+        onCategoryChange={(val) => setFilter('selectedCategory', val)}
         categories={expeditionCategoriesList}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        statusFilter={filters.statusFilter || 'all'}
+        onStatusFilterChange={(val) => setFilter('statusFilter', val)}
         onResetFilters={handleResetFilters}
       />
 

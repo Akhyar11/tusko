@@ -32,50 +32,81 @@ export const vendorService = {
   /**
    * Fetch all vendors with optional search, category, and status filtering.
    */
-  async fetchVendors({ search = '', status = 'all', category = 'all', page = 1, perPage = 20 } = {}) {
+  async fetchVendors(params = {}) {
     try {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (status !== 'all') params.append('is_active', status === 'active' ? '1' : '0');
-      params.append('all', '1');
+      const urlParams = new URLSearchParams();
+      const search = params.search || params.searchQuery || params.codeSearchQuery;
+      if (search) urlParams.append('search', search);
 
-      const res = await apiClient.get(`/api/vendors?${params.toString()}`);
+      const status = params.status || params.statusFilter;
+      if (status && status !== 'all') urlParams.append('is_active', status === 'active' ? '1' : '0');
+
+      const sortBy = params.sort_by || params.sortBy;
+      if (sortBy) urlParams.append('sort_by', sortBy);
+
+      const sortDir = params.sort_dir || params.sortDirection || params.order;
+      if (sortDir) urlParams.append('sort_dir', sortDir);
+
+      if (params.all && !params.page && !params.limit && !params.per_page) {
+        urlParams.append('all', '1');
+      } else {
+        const page = params.page || 1;
+        const perPage = params.per_page || params.limit || 10;
+        urlParams.append('page', page);
+        urlParams.append('per_page', perPage);
+      }
+
+      const queryString = urlParams.toString();
+      const res = await apiClient.get(queryString ? `/api/vendors?${queryString}` : '/api/vendors');
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       
       if (list.length > 0) {
         setStoredVendors(list);
-        return { data: list, total: list.length };
       }
+
+      return {
+        data: list,
+        total: res.total !== undefined ? res.total : (res.meta?.total !== undefined ? res.meta.total : list.length),
+        meta: res.meta || {
+          current_page: res.current_page || params.page || 1,
+          last_page: res.last_page || 1,
+          per_page: res.per_page || params.limit || 10,
+          total: res.total !== undefined ? res.total : list.length
+        }
+      };
     } catch (err) {
       // Fallback to local storage
+      console.warn('vendorService.fetchVendors: fallback to local/mock data.', err.message);
+      let list = getStoredVendors();
+      const search = params.search || params.searchQuery;
+      if (search && search.trim()) {
+        const q = search.toLowerCase();
+        list = list.filter(v => 
+          (v.company_name && v.company_name.toLowerCase().includes(q)) ||
+          (v.code && v.code.toLowerCase().includes(q)) ||
+          (v.contact_person && v.contact_person.toLowerCase().includes(q)) ||
+          (v.email && v.email.toLowerCase().includes(q)) ||
+          (v.phone && v.phone.includes(q))
+        );
+      }
+
+      const status = params.status || params.statusFilter;
+      if (status && status !== 'all') {
+        const isActive = status === 'active';
+        list = list.filter(v => Boolean(v.is_active) === isActive);
+      }
+
+      const category = params.category || params.categoryFilter;
+      if (category && category !== 'all') {
+        list = list.filter(v => Array.isArray(v.categories) && v.categories.includes(category));
+      }
+
+      return {
+        data: list,
+        total: list.length,
+        meta: { current_page: 1, last_page: 1, per_page: list.length, total: list.length }
+      };
     }
-
-    let list = getStoredVendors();
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(v => 
-        (v.company_name && v.company_name.toLowerCase().includes(q)) ||
-        (v.code && v.code.toLowerCase().includes(q)) ||
-        (v.contact_person && v.contact_person.toLowerCase().includes(q)) ||
-        (v.email && v.email.toLowerCase().includes(q)) ||
-        (v.phone && v.phone.includes(q))
-      );
-    }
-
-    if (status !== 'all') {
-      const isActive = status === 'active';
-      list = list.filter(v => Boolean(v.is_active) === isActive);
-    }
-
-    if (category !== 'all') {
-      list = list.filter(v => Array.isArray(v.categories) && v.categories.includes(category));
-    }
-
-    return {
-      data: list,
-      total: list.length
-    };
   },
 
   /**

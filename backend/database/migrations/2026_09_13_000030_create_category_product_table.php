@@ -20,12 +20,30 @@ return new class extends Migration
         });
 
         // Seed pivot data from existing products that already have a category_id
-        DB::statement("
-            INSERT OR IGNORE INTO category_product (product_id, category_id, created_at, updated_at)
-            SELECT id, category_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-            FROM products
-            WHERE category_id IS NOT NULL
-        ");
+        $driver = DB::getDriverName();
+        if ($driver === 'pgsql') {
+            DB::statement("
+                INSERT INTO category_product (product_id, category_id, created_at, updated_at)
+                SELECT id, category_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                FROM products
+                WHERE category_id IS NOT NULL
+                ON CONFLICT DO NOTHING
+            ");
+        } elseif ($driver === 'mysql') {
+            DB::statement("
+                INSERT IGNORE INTO category_product (product_id, category_id, created_at, updated_at)
+                SELECT id, category_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                FROM products
+                WHERE category_id IS NOT NULL
+            ");
+        } else {
+            DB::statement("
+                INSERT OR IGNORE INTO category_product (product_id, category_id, created_at, updated_at)
+                SELECT id, category_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                FROM products
+                WHERE category_id IS NOT NULL
+            ");
+        }
     }
 
     /**

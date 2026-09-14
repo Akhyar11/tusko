@@ -17,6 +17,7 @@ import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
+import { useBillTableStore } from '../stores/useProcurementTableStores';
 
 export default function VendorBillListPage({
   onShowToast = () => {}
@@ -24,12 +25,25 @@ export default function VendorBillListPage({
   const [vendorBills, setVendorBills] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
-  // Pagination & selection states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeBills,
+    total: totalBillsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useBillTableStore();
+
   const [selectedBillIds, setSelectedBillIds] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   // Modals
   const [selectedBillDetail, setSelectedBillDetail] = useState(null);
@@ -38,6 +52,7 @@ export default function VendorBillListPage({
   const loadBills = () => {
     const data = procurementService.getVendorBills();
     setVendorBills(data);
+    fetchData();
   };
 
   useEffect(() => {
@@ -48,21 +63,9 @@ export default function VendorBillListPage({
     return () => unsubscribe();
   }, []);
 
-  // Filtered & Paginated
-  const filteredBills = useMemo(() => {
-    return vendorBills.filter(bill => {
-      const matchSearch = (bill.bill_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (bill.vendor_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (bill.po_number || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchStatus = statusFilter === 'all' || bill.status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [vendorBills, searchQuery, statusFilter]);
-
-  const paginatedBills = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredBills.slice(start, start + limit);
-  }, [filteredBills, page, limit]);
+  // Paginated records directly from server-side store
+  const paginatedBills = storeBills.length > 0 || totalBillsCount === 0 ? storeBills : vendorBills;
+  const totalFiltered = totalBillsCount > 0 || storeBills.length > 0 ? totalBillsCount : vendorBills.length;
 
   // KPIs
   const kpis = useMemo(() => {
@@ -327,11 +330,15 @@ export default function VendorBillListPage({
         selectable={true}
         selectedRows={selectedBillIds}
         onSelectRows={setSelectedBillIds}
-        total={filteredBills.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => setSort(newSortBy, newDir)}
+        isLoading={isLoading}
         emptyMessage="Belum ada data tagihan vendor."
       />
 

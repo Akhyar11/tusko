@@ -37,9 +37,33 @@ class ExpeditionController extends Controller
             });
         }
 
-        $expeditions = $query->orderByDesc('is_default')->orderBy('id')->get();
+        $sortBy = $request->get('sort_by', $request->get('sortBy', 'id'));
+        $sortDir = strtolower($request->get('sort_direction', $request->get('sortDirection', $request->get('order', 'asc')))) === 'desc' ? 'desc' : 'asc';
+        if (in_array($sortBy, ['name', 'service', 'code', 'category', 'base_cost', 'is_default', 'is_active', 'id'])) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->orderByDesc('is_default')->orderBy('id');
+        }
 
         $weight = (float) ($request->query('weight') ?: 1.0);
+
+        if ($request->filled('page') || $request->filled('per_page') || $request->filled('limit')) {
+            $perPage = min(max((int) ($request->get('per_page') ?: $request->get('limit') ?: 10), 1), 100);
+            $paginated = $query->paginate($perPage);
+            return response()->json([
+                'data' => ExpeditionResource::collection($paginated),
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                    'weight_kg' => $weight,
+                    'categories' => $this->getCategoriesList(),
+                ],
+            ]);
+        }
+
+        $expeditions = $query->get();
 
         return response()->json([
             'data' => ExpeditionResource::collection($expeditions),

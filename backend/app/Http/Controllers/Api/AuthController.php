@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -180,7 +181,7 @@ class AuthController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => 'nullable|string|max:30',
-            'avatar' => 'nullable|string',
+            'avatar' => 'nullable',
             'gender' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'old_password' => 'nullable|string',
@@ -227,8 +228,12 @@ class AuthController extends Controller
         if (array_key_exists('phone', $validated)) {
             $user->phone = $validated['phone'];
         }
-        if (array_key_exists('avatar', $validated)) {
-            $user->avatar = $validated['avatar'];
+        if ($request->hasFile('avatar')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('avatar'), 'avatars');
+            $user->avatar = $stored['path'];
+        } elseif (array_key_exists('avatar', $validated)) {
+            $stored = FileStorageService::storeBase64OrUrl($validated['avatar'], 'avatars');
+            $user->avatar = $stored['path'] ?: $stored['url'];
         }
         if (array_key_exists('gender', $validated)) {
             $user->gender = $validated['gender'];

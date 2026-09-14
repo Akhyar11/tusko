@@ -58,6 +58,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function getAvatarAttribute($value): ?string
+    {
+        return \App\Services\FileStorageService::url($value);
+    }
+
     /**
      * Get user profile summary stats.
      */

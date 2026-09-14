@@ -25,30 +25,37 @@ import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import SupplierFilterDrawer from './organisms/SupplierFilterDrawer';
 import { vendorService } from '../services/vendorService';
+import { useSupplierTableStore } from '../stores/useSupplierTableStore';
 
 export default function SupplierListPage({
   onShowToast = () => {},
   onNavigateToPO = () => {}
 }) {
   const [vendors, setVendors] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Table pagination, sorting, and checkbox list selection states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('company_name');
-  const [sortDirection, setSortDirection] = useState('asc');
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: tableVendors,
+    total: totalVendorsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useSupplierTableStore();
+
   const [selectedVendorIds, setSelectedVendorIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
-
-  // Filter Drawer states
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [codeSearchQuery, setCodeSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Form Modal state: null | 'create' | 'edit'
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,17 +79,13 @@ export default function SupplierListPage({
   // Delete Confirmation state
   const [deletingVendor, setDeletingVendor] = useState(null);
 
-  // Load vendors from service
+  // Load vendors from store
   const loadVendors = async () => {
-    setIsLoading(true);
-    setErrorMessage('');
     try {
-      const res = await vendorService.fetchVendors();
-      setVendors(res.data);
+      const res = await fetchData();
+      if (res?.data) setVendors(res.data);
     } catch (err) {
       setErrorMessage('Gagal memuat data supplier: ' + err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -97,93 +100,38 @@ export default function SupplierListPage({
     return () => window.removeEventListener('click', handleGlobalClick);
   }, []);
 
+  // Paginated records directly from server-side store
+  const paginatedVendors = tableVendors.length > 0 || totalVendorsCount === 0 ? tableVendors : vendors;
+  const totalFiltered = totalVendorsCount > 0 || tableVendors.length > 0 ? totalVendorsCount : vendors.length;
+
   // Compute metrics
   const metrics = useMemo(() => {
-    const total = vendors.length;
-    const active = vendors.filter(v => v.is_active).length;
+    const list = paginatedVendors;
+    const total = totalFiltered;
+    const active = list.filter(v => v.is_active).length;
     const inactive = total - active;
 
     const allCategories = new Set();
-    vendors.forEach(v => {
+    list.forEach(v => {
       if (Array.isArray(v.categories)) {
         v.categories.forEach(c => allCategories.add(c));
       }
     });
 
     return { total, active, inactive, totalCategories: allCategories.size };
-  }, [vendors]);
-
-  // Filter vendors
-  const filteredVendors = useMemo(() => {
-    return vendors.filter(v => {
-      // 1. Text Search (Name/PIC/Phone/Email)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matches = (
-          (v.company_name && v.company_name.toLowerCase().includes(q)) ||
-          (v.contact_person && v.contact_person.toLowerCase().includes(q)) ||
-          (v.email && v.email.toLowerCase().includes(q)) ||
-          (v.phone && v.phone.includes(q))
-        );
-        if (!matches) return false;
-      }
-
-      // 2. Code Search
-      if (codeSearchQuery.trim()) {
-        const q = codeSearchQuery.toLowerCase();
-        if (!v.code || !v.code.toLowerCase().includes(q)) return false;
-      }
-
-      // 3. Status Filter
-      if (statusFilter !== 'all') {
-        const isActive = statusFilter === 'active';
-        if (Boolean(v.is_active) !== isActive) return false;
-      }
-
-      // 4. Category Filter
-      if (categoryFilter !== 'all') {
-        if (!Array.isArray(v.categories) || !v.categories.includes(categoryFilter)) return false;
-      }
-
-      return true;
-    });
-  }, [vendors, searchQuery, codeSearchQuery, statusFilter, categoryFilter]);
-
-  // Sorted and Paginated vendors
-  const sortedVendors = useMemo(() => {
-    return [...filteredVendors].sort((a, b) => {
-      let aVal = a[sortBy] ?? '';
-      let bVal = b[sortBy] ?? '';
-
-      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredVendors, sortBy, sortDirection]);
-
-  const paginatedVendors = useMemo(() => {
-    const start = (page - 1) * limit;
-    return sortedVendors.slice(start, start + limit);
-  }, [sortedVendors, page, limit]);
+  }, [paginatedVendors, totalFiltered]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (searchQuery.trim()) count++;
-    if (codeSearchQuery.trim()) count++;
-    if (statusFilter !== 'all') count++;
-    if (categoryFilter !== 'all') count++;
+    if (filters.searchQuery && filters.searchQuery.trim()) count++;
+    if (filters.codeSearchQuery && filters.codeSearchQuery.trim()) count++;
+    if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.categoryFilter && filters.categoryFilter !== 'all') count++;
     return count;
-  }, [searchQuery, codeSearchQuery, statusFilter, categoryFilter]);
+  }, [filters]);
 
   const handleResetFilters = () => {
-    setSearchQuery('');
-    setCodeSearchQuery('');
-    setStatusFilter('all');
-    setCategoryFilter('all');
-    setPage(1);
+    resetFilters();
   };
 
   // Open Create Modal
@@ -671,8 +619,7 @@ export default function SupplierListPage({
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
           setActiveActionMenuId(null);
         }}
         isLoading={isLoading}
@@ -707,14 +654,14 @@ export default function SupplierListPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-        codeSearchQuery={codeSearchQuery}
-        onCodeSearchQueryChange={setCodeSearchQuery}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
+        searchQuery={filters.searchQuery || ''}
+        onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        codeSearchQuery={filters.codeSearchQuery || ''}
+        onCodeSearchQueryChange={(val) => setFilter('codeSearchQuery', val)}
+        statusFilter={filters.statusFilter || 'all'}
+        onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        categoryFilter={filters.categoryFilter || 'all'}
+        onCategoryFilterChange={(val) => setFilter('categoryFilter', val)}
         onResetFilters={handleResetFilters}
       />
 

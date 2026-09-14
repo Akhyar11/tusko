@@ -26,7 +26,8 @@ import {
   ChevronDown,
   UploadCloud,
   Camera,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { generateProductSku, generateVariantSku } from '../data/mockProducts';
@@ -35,6 +36,7 @@ import IconButton from './atoms/IconButton';
 import CategoryMasterModal from './organisms/CategoryMasterModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
+import { productService } from '../services/productService';
 
 const EMPTY_ARRAY = [];
 
@@ -210,12 +212,14 @@ export default function ProductEditForm({
 
   // Images
   const [imageUrl, setImageUrl] = useState(product.image_url || '');
+  const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState(() => {
     if (Array.isArray(product.gallery) && product.gallery.length > 0) {
       return [...product.gallery];
     }
     return product.image_url ? [product.image_url] : [];
   });
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [newGalleryInput, setNewGalleryInput] = useState('');
 
   // Variants
@@ -289,33 +293,61 @@ export default function ProductEditForm({
     setSpecList(specList.filter((_, i) => i !== index));
   };
 
-  // Image upload helpers (Local real file upload via FileReader)
-  const handleMainImageFileUpload = (e) => {
+  // Image upload helpers (Uploads directly to Cloudflare R2 / backend storage)
+  const handleMainImageFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       alert('File harus berupa gambar (JPG, PNG, WEBP, dll.)');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setImageUrl(event.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleGalleryFilesUpload = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-    
-    files.forEach(file => {
-      if (!file.type.startsWith('image/')) return;
+    const localPreview = URL.createObjectURL(file);
+    setImageUrl(localPreview);
+
+    try {
+      setIsUploadingMainImage(true);
+      const res = await productService.uploadImage(file);
+      if (res?.url) {
+        setImageUrl(res.url);
+      }
+    } catch (err) {
+      console.warn('Upload gambar langsung gagal, fallback ke Data URL:', err);
       const reader = new FileReader();
       reader.onload = (event) => {
-        setGalleryUrls(prev => [...prev, event.target.result]);
+        setImageUrl(event.target.result);
       };
       reader.readAsDataURL(file);
-    });
+    } finally {
+      setIsUploadingMainImage(false);
+    }
+  };
+
+  const handleGalleryFilesUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    try {
+      setIsUploadingGallery(true);
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        try {
+          const res = await productService.uploadImage(file);
+          if (res?.url) {
+            setGalleryUrls(prev => [...prev, res.url]);
+          }
+        } catch (err) {
+          console.warn('Upload gambar galeri gagal, fallback ke Data URL:', err);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setGalleryUrls(prev => [...prev, event.target.result]);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    } finally {
+      setIsUploadingGallery(false);
+    }
   };
 
   // Gallery helpers
@@ -1318,6 +1350,14 @@ export default function ProductEditForm({
                     alt="Foto Utama"
                     className="w-full h-full object-cover"
                   />
+                  {isUploadingMainImage && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-white z-10">
+                      <Loader2 size={24} className="animate-spin text-amber-400" />
+                      <span className="text-[11px] font-sport font-black uppercase tracking-wider text-amber-400">
+                        Menyimpan ke Storage...
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <label className="px-3 py-1.5 bg-white text-neutral-950 text-xs font-sport font-black uppercase cursor-pointer hover:bg-amber-400 transition-colors rounded-none flex items-center gap-1.5">
                       <input
@@ -1380,8 +1420,17 @@ export default function ProductEditForm({
                   onChange={handleGalleryFilesUpload}
                   className="hidden"
                 />
-                <UploadCloud size={15} className="text-amber-500" />
-                <span>+ Upload Foto Galeri Asli (Bisa Banyak)</span>
+                {isUploadingGallery ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin text-amber-500" />
+                    <span className="text-amber-600">Mengunggah galeri ke storage...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={15} className="text-amber-500" />
+                    <span>+ Upload Foto Galeri Asli (Bisa Banyak)</span>
+                  </>
+                )}
               </label>
 
               {/* URL input fallback */}

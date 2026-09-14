@@ -16,6 +16,7 @@ import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
+import { useGRNTableStore } from '../stores/useProcurementTableStores';
 
 export default function GoodsReceiptListPage({
   onShowToast = () => {}
@@ -23,11 +24,25 @@ export default function GoodsReceiptListPage({
   const [receivingNotes, setReceivingNotes] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
-  // Pagination & selection states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeGRNs,
+    total: totalGRNsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useGRNTableStore();
+
   const [selectedGRNIds, setSelectedGRNIds] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Modal
   const [selectedGRNDetail, setSelectedGRNDetail] = useState(null);
@@ -35,6 +50,7 @@ export default function GoodsReceiptListPage({
   const loadGRNs = () => {
     const data = procurementService.getGoodsReceivingNotes();
     setReceivingNotes(data);
+    fetchData();
   };
 
   useEffect(() => {
@@ -45,21 +61,9 @@ export default function GoodsReceiptListPage({
     return () => unsubscribe();
   }, []);
 
-  // Filtered & Paginated data
-  const filteredGRNs = useMemo(() => {
-    return receivingNotes.filter(grn => {
-      const matchSearch = (grn.grn_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (grn.po_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (grn.vendor_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (grn.delivery_order_number || '').toLowerCase().includes(searchQuery.toLowerCase());
-      return matchSearch;
-    });
-  }, [receivingNotes, searchQuery]);
-
-  const paginatedGRNs = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredGRNs.slice(start, start + limit);
-  }, [filteredGRNs, page, limit]);
+  // Paginated records directly from server-side store
+  const paginatedGRNs = storeGRNs.length > 0 || totalGRNsCount === 0 ? storeGRNs : receivingNotes;
+  const totalFiltered = totalGRNsCount > 0 || storeGRNs.length > 0 ? totalGRNsCount : receivingNotes.length;
 
   // KPIs
   const kpis = useMemo(() => {
@@ -291,11 +295,15 @@ export default function GoodsReceiptListPage({
         selectable={true}
         selectedRows={selectedGRNIds}
         onSelectRows={setSelectedGRNIds}
-        total={filteredGRNs.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => setSort(newSortBy, newDir)}
+        isLoading={isLoading}
         emptyMessage="Belum ada riwayat Penerimaan Barang (GRN)."
       />
 

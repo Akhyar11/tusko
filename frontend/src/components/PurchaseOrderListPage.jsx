@@ -23,6 +23,7 @@ import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { vendorService } from '../services/vendorService';
 import { initialWarehouses } from '../data/mockStockData';
+import { usePOTableStore } from '../stores/useProcurementTableStores';
 
 export default function PurchaseOrderListPage({
   onShowToast = () => {},
@@ -33,12 +34,25 @@ export default function PurchaseOrderListPage({
   const [vendors, setVendors] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
-  // Pagination & selection states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storePOs,
+    total: totalPOsCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = usePOTableStore();
+
   const [selectedPOIds, setSelectedPOIds] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -65,6 +79,7 @@ export default function PurchaseOrderListPage({
   const loadPOs = () => {
     const data = procurementService.getPurchaseOrders();
     setPurchaseOrders(data);
+    fetchData();
   };
 
   useEffect(() => {
@@ -86,29 +101,19 @@ export default function PurchaseOrderListPage({
     return () => unsubscribe();
   }, []);
 
-  // Filtered and paginated POs
-  const filteredPOs = useMemo(() => {
-    return purchaseOrders.filter(po => {
-      const matchSearch = (po.po_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (po.vendor_name || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchStatus = statusFilter === 'all' || po.status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [purchaseOrders, searchQuery, statusFilter]);
-
-  const paginatedPOs = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredPOs.slice(start, start + limit);
-  }, [filteredPOs, page, limit]);
+  // Paginated records directly from server-side store
+  const paginatedPOs = storePOs.length > 0 || totalPOsCount === 0 ? storePOs : purchaseOrders;
+  const totalFiltered = totalPOsCount > 0 || storePOs.length > 0 ? totalPOsCount : purchaseOrders.length;
 
   // KPIs
   const kpis = useMemo(() => {
-    const totalCount = purchaseOrders.length;
-    const ongoingCount = purchaseOrders.filter(p => ['approved', 'sent', 'partially_received'].includes(p.status)).length;
-    const completedCount = purchaseOrders.filter(p => p.status === 'received').length;
-    const totalProcurementValue = purchaseOrders.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0);
+    const list = purchaseOrders.length > 0 ? purchaseOrders : paginatedPOs;
+    const totalCount = totalFiltered;
+    const ongoingCount = list.filter(p => ['approved', 'sent', 'partially_received'].includes(p.status)).length;
+    const completedCount = list.filter(p => p.status === 'received').length;
+    const totalProcurementValue = list.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0);
     return { totalCount, ongoingCount, completedCount, totalProcurementValue };
-  }, [purchaseOrders]);
+  }, [purchaseOrders, paginatedPOs, totalFiltered]);
 
   // Handle PO Creation
   const handleAddItemToPO = () => {
@@ -480,11 +485,15 @@ export default function PurchaseOrderListPage({
         selectable={true}
         selectedRows={selectedPOIds}
         onSelectRows={setSelectedPOIds}
-        total={filteredPOs.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => setSort(newSortBy, newDir)}
+        isLoading={isLoading}
         emptyMessage="Belum ada Purchase Order yang terdaftar."
       />
 

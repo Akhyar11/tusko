@@ -26,6 +26,7 @@ import {
   initialStockLogs, 
   initialWarehouses 
 } from '../data/mockStockData';
+import { useInventoryTableStore } from '../stores/useInventoryTableStore';
 
 export default function StockManagementPage({
   inventory: propInventory = initialInventory,
@@ -40,19 +41,30 @@ export default function StockManagementPage({
   const [stockLogs, setStockLogs] = useState(propStockLogs);
   const [warehouses] = useState(initialWarehouses);
 
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: storeInventory,
+    total: totalInventoryCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useInventoryTableStore();
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   // Filter drawer & active filters
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [selectedWarehouseCode, setSelectedWarehouseCode] = useState('all');
-  const [stockFilter, setStockFilter] = useState('all'); // 'all' | 'safe' | 'low' | 'out_of_stock'
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [searchName, setSearchName] = useState('');
-  const [searchSku, setSearchSku] = useState('');
-
-  // Table pagination, sorting & selection
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('stock');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [selectedStockIds, setSelectedStockIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
@@ -77,6 +89,10 @@ export default function StockManagementPage({
     return () => window.removeEventListener('click', handleGlobalClick);
   }, []);
 
+  // Paginated records directly from server-side store
+  const paginatedInventory = storeInventory.length > 0 || totalInventoryCount === 0 ? storeInventory : inventory;
+  const totalFiltered = totalInventoryCount > 0 || storeInventory.length > 0 ? totalInventoryCount : inventory.length;
+
   // Hitung KPI 3-Tier Stok
   const stats = useMemo(() => {
     let totalOnHand = 0;
@@ -86,9 +102,10 @@ export default function StockManagementPage({
     let lowStockCount = 0;
     let outOfStockCount = 0;
 
-    const source = selectedWarehouseCode === 'all' 
-      ? inventory 
-      : inventory.filter(i => i.warehouse_code === selectedWarehouseCode);
+    const warehouseCode = filters.selectedWarehouseCode || 'all';
+    const source = warehouseCode === 'all' 
+      ? paginatedInventory 
+      : paginatedInventory.filter(i => i.warehouse_code === warehouseCode);
 
     source.forEach((item) => {
       const onHand = Number(item.stock) || 0;
@@ -98,17 +115,17 @@ export default function StockManagementPage({
       totalOnHand += onHand;
       totalReserved += reserved;
       totalAvailable += available;
-      totalAssetCost += onHand * (item.cost_price || 0);
+      totalAssetCost += onHand * (item.cost_price || (item.price ? item.price * 0.65 : 0));
 
       if (onHand === 0) {
         outOfStockCount++;
-      } else if (onHand <= item.stock_minimum) {
+      } else if (onHand <= (item.stock_minimum || 5)) {
         lowStockCount++;
       }
     });
 
     return {
-      skuCount: source.length,
+      skuCount: totalFiltered,
       totalOnHand,
       totalReserved,
       totalAvailable,
@@ -116,86 +133,27 @@ export default function StockManagementPage({
       lowStockCount,
       outOfStockCount
     };
-  }, [inventory, selectedWarehouseCode]);
+  }, [paginatedInventory, totalFiltered, filters.selectedWarehouseCode]);
 
   // Unique categories
   const categories = useMemo(() => {
-    return Array.from(new Set(inventory.map((i) => i.category_name))).filter(Boolean);
-  }, [inventory]);
+    return Array.from(new Set(paginatedInventory.map((i) => i.category_name || i.category?.name))).filter(Boolean);
+  }, [paginatedInventory]);
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (selectedWarehouseCode !== 'all') count++;
-    if (stockFilter !== 'all') count++;
-    if (categoryFilter !== 'all') count++;
-    if (searchName.trim() !== '') count++;
-    if (searchSku.trim() !== '') count++;
+    if (filters.selectedWarehouseCode && filters.selectedWarehouseCode !== 'all') count++;
+    if (filters.stockFilter && filters.stockFilter !== 'all') count++;
+    if (filters.categoryFilter && filters.categoryFilter !== 'all') count++;
+    if (filters.searchName && filters.searchName.trim() !== '') count++;
+    if (filters.searchSku && filters.searchSku.trim() !== '') count++;
     return count;
-  }, [selectedWarehouseCode, stockFilter, categoryFilter, searchName, searchSku]);
+  }, [filters]);
 
   const handleResetFilters = () => {
-    setSelectedWarehouseCode('all');
-    setStockFilter('all');
-    setCategoryFilter('all');
-    setSearchName('');
-    setSearchSku('');
-    setPage(1);
+    resetFilters();
   };
-
-  // Filtered inventory
-  const filteredInventory = useMemo(() => {
-    return inventory.filter((item) => {
-      // 1. Gudang Filter
-      if (selectedWarehouseCode !== 'all' && item.warehouse_code !== selectedWarehouseCode) return false;
-
-      // 2. Status Stok Filter
-      const onHand = Number(item.stock) || 0;
-      if (stockFilter === 'safe' && (onHand <= item.stock_minimum || onHand === 0)) return false;
-      if (stockFilter === 'low' && (onHand > item.stock_minimum || onHand === 0)) return false;
-      if (stockFilter === 'out_of_stock' && onHand !== 0) return false;
-
-      // 3. Kategori Filter
-      if (categoryFilter !== 'all' && item.category_name !== categoryFilter) return false;
-
-      // 4. Search Name
-      if (searchName.trim()) {
-        const q = searchName.toLowerCase();
-        if (!item.name.toLowerCase().includes(q)) return false;
-      }
-
-      // 5. Search SKU / Bin
-      if (searchSku.trim()) {
-        const q = searchSku.toLowerCase();
-        const matchSku = item.sku?.toLowerCase().includes(q);
-        const matchBin = item.warehouse_bin?.toLowerCase().includes(q);
-        if (!matchSku && !matchBin) return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-
-      if (sortBy === 'available_stock') {
-        valA = (Number(a.stock) || 0) - (Number(a.reserved_stock) || 0);
-        valB = (Number(b.stock) || 0) - (Number(b.reserved_stock) || 0);
-      } else if (sortBy === 'stock' || sortBy === 'reserved_stock' || sortBy === 'cost_price') {
-        valA = Number(valA || 0);
-        valB = Number(valB || 0);
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [inventory, selectedWarehouseCode, stockFilter, categoryFilter, searchName, searchSku, sortBy, sortDirection]);
-
-  // Paginated records
-  const paginatedInventory = useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredInventory.slice(start, start + limit);
-  }, [filteredInventory, page, limit]);
 
   // Selection handlers
   const handleSelectRow = (id) => {
@@ -588,7 +546,7 @@ export default function StockManagementPage({
       <ServerSideTable
         columns={tableColumns}
         data={paginatedInventory}
-        total={filteredInventory.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50, 100]}
@@ -600,9 +558,9 @@ export default function StockManagementPage({
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
+          setSort(newSortBy, newDir);
         }}
+        isLoading={isLoading}
         selectable={true}
         selectedIds={selectedStockIds}
         onSelectRow={handleSelectRow}
@@ -617,19 +575,19 @@ export default function StockManagementPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        totalFiltered={filteredInventory.length}
-        totalStockItems={inventory.length}
-        searchName={searchName}
-        onSearchNameChange={setSearchName}
-        searchSku={searchSku}
-        onSearchSkuChange={setSearchSku}
-        selectedWarehouseCode={selectedWarehouseCode}
-        onWarehouseChange={setSelectedWarehouseCode}
+        totalFiltered={totalFiltered}
+        totalStockItems={totalFiltered}
+        searchName={filters.searchName || ''}
+        onSearchNameChange={(val) => setFilter('searchName', val)}
+        searchSku={filters.searchSku || ''}
+        onSearchSkuChange={(val) => setFilter('searchSku', val)}
+        selectedWarehouseCode={filters.selectedWarehouseCode || 'all'}
+        onWarehouseChange={(val) => setFilter('selectedWarehouseCode', val)}
         warehouses={warehouses}
-        stockFilter={stockFilter}
-        onStockFilterChange={setStockFilter}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
+        stockFilter={filters.stockFilter || 'all'}
+        onStockFilterChange={(val) => setFilter('stockFilter', val)}
+        categoryFilter={filters.categoryFilter || 'all'}
+        onCategoryFilterChange={(val) => setFilter('categoryFilter', val)}
         categories={categories}
         onResetFilters={handleResetFilters}
       />

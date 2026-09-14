@@ -2,8 +2,11 @@
  * Central API Client for Tusko Performance Storefront
  * Handles HTTP requests to Laravel Sanctum REST API with Bearer token authentication.
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+let rawBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('https://')) {
+  rawBaseUrl = `https://${rawBaseUrl}`;
+}
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 export const TOKEN_STORAGE_KEY = 'tusko_auth_token';
 export const USER_STORAGE_KEY = 'tusko_auth_user';
@@ -65,9 +68,11 @@ async function request(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
   const token = getStoredToken();
 
+  const isFormData = options.body instanceof FormData;
+
   const headers = {
     Accept: 'application/json',
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
@@ -77,7 +82,7 @@ async function request(endpoint, options = {}) {
     headers,
   };
 
-  if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
+  if (config.body && typeof config.body === 'object' && !isFormData) {
     config.body = JSON.stringify(config.body);
   }
 

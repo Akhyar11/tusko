@@ -64,7 +64,7 @@ class ManualPaymentController extends Controller
 
         // Store proof file
         $file = $request->file('payment_proof');
-        $filePath = $file->store('payment_proofs', 'public');
+        $filePath = $file->store('payment_proofs', config('filesystems.default', 'public'));
 
         $transferredAt = $request->filled('transferred_at')
             ? Carbon::parse($request->input('transferred_at'))

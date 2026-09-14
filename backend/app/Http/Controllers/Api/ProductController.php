@@ -7,8 +7,10 @@ use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\StockMutation;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -251,8 +253,44 @@ class ProductController extends Controller
             }
         }
 
-        $status = $validated['status'] ?? 'active';
-        $active = isset($validated['active']) ? (bool) $validated['active'] : ($status === 'active');
+        $active = $validated['active'] ?? true;
+        $status = $validated['status'] ?? ($active ? 'active' : 'inactive');
+
+        // Proses penyimpanan gambar utama ke Storage
+        $finalImageUrl = null;
+        if ($request->hasFile('image')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('image'), 'products');
+            $finalImageUrl = $stored['path'];
+        } elseif ($request->hasFile('image_file')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('image_file'), 'products');
+            $finalImageUrl = $stored['path'];
+        } elseif ($request->hasFile('file')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('file'), 'products');
+            $finalImageUrl = $stored['path'];
+        } elseif (!empty($validated['image_url'])) {
+            $stored = FileStorageService::storeBase64OrUrl($validated['image_url'], 'products');
+            $finalImageUrl = $stored['path'] ?: $stored['url'];
+        }
+
+        // Kumpulkan galeri gambar produk dan simpan ke Storage
+        $galleryImages = [];
+        $rawGalleryFiles = $request->file('images') ?: $request->file('gallery_images') ?: [];
+        if (is_array($rawGalleryFiles)) {
+            foreach ($rawGalleryFiles as $gFile) {
+                if ($gFile instanceof UploadedFile) {
+                    $res = FileStorageService::storeUploadedFile($gFile, 'products/gallery');
+                    $galleryImages[] = $res['path'];
+                }
+            }
+        }
+        if (!empty($validated['images']) && is_array($validated['images'])) {
+            foreach ($validated['images'] as $imgItem) {
+                if (is_string($imgItem) && !empty($imgItem)) {
+                    $res = FileStorageService::storeBase64OrUrl($imgItem, 'products/gallery');
+                    $galleryImages[] = $res['path'] ?: $res['url'];
+                }
+            }
+        }
 
         $product = Product::create([
             'category_id' => $validated['category_id'],
@@ -268,7 +306,7 @@ class ProductController extends Controller
             'min_stock' => $validated['stock_minimum'] ?? 5,
             'weight' => $validated['weight'] ?? 500,
             'warehouse_bin' => $validated['warehouse_bin'] ?? 'Gudang Utama',
-            'image_url' => $validated['image_url'] ?? null,
+            'image_url' => $finalImageUrl,
             'status' => $status,
             'active' => $active,
             'specifications' => $validated['specifications'] ?? null,
@@ -279,11 +317,11 @@ class ProductController extends Controller
         ]);
 
         // Simpan galeri gambar produk
-        if (!empty($validated['images']) && is_array($validated['images'])) {
-            foreach ($validated['images'] as $idx => $imgUrl) {
-                if (!empty($imgUrl)) {
+        if (!empty($galleryImages)) {
+            foreach ($galleryImages as $idx => $imgVal) {
+                if (!empty($imgVal)) {
                     $product->images()->create([
-                        'image_url' => $imgUrl,
+                        'image_url' => $imgVal,
                         'sort_order' => $idx,
                     ]);
                 }
@@ -470,8 +508,18 @@ class ProductController extends Controller
         if (array_key_exists('warehouse_bin', $validated)) {
             $product->warehouse_bin = $validated['warehouse_bin'];
         }
-        if (array_key_exists('image_url', $validated)) {
-            $product->image_url = $validated['image_url'];
+        if ($request->hasFile('image')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('image'), 'products');
+            $product->image_url = $stored['path'];
+        } elseif ($request->hasFile('image_file')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('image_file'), 'products');
+            $product->image_url = $stored['path'];
+        } elseif ($request->hasFile('file')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('file'), 'products');
+            $product->image_url = $stored['path'];
+        } elseif (array_key_exists('image_url', $validated)) {
+            $stored = FileStorageService::storeBase64OrUrl($validated['image_url'], 'products');
+            $product->image_url = $stored['path'] ?: $stored['url'];
         }
         if (array_key_exists('status', $validated)) {
             $product->status = $validated['status'];
@@ -503,13 +551,31 @@ class ProductController extends Controller
         }
 
         // Sync gambar galeri jika dikirim
-        if ($request->has('images') || $request->has('galleryUrls')) {
-            $imagesList = $validated['images'] ?? [];
+        if ($request->has('images') || $request->has('galleryUrls') || $request->hasFile('images') || $request->hasFile('gallery_images')) {
+            $galleryImages = [];
+            $rawGalleryFiles = $request->file('images') ?: $request->file('gallery_images') ?: [];
+            if (is_array($rawGalleryFiles)) {
+                foreach ($rawGalleryFiles as $gFile) {
+                    if ($gFile instanceof UploadedFile) {
+                        $res = FileStorageService::storeUploadedFile($gFile, 'products/gallery');
+                        $galleryImages[] = $res['path'];
+                    }
+                }
+            }
+            if (!empty($validated['images']) && is_array($validated['images'])) {
+                foreach ($validated['images'] as $imgItem) {
+                    if (is_string($imgItem) && !empty($imgItem)) {
+                        $res = FileStorageService::storeBase64OrUrl($imgItem, 'products/gallery');
+                        $galleryImages[] = $res['path'] ?: $res['url'];
+                    }
+                }
+            }
+
             $product->images()->delete();
-            foreach ($imagesList as $idx => $imgUrl) {
-                if (!empty($imgUrl)) {
+            foreach ($galleryImages as $idx => $imgVal) {
+                if (!empty($imgVal)) {
                     $product->images()->create([
-                        'image_url' => $imgUrl,
+                        'image_url' => $imgVal,
                         'sort_order' => $idx,
                     ]);
                 }
@@ -603,6 +669,39 @@ class ProductController extends Controller
             'message' => "Status produk '{$product->name}' berhasil {$statusText}.",
             'data' => new ProductResource($product->fresh(['category', 'images'])),
         ]);
+    }
+
+    /**
+     * Upload an image to storage and return its public storage URL and path.
+     */
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'nullable|file|image|max:10240',
+            'file' => 'nullable|file|image|max:10240',
+            'image_base64' => 'nullable|string',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('image'), 'products');
+        } elseif ($request->hasFile('file')) {
+            $stored = FileStorageService::storeUploadedFile($request->file('file'), 'products');
+        } elseif ($request->filled('image_base64')) {
+            $stored = FileStorageService::storeBase64OrUrl($request->input('image_base64'), 'products');
+        } else {
+            return response()->json([
+                'message' => 'Berkas gambar atau data base64 wajib disertakan.',
+                'errors' => ['image' => ['Berkas gambar wajib diunggah.']],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Gambar berhasil diunggah ke storage.',
+            'data' => [
+                'path' => $stored['path'],
+                'url' => $stored['url'],
+            ],
+        ], 201);
     }
 }
 

@@ -153,4 +153,23 @@ export const productService = {
     setCachedProducts(current.map(p => (String(p.id) === String(idOrSlug) || p.slug === idOrSlug ? toggled : p)));
     return toggled;
   },
+
+  /**
+   * Upload an image file or base64 data to backend storage.
+   * @param {File|Blob|string} fileOrBase64
+   * @returns {Promise<{path: string, url: string}>}
+   */
+  async uploadImage(fileOrBase64) {
+    if (typeof fileOrBase64 === 'string') {
+      const res = await apiClient.post('/api/products/upload-image', {
+        image_base64: fileOrBase64,
+      });
+      return res.data;
+    }
+
+    const formData = new FormData();
+    formData.append('image', fileOrBase64);
+    const res = await apiClient.post('/api/products/upload-image', formData);
+    return res.data;
+  },
 };

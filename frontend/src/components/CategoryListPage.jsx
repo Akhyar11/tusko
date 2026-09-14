@@ -21,6 +21,7 @@ import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import CategoryFilterDrawer from './organisms/CategoryFilterDrawer';
 import { categoryService } from '../services/categoryService';
+import { useCategoryTableStore } from '../stores/useCategoryTableStore';
 
 export default function CategoryListPage({
   categories: initialCategories = [],
@@ -31,23 +32,29 @@ export default function CategoryListPage({
   onNavigateToProducts = () => {}
 }) {
   const [categories, setCategories] = useState(initialCategories);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  // Centralized Zustand Table Store (100% Server-Side Data Operations)
+  const {
+    page,
+    limit,
+    sortBy,
+    sortDirection,
+    filters,
+    data: tableCategories,
+    total: totalCount,
+    isLoading,
+    setPage,
+    setLimit,
+    setSort,
+    setFilter,
+    resetFilters,
+    fetchData,
+  } = useCategoryTableStore();
 
-  // Table pagination, sorting, and checkbox list selection states
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
-
-  // Filter Drawer states
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [productStatusFilter, setProductStatusFilter] = useState('all');
-  const [iconFilter, setIconFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name_asc');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Form Modal state: null | 'create' | 'edit'
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,15 +74,14 @@ export default function CategoryListPage({
 
   // Load categories from server
   const loadCategories = async () => {
-    setIsLoading(true);
     try {
-      const res = await categoryService.fetchCategories({ all: true });
-      setCategories(res.data);
-      onCategoriesChange(res.data);
+      const res = await fetchData();
+      if (res?.data) {
+        setCategories(res.data);
+        onCategoriesChange(res.data);
+      }
     } catch (err) {
       console.error('Failed to load categories:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -92,12 +98,13 @@ export default function CategoryListPage({
 
   // Compute metrics
   const metrics = useMemo(() => {
-    const total = categories.length;
+    const activeList = tableCategories.length > 0 ? tableCategories : categories;
+    const total = totalCount > 0 ? totalCount : activeList.length;
     let withProducts = 0;
     let emptyCount = 0;
     let totalAssignedProducts = 0;
 
-    categories.forEach(cat => {
+    activeList.forEach(cat => {
       const count = cat.products_count !== undefined 
         ? cat.products_count 
         : products.filter(p => p.category_id === cat.id).length;
@@ -111,80 +118,48 @@ export default function CategoryListPage({
     });
 
     return { total, withProducts, emptyCount, totalAssignedProducts };
-  }, [categories, products]);
+  }, [tableCategories, totalCount, categories, products]);
 
-  // Filter categories by search, product association status, and icon
-  const filteredCategories = useMemo(() => {
-    return categories.filter(c => {
-      // Search text filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchSearch = 
-          c.name.toLowerCase().includes(q) || 
-          (c.slug && c.slug.toLowerCase().includes(q)) ||
-          (c.description && c.description.toLowerCase().includes(q));
-        if (!matchSearch) return false;
-      }
+  // Active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
+    if (filters.productStatusFilter && filters.productStatusFilter !== 'all') count++;
+    if (filters.iconFilter && filters.iconFilter !== 'all') count++;
+    if (sortOption !== 'name_asc') count++;
+    return count;
+  }, [filters, sortOption]);
 
-      // Product association status filter
-      const prodCount = c.products_count !== undefined 
-        ? c.products_count 
-        : products.filter(p => p.category_id === c.id).length;
-
-      if (productStatusFilter === 'with_products' && prodCount === 0) return false;
-      if (productStatusFilter === 'empty' && prodCount > 0) return false;
-
-      // Icon filter
-      if (iconFilter !== 'all' && (c.icon || 'Tag') !== iconFilter) return false;
-
-      return true;
-    });
-  }, [categories, searchQuery, productStatusFilter, iconFilter, products]);
+  // Paginated records directly from server-side store
+  const paginatedCategories = tableCategories.length > 0 || totalCount === 0 ? tableCategories : categories;
+  const totalFiltered = totalCount > 0 || tableCategories.length > 0 ? totalCount : categories.length;
 
   // Sort option handler synchronized with table sortBy & sortDirection
   const handleSortOptionChange = (option) => {
     setSortOption(option);
     switch (option) {
       case 'name_desc':
-        setSortBy('name');
-        setSortDirection('desc');
+        setSort('name', 'desc');
         break;
       case 'products_desc':
-        setSortBy('products_count');
-        setSortDirection('desc');
+        setSort('products_count', 'desc');
         break;
       case 'products_asc':
-        setSortBy('products_count');
-        setSortDirection('asc');
+        setSort('products_count', 'asc');
         break;
       case 'newest':
-        setSortBy('id');
-        setSortDirection('desc');
+        setSort('id', 'desc');
         break;
       case 'name_asc':
       default:
-        setSortBy('name');
-        setSortDirection('asc');
+        setSort('name', 'asc');
         break;
     }
-    setPage(1);
   };
 
-  // Active filter count
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (productStatusFilter !== 'all') count++;
-    if (iconFilter !== 'all') count++;
-    if (sortOption !== 'name_asc') count++;
-    return count;
-  }, [productStatusFilter, iconFilter, sortOption]);
-
   const handleResetFilters = () => {
-    setProductStatusFilter('all');
-    setIconFilter('all');
-    handleSortOptionChange('name_asc');
-    setSearchQuery('');
-    setPage(1);
+    resetFilters();
+    setSortOption('name_asc');
   };
 
   const handleOpenCreate = () => {
@@ -284,33 +259,7 @@ export default function CategoryListPage({
     }
   };
 
-  // Sort categories
-  const sortedCategories = useMemo(() => {
-    return [...filteredCategories].sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
 
-      if (sortBy === 'products_count') {
-        valA = a.products_count !== undefined ? a.products_count : products.filter(p => p.category_id === a.id).length;
-        valB = b.products_count !== undefined ? b.products_count : products.filter(p => p.category_id === b.id).length;
-      }
-
-      if (typeof valA === 'string') {
-        valA = valA.toLowerCase();
-        valB = (valB || '').toLowerCase();
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredCategories, sortBy, sortDirection, products]);
-
-  // Paginate categories
-  const paginatedCategories = useMemo(() => {
-    const start = (page - 1) * limit;
-    return sortedCategories.slice(start, start + limit);
-  }, [sortedCategories, page, limit]);
 
   // Checkbox list selection handlers
   const handleSelectRow = (id) => {
@@ -599,25 +548,16 @@ export default function CategoryListPage({
       <ServerSideTable
         columns={tableColumns}
         data={paginatedCategories}
-        total={filteredCategories.length}
+        total={totalFiltered}
         page={page}
         limit={limit}
         limitOptions={[10, 25, 50]}
-        onPageChange={(p) => {
-          setPage(p);
-          setActiveActionMenuId(null);
-        }}
-        onLimitChange={(newLimit) => {
-          setLimit(newLimit);
-          setPage(1);
-          setActiveActionMenuId(null);
-        }}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
         sortBy={sortBy}
         sortDirection={sortDirection}
         onSortChange={({ sortBy: newSortBy, sortDirection: newDir }) => {
-          setSortBy(newSortBy);
-          setSortDirection(newDir);
-          setActiveActionMenuId(null);
+          setSort(newSortBy, newDir);
         }}
         isLoading={isLoading}
         selectable={true}
@@ -758,23 +698,14 @@ export default function CategoryListPage({
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         activeFilterCount={activeFilterCount}
-        totalFiltered={filteredCategories.length}
-        totalCategories={categories.length}
-        searchQuery={searchQuery}
-        onSearchQueryChange={(val) => {
-          setSearchQuery(val);
-          setPage(1);
-        }}
-        productStatusFilter={productStatusFilter}
-        onProductStatusFilterChange={(val) => {
-          setProductStatusFilter(val);
-          setPage(1);
-        }}
-        iconFilter={iconFilter}
-        onIconFilterChange={(val) => {
-          setIconFilter(val);
-          setPage(1);
-        }}
+        totalFiltered={totalFiltered}
+        totalCategories={totalFiltered}
+        searchQuery={filters.searchQuery || ''}
+        onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        productStatusFilter={filters.productStatusFilter || 'all'}
+        onProductStatusFilterChange={(val) => setFilter('productStatusFilter', val)}
+        iconFilter={filters.iconFilter || 'all'}
+        onIconFilterChange={(val) => setFilter('iconFilter', val)}
         sortOption={sortOption}
         onSortOptionChange={handleSortOptionChange}
         onResetFilters={handleResetFilters}
