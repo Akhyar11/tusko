@@ -18,6 +18,7 @@ import ServerSideTable from './ServerSideTable';
 import ExpeditionFilterDrawer from './organisms/ExpeditionFilterDrawer';
 import AddExpeditionModal from './AddExpeditionModal';
 import EditRateModal from './EditRateModal';
+import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
 import { useExpeditionTableStore } from '../stores/useExpeditionTableStore';
@@ -62,6 +63,8 @@ export default function ExpeditionSettingsPage({
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editRateExpedition, setEditRateExpedition] = useState(null);
+  const [expeditionToDelete, setExpeditionToDelete] = useState(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   // Close action popup when clicking outside
   useEffect(() => {
@@ -135,14 +138,25 @@ export default function ExpeditionSettingsPage({
   };
 
   const handleBulkDelete = () => {
-    if (window.confirm(`Yakin ingin menghapus ${selectedExpeditionIds.length} ekspedisi terpilih?`)) {
-      selectedExpeditionIds.forEach(id => {
-        const target = expeditions.find(e => e.id === id);
-        if (target) onDeleteExpedition(target);
-      });
-      setSelectedExpeditionIds([]);
-      onShowToast(`${selectedExpeditionIds.length} ekspedisi berhasil dihapus.`);
-    }
+    if (selectedExpeditionIds.length === 0) return;
+    setIsBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    selectedExpeditionIds.forEach(id => {
+      const target = expeditions.find(e => e.id === id);
+      if (target) onDeleteExpedition(target);
+    });
+    onShowToast(`${selectedExpeditionIds.length} ekspedisi berhasil dihapus.`);
+    setSelectedExpeditionIds([]);
+    setIsBulkDeleteOpen(false);
+  };
+
+  const confirmDeleteSingle = () => {
+    if (!expeditionToDelete) return;
+    onDeleteExpedition(expeditionToDelete);
+    onShowToast(`Layanan ${expeditionToDelete.name} berhasil dihapus.`);
+    setExpeditionToDelete(null);
   };
 
   // Table Columns Definition
@@ -311,10 +325,7 @@ export default function ExpeditionSettingsPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    if (window.confirm(`Yakin ingin menghapus layanan ${exp.name} (${exp.service})?`)) {
-                      onDeleteExpedition(exp);
-                      onShowToast(`Layanan ${exp.name} berhasil dihapus.`);
-                    }
+                    setExpeditionToDelete(exp);
                   }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                 >
@@ -502,6 +513,43 @@ export default function ExpeditionSettingsPage({
           }}
         />
       )}
+
+      {/* Confirmation Modal - Single Expedition Delete */}
+      <ConfirmationModal
+        isOpen={!!expeditionToDelete}
+        onClose={() => setExpeditionToDelete(null)}
+        onConfirm={confirmDeleteSingle}
+        title="Konfirmasi Hapus Layanan Ekspedisi"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus layanan ${expeditionToDelete?.name} (${expeditionToDelete?.service})?`}
+        confirmText="Hapus Layanan"
+        variant="danger"
+      >
+        {expeditionToDelete && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Kode Ekspedisi:</span>
+              <span className="font-mono font-bold text-neutral-900 uppercase">{expeditionToDelete.code}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Tarif Dasar:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(expeditionToDelete.base_cost || 0)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
+
+      {/* Confirmation Modal - Bulk Expedition Delete */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={confirmBulkDelete}
+        title="Konfirmasi Hapus Massal Ekspedisi"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus ${selectedExpeditionIds.length} layanan ekspedisi terpilih? Seluruh konfigurasi tarif layanan terkait akan dihapus.`}
+        confirmText={`Hapus ${selectedExpeditionIds.length} Ekspedisi`}
+        variant="danger"
+      />
     </div>
   );
 }

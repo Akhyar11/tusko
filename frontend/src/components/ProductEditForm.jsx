@@ -34,6 +34,7 @@ import { generateProductSku, generateVariantSku } from '../data/mockProducts';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import IconButton from './atoms/IconButton';
 import CategoryMasterModal from './organisms/CategoryMasterModal';
+import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
 import { productService } from '../services/productService';
@@ -48,18 +49,17 @@ export default function ProductEditForm({
   onUpdateProduct = () => {},
   onCancel = () => {},
   onNavigateToCategories = () => {},
-  onNavigateToSuppliers = () => {}
+  onNavigateToSuppliers = () => {},
+  onShowToast = () => {}
 }) {
   const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   const [categoryList, setCategoryList] = useState(categories);
   const [vendorList, setVendorList] = useState(vendors);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const handleNavigateToCategories = () => {
     if (onNavigateToCategories) {
-      if (!window.confirm('Form edit produk belum disimpan. Apakah Anda yakin ingin beralih ke halaman Master Kategori? Perubahan yang belum disimpan akan hilang.')) {
-        return;
-      }
-      onNavigateToCategories();
+      setPendingNavigation('categories');
     } else {
       setIsCategoryMasterOpen(true);
     }
@@ -67,9 +67,16 @@ export default function ProductEditForm({
 
   const handleNavigateToSuppliers = () => {
     if (onNavigateToSuppliers) {
-      if (!window.confirm('Form edit produk belum disimpan. Beralih ke halaman Master Supplier? Perubahan yang belum disimpan akan hilang.')) {
-        return;
-      }
+      setPendingNavigation('suppliers');
+    }
+  };
+
+  const confirmNavigation = () => {
+    const dest = pendingNavigation;
+    setPendingNavigation(null);
+    if (dest === 'categories') {
+      onNavigateToCategories();
+    } else if (dest === 'suppliers') {
       onNavigateToSuppliers();
     }
   };
@@ -298,7 +305,9 @@ export default function ProductEditForm({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert('File harus berupa gambar (JPG, PNG, WEBP, dll.)');
+      if (typeof onShowToast === 'function') {
+        onShowToast('File harus berupa gambar (JPG, PNG, WEBP, dll.)', { type: 'error' });
+      }
       return;
     }
 
@@ -483,17 +492,17 @@ export default function ProductEditForm({
   // Submit Handler
   const handleSubmit = (targetStatus = status) => {
     if (!name.trim()) {
-      alert('Nama produk wajib diisi!');
+      if (typeof onShowToast === 'function') onShowToast('Nama produk wajib diisi!', { type: 'error' });
       return;
     }
 
     if (!categoryIds || categoryIds.length === 0) {
-      alert('Pilih minimal satu kategori produk!');
+      if (typeof onShowToast === 'function') onShowToast('Pilih minimal satu kategori produk!', { type: 'error' });
       return;
     }
 
     if (isSkuDuplicate) {
-      alert(`Kode SKU "${sku.trim().toUpperCase()}" sudah digunakan oleh produk lain! Harap gunakan SKU yang unik.`);
+      if (typeof onShowToast === 'function') onShowToast(`Kode SKU "${sku.trim().toUpperCase()}" sudah digunakan oleh produk lain! Harap gunakan SKU yang unik.`, { type: 'error' });
       return;
     }
 
@@ -504,11 +513,11 @@ export default function ProductEditForm({
         const key = v.id || i;
         const st = variantSkuStatusMap[key];
         if (!vSku) {
-          alert(`Varian "${v.name || `Baris ${i + 1}`}" belum memiliki Kode SKU!`);
+          if (typeof onShowToast === 'function') onShowToast(`Varian "${v.name || `Baris ${i + 1}`}" belum memiliki Kode SKU!`, { type: 'error' });
           return;
         }
         if (st && st.isDuplicate) {
-          alert(`Kode SKU "${vSku}" pada varian "${v.name || `Baris ${i + 1}`}" tidak unik (${st.message})! Setiap varian wajib memiliki SKU unik.`);
+          if (typeof onShowToast === 'function') onShowToast(`Kode SKU "${vSku}" pada varian "${v.name || `Baris ${i + 1}`}" tidak unik (${st.message})! Setiap varian wajib memiliki SKU unik.`, { type: 'error' });
           return;
         }
       }
@@ -1568,6 +1577,19 @@ export default function ProductEditForm({
         onCategoriesChange={(updatedList) => {
           setCategoryList(updatedList);
         }}
+      />
+
+      {/* Modal Konfirmasi Navigasi Saat Form Kotor */}
+      <ConfirmationModal
+        isOpen={!!pendingNavigation}
+        onClose={() => setPendingNavigation(null)}
+        onConfirm={confirmNavigation}
+        title="Perubahan Belum Disimpan"
+        subtitle="Perubahan form edit produk belum tersimpan ke server."
+        message={`Apakah Anda yakin ingin beralih ke halaman ${pendingNavigation === 'categories' ? 'Master Kategori' : 'Master Supplier'}? Perubahan yang belum disimpan akan hilang.`}
+        confirmText="Beralih Halaman"
+        cancelText="Tetap di Form"
+        variant="warning"
       />
     </div>
   );

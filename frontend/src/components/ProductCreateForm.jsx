@@ -29,6 +29,7 @@ import { createMockProduct, generateProductSku, generateVariantSku } from '../da
 import ServerSideSelect from './molecules/ServerSideSelect';
 import IconButton from './atoms/IconButton';
 import CategoryMasterModal from './organisms/CategoryMasterModal';
+import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
 import { productService } from '../services/productService';
@@ -41,7 +42,8 @@ export default function ProductCreateForm({
   onSaveProduct = () => {},
   onCancel = () => {},
   onNavigateToCategories = () => {},
-  onNavigateToSuppliers = () => {}
+  onNavigateToSuppliers = () => {},
+  onShowToast = () => {}
 }) {
   // Basic Information (Starts Clean / Blank)
   const [name, setName] = useState('');
@@ -50,14 +52,14 @@ export default function ProductCreateForm({
   const [vendorId, setVendorId] = useState('');
   const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   const [categoryList, setCategoryList] = useState(categories);
-  const [vendorList, setVendorList] = useState(vendors);
+   const [vendorList, setVendorList] = useState(vendors);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const handleNavigateToCategories = () => {
     if (onNavigateToCategories) {
       if (name.trim() || price || description.trim()) {
-        if (!window.confirm('Form produk belum disimpan. Apakah Anda yakin ingin beralih ke halaman Master Kategori? Data yang belum disimpan akan hilang.')) {
-          return;
-        }
+        setPendingNavigation('categories');
+        return;
       }
       onNavigateToCategories();
     } else {
@@ -68,10 +70,19 @@ export default function ProductCreateForm({
   const handleNavigateToSuppliers = () => {
     if (onNavigateToSuppliers) {
       if (name.trim() || price || description.trim()) {
-        if (!window.confirm('Form produk belum disimpan. Apakah Anda yakin ingin beralih ke halaman Master Supplier? Data yang belum disimpan akan hilang.')) {
-          return;
-        }
+        setPendingNavigation('suppliers');
+        return;
       }
+      onNavigateToSuppliers();
+    }
+  };
+
+  const confirmNavigation = () => {
+    const dest = pendingNavigation;
+    setPendingNavigation(null);
+    if (dest === 'categories') {
+      onNavigateToCategories();
+    } else if (dest === 'suppliers') {
       onNavigateToSuppliers();
     }
   };
@@ -455,7 +466,9 @@ export default function ProductCreateForm({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert('File harus berupa gambar (JPG, PNG, WEBP, dll.)');
+      if (typeof onShowToast === 'function') {
+        onShowToast('File harus berupa gambar (JPG, PNG, WEBP, dll.)', { type: 'error' });
+      }
       return;
     }
 
@@ -1799,6 +1812,19 @@ export default function ProductCreateForm({
         onCategoriesChange={(updatedList) => {
           setCategoryList(updatedList);
         }}
+      />
+
+      {/* Modal Konfirmasi Navigasi Saat Form Kotor */}
+      <ConfirmationModal
+        isOpen={!!pendingNavigation}
+        onClose={() => setPendingNavigation(null)}
+        onConfirm={confirmNavigation}
+        title="Perubahan Belum Disimpan"
+        subtitle="Data form produk baru belum tersimpan ke database."
+        message={`Apakah Anda yakin ingin beralih ke halaman ${pendingNavigation === 'categories' ? 'Master Kategori' : 'Master Supplier'}? Data produk yang baru saja dimasukkan akan hilang.`}
+        confirmText="Beralih Halaman"
+        cancelText="Tetap di Form"
+        variant="warning"
       />
     </div>
   );

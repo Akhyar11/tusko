@@ -24,6 +24,7 @@ import OrderFilterDrawer from './organisms/OrderFilterDrawer';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
+import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { orderStatuses, mockOrders } from '../data/mockOrders';
 import { useOrderTableStore } from '../stores/useOrderTableStore';
@@ -68,6 +69,8 @@ export default function OrderListPage({
   const [statusModalOrder, setStatusModalOrder] = useState(null);
   const [printReceiptOrder, setPrintReceiptOrder] = useState(null);
   const [printInvoiceOrder, setPrintInvoiceOrder] = useState(null);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+  const [isBulkCancelOpen, setIsBulkCancelOpen] = useState(false);
 
   // Initial fetch on mount
   useEffect(() => {
@@ -193,14 +196,25 @@ export default function OrderListPage({
 
   // Bulk actions
   const handleBulkCancel = () => {
-    if (window.confirm(`Yakin ingin membatalkan ${selectedOrderIds.length} pesanan terpilih?`)) {
-      selectedOrderIds.forEach(id => {
-        const order = orders.find(o => (o.id || o.order_number || o.invoice_number) === id);
-        if (order) onCancelOrder(order);
-      });
-      setSelectedOrderIds([]);
-      onShowToast(`${selectedOrderIds.length} pesanan berhasil dibatalkan.`);
-    }
+    if (selectedOrderIds.length === 0) return;
+    setIsBulkCancelOpen(true);
+  };
+
+  const confirmBulkCancel = () => {
+    selectedOrderIds.forEach(id => {
+      const order = orders.find(o => (o.id || o.order_number || o.invoice_number) === id);
+      if (order) onCancelOrder(order);
+    });
+    onShowToast(`${selectedOrderIds.length} pesanan berhasil dibatalkan.`);
+    setSelectedOrderIds([]);
+    setIsBulkCancelOpen(false);
+  };
+
+  const confirmCancelOrder = () => {
+    if (!orderToCancel) return;
+    onCancelOrder(orderToCancel);
+    onShowToast(`Pesanan ${orderToCancel.order_number || orderToCancel.invoice_number} berhasil dibatalkan.`);
+    setOrderToCancel(null);
   };
 
   // Table Columns Definition for ServerSideTable
@@ -425,9 +439,7 @@ export default function OrderListPage({
                     type="button"
                     onClick={() => {
                       setActiveActionMenuId(null);
-                      if (window.confirm(`Yakin ingin membatalkan pesanan ${order.order_number || order.invoice_number}?`)) {
-                        onCancelOrder(order);
-                      }
+                      setOrderToCancel(order);
                     }}
                     className="w-full px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                   >
@@ -634,6 +646,43 @@ export default function OrderListPage({
           onClose={() => setPrintInvoiceOrder(null)}
         />
       )}
+
+      {/* Confirmation Modal - Single Order Cancel */}
+      <ConfirmationModal
+        isOpen={!!orderToCancel}
+        onClose={() => setOrderToCancel(null)}
+        onConfirm={confirmCancelOrder}
+        title="Konfirmasi Pembatalan Pesanan"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin membatalkan pesanan ${orderToCancel?.order_number || orderToCancel?.invoice_number}? Status pesanan akan diubah menjadi dibatalkan.`}
+        confirmText="Batalkan Pesanan"
+        variant="danger"
+      >
+        {orderToCancel && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Pelanggan:</span>
+              <span className="font-bold text-neutral-900">{orderToCancel.customer_name || orderToCancel.customer || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total Tagihan:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(orderToCancel.total_amount || orderToCancel.total || 0)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
+
+      {/* Confirmation Modal - Bulk Order Cancel */}
+      <ConfirmationModal
+        isOpen={isBulkCancelOpen}
+        onClose={() => setIsBulkCancelOpen(false)}
+        onConfirm={confirmBulkCancel}
+        title="Konfirmasi Pembatalan Massal Pesanan"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin membatalkan ${selectedOrderIds.length} pesanan terpilih? Semua pesanan terpilih akan dibatalkan.`}
+        confirmText={`Batalkan ${selectedOrderIds.length} Pesanan`}
+        variant="danger"
+      />
     </div>
   );
 }

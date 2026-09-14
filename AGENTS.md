@@ -96,6 +96,10 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
     - Seluruh pengelolaan state tabel data admin (filter, pagination, limit/per_page, dan sorting) WAJIB menggunakan state management store terpusat berbasis Zustand (`src/stores/*`).
     - DILARANG KERAS melakukan pemotongan data (client-side pagination via `.slice()`), penyaringan array in-memory (`.filter()`), atau pengurutan in-memory (`.sort()`) pada komponen tabel admin.
     - Seluruh operasi pagination, limit, filter pencarian, dan sorting WAJIB dieksekusi secara Server-Side melalui query API ke backend Laravel Eloquent (`$query->paginate()`). Komponen antarmuka tabel WAJIB langsung mengonsumsi data dari server.
+20. **Standardisasi Modal Konfirmasi Kustom (ConfirmationModal & Larangan Browser Dialogs)**:
+    - DILARANG KERAS menggunakan dialog bawaan browser (`window.confirm`, `confirm`, `window.alert`, `alert`, `window.prompt`, `prompt`) pada seluruh komponen antarmuka, halaman, dan form admin maupun storefront Tusko.
+    - Seluruh dialog konfirmasi (seperti konfirmasi hapus data tunggal, hapus massal, pembatalan pesanan/PO, konfirmasi navigasi saat form belum disimpan, dll.) WAJIB menggunakan modal kustom terstandarisasi `ConfirmationModal` (`frontend/src/components/ConfirmationModal.jsx` atau `frontend/src/components/organisms/ConfirmationModal.jsx`) bersudut siku tajam `rounded-none`, header gelap atletis, varian yang relevan (`danger`, `warning`, `info`), dan tombol aksi terstandarisasi.
+    - DILARANG membuat elemen dialog konfirmasi kustom mentah inline tanpa memanfaatkan komponen reusable `ConfirmationModal`.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

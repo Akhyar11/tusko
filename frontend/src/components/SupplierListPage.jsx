@@ -24,6 +24,7 @@ import {
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import SupplierFilterDrawer from './organisms/SupplierFilterDrawer';
+import ConfirmationModal from './ConfirmationModal';
 import { vendorService } from '../services/vendorService';
 import { useSupplierTableStore } from '../stores/useSupplierTableStore';
 
@@ -78,6 +79,7 @@ export default function SupplierListPage({
 
   // Delete Confirmation state
   const [deletingVendor, setDeletingVendor] = useState(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   // Load vendors from store
   const loadVendors = async () => {
@@ -230,6 +232,7 @@ export default function SupplierListPage({
   // Delete Vendor
   const handleConfirmDelete = async () => {
     if (!deletingVendor) return;
+    setIsSubmitting(true);
     try {
       await vendorService.deleteVendor(deletingVendor.id);
       setDeletingVendor(null);
@@ -237,6 +240,8 @@ export default function SupplierListPage({
       onShowToast(`Supplier "${deletingVendor.company_name}" berhasil dihapus.`);
     } catch (err) {
       onShowToast('Gagal menghapus: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -255,19 +260,25 @@ export default function SupplierListPage({
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedVendorIds.length === 0) return;
-    if (!window.confirm(`Hapus ${selectedVendorIds.length} supplier terpilih? Tindakan ini tidak dapat dibatalkan.`)) return;
+    setIsBulkDeleteOpen(true);
+  };
 
+  const confirmBulkDelete = async () => {
+    setIsSubmitting(true);
     try {
       for (const id of selectedVendorIds) {
         await vendorService.deleteVendor(id);
       }
       setSelectedVendorIds([]);
+      setIsBulkDeleteOpen(false);
       loadVendors();
       onShowToast(`${selectedVendorIds.length} supplier berhasil dihapus.`);
     } catch (err) {
       onShowToast('Gagal menghapus supplier: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -962,48 +973,44 @@ export default function SupplierListPage({
         </div>
       )}
 
-      {/* 7. Delete Confirmation Modal */}
-      {deletingVendor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-[2px] animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white border border-neutral-300 shadow-2xl p-6 rounded-none space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-rose-100 border border-rose-300 text-rose-600 flex items-center justify-center rounded-none font-black">
-                <Trash2 size={20} />
-              </div>
-              <div>
-                <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                  Hapus Rekanan Vendor?
-                </h3>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Tindakan ini tidak dapat dibatalkan
-                </p>
-              </div>
+      {/* 7. Delete Confirmation Modal (Single Vendor) */}
+      <ConfirmationModal
+        isOpen={!!deletingVendor}
+        onClose={() => setDeletingVendor(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Rekanan Vendor"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus vendor "${deletingVendor?.company_name}" (${deletingVendor?.code}) dari sistem? Seluruh riwayat relasi pengadaan terkait akan diputus.`}
+        confirmText="Hapus Vendor"
+        variant="danger"
+        isLoading={isSubmitting}
+      >
+        {deletingVendor && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Kode Vendor:</span>
+              <span className="font-mono font-bold text-neutral-900">{deletingVendor.code}</span>
             </div>
-
-            <p className="text-xs text-neutral-700 leading-relaxed">
-              Apakah Anda yakin ingin menghapus vendor <strong className="text-neutral-950">{deletingVendor.company_name}</strong> ({deletingVendor.code}) dari sistem?
-            </p>
-
-            <div className="pt-2 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setDeletingVendor(null)}
-                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-300 text-xs font-sport font-black uppercase tracking-wider rounded-none cursor-pointer"
-              >
-                Batal
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none cursor-pointer shadow-xs"
-              >
-                Ya, Hapus Vendor
-              </button>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">PIC:</span>
+              <span className="font-bold text-neutral-900">{deletingVendor.contact_person || '-'}</span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ConfirmationModal>
+
+      {/* 8. Delete Confirmation Modal (Bulk Vendors) */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={confirmBulkDelete}
+        title="Konfirmasi Hapus Massal Supplier"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus ${selectedVendorIds.length} supplier terpilih? Seluruh data profil rekanan yang dipilih akan dihapus.`}
+        confirmText={`Hapus ${selectedVendorIds.length} Supplier`}
+        variant="danger"
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

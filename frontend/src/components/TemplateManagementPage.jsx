@@ -122,7 +122,7 @@ export default function TemplateManagementPage({
   // Send Test Email Simulation
   const handleSendTestEmail = () => {
     if (!testEmailAddress) {
-      alert('Masukkan alamat email tujuan uji coba.');
+      onShowToast('Masukkan alamat email tujuan uji coba.', { type: 'error' });
       return;
     }
     setIsSendingTest(true);

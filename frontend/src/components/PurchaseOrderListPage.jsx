@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
+import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { vendorService } from '../services/vendorService';
@@ -33,6 +34,7 @@ export default function PurchaseOrderListPage({
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [poToCancel, setPoToCancel] = useState(null);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {
@@ -214,12 +216,17 @@ export default function PurchaseOrderListPage({
   };
 
   // Cancel PO
-  const handleCancelPO = (poId) => {
-    if (window.confirm('Yakin ingin membatalkan Purchase Order ini?')) {
-      procurementService.cancelPurchaseOrder(poId);
-      setActiveActionMenuId(null);
-      onShowToast('Purchase Order berhasil dibatalkan.');
-    }
+  const handleCancelPO = (po) => {
+    setActiveActionMenuId(null);
+    setPoToCancel(po);
+  };
+
+  const confirmCancelPO = () => {
+    if (!poToCancel) return;
+    procurementService.cancelPurchaseOrder(poToCancel.id);
+    onShowToast(`Purchase Order ${poToCancel.po_number} berhasil dibatalkan.`);
+    setPoToCancel(null);
+    fetchData();
   };
 
   // Table Columns
@@ -362,7 +369,7 @@ export default function PurchaseOrderListPage({
                 {['draft', 'approved'].includes(r.status) && (
                   <button
                     type="button"
-                    onClick={() => handleCancelPO(r.id)}
+                    onClick={() => handleCancelPO(r)}
                     className="w-full px-3 py-2 text-left text-xs font-bold text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                   >
                     <XCircle size={14} className="text-rose-600" />
@@ -878,6 +885,31 @@ export default function PurchaseOrderListPage({
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Pembatalan Purchase Order */}
+      <ConfirmationModal
+        isOpen={!!poToCancel}
+        onClose={() => setPoToCancel(null)}
+        onConfirm={confirmCancelPO}
+        title="Konfirmasi Pembatalan PO"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin membatalkan Purchase Order ${poToCancel?.po_number}? Status dokumen pengadaan akan diubah menjadi dibatalkan.`}
+        confirmText="Batalkan PO"
+        variant="danger"
+      >
+        {poToCancel && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Supplier:</span>
+              <span className="font-bold text-neutral-900">{poToCancel.vendor?.company_name || poToCancel.vendor_name || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total Nilai:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(poToCancel.total_amount || 0)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
     </div>
   );
 }

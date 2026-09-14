@@ -990,6 +990,7 @@ export default function App() {
             onCancel={() => setCurrentView('products-admin')}
             onNavigateToCategories={() => setCurrentView('categories-admin')}
             onNavigateToSuppliers={() => setCurrentView('suppliers-admin')}
+            onShowToast={showToast}
           />
         ) : currentView === 'product-create' ? (
           <ProductCreateForm
@@ -1003,6 +1004,7 @@ export default function App() {
             onCancel={() => setCurrentView('products-admin')}
             onNavigateToCategories={() => setCurrentView('categories-admin')}
             onNavigateToSuppliers={() => setCurrentView('suppliers-admin')}
+            onShowToast={showToast}
           />
         ) : currentView === 'categories-admin' ? (
           <CategoryListPage

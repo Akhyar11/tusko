@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import IconButton from '../atoms/IconButton';
 import SearchBar from '../molecules/SearchBar';
+import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../../services/categoryService';
 
 export default function CategoryMasterModal({
@@ -30,6 +31,7 @@ export default function CategoryMasterModal({
   // Form mode: null | 'create' | 'edit'
   const [formMode, setFormMode] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formIcon, setFormIcon] = useState('Tag');
@@ -131,23 +133,28 @@ export default function CategoryMasterModal({
     }
   };
 
-  const handleDelete = async (cat) => {
+  const handleDelete = (cat) => {
     if ((cat.products_count || 0) > 0) {
       setErrorMessage(`Kategori "${cat.name}" memiliki ${cat.products_count} produk aktif dan tidak dapat dihapus!`);
       return;
     }
+    setCategoryToDelete(cat);
+  };
 
-    if (!window.confirm(`Hapus master kategori "${cat.name}"?`)) {
-      return;
-    }
-
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    setIsSubmitting(true);
     try {
-      await categoryService.deleteCategory(cat.id);
-      setSuccessMessage(`Kategori "${cat.name}" berhasil dihapus.`);
+      await categoryService.deleteCategory(categoryToDelete.id);
+      setSuccessMessage(`Kategori "${categoryToDelete.name}" berhasil dihapus.`);
+      setCategoryToDelete(null);
       await loadCategoryData();
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       setErrorMessage(err.data?.message || err.message || 'Gagal menghapus kategori.');
+      setCategoryToDelete(null);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -430,6 +437,19 @@ export default function CategoryMasterModal({
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal for Category Deletion */}
+      <ConfirmationModal
+        isOpen={!!categoryToDelete}
+        onClose={() => setCategoryToDelete(null)}
+        onConfirm={confirmDeleteCategory}
+        title="Konfirmasi Hapus Kategori"
+        subtitle="Tindakan ini permanen dan tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus master kategori "${categoryToDelete?.name}"?`}
+        confirmText="Hapus Kategori"
+        variant="danger"
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

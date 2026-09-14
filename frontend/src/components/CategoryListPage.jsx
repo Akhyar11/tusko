@@ -20,6 +20,7 @@ import {
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import CategoryFilterDrawer from './organisms/CategoryFilterDrawer';
+import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../services/categoryService';
 import { useCategoryTableStore } from '../stores/useCategoryTableStore';
 
@@ -59,6 +60,7 @@ export default function CategoryListPage({
   // Form Modal state: null | 'create' | 'edit'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
@@ -280,7 +282,7 @@ export default function CategoryListPage({
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedCategoryIds.length === 0) return;
 
     const protectedCats = categories.filter(c => {
@@ -294,19 +296,23 @@ export default function CategoryListPage({
       return;
     }
 
-    if (!window.confirm(`Hapus ${selectedCategoryIds.length} master kategori terpilih?`)) {
-      return;
-    }
+    setIsBulkDeleteOpen(true);
+  };
 
+  const confirmBulkDelete = async () => {
+    setIsSubmitting(true);
     try {
       for (const id of selectedCategoryIds) {
         await categoryService.deleteCategory(id);
       }
-      setSelectedCategoryIds([]);
       onShowToast(`${selectedCategoryIds.length} kategori berhasil dihapus.`);
+      setSelectedCategoryIds([]);
+      setIsBulkDeleteOpen(false);
       await loadCategories();
     } catch (err) {
       onShowToast('Sebagian kategori gagal dihapus.', { type: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -716,62 +722,36 @@ export default function CategoryListPage({
       />
 
       {/* 7. Delete Category Confirmation Modal */}
-      {categoryToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
-            className="bg-white rounded-none border border-neutral-300 shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-5 bg-neutral-900 text-white border-b border-neutral-800 flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-none bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center shrink-0">
-                  <AlertTriangle size={22} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-sport font-black uppercase tracking-wider text-white">
-                    Konfirmasi Hapus Kategori
-                  </h3>
-                  <p className="text-xs text-neutral-400 font-sport">
-                    Tindakan ini permanen dan tidak dapat dibatalkan.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCategoryToDelete(null)}
-                className="text-neutral-400 hover:text-white p-1 rounded-none hover:bg-neutral-800 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-5 space-y-3 text-xs font-sport">
-              <p className="text-neutral-700 leading-relaxed">
-                Apakah Anda yakin ingin menghapus master kategori <strong className="text-neutral-950 font-black">"{categoryToDelete.name}"</strong>?
-              </p>
-              <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-neutral-600">
-                <span className="font-bold">Slug:</span> <code className="font-mono text-neutral-900 bg-white px-1.5 py-0.5 border border-neutral-200">{categoryToDelete.slug}</code>
-              </div>
-            </div>
-            <div className="p-4 bg-neutral-100 border-t border-neutral-200 flex items-center justify-end gap-2 text-xs font-sport">
-              <button
-                type="button"
-                onClick={() => setCategoryToDelete(null)}
-                className="px-3.5 py-2 text-neutral-700 bg-white hover:bg-neutral-200 border border-neutral-300 font-bold rounded-none transition-colors cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteCategory}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-wider rounded-none transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 size={14} />
-                <span>Hapus Kategori</span>
-              </button>
-            </div>
+      {/* Modal Konfirmasi Hapus Kategori Tunggal */}
+      <ConfirmationModal
+        isOpen={!!categoryToDelete}
+        onClose={() => setCategoryToDelete(null)}
+        onConfirm={confirmDeleteCategory}
+        title="Konfirmasi Hapus Kategori"
+        subtitle="Tindakan ini permanen dan tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus master kategori "${categoryToDelete?.name}"?`}
+        confirmText="Hapus Kategori"
+        variant="danger"
+      >
+        {categoryToDelete && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport text-neutral-600">
+            <span className="font-bold">Slug:</span> <code className="font-mono text-neutral-900 bg-white px-1.5 py-0.5 border border-neutral-200">{categoryToDelete.slug}</code>
           </div>
-        </div>
-      )}
+        )}
+      </ConfirmationModal>
+
+      {/* Modal Konfirmasi Hapus Massal Kategori */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={confirmBulkDelete}
+        title="Konfirmasi Hapus Massal Kategori"
+        subtitle="Tindakan ini permanen dan tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin menghapus ${selectedCategoryIds.length} master kategori terpilih secara permanen? Semua relasi kategori akan dihapus.`}
+        confirmText={`Hapus ${selectedCategoryIds.length} Kategori`}
+        variant="danger"
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

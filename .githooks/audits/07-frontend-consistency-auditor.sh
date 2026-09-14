@@ -94,6 +94,10 @@ STANDAR KONSISTENSI FRONTEND TUSKO:
     - Seluruh pengelolaan state query tabel admin (filter, pagination, limit/per_page, dan sorting) WAJIB menggunakan state management store terpusat seperti Zustand (`src/stores/*`).
     - DILARANG KERAS melakukan pemotongan data (client-side pagination dengan `.slice()`), penyaringan array in-memory (`.filter()`), atau pengurutan data in-memory (`.sort()`) pada komponen tabel halaman admin. Seluruh pagination, limit, filter, dan sorting WAJIB dieksekusi secara Server-Side melalui query API backend.
     - Tabel WAJIB mengonsumsi data langsung dari store Zustand yang disinkronkan dengan response paginasi dari server.
+22. Standardisasi Modal Konfirmasi Kustom (Mandatory Custom ConfirmationModal & Strict Prohibition of Native Browser Dialogs):
+    - DILARANG KERAS menggunakan dialog bawaan browser (`window.confirm`, `confirm(...)`, `window.alert`, `alert(...)`, `window.prompt`, `prompt(...)`) pada seluruh komponen antarmuka, halaman, dan form admin maupun storefront.
+    - Seluruh dialog konfirmasi (seperti konfirmasi hapus data tunggal, hapus massal, pembatalan pesanan/PO, konfirmasi navigasi saat form kotor/belum disimpan, dll.) WAJIB menggunakan modal kustom terstandarisasi `ConfirmationModal` (`frontend/src/components/ConfirmationModal.jsx` atau `frontend/src/components/organisms/ConfirmationModal.jsx`) dengan sudut siku tajam `rounded-none`, header gelap atletis, varian yang relevan (`danger`, `warning`, `info`), dan tombol aksi terstandarisasi.
+    - DILARANG membuat elemen dialog konfirmasi kustom mentah inline tanpa memanfaatkan komponen reusable `ConfirmationModal`.
 
 Git Diff (Staged Frontend Changes):
 ```
