@@ -314,7 +314,7 @@ export default function PurchaseOrderCreatePage({
       {/* Konten Form + Tips */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Form Card */}
-        <div className="bg-white border border-neutral-300 rounded-none shadow-xs p-6 sm:p-8 lg:col-span-3">
+        <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs lg:col-span-3">
           <form id="po-form" onSubmit={handleSubmit} className="space-y-6">
             {errorMessage && (
               <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between animate-in fade-in duration-150">
@@ -392,12 +392,12 @@ export default function PurchaseOrderCreatePage({
 
             {/* Section 2: Daftar Item & Matriks Varian Pemesanan Stok */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
-                <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2">
-                  <Boxes size={16} className="text-amber-500" />
-                  <span>2. Daftar Item &amp; Matriks Varian Pemesanan Stok</span>
-                </h2>
+              <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                <Boxes size={16} className="text-amber-500" />
+                <span>2. Daftar Item &amp; Matriks Varian Pemesanan Stok</span>
+              </h2>
 
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleAddProduct}
@@ -415,9 +415,9 @@ export default function PurchaseOrderCreatePage({
                   const prodTotalSubtotal = variants.reduce((s, v) => s + ((Number(v.ordered_quantity) || 0) * (Number(v.unit_price) || 0)), 0);
 
                   return (
-                    <div key={orderProd.id || pIdx} className="bg-neutral-50 border border-neutral-300 rounded-none overflow-hidden shadow-2xs">
+                    <div key={orderProd.id || pIdx} className="bg-neutral-50 border border-neutral-300 rounded-none shadow-2xs">
                       {/* Product Header Bar */}
-                      <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="p-5 sm:p-6 bg-white border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 bg-neutral-950 text-amber-400 font-sport font-black text-xs flex items-center justify-center shrink-0">
                             #{pIdx + 1}
@@ -447,7 +447,7 @@ export default function PurchaseOrderCreatePage({
                       </div>
 
                       {/* Product Selector */}
-                      <div className="p-4 sm:p-5 border-b border-neutral-200 bg-neutral-50/50">
+                      <div className="p-5 sm:p-6 border-b border-neutral-200 bg-neutral-50/50 relative z-20">
                         <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                           Pilih Produk Vendor <span className="text-rose-500">*</span>
                         </label>
@@ -468,7 +468,7 @@ export default function PurchaseOrderCreatePage({
 
                       {/* Variants Table / Matrix */}
                       {orderProd.product_id ? (
-                        <div className="p-4 sm:p-5 space-y-4">
+                        <div className="p-5 sm:p-6 space-y-5">
                           {/* Quick Fill Toolbar */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 border border-neutral-200">
                             <div className="flex items-center gap-2">
