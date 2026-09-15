@@ -270,10 +270,10 @@ export default function ServerSideSelect({
             if (isOpen) handleClose(); else handleOpen();
           }
         }}
-        className={`w-full min-h-[38px] px-3 py-1.5 text-xs sm:text-sm bg-neutral-50 hover:bg-neutral-100/80 focus:bg-white border rounded-none flex items-center justify-between gap-2 transition-all cursor-pointer text-left ${
+        className={`w-full h-[42px] min-h-[42px] px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 hover:bg-neutral-100/60 focus:bg-white border rounded-none flex items-center justify-between gap-2 transition-all cursor-pointer text-left ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         } ${
-          isOpen ? 'border-black ring-1 ring-black bg-white' : 'border-neutral-300'
+          isOpen ? 'border-amber-500 bg-white' : 'border-neutral-300'
         } ${className}`}
       >
         <div className="flex-1 flex flex-wrap items-center gap-1.5 overflow-hidden">
@@ -336,14 +336,14 @@ export default function ServerSideSelect({
           {/* Server-side Search Input Inside Dropdown */}
           <div className="p-2 border-b border-neutral-200 bg-neutral-50">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 text-neutral-400" size={14} />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" size={14} />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Ketik untuk mencari di server..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-neutral-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
+                className="w-full h-9 pl-8 pr-7 py-1.5 text-xs bg-white border border-neutral-300 rounded-none focus:outline-none focus:border-amber-500 text-neutral-950 font-medium placeholder:text-neutral-400"
               />
               {searchQuery && (
                 <button
@@ -352,7 +352,7 @@ export default function ServerSideSelect({
                     setSearchQuery('');
                     fetchPage('', 1);
                   }}
-                  className="absolute right-2 top-2 text-xs text-neutral-400 hover:text-black cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 hover:text-black cursor-pointer"
                 >
                   ✕
                 </button>

@@ -122,7 +122,7 @@ export default function AdminDashboardPage({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* 1. Header Bar Dashboard Admin */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
@@ -149,10 +149,10 @@ export default function AdminDashboardPage({
       </div>
 
       {/* 2. Top 5 KPI Cards Grid (Wajib Sudut Siku rounded-none) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
         
         {/* KPI 1: Total Produk */}
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs hover:border-black transition-colors">
+        <div className="bg-white border border-neutral-300 p-4 rounded-none shadow-2xs hover:border-black transition-colors">
           <div className="flex items-center justify-between text-neutral-600 text-xs font-bold uppercase tracking-wider mb-2">
             <span>Total Produk</span>
             <div className="w-8 h-8 bg-neutral-100 text-neutral-900 border border-neutral-300 flex items-center justify-center rounded-none">
@@ -176,7 +176,7 @@ export default function AdminDashboardPage({
         </div>
 
         {/* KPI 2: Produk Perlu Restok */}
-        <div className={`bg-white border p-5 rounded-none shadow-2xs transition-colors ${
+        <div className={`bg-white border p-4 rounded-none shadow-2xs transition-colors ${
           metrics.lowStockCount > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-neutral-300'
         }`}>
           <div className="flex items-center justify-between text-neutral-600 text-xs font-bold uppercase tracking-wider mb-2">
@@ -207,7 +207,7 @@ export default function AdminDashboardPage({
         </div>
 
         {/* KPI 3: Revenue Kotor Bulan Ini */}
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs hover:border-black transition-colors">
+        <div className="bg-white border border-neutral-300 p-4 rounded-none shadow-2xs hover:border-black transition-colors">
           <div className="flex items-center justify-between text-neutral-600 text-xs font-bold uppercase tracking-wider mb-2">
             <span>Revenue Kotor (Bulan)</span>
             <div className="w-8 h-8 bg-neutral-900 text-white border border-neutral-900 flex items-center justify-center rounded-none">
@@ -224,7 +224,7 @@ export default function AdminDashboardPage({
         </div>
 
         {/* KPI 4: Revenue Bersih Bulan Ini */}
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs hover:border-black transition-colors">
+        <div className="bg-white border border-neutral-300 p-4 rounded-none shadow-2xs hover:border-black transition-colors">
           <div className="flex items-center justify-between text-neutral-600 text-xs font-bold uppercase tracking-wider mb-2">
             <span>Revenue Bersih (Bulan)</span>
             <div className="w-8 h-8 bg-amber-50 text-amber-800 border border-amber-300 flex items-center justify-center rounded-none">
@@ -241,7 +241,7 @@ export default function AdminDashboardPage({
         </div>
 
         {/* KPI 5: Total Saldo Rekening */}
-        <div className="bg-neutral-950 text-white border border-black p-5 rounded-none shadow-md">
+        <div className="bg-neutral-950 text-white border border-black p-4 rounded-none shadow-2xs">
           <div className="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider mb-2">
             <span>Total Saldo Rekening</span>
             <div className="w-8 h-8 bg-neutral-800 text-amber-400 border border-neutral-700 flex items-center justify-center rounded-none">
@@ -505,7 +505,7 @@ export default function AdminDashboardPage({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-none space-y-1">
               <span className="text-[10px] font-mono uppercase text-neutral-500 font-bold block">
                 Total Poin Beredar (Active)
@@ -567,7 +567,7 @@ export default function AdminDashboardPage({
       </div>
 
       {/* 5. Quick Navigational Shortcuts */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         <div className="bg-white border border-neutral-300 p-4 rounded-none shadow-2xs flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-neutral-100 border border-neutral-300 text-neutral-900 flex items-center justify-center rounded-none">

@@ -28,7 +28,9 @@ import { useSupplierTableStore } from '../stores/useSupplierTableStore';
 
 export default function SupplierListPage({
   onShowToast = () => {},
-  onNavigateToPO = () => {}
+  onNavigateToPO = () => {},
+  onNavigateToCreate = () => {},
+  onNavigateToEdit = () => {}
 }) {
   const [vendors, setVendors] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -55,21 +57,6 @@ export default function SupplierListPage({
   const [selectedVendorIds, setSelectedVendorIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-
-  // Form Modal state: null | 'create' | 'edit'
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState(null);
-  const [formData, setFormData] = useState({
-    code: '',
-    company_name: '',
-    contact_person: '',
-    email: '',
-    phone: '',
-    address: '',
-    bank_account_info: '',
-    categories: 'Apparel',
-    is_active: true
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Detail Modal state
@@ -125,6 +112,8 @@ export default function SupplierListPage({
     let count = 0;
     if (filters.searchQuery && filters.searchQuery.trim()) count++;
     if (filters.codeSearchQuery && filters.codeSearchQuery.trim()) count++;
+    if (filters.contactSearchQuery && filters.contactSearchQuery.trim()) count++;
+    if (filters.bankSearchQuery && filters.bankSearchQuery.trim()) count++;
     if (filters.statusFilter && filters.statusFilter !== 'all') count++;
     if (filters.categoryFilter && filters.categoryFilter !== 'all') count++;
     return count;
@@ -132,88 +121,6 @@ export default function SupplierListPage({
 
   const handleResetFilters = () => {
     resetFilters();
-  };
-
-  // Open Create Modal
-  const handleOpenCreateModal = () => {
-    setEditingVendor(null);
-    setFormData({
-      code: '',
-      company_name: '',
-      contact_person: '',
-      email: '',
-      phone: '',
-      address: '',
-      bank_account_info: '',
-      categories: 'Apparel',
-      is_active: true
-    });
-    setErrorMessage('');
-    setIsModalOpen(true);
-  };
-
-  // Open Edit Modal
-  const handleOpenEditModal = (vendor) => {
-    setEditingVendor(vendor);
-    setFormData({
-      code: vendor.code || '',
-      company_name: vendor.company_name || '',
-      contact_person: vendor.contact_person || '',
-      email: vendor.email || '',
-      phone: vendor.phone || '',
-      address: vendor.address || '',
-      bank_account_info: vendor.bank_account_info || '',
-      categories: Array.isArray(vendor.categories) ? vendor.categories.join(', ') : (vendor.categories || 'Apparel'),
-      is_active: vendor.is_active !== undefined ? vendor.is_active : true
-    });
-    setErrorMessage('');
-    setIsModalOpen(true);
-  };
-
-  // Submit Create / Edit Form
-  const handleSubmitForm = async (e) => {
-    e.preventDefault();
-    if (!formData.company_name.trim() || !formData.contact_person.trim() || !formData.phone.trim()) {
-      setErrorMessage('Harap lengkapi nama perusahaan, nama kontak PIC, dan nomor telepon.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage('');
-
-    try {
-      const parsedCategories = formData.categories
-        .split(',')
-        .map(c => c.trim())
-        .filter(Boolean);
-
-      const payload = {
-        code: formData.code,
-        company_name: formData.company_name,
-        contact_person: formData.contact_person,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        bank_account_info: formData.bank_account_info,
-        categories: parsedCategories.length > 0 ? parsedCategories : ['Apparel'],
-        is_active: formData.is_active
-      };
-
-      if (editingVendor) {
-        await vendorService.updateVendor(editingVendor.id, payload);
-        onShowToast(`Supplier "${payload.company_name}" berhasil diperbarui.`);
-      } else {
-        await vendorService.createVendor(payload);
-        onShowToast(`Supplier "${payload.company_name}" berhasil ditambahkan.`);
-      }
-
-      setIsModalOpen(false);
-      loadVendors();
-    } catch (err) {
-      setErrorMessage(err.message || 'Gagal menyimpan data supplier.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Toggle Active Status
@@ -440,7 +347,7 @@ export default function SupplierListPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    handleOpenEditModal(r);
+                    onNavigateToEdit(r);
                   }}
                   className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
                 >
@@ -502,31 +409,33 @@ export default function SupplierListPage({
         );
       }
     }
-  ], [activeActionMenuId, onNavigateToPO]);
+  ], [activeActionMenuId, onNavigateToPO, onNavigateToEdit]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* 1. Header Card (Icon-Only Controls with Tooltips) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0 shadow-xs">
-            <Building2 size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">
-              Master Supplier &amp; Rekanan Vendor
-            </h1>
-            <p className="text-xs text-neutral-500 mt-0.5 max-w-2xl">
-              Direktori vendor terpusat untuk pengadaan bahan &amp; stok, kontak PIC, rekening bank, termin pembayaran, dan pemesanan PO.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <Building2 size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Master Supplier &amp; Rekanan Vendor
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Direktori vendor terpusat untuk pengadaan bahan &amp; stok, kontak PIC, rekening bank, termin pembayaran, dan pemesanan PO.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Header Action Controls (Icon-Only with Tooltip) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           <IconButton
             icon={Plus}
-            onClick={handleOpenCreateModal}
+            onClick={onNavigateToCreate}
             title="Tambah Supplier Baru"
             variant="primary"
           />
@@ -548,9 +457,9 @@ export default function SupplierListPage({
       </div>
 
       {/* 2. Metric Cards (Row of 4 Cards) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Total Supplier */}
-        <div className="bg-white p-4 sm:p-5 border border-neutral-300 rounded-none shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs font-sport font-bold uppercase tracking-wider">
             <span>Total Supplier</span>
             <Building2 size={16} className="text-amber-500" />
@@ -564,7 +473,7 @@ export default function SupplierListPage({
         </div>
 
         {/* Card 2: Supplier Aktif */}
-        <div className="bg-white p-4 sm:p-5 border border-neutral-300 rounded-none shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs font-sport font-bold uppercase tracking-wider">
             <span>Supplier Aktif</span>
             <CheckCircle2 size={16} className="text-emerald-600" />
@@ -578,7 +487,7 @@ export default function SupplierListPage({
         </div>
 
         {/* Card 3: Supplier Nonaktif */}
-        <div className="bg-white p-4 sm:p-5 border border-neutral-300 rounded-none shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs font-sport font-bold uppercase tracking-wider">
             <span>Supplier Nonaktif</span>
             <AlertCircle size={16} className="text-neutral-400" />
@@ -592,7 +501,7 @@ export default function SupplierListPage({
         </div>
 
         {/* Card 4: Kategori Pasokan */}
-        <div className="bg-white p-4 sm:p-5 border border-neutral-300 rounded-none shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs font-sport font-bold uppercase tracking-wider">
             <span>Kategori Pasokan</span>
             <CreditCard size={16} className="text-purple-600" />
@@ -613,7 +522,7 @@ export default function SupplierListPage({
         total={totalFiltered}
         page={page}
         limit={limit}
-        limitOptions={[10, 25, 50]}
+        limitOptions={[10, 25, 50, 100]}
         onPageChange={(p) => {
           setPage(p);
           setActiveActionMenuId(null);
@@ -665,6 +574,10 @@ export default function SupplierListPage({
         onSearchQueryChange={(val) => setFilter('searchQuery', val)}
         codeSearchQuery={filters.codeSearchQuery || ''}
         onCodeSearchQueryChange={(val) => setFilter('codeSearchQuery', val)}
+        contactSearchQuery={filters.contactSearchQuery || ''}
+        onContactSearchQueryChange={(val) => setFilter('contactSearchQuery', val)}
+        bankSearchQuery={filters.bankSearchQuery || ''}
+        onBankSearchQueryChange={(val) => setFilter('bankSearchQuery', val)}
         statusFilter={filters.statusFilter || 'all'}
         onStatusFilterChange={(val) => setFilter('statusFilter', val)}
         categoryFilter={filters.categoryFilter || 'all'}
@@ -672,201 +585,7 @@ export default function SupplierListPage({
         onResetFilters={handleResetFilters}
       />
 
-      {/* 5. Create / Edit Supplier Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-[2px] animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white border border-neutral-300 shadow-2xl rounded-none flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="p-5 sm:p-6 bg-neutral-950 text-white flex items-center justify-between border-b border-neutral-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-neutral-900 border border-neutral-700 text-amber-400 flex items-center justify-center rounded-none font-black">
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <h2 className="text-base font-black font-sport uppercase tracking-wider text-white">
-                    {editingVendor ? 'Edit Data Supplier' : 'Tambah Supplier Baru'}
-                  </h2>
-                  <p className="text-xs text-neutral-400 mt-0.5">
-                    {editingVendor ? `Memperbarui vendor ${editingVendor.code}` : 'Input data rekanan vendor pengadaan baru'}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent hover:border-neutral-800 rounded-none transition-colors cursor-pointer"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body (Scrollable) */}
-            <form onSubmit={handleSubmitForm} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
-              {errorMessage && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 rounded-none">
-                  <AlertCircle size={15} className="shrink-0 text-rose-600" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Nama Perusahaan / Vendor <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.company_name}
-                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                    placeholder="PT Tekstil Atletik Prima"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-bold rounded-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Kode Vendor (Opsional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="Otomatis: VND-004..."
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-mono font-bold rounded-none uppercase"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Nama Kontak PIC <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.contact_person}
-                    onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                    placeholder="Budi Santoso"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    No. Telepon / WhatsApp <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="0812-3456-7890"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-mono rounded-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Email Kontak
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="budi@vendor.co.id"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Informasi Rekening Bank
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.bank_account_info}
-                    onChange={(e) => setFormData({ ...formData, bank_account_info: e.target.value })}
-                    placeholder="BCA 7788990011 a.n PT Tekstil"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-mono rounded-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Kategori Pasokan (Pisahkan dengan koma)
-                </label>
-                <input
-                  type="text"
-                  value={formData.categories}
-                  onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
-                  placeholder="Apparel, Jersey, Running Shorts"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Alamat Kantor / Pabrik / Gudang
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Kawasan Industri Jababeka Blok C-12, Cikarang..."
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none"
-                />
-              </div>
-
-              <div className="pt-2">
-                <label className="flex items-center gap-2.5 cursor-pointer p-3 bg-neutral-50 border border-neutral-200 rounded-none">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 text-amber-500 border-neutral-300 focus:ring-amber-500 rounded-none cursor-pointer"
-                  />
-                  <div>
-                    <span className="font-sport font-bold uppercase text-xs text-neutral-900 block leading-tight">
-                      Kemitraan Vendor Aktif
-                    </span>
-                    <span className="text-[11px] text-neutral-500 block mt-0.5">
-                      Vendor dapat dipilih saat menerbitkan Purchase Order (PO) &amp; input produk
-                    </span>
-                  </div>
-                </label>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="pt-4 border-t border-neutral-200 flex items-center justify-end gap-2.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-300 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none"
-                >
-                  Batal
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-neutral-950 border border-amber-500 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none shadow-xs flex items-center gap-2"
-                >
-                  <Check size={15} />
-                  <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Supplier'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Detail Supplier Modal */}
+      {/* 5. Detail Supplier Modal */}
       {detailVendor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-[2px] animate-in fade-in duration-200">
           <div className="w-full max-w-lg bg-white border border-neutral-300 shadow-2xl rounded-none flex flex-col">
@@ -950,7 +669,7 @@ export default function SupplierListPage({
                 onClick={() => {
                   const v = detailVendor;
                   setDetailVendor(null);
-                  handleOpenEditModal(v);
+                  onNavigateToEdit(v);
                 }}
                 className="px-4 py-2 bg-neutral-950 text-white hover:bg-neutral-800 text-xs font-sport font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5"
               >

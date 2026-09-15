@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check, Wallet } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: FinancialFilterDrawer
@@ -20,8 +21,20 @@ export default function FinancialFilterDrawer({
   selectedCategory = 'all',
   onCategoryChange = () => {},
   categories = [],
+  paymentMethod = 'all',
+  onPaymentMethodChange = () => {},
+  status = 'all',
+  onStatusChange = () => {},
+  minAmount = '',
+  onMinAmountChange = () => {},
+  maxAmount = '',
+  onMaxAmountChange = () => {},
   dateRange = 'all',
   onDateRangeChange = () => {},
+  startDate = '',
+  onStartDateChange = () => {},
+  endDate = '',
+  onEndDateChange = () => {},
   onResetFilters = () => {}
 }) {
   const cashbookTypeOptions = [
@@ -37,6 +50,20 @@ export default function FinancialFilterDrawer({
       value: c.id,
       label: c.label
     }))
+  ];
+
+  const paymentMethodOptions = [
+    { value: 'all', label: 'Semua Metode / Rekening' },
+    { value: 'BCA Bisnis (088-299-112)', label: 'BCA Bisnis (088-299-112)' },
+    { value: 'Mandiri Operasional (144-00-8812)', label: 'Mandiri Operasional (144-00-8812)' },
+    { value: 'Kas Tunai Kasir Toko', label: 'Kas Tunai Kasir Toko' },
+    { value: 'QRIS Tusko Storefront', label: 'QRIS Tusko Storefront' }
+  ];
+
+  const statusOptions = [
+    { value: 'all', label: 'Semua Status' },
+    { value: 'settled', label: 'Berhasil / Settled' },
+    { value: 'pending', label: 'Pending / Menunggu' }
   ];
 
   const dateOptions = [
@@ -140,10 +167,67 @@ export default function FinancialFilterDrawer({
               />
             </div>
 
-            {/* 4. Periode Tanggal */}
+            {/* 4. Metode Bayar / Rekening */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
-                Rentang Periode Pembukuan
+                Metode Bayar / Rekening Kas
+              </label>
+              <ServerSideSelect
+                options={paymentMethodOptions}
+                value={paymentMethod}
+                onChange={onPaymentMethodChange}
+                placeholder="Pilih metode atau rekening..."
+              />
+            </div>
+
+            {/* 5. Status Transaksi */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Status Pembukuan
+              </label>
+              <ServerSideSelect
+                options={statusOptions}
+                value={status}
+                onChange={onStatusChange}
+                placeholder="Pilih status transaksi..."
+              />
+            </div>
+
+            {/* 6. Rentang Nominal Rp */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Nominal Transaksi (Rp)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Nominal Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Min"
+                    value={minAmount}
+                    onChange={onMinAmountChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Nominal Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Maks"
+                    value={maxAmount}
+                    onChange={onMaxAmountChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Periode Tanggal Preset */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Preset Periode Pembukuan
               </label>
               <ServerSideSelect
                 options={dateOptions}
@@ -152,10 +236,35 @@ export default function FinancialFilterDrawer({
                 placeholder="Pilih rentang tanggal..."
               />
             </div>
+
+            {/* 8. Rentang Tanggal Spesifik */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Tanggal Transaksi
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Dari Tanggal</span>
+                  <TextInput
+                    type="date"
+                    value={startDate}
+                    onChange={onStartDateChange}
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Sampai Tanggal</span>
+                  <TextInput
+                    type="date"
+                    value={endDate}
+                    onChange={onEndDateChange}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check, Boxes } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: StockFilterDrawer
@@ -25,6 +26,18 @@ export default function StockFilterDrawer({
   categoryFilter = 'all',
   onCategoryFilterChange = () => {},
   categories = [],
+  minStock = '',
+  onMinStockChange = () => {},
+  maxStock = '',
+  onMaxStockChange = () => {},
+  minAvailable = '',
+  onMinAvailableChange = () => {},
+  maxAvailable = '',
+  onMaxAvailableChange = () => {},
+  minReserved = '',
+  onMinReservedChange = () => {},
+  maxReserved = '',
+  onMaxReservedChange = () => {},
   onResetFilters = () => {}
 }) {
   const warehouseOptions = [
@@ -170,10 +183,114 @@ export default function StockFilterDrawer({
                 />
               </div>
             )}
+
+            {/* 6. Rentang Total Stok Fisik */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Total Stok Fisik (Unit)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Stok Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Min Qty"
+                    value={minStock}
+                    onChange={onMinStockChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Stok Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Maks Qty"
+                    value={maxStock}
+                    onChange={onMaxStockChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Rentang Stok Siap Jual (Available) */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Stok Siap Jual (Available)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Siap Jual Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Min Qty"
+                    value={minAvailable}
+                    onChange={onMinAvailableChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Siap Jual Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Maks Qty"
+                    value={maxAvailable}
+                    onChange={onMaxAvailableChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Rentang Stok Terpesan (Reserved) */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Rentang Stok Terpesan (Unit)
+                </label>
+                {(minReserved || maxReserved) && (
+                  <button
+                    type="button"
+                    onClick={() => { onMinReservedChange(''); onMaxReservedChange(''); }}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Reserved
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Terpesan Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Min Qty"
+                    value={minReserved}
+                    onChange={onMinReservedChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Terpesan Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Maks Qty"
+                    value={maxReserved}
+                    onChange={onMaxReservedChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

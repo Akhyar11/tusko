@@ -1,0 +1,20 @@
+#!/bin/bash
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+PROOF_DIR="$REPO_ROOT/.agent-test-proofs"
+
+if [ -d "$PROOF_DIR" ]; then
+    PROOF_COUNT=$(find "$PROOF_DIR" -type f 2>/dev/null | wc -l)
+    if [ "$PROOF_COUNT" -gt 0 ]; then
+        echo ""
+        echo "🧹 =========================================================================="
+        echo "🧹 [Tusko Post-Commit Hook] Commit berhasil disimpan ke repository Git!"
+        echo "🧹 [Tusko Post-Commit Hook] Membersihkan $PROOF_COUNT berkas bukti pengujian di .agent-test-proofs/..."
+        rm -f "$PROOF_DIR"/* 2>/dev/null
+        echo "✅ [Tusko Post-Commit Hook] Folder bukti pengujian telah dibersihkan secara tuntas."
+        echo "🧹 =========================================================================="
+        echo ""
+    fi
+fi
+
+exit 0

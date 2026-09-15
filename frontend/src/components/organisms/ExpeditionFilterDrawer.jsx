@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check, Truck } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: ExpeditionFilterDrawer
@@ -15,17 +16,31 @@ export default function ExpeditionFilterDrawer({
   totalExpeditions = 0,
   searchQuery = '',
   onSearchChange = () => {},
+  searchEtd = '',
+  onSearchEtdChange = () => {},
   selectedCategory = 'Semua Kategori',
   onCategoryChange = () => {},
   categories = [],
   statusFilter = 'all',
   onStatusFilterChange = () => {},
+  defaultFilter = 'all',
+  onDefaultFilterChange = () => {},
+  minRate = '',
+  onMinRateChange = () => {},
+  maxRate = '',
+  onMaxRateChange = () => {},
   onResetFilters = () => {}
 }) {
   const statusOptions = [
     { value: 'all', label: 'Semua Status Layanan' },
     { value: 'active', label: 'Layanan Aktif (Bisa Dipilih)' },
     { value: 'inactive', label: 'Layanan Nonaktif' }
+  ];
+
+  const defaultOptions = [
+    { value: 'all', label: 'Semua Ekspedisi' },
+    { value: 'default', label: 'Hanya Ekspedisi Utama' },
+    { value: 'standard', label: 'Hanya Ekspedisi Standar' }
   ];
 
   const categoryOptions = [
@@ -104,7 +119,19 @@ export default function ExpeditionFilterDrawer({
               />
             </div>
 
-            {/* 2. Kategori Layanan */}
+            {/* 2. Pencarian Estimasi (ETD) */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Pencarian Estimasi Pengiriman (ETD)
+              </label>
+              <SearchBar
+                value={searchEtd}
+                onChange={onSearchEtdChange}
+                placeholder="Cari estimasi (1-3 hari, same day, dll)..."
+              />
+            </div>
+
+            {/* 3. Kategori Layanan */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
                 Kategori Layanan Kurir
@@ -117,7 +144,7 @@ export default function ExpeditionFilterDrawer({
               />
             </div>
 
-            {/* 3. Status Layanan */}
+            {/* 4. Status Layanan */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
                 Status Keaktifan Ekspedisi
@@ -129,10 +156,54 @@ export default function ExpeditionFilterDrawer({
                 placeholder="Pilih status layanan..."
               />
             </div>
+
+            {/* 5. Status Ekspedisi Utama */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Prioritas Ekspedisi Utama
+              </label>
+              <ServerSideSelect
+                options={defaultOptions}
+                value={defaultFilter}
+                onChange={onDefaultFilterChange}
+                placeholder="Pilih status utama..."
+              />
+            </div>
+
+            {/* 6. Rentang Tarif Dasar */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Tarif Dasar (Rp)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Tarif Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Min"
+                    value={minRate}
+                    onChange={onMinRateChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Tarif Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Maks"
+                    value={maxRate}
+                    onChange={onMaxRateChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Drawer Footer Actions */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
+          {/* Footer Actions */}
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

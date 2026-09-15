@@ -21,6 +21,17 @@ import ProductListPage from './components/ProductListPage';
 import ProductCreateForm from './components/ProductCreateForm';
 import ProductEditForm from './components/ProductEditForm';
 import CategoryListPage from './components/CategoryListPage';
+import CategoryCreatePage from './components/CategoryCreatePage';
+import CategoryEditPage from './components/CategoryEditPage';
+import SupplierCreatePage from './components/SupplierCreatePage';
+import SupplierEditPage from './components/SupplierEditPage';
+import ExpeditionCreatePage from './components/ExpeditionCreatePage';
+import ExpeditionEditPage from './components/ExpeditionEditPage';
+import WarehouseListPage from './components/WarehouseListPage';
+import WarehouseCreatePage from './components/WarehouseCreatePage';
+import WarehouseEditPage from './components/WarehouseEditPage';
+import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
+import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
 import PopularChipsBar from './components/PopularChipsBar';
 import SportCategoriesSection from './components/SportCategoriesSection';
@@ -63,8 +74,22 @@ const VALID_VIEWS = [
   'expeditions',
   'products-admin',
   'categories-admin',
+  'category-create',
+  'category-edit',
+  'suppliers-admin',
+  'supplier-create',
+  'supplier-edit',
   'product-create',
   'product-edit',
+  'transactions',
+  'transaction-create',
+  'procurement-po-create',
+  'expeditions',
+  'expedition-create',
+  'expedition-edit',
+  'warehouses-admin',
+  'warehouse-create',
+  'warehouse-edit',
   'login',
   'register',
   'profile',
@@ -78,7 +103,11 @@ const getViewFromPathOrHash = () => {
     }
     if (rawPath === '/admin/products' || rawPath === '/admin/product') return 'products-admin';
     if (rawPath === '/admin/categories' || rawPath === '/admin/category') return 'categories-admin';
+    if (rawPath === '/admin/categories/create') return 'category-create';
+    if (rawPath === '/admin/warehouses' || rawPath === '/admin/warehouse' || rawPath === '/admin/inventory/warehouses') return 'warehouses-admin';
+    if (rawPath === '/admin/warehouses/create' || rawPath === '/admin/inventory/warehouses/create') return 'warehouse-create';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
+    if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/stock' || rawPath === '/admin/stocks' || rawPath === '/admin/inventory') return 'stock';
     if (rawPath === '/admin/orders' || rawPath === '/admin/order') return 'orders';
     if (rawPath === '/admin/procurement') return 'procurement-pos';
@@ -87,9 +116,12 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement/bills' || rawPath === '/admin/procurement/bill') return 'procurement-bills';
     if (rawPath === '/admin/procurement/vendors' || rawPath === '/admin/procurement/vendor') return 'suppliers-admin';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
+    if (rawPath === '/admin/transactions/create') return 'transaction-create';
     if (rawPath === '/admin/expeditions' || rawPath === '/admin/expedition') return 'expeditions';
+    if (rawPath === '/admin/expeditions/create') return 'expedition-create';
     if (rawPath === '/admin/templates' || rawPath === '/admin/template') return 'templates';
     if (rawPath === '/admin/products/create' || rawPath === '/admin/product/create') return 'product-create';
+    if (rawPath === '/admin/procurement/pos/create') return 'procurement-po-create';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/register') return 'register';
     if (rawPath === '/profile') return 'profile';
@@ -136,6 +168,18 @@ const getInitialView = () => {
     }
     if (rawView === 'product-edit') {
       return 'products-admin';
+    }
+    if (rawView === 'category-edit') {
+      return 'categories-admin';
+    }
+    if (rawView === 'warehouse-edit') {
+      return 'warehouses-admin';
+    }
+    if (rawView === 'supplier-edit') {
+      return 'suppliers-admin';
+    }
+    if (rawView === 'expedition-edit') {
+      return 'expeditions';
     }
     if (rawView === 'order-success') {
       return 'orders';
@@ -200,6 +244,10 @@ export default function App() {
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingWarehouse, setEditingWarehouse] = useState(null);
+  const [editingVendor, setEditingVendor] = useState(null);
+  const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
@@ -258,7 +306,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'transactions'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-grn', 'procurement-bills'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -311,9 +359,17 @@ export default function App() {
       if (window.location.pathname !== '/admin/categories') {
         window.history.pushState(null, '', '/admin/categories');
       }
+    } else if (currentView === 'category-create') {
+      if (window.location.pathname !== '/admin/categories/create') {
+        window.history.pushState(null, '', '/admin/categories/create');
+      }
     } else if (currentView === 'suppliers-admin') {
       if (window.location.pathname !== '/admin/suppliers') {
         window.history.pushState(null, '', '/admin/suppliers');
+      }
+    } else if (currentView === 'supplier-create') {
+      if (window.location.pathname !== '/admin/suppliers/create') {
+        window.history.pushState(null, '', '/admin/suppliers/create');
       }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
@@ -322,6 +378,10 @@ export default function App() {
     } else if (currentView === 'procurement-pos' || currentView === 'procurement') {
       if (window.location.pathname !== '/admin/procurement/pos' && window.location.pathname !== '/admin/procurement') {
         window.history.pushState(null, '', '/admin/procurement/pos');
+      }
+    } else if (currentView === 'procurement-po-create') {
+      if (window.location.pathname !== '/admin/procurement/pos/create') {
+        window.history.pushState(null, '', '/admin/procurement/pos/create');
       }
     } else if (currentView === 'procurement-grn') {
       if (window.location.pathname !== '/admin/procurement/grn') {
@@ -339,9 +399,17 @@ export default function App() {
       if (window.location.pathname !== '/admin/transactions') {
         window.history.pushState(null, '', '/admin/transactions');
       }
+    } else if (currentView === 'transaction-create') {
+      if (window.location.pathname !== '/admin/transactions/create') {
+        window.history.pushState(null, '', '/admin/transactions/create');
+      }
     } else if (currentView === 'expeditions') {
       if (window.location.pathname !== '/admin/expeditions') {
         window.history.pushState(null, '', '/admin/expeditions');
+      }
+    } else if (currentView === 'expedition-create') {
+      if (window.location.pathname !== '/admin/expeditions/create') {
+        window.history.pushState(null, '', '/admin/expeditions/create');
       }
     } else if (currentView === 'templates') {
       if (window.location.pathname !== '/admin/templates') {
@@ -405,17 +473,29 @@ export default function App() {
       'admin-dashboard', 
       'products-admin', 
       'categories-admin', 
+      'category-create',
+      'category-edit',
+      'warehouses-admin',
+      'warehouse-create',
+      'warehouse-edit',
       'suppliers-admin',
+      'supplier-create',
+      'supplier-edit',
       'product-create', 
       'product-edit', 
       'stock', 
+      'stock-mutation',
       'procurement', 
       'procurement-pos',
+      'procurement-po-create',
       'procurement-grn',
       'procurement-bills',
       'templates', 
       'expeditions', 
-      'transactions'
+      'expedition-create',
+      'expedition-edit',
+      'transactions',
+      'transaction-create'
     ];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
@@ -1030,6 +1110,24 @@ export default function App() {
             onShowToast={showToast}
             onBackToShopping={() => setCurrentView('catalog')}
             onNavigateToProducts={() => setCurrentView('products-admin')}
+            onNavigateToCreate={() => setCurrentView('category-create')}
+            onNavigateToEdit={(cat) => {
+              setEditingCategory(cat);
+              setCurrentView('category-edit');
+            }}
+          />
+        ) : currentView === 'category-create' ? (
+          <CategoryCreatePage
+            onNavigateBack={() => setCurrentView('categories-admin')}
+            onShowToast={showToast}
+            onCategoriesChange={setCategories}
+          />
+        ) : currentView === 'category-edit' ? (
+          <CategoryEditPage
+            category={editingCategory}
+            onNavigateBack={() => setCurrentView('categories-admin')}
+            onShowToast={showToast}
+            onCategoriesChange={setCategories}
           />
         ) : currentView === 'products-admin' ? (
           <ProductListPage
@@ -1175,6 +1273,15 @@ export default function App() {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
+            onNavigateToCreate={() => setCurrentView('transaction-create')}
+          />
+        ) : currentView === 'transaction-create' ? (
+          <FinancialTransactionCreatePage
+            onAddTransaction={(newTx) => {
+              setTransactions(prev => [newTx, ...prev]);
+            }}
+            onNavigateBack={() => setCurrentView('transactions')}
+            onShowToast={showToast}
           />
         ) : currentView === 'stock' ? (
           <StockManagementPage
@@ -1216,6 +1323,43 @@ export default function App() {
             onNavigateToPO={() => {
               setCurrentView('procurement-pos');
             }}
+            onNavigateToCreate={() => setCurrentView('supplier-create')}
+            onNavigateToEdit={(vendor) => {
+              setEditingVendor(vendor);
+              setCurrentView('supplier-edit');
+            }}
+          />
+        ) : currentView === 'supplier-create' ? (
+          <SupplierCreatePage
+            onNavigateBack={() => setCurrentView('suppliers-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'supplier-edit' ? (
+          <SupplierEditPage
+            vendor={editingVendor}
+            onNavigateBack={() => setCurrentView('suppliers-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'warehouses-admin' ? (
+          <WarehouseListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('warehouse-create')}
+            onNavigateToEdit={(wh) => {
+              setEditingWarehouse(wh);
+              setCurrentView('warehouse-edit');
+            }}
+            onNavigateToStock={() => setCurrentView('stock')}
+          />
+        ) : currentView === 'warehouse-create' ? (
+          <WarehouseCreatePage
+            onNavigateBack={() => setCurrentView('warehouses-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'warehouse-edit' ? (
+          <WarehouseEditPage
+            warehouse={editingWarehouse}
+            onNavigateBack={() => setCurrentView('warehouses-admin')}
+            onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (
           <PurchaseOrderListPage
@@ -1225,6 +1369,12 @@ export default function App() {
             }}
             onNavigateToGRN={() => setCurrentView('procurement-grn')}
             onNavigateToBills={() => setCurrentView('procurement-bills')}
+            onNavigateToCreate={() => setCurrentView('procurement-po-create')}
+          />
+        ) : currentView === 'procurement-po-create' ? (
+          <PurchaseOrderCreatePage
+            onNavigateBack={() => setCurrentView('procurement-pos')}
+            onShowToast={showToast}
           />
         ) : currentView === 'procurement-grn' ? (
           <GoodsReceiptListPage
@@ -1282,6 +1432,32 @@ export default function App() {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
+            onNavigateToCreate={() => setCurrentView('expedition-create')}
+            onNavigateToEdit={(exp) => {
+              setEditingExpedition(exp);
+              setCurrentView('expedition-edit');
+            }}
+          />
+        ) : currentView === 'expedition-create' ? (
+          <ExpeditionCreatePage
+            onAddExpedition={(newExp) => {
+              setExpeditions(prev => [newExp, ...prev]);
+            }}
+            onNavigateBack={() => setCurrentView('expeditions')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'expedition-edit' ? (
+          <ExpeditionEditPage
+            expedition={editingExpedition}
+            onEditRate={(updatedData) => {
+              setExpeditions(prev => prev.map(e =>
+                e.id === updatedData.id
+                  ? { ...e, rateType: updatedData.rateType, baseRate: updatedData.baseRate }
+                  : e
+              ));
+            }}
+            onNavigateBack={() => setCurrentView('expeditions')}
+            onShowToast={showToast}
           />
         ) : currentView === 'order-success' ? (
           <OrderSuccessPage

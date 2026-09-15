@@ -14,29 +14,29 @@ import {
   Check, 
   Calendar, 
   Building2,
-  AlertCircle
+  AlertCircle,
+  SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import TextInput from './molecules/TextInput';
+import TextArea from './molecules/TextArea';
+import PurchaseOrderFilterDrawer from './organisms/PurchaseOrderFilterDrawer';
 import ServerSideTable from './ServerSideTable';
 import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
-import { vendorService } from '../services/vendorService';
-import { productService } from '../services/productService';
-import { initialWarehouses } from '../data/mockStockData';
 import { usePOTableStore } from '../stores/useProcurementTableStores';
 
 export default function PurchaseOrderListPage({
   onShowToast = () => {},
   onNavigateToGRN = () => {},
-  onNavigateToBills = () => {}
+  onNavigateToBills = () => {},
+  onNavigateToCreate = () => {}
 }) {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
-  const [vendors, setVendors] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // all published products
-  const [vendorProducts, setVendorProducts] = useState([]); // products filtered by selected vendor
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [poToCancel, setPoToCancel] = useState(null);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {
@@ -56,10 +56,24 @@ export default function PurchaseOrderListPage({
     fetchData,
   } = usePOTableStore();
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchQuery) count++;
+    if (filters.vendorSearchQuery) count++;
+    if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.warehouseFilter && filters.warehouseFilter !== 'all') count++;
+    if (filters.orderDateStart) count++;
+    if (filters.orderDateEnd) count++;
+    if (filters.deliveryDateStart) count++;
+    if (filters.deliveryDateEnd) count++;
+    if (filters.minAmount !== '' && filters.minAmount !== undefined) count++;
+    if (filters.maxAmount !== '' && filters.maxAmount !== undefined) count++;
+    return count;
+  }, [filters]);
+
   const [selectedPOIds, setSelectedPOIds] = useState([]);
 
   // Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedPODetail, setSelectedPODetail] = useState(null);
   const [selectedPOForReceive, setSelectedPOForReceive] = useState(null);
   const [receiveForm, setReceiveForm] = useState({
@@ -67,17 +81,6 @@ export default function PurchaseOrderListPage({
     received_by: '',
     accepted_quantities: {},
     notes: ''
-  });
-
-  // New PO form state
-  const [newPO, setNewPO] = useState({
-    vendor_id: '',
-    expected_delivery_date: '',
-    notes: '',
-    warehouse_name: initialWarehouses[0] ? `${initialWarehouses[0].name} (${initialWarehouses[0].code})` : '',
-    items: [
-      { product_name: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
-    ]
   });
 
   const loadPOs = () => {
@@ -91,22 +94,6 @@ export default function PurchaseOrderListPage({
     const unsubscribe = procurementService.subscribe(() => {
       loadPOs();
     });
-
-    // Load all vendors
-    vendorService.fetchVendors().then(res => {
-      if (res?.data && res.data.length > 0) {
-        setVendors(res.data);
-        setNewPO(prev => ({
-          ...prev,
-          vendor_id: prev.vendor_id || res.data[0].id
-        }));
-      }
-    }).catch(() => {});
-
-    // Load all products (incl. inactive, large per_page for PO selector)
-    productService.fetchProducts({ per_page: 200, include_inactive: 1 }).then(res => {
-      if (res?.data) setAllProducts(res.data);
-    }).catch(() => {});
 
     return () => unsubscribe();
   }, []);
@@ -124,147 +111,6 @@ export default function PurchaseOrderListPage({
     const totalProcurementValue = list.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0);
     return { totalCount, ongoingCount, completedCount, totalProcurementValue };
   }, [purchaseOrders, paginatedPOs, totalFiltered]);
-
-  // Filter products by selected vendor_id whenever vendor or allProducts changes
-  useEffect(() => {
-    if (!newPO.vendor_id || allProducts.length === 0) {
-      setVendorProducts(allProducts);
-      return;
-    }
-    const filtered = allProducts.filter(p => String(p.vendor_id) === String(newPO.vendor_id));
-    // If no products linked to vendor, show all products as fallback
-    setVendorProducts(filtered.length > 0 ? filtered : allProducts);
-  }, [newPO.vendor_id, allProducts]);
-
-  // Handle PO Creation
-  const handleAddItemToPO = () => {
-    setNewPO(prev => ({
-      ...prev,
-      items: [
-        ...prev.items,
-        { product_id: '', product_name: '', variant_id: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
-      ]
-    }));
-  };
-
-  const handleRemoveItemFromPO = (idx) => {
-    if (newPO.items.length <= 1) return;
-    setNewPO(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== idx)
-    }));
-  };
-
-  const handleItemChange = (idx, field, val) => {
-    setNewPO(prev => {
-      const updated = [...prev.items];
-      updated[idx] = { ...updated[idx], [field]: val };
-      return { ...prev, items: updated };
-    });
-  };
-
-  // When user selects a product in PO item row → auto-fill sku & unit_price & reset variant
-  const handleItemProductSelect = (idx, productId) => {
-    const product = vendorProducts.find(p => String(p.id) === String(productId));
-    if (!product) {
-      handleItemChange(idx, 'product_id', '');
-      return;
-    }
-    const variants = product.variants || [];
-    const hasVariants = variants.length > 0;
-
-    setNewPO(prev => {
-      const updated = [...prev.items];
-      if (hasVariants) {
-        // Let user pick variant — clear variant fields first
-        updated[idx] = {
-          ...updated[idx],
-          product_id: product.id,
-          product_name: product.name,
-          variant_id: '',
-          variant_name: '',
-          sku: '',
-          unit_price: Number(product.cost_price) || Number(product.price) || 0,
-        };
-      } else {
-        // No variants → self-variant: use product SKU and cost_price
-        updated[idx] = {
-          ...updated[idx],
-          product_id: product.id,
-          product_name: product.name,
-          variant_id: 'self',
-          variant_name: 'Unit Utama (Self-Variant)',
-          sku: product.sku || '',
-          unit_price: Number(product.cost_price) || Number(product.price) || 0,
-        };
-      }
-      return { ...prev, items: updated };
-    });
-  };
-
-  // When user selects a variant in PO item row → auto-fill sku & unit_price
-  const handleItemVariantSelect = (idx, variantId) => {
-    const item = newPO.items[idx];
-    const product = vendorProducts.find(p => String(p.id) === String(item?.product_id));
-    if (!product) return;
-    const variants = product.variants || [];
-    const variant = variants.find(v => String(v.id) === String(variantId));
-    if (!variant) return;
-
-    setNewPO(prev => {
-      const updated = [...prev.items];
-      updated[idx] = {
-        ...updated[idx],
-        variant_id: variant.id,
-        variant_name: variant.name || `${variant.color || ''} ${variant.size || ''}`.trim(),
-        sku: variant.sku || item.sku || '',
-        unit_price: Number(variant.price) || Number(product.cost_price) || 0,
-      };
-      return { ...prev, items: updated };
-    });
-  };
-
-  const handleSavePO = (e) => {
-    e.preventDefault();
-    const vendor = vendors.find(v => String(v.id) === String(newPO.vendor_id)) || vendors[0];
-    const totalAmount = newPO.items.reduce((sum, it) => sum + (Number(it.ordered_quantity || 0) * Number(it.unit_price || 0)), 0);
-
-    const poRecord = {
-      vendor_id: vendor ? vendor.id : 1,
-      vendor_name: vendor ? (vendor.company_name || vendor.name) : 'Supplier Partner',
-      warehouse_id: 1,
-      warehouse_name: newPO.warehouse_name,
-      status: 'approved',
-      expected_delivery_date: newPO.expected_delivery_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-      total_amount: totalAmount,
-      notes: newPO.notes || 'Pengadaan batch baru perlengkapan atletik.',
-      items: newPO.items.map((it, idx) => ({
-        id: Date.now() + idx,
-        product_id: it.product_id || null,
-        product_name: it.product_name || 'Produk Tusko Performance',
-        variant_id: it.variant_id !== 'self' ? (it.variant_id || null) : null,
-        variant_name: it.variant_name || '-',
-        sku: it.sku || `TSK-GEN-${Date.now().toString().slice(-4)}`,
-        ordered_quantity: Number(it.ordered_quantity) || 1,
-        received_quantity: 0,
-        unit_price: Number(it.unit_price) || 0,
-        subtotal: (Number(it.ordered_quantity) || 1) * (Number(it.unit_price) || 0)
-      }))
-    };
-
-    const created = procurementService.createPurchaseOrder(poRecord);
-    setIsCreateModalOpen(false);
-    setNewPO({
-      vendor_id: vendors[0]?.id || '',
-      expected_delivery_date: '',
-      notes: '',
-      warehouse_name: initialWarehouses[0] ? `${initialWarehouses[0].name} (${initialWarehouses[0].code})` : '',
-      items: [
-        { product_id: '', product_name: '', variant_id: '', variant_name: '', sku: '', ordered_quantity: 1, unit_price: 0 }
-      ]
-    });
-    onShowToast(`Purchase Order ${created.po_number} berhasil diterbitkan.`);
-  };
 
   // Open Receive Modal
   const handleOpenReceiveModal = (po) => {
@@ -467,20 +313,22 @@ export default function PurchaseOrderListPage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header Modul Bersih (Icon-only Controls, 0 Tabs) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-neutral-950 text-white flex items-center justify-center rounded-none shrink-0 shadow-xs">
-            <ClipboardList size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-sport font-black uppercase tracking-tight text-neutral-950">
-              Purchase Order (PO)
-            </h1>
-            <p className="text-xs text-neutral-600 font-sans mt-0.5">
-              Penerbitan, otorisasi, dan pelacakan pesanan pengadaan stok barang ke pabrik &amp; mitra supplier.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <ClipboardList size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Purchase Order (PO)
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Penerbitan, otorisasi, dan pelacakan pesanan pengadaan stok barang ke pabrik &amp; mitra supplier.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -489,74 +337,76 @@ export default function PurchaseOrderListPage({
           <IconButton
             icon={Plus}
             tooltip="Buat Purchase Order Baru"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={onNavigateToCreate}
             variant="primary"
+          />
+          <IconButton
+            icon={SlidersHorizontal}
+            tooltip="Buka Filter Purchase Order"
+            onClick={() => setIsFilterDrawerOpen(true)}
+            variant="secondary"
+            badge={activeFilterCount > 0 ? activeFilterCount : undefined}
           />
         </div>
       </div>
 
       {/* KPI Cards Khusus PO */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Total Purchase Order</span>
-            <div className="w-8 h-8 bg-neutral-100 text-neutral-900 border border-neutral-300 flex items-center justify-center rounded-none">
-              <ClipboardList size={16} />
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Purchase Order</span>
+            <ClipboardList size={16} className="text-neutral-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.totalCount} <span className="text-xs font-sans font-normal text-neutral-500">Dokumen</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.totalCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Dokumen</span>
           </div>
-          <div className="text-[11px] text-neutral-600 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5">
             <CheckCircle2 size={12} className="text-emerald-600" />
             <span>Arsip transaksi pengadaan</span>
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">PO Berjalan</span>
-            <div className="w-8 h-8 bg-amber-50 text-amber-800 border border-amber-300 flex items-center justify-center rounded-none">
-              <Clock size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">PO Berjalan</span>
+            <Clock size={16} className="text-amber-600" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.ongoingCount} <span className="text-xs font-sans font-normal text-neutral-500">Antrean</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.ongoingCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Antrean</span>
           </div>
-          <div className="text-[11px] text-amber-700 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-amber-700 font-bold border-t border-neutral-100 pt-1.5">
             <Truck size={12} />
             <span>Menunggu kiriman supplier</span>
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">PO Selesai Diterima</span>
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center justify-center rounded-none">
-              <Check size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">PO Selesai Diterima</span>
+            <Check size={16} className="text-emerald-600" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.completedCount} <span className="text-xs font-sans font-normal text-neutral-500">Selesai</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.completedCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Selesai</span>
           </div>
-          <div className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-700 font-bold border-t border-neutral-100 pt-1.5">
             <PackageCheck size={12} />
             <span>Telah tiba di gudang fisik</span>
           </div>
         </div>
 
-        <div className="bg-neutral-950 text-white border border-black p-5 rounded-none shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-400">Nilai Belanja Modal</span>
-            <div className="w-8 h-8 bg-neutral-800 text-amber-400 border border-neutral-700 flex items-center justify-center rounded-none">
-              <Boxes size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Nilai Belanja Modal</span>
+            <Boxes size={16} className="text-neutral-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-white mt-2">
+          <div className="text-xl sm:text-2xl font-mono font-black text-neutral-950 truncate">
             {formatRupiah(kpis.totalProcurementValue)}
           </div>
-          <div className="text-[11px] text-neutral-400 mt-1 flex items-center gap-1">
-            <span>Total modal komitmen PO</span>
+          <div className="mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5">
+            Total modal komitmen PO
           </div>
         </div>
       </div>
@@ -579,238 +429,6 @@ export default function PurchaseOrderListPage({
         isLoading={isLoading}
         emptyMessage="Belum ada Purchase Order yang terdaftar."
       />
-
-      {/* MODAL: BUAT PURCHASE ORDER BARU */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-2xl p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4 shrink-0">
-              <div className="flex items-center gap-2">
-                <ClipboardList size={18} className="text-neutral-950" />
-                <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                  Penerbitan Purchase Order Baru
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSavePO} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-neutral-700 mb-1">Pilih Vendor / Supplier</label>
-                  <select
-                    required
-                    value={newPO.vendor_id}
-                    onChange={(e) => setNewPO(p => ({ ...p, vendor_id: e.target.value }))}
-                    className="w-full p-2 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
-                  >
-                    {vendors.map(v => (
-                      <option key={v.id} value={v.id}>
-                        {v.company_name || v.name} ({v.code || 'VND'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-neutral-700 mb-1">Perkiraan Tgl Kirim Tiba</label>
-                  <input
-                    type="date"
-                    required
-                    value={newPO.expected_delivery_date}
-                    onChange={(e) => setNewPO(p => ({ ...p, expected_delivery_date: e.target.value }))}
-                    className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 mb-1">Gudang Tujuan Penerimaan</label>
-                <select
-                  required
-                  value={newPO.warehouse_name}
-                  onChange={(e) => setNewPO(p => ({ ...p, warehouse_name: e.target.value }))}
-                  className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs bg-white cursor-pointer"
-                >
-                  {initialWarehouses.map((w) => (
-                    <option key={w.id} value={`${w.name} (${w.code})`}>
-                      {w.name} ({w.code}) - {w.location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Items List */}
-              <div className="pt-2 border-t border-neutral-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-sport font-black uppercase text-neutral-900">Daftar Item Pemesanan Stok</span>
-                  <button
-                    type="button"
-                    onClick={handleAddItemToPO}
-                    className="px-2.5 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-[11px] font-bold uppercase rounded-none border border-neutral-300 cursor-pointer flex items-center gap-1"
-                  >
-                    <Plus size={12} />
-                    <span>Tambah Baris</span>
-                  </button>
-                </div>
-
-                {vendorProducts.length === 0 && allProducts.length === 0 && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-none text-[11px] text-amber-700 mb-2">
-                    ⚠ Memuat data produk... Pastikan backend berjalan.
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {newPO.items.map((it, idx) => {
-                    const selectedProduct = vendorProducts.find(p => String(p.id) === String(it.product_id));
-                    const productVariants = selectedProduct?.variants || [];
-                    const hasVariants = productVariants.length > 0;
-                    const isSelfVariant = !hasVariants && it.product_id;
-                    const subtotal = (Number(it.ordered_quantity) || 0) * (Number(it.unit_price) || 0);
-
-                    return (
-                      <div key={idx} className="p-3 bg-neutral-50 border border-neutral-300 rounded-none space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-[11px] text-neutral-500">Item #{idx + 1}</span>
-                          {newPO.items.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveItemFromPO(idx)}
-                              className="text-rose-500 hover:text-rose-700 text-[11px] cursor-pointer"
-                            >
-                              Hapus
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Row 1: Product Selector */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Pilih Produk</label>
-                          <select
-                            required
-                            value={it.product_id || ''}
-                            onChange={(e) => handleItemProductSelect(idx, e.target.value)}
-                            className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs cursor-pointer"
-                          >
-                            <option value="">— Pilih produk vendor —</option>
-                            {vendorProducts.map(p => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}{p.sku ? ` [${p.sku}]` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* Row 2: Variant Selector (if product has variants) or Self-Variant Badge */}
-                        {it.product_id && (
-                          <div>
-                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Varian Produk</label>
-                            {hasVariants ? (
-                              <select
-                                required
-                                value={it.variant_id || ''}
-                                onChange={(e) => handleItemVariantSelect(idx, e.target.value)}
-                                className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs cursor-pointer"
-                              >
-                                <option value="">— Pilih varian —</option>
-                                {productVariants.map(v => (
-                                  <option key={v.id} value={v.id}>
-                                    {v.name || `${v.color || ''} ${v.size || ''}`.trim()} {v.sku ? `[${v.sku}]` : ''}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <div className="flex items-center gap-2 p-1.5 bg-neutral-100 border border-neutral-200 rounded-none">
-                                <span className="text-[10px] font-mono font-bold text-neutral-600">Unit Utama (Self-Variant)</span>
-                                <span className="text-[10px] font-mono text-neutral-400">{it.sku}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Row 3: SKU (auto-filled), Qty, Unit Price, Subtotal */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">SKU</label>
-                            <input
-                              type="text"
-                              value={it.sku || ''}
-                              readOnly
-                              className="w-full p-1.5 bg-neutral-100 border border-neutral-200 rounded-none text-xs font-mono text-neutral-600 cursor-default"
-                              placeholder="—"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Qty Pesan</label>
-                            <input
-                              type="number"
-                              required
-                              min="1"
-                              value={it.ordered_quantity}
-                              onChange={(e) => handleItemChange(idx, 'ordered_quantity', e.target.value)}
-                              className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">HPP / Unit (Rp)</label>
-                            <input
-                              type="number"
-                              required
-                              min="0"
-                              value={it.unit_price}
-                              onChange={(e) => handleItemChange(idx, 'unit_price', e.target.value)}
-                              className="w-full p-1.5 bg-white border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-0.5">Subtotal</label>
-                            <div className="p-1.5 bg-neutral-100 border border-neutral-200 rounded-none text-xs font-mono font-bold text-neutral-700">
-                              {formatRupiah(subtotal)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 mb-1">Catatan Tambahan</label>
-                <textarea
-                  rows="2"
-                  value={newPO.notes}
-                  onChange={(e) => setNewPO(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Instruksi pengiriman vendor..."
-                  className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-neutral-200 flex items-center justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 border border-neutral-300 hover:bg-neutral-100 text-neutral-800 text-xs font-sport font-bold uppercase rounded-none cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none cursor-pointer"
-                >
-                  Terbitkan Purchase Order
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* MODAL: DETAIL PURCHASE ORDER */}
       {selectedPODetail && (
@@ -919,24 +537,22 @@ export default function PurchaseOrderListPage({
 
               <div>
                 <label className="block font-bold text-neutral-700 mb-1">Nomor Surat Jalan (DO) Vendor</label>
-                <input
-                  type="text"
-                  required
+                <TextInput
                   value={receiveForm.delivery_order_number}
-                  onChange={(e) => setReceiveForm(p => ({ ...p, delivery_order_number: e.target.value }))}
+                  onChange={(val) => setReceiveForm(p => ({ ...p, delivery_order_number: val }))}
                   placeholder="Contoh: SJ-VENDOR-88992"
-                  className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs font-mono uppercase"
+                  required
+                  weight="mono"
                 />
               </div>
 
               <div>
                 <label className="block font-bold text-neutral-700 mb-1">Petugas Penerima Gudang</label>
-                <input
-                  type="text"
-                  required
+                <TextInput
                   value={receiveForm.received_by}
-                  onChange={(e) => setReceiveForm(p => ({ ...p, received_by: e.target.value }))}
-                  className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
+                  onChange={(val) => setReceiveForm(p => ({ ...p, received_by: val }))}
+                  placeholder="Nama staf penerima..."
+                  required
                 />
               </div>
 
@@ -951,14 +567,13 @@ export default function PurchaseOrderListPage({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-neutral-600">Diterima:</span>
-                        <input
+                        <TextInput
                           type="number"
                           required
                           min="0"
                           max={it.ordered_quantity}
                           value={receiveForm.accepted_quantities[it.id] ?? it.ordered_quantity}
-                          onChange={(e) => {
-                            const val = e.target.value;
+                          onChange={(val) => {
                             setReceiveForm(p => ({
                               ...p,
                               accepted_quantities: {
@@ -967,7 +582,8 @@ export default function PurchaseOrderListPage({
                               }
                             }));
                           }}
-                          className="w-16 p-1 bg-white border border-neutral-300 text-center font-mono font-bold text-neutral-950 rounded-none focus:border-black focus:outline-none"
+                          className="w-20"
+                          weight="mono"
                         />
                       </div>
                     </div>
@@ -977,11 +593,11 @@ export default function PurchaseOrderListPage({
 
               <div>
                 <label className="block font-bold text-neutral-700 mb-1">Catatan QC / Kondisi Kemasan</label>
-                <textarea
-                  rows="2"
+                <TextArea
+                  rows={2}
                   value={receiveForm.notes}
-                  onChange={(e) => setReceiveForm(p => ({ ...p, notes: e.target.value }))}
-                  className="w-full p-2 border border-neutral-300 focus:border-black focus:outline-none rounded-none text-xs"
+                  onChange={(val) => setReceiveForm(p => ({ ...p, notes: val }))}
+                  placeholder="Catatan hasil inspeksi..."
                 />
               </div>
 
@@ -1030,6 +646,34 @@ export default function PurchaseOrderListPage({
           </div>
         )}
       </ConfirmationModal>
+
+      {/* Drawer Filter Purchase Order */}
+      <PurchaseOrderFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        activeFilterCount={activeFilterCount}
+        searchQuery={filters.searchQuery || ''}
+        onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        vendorSearchQuery={filters.vendorSearchQuery || ''}
+        onVendorSearchQueryChange={(val) => setFilter('vendorSearchQuery', val)}
+        statusFilter={filters.statusFilter || 'all'}
+        onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        warehouseFilter={filters.warehouseFilter || 'all'}
+        onWarehouseFilterChange={(val) => setFilter('warehouseFilter', val)}
+        orderDateStart={filters.orderDateStart || ''}
+        onOrderDateStartChange={(val) => setFilter('orderDateStart', val)}
+        orderDateEnd={filters.orderDateEnd || ''}
+        onOrderDateEndChange={(val) => setFilter('orderDateEnd', val)}
+        deliveryDateStart={filters.deliveryDateStart || ''}
+        onDeliveryDateStartChange={(val) => setFilter('deliveryDateStart', val)}
+        deliveryDateEnd={filters.deliveryDateEnd || ''}
+        onDeliveryDateEndChange={(val) => setFilter('deliveryDateEnd', val)}
+        minAmount={filters.minAmount || ''}
+        onMinAmountChange={(val) => setFilter('minAmount', val)}
+        maxAmount={filters.maxAmount || ''}
+        onMaxAmountChange={(val) => setFilter('maxAmount', val)}
+        onResetFilters={resetFilters}
+      />
     </div>
   );
 }

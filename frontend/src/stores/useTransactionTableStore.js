@@ -14,7 +14,13 @@ export const useTransactionTableStore = createTableStore({
     cashbookFilter: 'all',
     selectedCategory: 'all',
     dateRange: 'all',
-    searchQuery: ''
+    searchQuery: '',
+    paymentMethod: 'all',
+    status: 'all',
+    minAmount: '',
+    maxAmount: '',
+    startDate: '',
+    endDate: ''
   },
   defaultSortBy: 'created_at',
   defaultSortDir: 'desc',

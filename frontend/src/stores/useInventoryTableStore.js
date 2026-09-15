@@ -15,7 +15,11 @@ export const useInventoryTableStore = createTableStore({
     searchSku: '',
     stockFilter: 'all',
     categoryFilter: 'all',
-    selectedWarehouseCode: 'all'
+    selectedWarehouseCode: 'all',
+    minStock: '',
+    maxStock: '',
+    minAvailable: '',
+    maxAvailable: ''
   },
   defaultSortBy: 'name',
   defaultSortDir: 'asc',

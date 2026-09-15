@@ -12,8 +12,12 @@ export const useExpeditionTableStore = createTableStore({
   },
   initialFilters: {
     searchQuery: '',
+    searchEtd: '',
     selectedCategory: 'all',
-    statusFilter: 'all'
+    statusFilter: 'all',
+    defaultFilter: 'all',
+    minRate: '',
+    maxRate: ''
   },
   defaultSortBy: 'id',
   defaultSortDir: 'asc',

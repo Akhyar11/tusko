@@ -115,4 +115,15 @@ class CategoryApiTest extends TestCase
         $response->assertStatus(422);
         $this->assertDatabaseHas('categories', ['id' => $category->id]);
     }
+
+    public function test_can_filter_category_by_slug(): void
+    {
+        Category::create(['name' => 'Badminton Pro', 'slug' => 'badminton-pro']);
+        Category::create(['name' => 'Tenis Lapangan', 'slug' => 'tenis-lapangan']);
+
+        $res = $this->getJson('/api/categories?slug=badminton');
+        $res->assertStatus(200);
+        $this->assertCount(1, $res->json('data'));
+        $this->assertEquals('badminton-pro', $res->json('data.0.slug'));
+    }
 }

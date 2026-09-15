@@ -27,7 +27,6 @@ import DeleteProductModal from './DeleteProductModal';
 import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
 import ProductFilterDrawer from './organisms/ProductFilterDrawer';
-import CategoryMasterModal from './organisms/CategoryMasterModal';
 import { useProductTableStore } from '../stores/useProductTableStore';
 
 export default function ProductListPage({
@@ -43,8 +42,7 @@ export default function ProductListPage({
   onNavigateToCategories,
   onOpenCategoryMaster
 }) {
-  const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
-  const handleOpenCategoryMaster = onNavigateToCategories || onOpenCategoryMaster || (() => setIsCategoryMasterOpen(true));
+  const handleOpenCategoryMaster = onNavigateToCategories || onOpenCategoryMaster || (() => {});
   // Centralized Zustand Table Store (100% Server-Side Filtering, Pagination, Limit & Sorting)
   const {
     page,
@@ -622,7 +620,7 @@ export default function ProductListPage({
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-rose-700 hover:bg-rose-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
             >
               Hapus
             </button>
@@ -706,12 +704,6 @@ export default function ProductListPage({
         }}
       />
 
-      {/* Category Master Modal */}
-      <CategoryMasterModal
-        isOpen={isCategoryMasterOpen}
-        onClose={() => setIsCategoryMasterOpen(false)}
-        onCategoriesChange={onCategoriesChange}
-      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import Checkbox from './molecules/Checkbox';
+import ServerSideSelect from './molecules/ServerSideSelect';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -177,15 +179,13 @@ export default function ServerSideTable({
             <tr className="bg-neutral-950 text-white font-sport font-black uppercase text-[11px] tracking-wider border-b border-neutral-950 select-none">
               {selectable && (
                 <th className="py-3.5 px-4 w-10 text-center">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isAllSelected}
-                    ref={(el) => {
+                    inputRef={(el) => {
                       if (el) el.indeterminate = isSomeSelected;
                     }}
                     onChange={handleAllSelect}
-                    aria-label="Pilih semua baris"
-                    className="h-4 w-4 accent-amber-500 rounded-none cursor-pointer"
+                    ariaLabel="Pilih semua baris"
                   />
                 </th>
               )}
@@ -289,12 +289,10 @@ export default function ServerSideTable({
                   >
                     {selectable && (
                       <td className="py-3.5 px-4 text-center w-10">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isSelected}
                           onChange={() => handleRowSelect(rowId)}
-                          aria-label={`Pilih baris ${rowId}`}
-                          className="h-4 w-4 accent-amber-500 rounded-none cursor-pointer"
+                          ariaLabel={`Pilih baris ${rowId}`}
                         />
                       </td>
                     )}
@@ -311,8 +309,8 @@ export default function ServerSideTable({
                           className={`py-3.5 px-4 ${alignClass} ${col.width || ''} text-neutral-800`}
                         >
                           {typeof col.render === 'function' 
-                            ? col.render(value !== undefined ? value : row, row, rowIdx) 
-                            : (value ?? '-')}
+                            ? col.render(value !== undefined ? value : null, row, rowIdx) 
+                            : (typeof value === 'object' && value !== null ? (value.name || value.title || '-') : (value ?? '-'))}
                         </td>
                       );
                     })}
@@ -331,19 +329,19 @@ export default function ServerSideTable({
         <div className="flex flex-wrap items-center gap-3 text-neutral-600">
           <div className="flex items-center gap-1.5">
             <span>Tampilkan:</span>
-            <select
-              value={effectiveLimit}
-              onChange={(e) => handleLimitChange(Number(e.target.value))}
-              disabled={isLoading}
-              aria-label="Jumlah baris per halaman"
-              className="bg-white border border-neutral-300 text-xs font-mono font-bold px-2 py-1 rounded-none text-neutral-900 focus:outline-none focus:border-black cursor-pointer shadow-2xs"
-            >
-              {limitOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+            <div className="w-20">
+              <ServerSideSelect
+                value={effectiveLimit}
+                onChange={(val) => handleLimitChange(Number(val))}
+                disabled={isLoading}
+                options={limitOptions.map((opt) => ({
+                  value: opt,
+                  label: String(opt)
+                }))}
+                placeholder={String(effectiveLimit)}
+                className="min-h-[30px] py-1 px-2 text-xs font-mono font-bold"
+              />
+            </div>
             <span>baris per halaman</span>
           </div>
 

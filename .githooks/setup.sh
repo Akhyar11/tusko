@@ -16,6 +16,7 @@ git config core.hooksPath .githooks
 
 # Berikan izin eksekusi (executable permission) ke semua file hook dan script audit
 chmod +x .githooks/pre-commit 2>/dev/null
+chmod +x .githooks/post-commit 2>/dev/null
 chmod +x .githooks/setup.sh 2>/dev/null
 
 if [ -d ".githooks/audits" ]; then

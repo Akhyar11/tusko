@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: ProductFilterDrawer
@@ -34,6 +35,10 @@ export default function ProductFilterDrawer({
   onMinPriceChange = () => {},
   maxPrice = '',
   onMaxPriceChange = () => {},
+  minStock = '',
+  onMinStockChange = () => {},
+  maxStock = '',
+  onMaxStockChange = () => {},
   sortBy = 'created_at',
   sortDirection = 'desc',
   onSortChange = () => {},
@@ -269,30 +274,72 @@ export default function ProductFilterDrawer({
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Harga Minimum</span>
-                  <input
+                  <TextInput
                     type="number"
                     min="0"
                     placeholder="Rp Min"
                     value={minPrice}
-                    onChange={(e) => onMinPriceChange(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
+                    onChange={onMinPriceChange}
+                    weight="mono"
                   />
                 </div>
                 <div>
                   <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Harga Maksimum</span>
-                  <input
+                  <TextInput
                     type="number"
                     min="0"
                     placeholder="Rp Maks"
                     value={maxPrice}
-                    onChange={(e) => onMaxPriceChange(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
+                    onChange={onMaxPriceChange}
+                    weight="mono"
                   />
                 </div>
               </div>
             </div>
 
-            {/* 6. Urutan Data (Sorting) */}
+            {/* 6. Rentang Jumlah Stok Unit */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Rentang Jumlah Stok (Unit)
+                </label>
+                {(minStock || maxStock) && (
+                  <button
+                    type="button"
+                    onClick={() => { onMinStockChange(''); onMaxStockChange(''); }}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Stok
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Stok Minimum</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Min Qty"
+                    value={minStock}
+                    onChange={onMinStockChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Stok Maksimum</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Maks Qty"
+                    value={maxStock}
+                    onChange={onMaxStockChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Urutan Data (Sorting) */}
             <div className="space-y-2">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                 Urutkan Katalog Berdasarkan
@@ -319,8 +366,8 @@ export default function ProductFilterDrawer({
 
           </div>
 
-          {/* Drawer Footer */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
+          {/* Drawer Footer Actions */}
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

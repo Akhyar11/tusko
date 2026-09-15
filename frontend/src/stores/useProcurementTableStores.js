@@ -12,13 +12,39 @@ export const usePOTableStore = createTableStore({
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(po => 
-        (po.po_number && po.po_number.toLowerCase().includes(q)) ||
-        (po.vendor_name && po.vendor_name.toLowerCase().includes(q))
+        (po.po_number && po.po_number.toLowerCase().includes(q))
       );
+    }
+    const vendorSearch = params.vendorSearchQuery || '';
+    if (vendorSearch.trim()) {
+      const q = vendorSearch.toLowerCase();
+      list = list.filter(po => po.vendor_name && po.vendor_name.toLowerCase().includes(q));
     }
     const status = params.statusFilter || params.status;
     if (status && status !== 'all') {
       list = list.filter(po => po.status === status);
+    }
+    const warehouse = params.warehouseFilter;
+    if (warehouse && warehouse !== 'all') {
+      list = list.filter(po => po.warehouse_id === warehouse || po.warehouse_name === warehouse);
+    }
+    if (params.orderDateStart) {
+      list = list.filter(po => po.order_date && po.order_date >= params.orderDateStart);
+    }
+    if (params.orderDateEnd) {
+      list = list.filter(po => po.order_date && po.order_date <= params.orderDateEnd);
+    }
+    if (params.deliveryDateStart) {
+      list = list.filter(po => po.expected_delivery_date && po.expected_delivery_date >= params.deliveryDateStart);
+    }
+    if (params.deliveryDateEnd) {
+      list = list.filter(po => po.expected_delivery_date && po.expected_delivery_date <= params.deliveryDateEnd);
+    }
+    if (params.minAmount !== undefined && params.minAmount !== '') {
+      list = list.filter(po => Number(po.total_amount || 0) >= Number(params.minAmount));
+    }
+    if (params.maxAmount !== undefined && params.maxAmount !== '') {
+      list = list.filter(po => Number(po.total_amount || 0) <= Number(params.maxAmount));
     }
 
     const sortBy = params.sortBy || params.sort_by || 'created_at';
@@ -44,7 +70,15 @@ export const usePOTableStore = createTableStore({
   },
   initialFilters: {
     searchQuery: '',
-    statusFilter: 'all'
+    vendorSearchQuery: '',
+    statusFilter: 'all',
+    warehouseFilter: 'all',
+    orderDateStart: '',
+    orderDateEnd: '',
+    deliveryDateStart: '',
+    deliveryDateEnd: '',
+    minAmount: '',
+    maxAmount: ''
   },
   defaultSortBy: 'created_at',
   defaultSortDir: 'desc',
@@ -62,14 +96,49 @@ export const useGRNTableStore = createTableStore({
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(grn => 
-        (grn.grn_number && grn.grn_number.toLowerCase().includes(q)) ||
-        (grn.po_number && grn.po_number.toLowerCase().includes(q)) ||
-        (grn.vendor_name && grn.vendor_name.toLowerCase().includes(q))
+        (grn.grn_number && grn.grn_number.toLowerCase().includes(q))
       );
+    }
+    const poSearch = params.poSearchQuery || '';
+    if (poSearch.trim()) {
+      const q = poSearch.toLowerCase();
+      list = list.filter(grn => grn.po_number && grn.po_number.toLowerCase().includes(q));
+    }
+    const doQuery = params.deliveryOrderQuery || '';
+    if (doQuery.trim()) {
+      const q = doQuery.toLowerCase();
+      list = list.filter(grn => grn.delivery_order_number && grn.delivery_order_number.toLowerCase().includes(q));
+    }
+    const receiver = params.receiverQuery || '';
+    if (receiver.trim()) {
+      const q = receiver.toLowerCase();
+      list = list.filter(grn => grn.received_by && grn.received_by.toLowerCase().includes(q));
+    }
+    const vendor = params.vendorFilter;
+    if (vendor && vendor !== 'all') {
+      list = list.filter(grn => grn.vendor_id === vendor || grn.vendor_name === vendor);
     }
     const status = params.statusFilter || params.status;
     if (status && status !== 'all') {
       list = list.filter(grn => grn.status === status);
+    }
+    if (params.receivedDateStart) {
+      list = list.filter(grn => grn.received_date && grn.received_date >= params.receivedDateStart);
+    }
+    if (params.receivedDateEnd) {
+      list = list.filter(grn => grn.received_date && grn.received_date <= params.receivedDateEnd);
+    }
+    if (params.minUnits !== undefined && params.minUnits !== '') {
+      list = list.filter(grn => {
+        const units = (grn.items || []).reduce((s, it) => s + (Number(it.accepted_quantity) || 0), 0);
+        return units >= Number(params.minUnits);
+      });
+    }
+    if (params.maxUnits !== undefined && params.maxUnits !== '') {
+      list = list.filter(grn => {
+        const units = (grn.items || []).reduce((s, it) => s + (Number(it.accepted_quantity) || 0), 0);
+        return units <= Number(params.maxUnits);
+      });
     }
 
     const page = params.page || 1;
@@ -85,7 +154,15 @@ export const useGRNTableStore = createTableStore({
   },
   initialFilters: {
     searchQuery: '',
-    statusFilter: 'all'
+    poSearchQuery: '',
+    deliveryOrderQuery: '',
+    receiverQuery: '',
+    vendorFilter: 'all',
+    statusFilter: 'all',
+    receivedDateStart: '',
+    receivedDateEnd: '',
+    minUnits: '',
+    maxUnits: ''
   },
   defaultSortBy: 'received_date',
   defaultSortDir: 'desc',
@@ -103,14 +180,40 @@ export const useBillTableStore = createTableStore({
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(b => 
-        (b.bill_number && b.bill_number.toLowerCase().includes(q)) ||
-        (b.vendor_name && b.vendor_name.toLowerCase().includes(q)) ||
-        (b.po_number && b.po_number.toLowerCase().includes(q))
+        (b.bill_number && b.bill_number.toLowerCase().includes(q))
       );
+    }
+    const poSearch = params.poSearchQuery || '';
+    if (poSearch.trim()) {
+      const q = poSearch.toLowerCase();
+      list = list.filter(b => b.po_number && b.po_number.toLowerCase().includes(q));
+    }
+    const vendorSearch = params.vendorSearchQuery || '';
+    if (vendorSearch.trim()) {
+      const q = vendorSearch.toLowerCase();
+      list = list.filter(b => b.vendor_name && b.vendor_name.toLowerCase().includes(q));
     }
     const status = params.statusFilter || params.status;
     if (status && status !== 'all') {
       list = list.filter(b => b.status === status);
+    }
+    if (params.billDateStart) {
+      list = list.filter(b => b.bill_date && b.bill_date >= params.billDateStart);
+    }
+    if (params.billDateEnd) {
+      list = list.filter(b => b.bill_date && b.bill_date <= params.billDateEnd);
+    }
+    if (params.dueDateStart) {
+      list = list.filter(b => b.due_date && b.due_date >= params.dueDateStart);
+    }
+    if (params.dueDateEnd) {
+      list = list.filter(b => b.due_date && b.due_date <= params.dueDateEnd);
+    }
+    if (params.minAmount !== undefined && params.minAmount !== '') {
+      list = list.filter(b => Number(b.amount || 0) >= Number(params.minAmount));
+    }
+    if (params.maxAmount !== undefined && params.maxAmount !== '') {
+      list = list.filter(b => Number(b.amount || 0) <= Number(params.maxAmount));
     }
 
     const page = params.page || 1;
@@ -126,7 +229,15 @@ export const useBillTableStore = createTableStore({
   },
   initialFilters: {
     searchQuery: '',
-    statusFilter: 'all'
+    poSearchQuery: '',
+    vendorSearchQuery: '',
+    statusFilter: 'all',
+    billDateStart: '',
+    billDateEnd: '',
+    dueDateStart: '',
+    dueDateEnd: '',
+    minAmount: '',
+    maxAmount: ''
   },
   defaultSortBy: 'due_date',
   defaultSortDir: 'asc',

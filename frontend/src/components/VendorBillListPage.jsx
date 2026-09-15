@@ -10,9 +10,11 @@ import {
   Calendar, 
   Building2, 
   Check, 
-  X 
+  X,
+  SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import VendorBillFilterDrawer from './organisms/VendorBillFilterDrawer';
 import ServerSideTable from './ServerSideTable';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
@@ -23,6 +25,7 @@ export default function VendorBillListPage({
 }) {
   const [vendorBills, setVendorBills] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {
@@ -41,6 +44,21 @@ export default function VendorBillListPage({
     resetFilters,
     fetchData,
   } = useBillTableStore();
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchQuery) count++;
+    if (filters.poSearchQuery) count++;
+    if (filters.vendorSearchQuery) count++;
+    if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.billDateStart) count++;
+    if (filters.billDateEnd) count++;
+    if (filters.dueDateStart) count++;
+    if (filters.dueDateEnd) count++;
+    if (filters.minAmount !== '' && filters.minAmount !== undefined) count++;
+    if (filters.maxAmount !== '' && filters.maxAmount !== undefined) count++;
+    return count;
+  }, [filters]);
 
   const [selectedBillIds, setSelectedBillIds] = useState([]);
 
@@ -230,84 +248,91 @@ export default function VendorBillListPage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header Modul Bersih (0 Tabs) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-neutral-950 text-white flex items-center justify-center rounded-none shrink-0 shadow-xs">
-            <Receipt size={24} />
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <Receipt size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Tagihan Vendor (Bills)
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Manajemen faktur hutang dagang supplier dari dokumen PO/GRN dan pencatatan riwayat pelunasan kas toko.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-sport font-black uppercase tracking-tight text-neutral-950">
-              Tagihan Vendor (Bills)
-            </h1>
-            <p className="text-xs text-neutral-600 font-sans mt-0.5">
-              Manajemen faktur hutang dagang supplier dari dokumen PO/GRN dan pencatatan riwayat pelunasan kas toko.
-            </p>
-          </div>
+        </div>
+
+        {/* Header Action Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <IconButton
+            icon={SlidersHorizontal}
+            tooltip="Buka Filter Tagihan"
+            onClick={() => setIsFilterDrawerOpen(true)}
+            variant="secondary"
+            badge={activeFilterCount > 0 ? activeFilterCount : undefined}
+          />
         </div>
       </div>
 
       {/* KPI Cards Khusus Bills */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Total Tagihan Masuk</span>
-            <div className="w-8 h-8 bg-neutral-100 text-neutral-900 border border-neutral-300 flex items-center justify-center rounded-none">
-              <Receipt size={16} />
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Tagihan Masuk</span>
+            <Receipt size={16} className="text-neutral-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.totalCount} <span className="text-xs font-sans font-normal text-neutral-500">Faktur</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.totalCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Faktur</span>
           </div>
-          <div className="text-[11px] text-neutral-600 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
             <CheckCircle2 size={12} className="text-emerald-600" />
             <span>Faktur hutang supplier</span>
           </div>
         </div>
 
-        <div className="bg-neutral-950 text-white border border-black p-5 rounded-none shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-400">Hutang Belum Lunas</span>
-            <div className="w-8 h-8 bg-neutral-800 text-amber-400 border border-neutral-700 flex items-center justify-center rounded-none">
-              <AlertCircle size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Hutang Belum Lunas</span>
+            <AlertCircle size={16} className="text-amber-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-amber-400 mt-2">
-            {formatRupiah(kpis.unpaidAmount)}
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-amber-600 font-sport">{formatRupiah(kpis.unpaidAmount)}</span>
           </div>
-          <div className="text-[11px] text-neutral-400 mt-1">
-            {kpis.unpaidCount} faktur belum dibayar
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
+            <span>{kpis.unpaidCount} faktur belum dibayar</span>
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Tagihan Telah Lunas</span>
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center justify-center rounded-none">
-              <Check size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Tagihan Telah Lunas</span>
+            <Check size={16} className="text-emerald-600" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.paidCount} <span className="text-xs font-sans font-normal text-neutral-500">Lunas</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.paidCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Lunas</span>
           </div>
-          <div className="text-[11px] text-emerald-700 mt-1">
-            Kewajiban terselesaikan
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-700 font-bold border-t border-neutral-100 pt-1.5">
+            <span>Kewajiban terselesaikan</span>
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Total Kas Terbayar</span>
-            <div className="w-8 h-8 bg-neutral-100 text-neutral-900 border border-neutral-300 flex items-center justify-center rounded-none">
-              <DollarSign size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Kas Terbayar</span>
+            <DollarSign size={16} className="text-neutral-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {formatRupiah(kpis.totalPaidAmount)}
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{formatRupiah(kpis.totalPaidAmount)}</span>
           </div>
-          <div className="text-[11px] text-neutral-600 mt-1">
-            Realisasi pembayaran vendor
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
+            <span>Realisasi pembayaran vendor</span>
           </div>
         </div>
       </div>
@@ -450,6 +475,34 @@ export default function VendorBillListPage({
           </div>
         </div>
       )}
+
+      {/* Drawer Filter Tagihan Vendor (Bills) */}
+      <VendorBillFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        activeFilterCount={activeFilterCount}
+        searchQuery={filters.searchQuery || ''}
+        onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        poSearchQuery={filters.poSearchQuery || ''}
+        onPoSearchQueryChange={(val) => setFilter('poSearchQuery', val)}
+        vendorSearchQuery={filters.vendorSearchQuery || ''}
+        onVendorSearchQueryChange={(val) => setFilter('vendorSearchQuery', val)}
+        statusFilter={filters.statusFilter || 'all'}
+        onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        billDateStart={filters.billDateStart || ''}
+        onBillDateStartChange={(val) => setFilter('billDateStart', val)}
+        billDateEnd={filters.billDateEnd || ''}
+        onBillDateEndChange={(val) => setFilter('billDateEnd', val)}
+        dueDateStart={filters.dueDateStart || ''}
+        onDueDateStartChange={(val) => setFilter('dueDateStart', val)}
+        dueDateEnd={filters.dueDateEnd || ''}
+        onDueDateEndChange={(val) => setFilter('dueDateEnd', val)}
+        minAmount={filters.minAmount || ''}
+        onMinAmountChange={(val) => setFilter('minAmount', val)}
+        maxAmount={filters.maxAmount || ''}
+        onMaxAmountChange={(val) => setFilter('maxAmount', val)}
+        onResetFilters={resetFilters}
+      />
     </div>
   );
 }

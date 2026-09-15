@@ -16,6 +16,10 @@ export default function SupplierFilterDrawer({
   onSearchQueryChange = () => {},
   codeSearchQuery = '',
   onCodeSearchQueryChange = () => {},
+  contactSearchQuery = '',
+  onContactSearchQueryChange = () => {},
+  bankSearchQuery = '',
+  onBankSearchQueryChange = () => {},
   // Filter states
   statusFilter = 'all',
   onStatusFilterChange = () => {},
@@ -137,7 +141,53 @@ export default function SupplierFilterDrawer({
               />
             </div>
 
-            {/* 3. Filter Status Kemitraan */}
+            {/* 3. Pencarian Kontak (Phone / Email) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Kontak, Telepon & Email
+                </label>
+                {contactSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => onContactSearchQueryChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={contactSearchQuery}
+                onChange={onContactSearchQueryChange}
+                placeholder="Cari nomor telepon atau alamat email..."
+              />
+            </div>
+
+            {/* 4. Pencarian Rekening Pembayaran */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Rekening Pembayaran & Bank
+                </label>
+                {bankSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => onBankSearchQueryChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={bankSearchQuery}
+                onChange={onBankSearchQueryChange}
+                placeholder="Cari nomor rekening atau nama bank..."
+              />
+            </div>
+
+            {/* 5. Filter Status Kemitraan */}
             <div className="space-y-2">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                 Status Kemitraan
@@ -150,7 +200,7 @@ export default function SupplierFilterDrawer({
               />
             </div>
 
-            {/* 4. Filter Kategori Pasokan */}
+            {/* 6. Filter Kategori Pasokan */}
             <div className="space-y-2">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                 Kategori Pasokan Produk

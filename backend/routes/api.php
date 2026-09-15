@@ -141,3 +141,13 @@ Route::prefix('purchase-orders')->group(function () {
     Route::post('/{idOrPoNumber}/receive', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'receive']);
     Route::post('/{idOrPoNumber}/cancel', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'cancel']);
 });
+
+Route::prefix('warehouses')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\WarehouseController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\WarehouseController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'show']);
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\WarehouseController::class, 'toggleStatus']);
+});
+

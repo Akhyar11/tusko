@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: OrderFilterDrawer
@@ -15,10 +16,20 @@ export default function OrderFilterDrawer({
   totalOrders = 0,
   searchKeyword = '',
   onSearchChange = () => {},
+  searchProduct = '',
+  onSearchProductChange = () => {},
   statusFilter = 'all',
   onStatusFilterChange = () => {},
+  minTotal = '',
+  onMinTotalChange = () => {},
+  maxTotal = '',
+  onMaxTotalChange = () => {},
   dateFilter = 'all',
   onDateFilterChange = () => {},
+  startDate = '',
+  onStartDateChange = () => {},
+  endDate = '',
+  onEndDateChange = () => {},
   expeditionFilter = 'all',
   onExpeditionFilterChange = () => {},
   expeditions = [],
@@ -116,7 +127,19 @@ export default function OrderFilterDrawer({
               />
             </div>
 
-            {/* 2. Status Pesanan */}
+            {/* 2. Pencarian Nama Produk Item */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Pencarian Item Produk
+              </label>
+              <SearchBar
+                value={searchProduct}
+                onChange={onSearchProductChange}
+                placeholder="Cari nama produk di dalam pesanan..."
+              />
+            </div>
+
+            {/* 3. Status Pesanan */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
                 Status Fulfillment Pesanan
@@ -126,19 +149,6 @@ export default function OrderFilterDrawer({
                 value={statusFilter}
                 onChange={onStatusFilterChange}
                 placeholder="Pilih status pesanan..."
-              />
-            </div>
-
-            {/* 3. Rentang Waktu */}
-            <div className="space-y-2">
-              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
-                Rentang Waktu Transaksi
-              </label>
-              <ServerSideSelect
-                options={dateOptions}
-                value={dateFilter}
-                onChange={onDateFilterChange}
-                placeholder="Pilih rentang waktu..."
               />
             </div>
 
@@ -156,10 +166,79 @@ export default function OrderFilterDrawer({
                 />
               </div>
             )}
+
+            {/* 5. Rentang Total Tagihan */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Total Tagihan (Rp)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Total Min</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Min"
+                    value={minTotal}
+                    onChange={onMinTotalChange}
+                    weight="mono"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Total Maks</span>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    placeholder="Rp Maks"
+                    value={maxTotal}
+                    onChange={onMaxTotalChange}
+                    weight="mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Rentang Waktu Preset */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Preset Rentang Waktu
+              </label>
+              <ServerSideSelect
+                options={dateOptions}
+                value={dateFilter}
+                onChange={onDateFilterChange}
+                placeholder="Pilih rentang waktu..."
+              />
+            </div>
+
+            {/* 7. Rentang Tanggal Spesifik */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-900">
+                Rentang Tanggal Spesifik
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Dari Tanggal</span>
+                  <TextInput
+                    type="date"
+                    value={startDate}
+                    onChange={onStartDateChange}
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-mono text-neutral-500 uppercase mb-1">Sampai Tanggal</span>
+                  <TextInput
+                    type="date"
+                    value={endDate}
+                    onChange={onEndDateChange}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center gap-3 shrink-0">
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

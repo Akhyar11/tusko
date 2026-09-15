@@ -4,21 +4,18 @@ import {
   Warehouse,
   Lock,
   CheckCircle2,
-  AlertTriangle,
   Plus,
   Minus,
   SlidersHorizontal,
   Edit3,
   MoreVertical,
   DollarSign,
-  Package,
-  X
+  Package
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import StockFilterDrawer from './organisms/StockFilterDrawer';
-import AddStockModal from './AddStockModal';
-import ReduceStockModal from './ReduceStockModal';
+import StockMutationPage from './StockMutationPage';
 import { formatRupiah } from '../utils/formatters';
 import { 
   initialInventory, 
@@ -67,19 +64,8 @@ export default function StockManagementPage({
   const [selectedStockIds, setSelectedStockIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
-  // Modals state
-  const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
-  const [preselectedRestockProductId, setPreselectedRestockProductId] = useState(null);
-  const [isReduceStockModalOpen, setIsReduceStockModalOpen] = useState(false);
-  const [preselectedReduceProductId, setPreselectedReduceProductId] = useState(null);
-
-  // Quick Adjustment Modal State
-  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
-  const [selectedProductForAdjust, setSelectedProductForAdjust] = useState(null);
-  const [adjustType, setAdjustType] = useState('in'); // 'in' | 'out' | 'set'
-  const [adjustQuantity, setAdjustQuantity] = useState('');
-  const [adjustReference, setAdjustReference] = useState('');
-  const [adjustNotes, setAdjustNotes] = useState('');
+  // Halaman mutasi stok terpisah (pengganti modal): null | { mode: 'in'|'out'|'adjust', productId }
+  const [mutationRequest, setMutationRequest] = useState(null);
 
   // Close action popup when clicking outside
   useEffect(() => {
@@ -147,6 +133,10 @@ export default function StockManagementPage({
     if (filters.categoryFilter && filters.categoryFilter !== 'all') count++;
     if (filters.searchName && filters.searchName.trim() !== '') count++;
     if (filters.searchSku && filters.searchSku.trim() !== '') count++;
+    if (filters.minStock) count++;
+    if (filters.maxStock) count++;
+    if (filters.minAvailable) count++;
+    if (filters.maxAvailable) count++;
     return count;
   }, [filters]);
 
@@ -173,70 +163,24 @@ export default function StockManagementPage({
     }
   };
 
-  // Open adjustment modal
-  const handleOpenAdjustModal = (product) => {
-    setSelectedProductForAdjust(product);
-    setAdjustType('in');
-    setAdjustQuantity('');
-    setAdjustReference(`ADJ-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`);
-    setAdjustNotes('');
-    setIsAdjustModalOpen(true);
-  };
-
-  // Submit Adjustment
-  const handleSaveAdjustment = (e) => {
-    e.preventDefault();
-    if (!selectedProductForAdjust || !adjustQuantity) return;
-
-    const qty = parseInt(adjustQuantity, 10);
-    if (isNaN(qty) || qty <= 0) return;
-
-    const currentStock = selectedProductForAdjust.stock;
-    let newStock = currentStock;
-    let delta = 0;
-
-    if (adjustType === 'in') {
-      newStock = currentStock + qty;
-      delta = qty;
-    } else if (adjustType === 'out') {
-      newStock = Math.max(0, currentStock - qty);
-      delta = -qty;
-    } else if (adjustType === 'set') {
-      newStock = qty;
-      delta = qty - currentStock;
-    }
-
+  // Terapkan hasil mutasi dari StockMutationPage (halaman terpisah)
+  const handleSaveMutation = (result) => {
+    if (!result || !result.log) return;
     setInventory((prev) =>
       prev.map((item) =>
-        item.id === selectedProductForAdjust.id
-          ? {
-              ...item,
-              stock: newStock,
-              last_restock_at: adjustType === 'in' ? new Date().toISOString() : item.last_restock_at
-            }
+        item.id === result.log.product_id
+          ? { ...item, stock: result.updatedStock, last_restock_at: result.kind === 'in' ? result.log.created_at : item.last_restock_at }
           : item
       )
     );
-
-    const newLog = {
-      id: Date.now(),
-      product_id: selectedProductForAdjust.id,
-      sku: selectedProductForAdjust.sku,
-      product_name: selectedProductForAdjust.name,
-      type: adjustType === 'in' ? 'in' : adjustType === 'out' ? 'out' : 'adjustment',
-      quantity: delta,
-      previous_stock: currentStock,
-      current_stock: newStock,
-      reference: adjustReference || 'ADJ-MANUAL',
-      notes: adjustNotes || 'Penyesuaian stok manual',
-      created_at: new Date().toISOString(),
-      operator: 'Admin Gudang',
-      warehouse_code: selectedProductForAdjust.warehouse_code || 'WH-CGK-01'
-    };
-
-    setStockLogs((prev) => [newLog, ...prev]);
-    setIsAdjustModalOpen(false);
-    onShowToast(`Stok ${selectedProductForAdjust.sku} diperbarui: ${currentStock} -> ${newStock} unit`);
+    setStockLogs((prev) => [result.log, ...prev]);
+    if (result.kind === 'in' && result.costAmount > 0) {
+      onAddExpenseTransaction({
+        amount: result.costAmount,
+        ...(result.costMeta || {})
+      });
+    }
+    setMutationRequest(null);
   };
 
   // Table Columns Definition
@@ -297,9 +241,9 @@ export default function StockManagementPage({
       sortable: true,
       align: 'center',
       width: 'w-36',
-      render: (reserved) => (
+      render: (_, item) => (
         <div className="font-mono font-bold text-xs text-amber-700">
-          {reserved || 0}{' '}
+          {Number(item?.reserved_stock || 0)}{' '}
           <span className="text-[10px] font-normal text-neutral-500">unit</span>
         </div>
       )
@@ -379,8 +323,7 @@ export default function StockManagementPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    setPreselectedRestockProductId(item.id);
-                    setIsAddStockModalOpen(true);
+                    setMutationRequest({ mode: 'in', productId: item.id });
                   }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
                 >
@@ -393,8 +336,7 @@ export default function StockManagementPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    setPreselectedReduceProductId(item.id);
-                    setIsReduceStockModalOpen(true);
+                    setMutationRequest({ mode: 'out', productId: item.id });
                   }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
                 >
@@ -407,7 +349,7 @@ export default function StockManagementPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    handleOpenAdjustModal(item);
+                    setMutationRequest({ mode: 'adjust', productId: item.id });
                   }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors border-t border-neutral-100"
                 >
@@ -422,32 +364,47 @@ export default function StockManagementPage({
     }
   ], [paginatedInventory, activeActionMenuId]);
 
+  // View penuh halaman mutasi stok terpisah (pengganti modal create/edit — Aturan 23)
+  if (mutationRequest) {
+    return (
+      <StockMutationPage
+        mode={mutationRequest.mode}
+        inventory={inventory}
+        preselectedProductId={mutationRequest.productId}
+        onSaveMutation={handleSaveMutation}
+        onNavigateBack={() => setMutationRequest(null)}
+        onShowToast={onShowToast}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* 1. Header Bar Bersih (Icon-only Controls, 1 Halaman 1 Entitas) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-            <Boxes size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
-              Manajemen Stok &amp; Gudang Terpadu
-            </h1>
-            <p className="text-xs text-neutral-600 mt-0.5">
-              Kontrol inventaris stok fisik (*on-hand*), stok terpesan (*reserved*), dan stok siap jual multi-gudang.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <Boxes size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Manajemen Stok &amp; Gudang Terpadu
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Kontrol inventaris stok fisik (*on-hand*), stok terpesan (*reserved*), dan stok siap jual multi-gudang.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Action Controls: [Restok] -> [Kurangi] -> [Filter] */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           <IconButton
             icon={Plus}
             onClick={() => {
-              setPreselectedRestockProductId(null);
-              setIsAddStockModalOpen(true);
+              setMutationRequest({ mode: 'in', productId: null });
             }}
             tooltip="Restok / Tambah Stok (+ Masuk)"
             variant="primary"
@@ -455,8 +412,7 @@ export default function StockManagementPage({
           <IconButton
             icon={Minus}
             onClick={() => {
-              setPreselectedReduceProductId(null);
-              setIsReduceStockModalOpen(true);
+              setMutationRequest({ mode: 'out', productId: null });
             }}
             tooltip="Kurangi Stok (- Fisik)"
             variant="secondary"
@@ -472,9 +428,9 @@ export default function StockManagementPage({
       </div>
 
       {/* 2. 3-Tier Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* On-Hand Physical Stock */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               1. Stok Fisik (On-Hand)
@@ -491,7 +447,7 @@ export default function StockManagementPage({
         </div>
 
         {/* Reserved Stock */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-amber-700">
               2. Stok Terpesan (Reserved)
@@ -508,7 +464,7 @@ export default function StockManagementPage({
         </div>
 
         {/* Available Stock */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-emerald-700">
               3. Siap Jual (Available)
@@ -525,7 +481,7 @@ export default function StockManagementPage({
         </div>
 
         {/* Total Stock Asset Value */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Nilai Valuasi Aset
@@ -588,168 +544,17 @@ export default function StockManagementPage({
         categoryFilter={filters.categoryFilter || 'all'}
         onCategoryFilterChange={(val) => setFilter('categoryFilter', val)}
         categories={categories}
+        minStock={filters.minStock || ''}
+        onMinStockChange={(val) => setFilter('minStock', val)}
+        maxStock={filters.maxStock || ''}
+        onMaxStockChange={(val) => setFilter('maxStock', val)}
+        minAvailable={filters.minAvailable || ''}
+        onMinAvailableChange={(val) => setFilter('minAvailable', val)}
+        maxAvailable={filters.maxAvailable || ''}
+        onMaxAvailableChange={(val) => setFilter('maxAvailable', val)}
         onResetFilters={handleResetFilters}
       />
 
-      {/* 5. Modal Restok Tambah */}
-      <AddStockModal
-        isOpen={isAddStockModalOpen}
-        onClose={() => {
-          setIsAddStockModalOpen(false);
-          setPreselectedRestockProductId(null);
-        }}
-        inventory={inventory}
-        preselectedProductId={preselectedRestockProductId}
-        onAddStock={(newLog, updatedStock, costAmount) => {
-          setInventory((prev) =>
-            prev.map((item) =>
-              item.id === newLog.product_id
-                ? { ...item, stock: updatedStock, last_restock_at: newLog.created_at }
-                : item
-            )
-          );
-          setStockLogs((prev) => [newLog, ...prev]);
-          if (costAmount > 0) {
-            onAddExpenseTransaction({
-              amount: costAmount,
-              category: 'restock',
-              category_label: 'Restock Stok Produk',
-              description: `Pengadaan restock: ${newLog.product_name} (${newLog.quantity} unit)`
-            });
-          }
-          setIsAddStockModalOpen(false);
-          onShowToast(`Stok ${newLog.product_name} berhasil ditambah (+${newLog.quantity} unit).`);
-        }}
-      />
-
-      {/* 6. Modal Kurangi Stok */}
-      <ReduceStockModal
-        isOpen={isReduceStockModalOpen}
-        onClose={() => {
-          setIsReduceStockModalOpen(false);
-          setPreselectedReduceProductId(null);
-        }}
-        inventory={inventory}
-        preselectedProductId={preselectedReduceProductId}
-        onReduceStock={(newLog, updatedStock) => {
-          setInventory((prev) =>
-            prev.map((item) =>
-              item.id === newLog.product_id ? { ...item, stock: updatedStock } : item
-            )
-          );
-          setStockLogs((prev) => [newLog, ...prev]);
-          setIsReduceStockModalOpen(false);
-          onShowToast(`Stok ${newLog.product_name} dikurangi (-${newLog.quantity} unit).`);
-        }}
-      />
-
-      {/* 7. Modal Penyesuaian Manual */}
-      {isAdjustModalOpen && selectedProductForAdjust && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
-          <div className="bg-white border border-neutral-300 w-full max-w-md rounded-none shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                Penyesuaian Cepat Stok
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAdjustModalOpen(false)}
-                className="text-neutral-400 hover:text-black cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none text-xs">
-              <div className="font-bold text-neutral-900">{selectedProductForAdjust.name}</div>
-              <div className="font-mono text-neutral-500 mt-0.5">
-                SKU: {selectedProductForAdjust.sku} • Stok Saat Ini: {selectedProductForAdjust.stock} unit
-              </div>
-            </div>
-
-            <form onSubmit={handleSaveAdjustment} className="space-y-4">
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Jenis Penyesuaian
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setAdjustType('in')}
-                    className={`py-2 text-[11px] font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
-                      adjustType === 'in' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-neutral-50 text-neutral-700 border-neutral-300'
-                    }`}
-                  >
-                    + Tambah
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAdjustType('out')}
-                    className={`py-2 text-[11px] font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
-                      adjustType === 'out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-neutral-50 text-neutral-700 border-neutral-300'
-                    }`}
-                  >
-                    - Kurang
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAdjustType('set')}
-                    className={`py-2 text-[11px] font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
-                      adjustType === 'set' ? 'bg-neutral-950 text-white border-neutral-950' : 'bg-neutral-50 text-neutral-700 border-neutral-300'
-                    }`}
-                  >
-                    = Set Aktual
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Jumlah Unit
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={adjustQuantity}
-                  onChange={(e) => setAdjustQuantity(e.target.value)}
-                  placeholder="Contoh: 10"
-                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Catatan Alasan Penyesuaian
-                </label>
-                <input
-                  type="text"
-                  value={adjustNotes}
-                  onChange={(e) => setAdjustNotes(e.target.value)}
-                  placeholder="Contoh: Hasil temuan audit fisik..."
-                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAdjustModalOpen(false)}
-                  className="px-4 py-2 text-xs font-sport font-black uppercase text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-none cursor-pointer transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-sport font-black uppercase text-white bg-neutral-950 hover:bg-neutral-900 rounded-none cursor-pointer transition-colors"
-                >
-                  Simpan Penyesuaian
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

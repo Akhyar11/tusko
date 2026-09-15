@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
+import ServerSideSelect from './molecules/ServerSideSelect';
+import TextInput from './molecules/TextInput';
 import FinancialFilterDrawer from './organisms/FinancialFilterDrawer';
 import { formatRupiah } from '../utils/formatters';
 import { 
@@ -30,7 +32,8 @@ export default function FinancialTransactionsPage({
   onBackToShopping = () => {},
   onViewOrders = () => {},
   onViewOrderDetail = () => {},
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onNavigateToCreate = () => {}
 }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [financialAccounts, setFinancialAccounts] = useState(mockFinancialAccounts);
@@ -63,16 +66,8 @@ export default function FinancialTransactionsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Modals state
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [receiptModalTx, setReceiptModalTx] = useState(null);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-
-  // New transaction form state
-  const [formType, setFormType] = useState('expense');
-  const [formCategory, setFormCategory] = useState('operational');
-  const [formAmount, setFormAmount] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formPaymentMethod, setFormPaymentMethod] = useState('BCA Bisnis Transfer');
 
   // Internal transfer form state
   const [transferFrom, setTransferFrom] = useState(1);
@@ -132,6 +127,12 @@ export default function FinancialTransactionsPage({
     if (filters.selectedCategory && filters.selectedCategory !== 'all') count++;
     if (filters.dateRange && filters.dateRange !== 'all') count++;
     if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
+    if (filters.paymentMethod && filters.paymentMethod !== 'all') count++;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.minAmount) count++;
+    if (filters.maxAmount) count++;
+    if (filters.startDate) count++;
+    if (filters.endDate) count++;
     return count;
   }, [filters]);
 
@@ -156,35 +157,6 @@ export default function FinancialTransactionsPage({
       const merged = new Set([...selectedTxIds, ...currentPageIds]);
       setSelectedTxIds(Array.from(merged));
     }
-  };
-
-  // Simpan Transaksi Baru Manual
-  const handleSaveTransaction = (e) => {
-    e.preventDefault();
-    if (!formAmount || isNaN(formAmount) || Number(formAmount) <= 0) return;
-
-    const matchedCat = transactionCategories.find((c) => c.id === formCategory);
-    const newTx = {
-      id: Date.now(),
-      transaction_number: `TRX/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/${formType === 'income' ? 'IN' : 'EX'}-${Math.floor(1000 + Math.random() * 9000)}`,
-      order_id: null,
-      order_number: null,
-      type: formType,
-      category: formCategory,
-      category_label: matchedCat?.label || 'Manual Record',
-      amount: Number(formAmount),
-      description: formDescription || `Catatan manual ${matchedCat?.label || ''}`,
-      payment_method: formPaymentMethod,
-      status: 'settled',
-      created_at: new Date().toISOString(),
-      customer_name: formType === 'income' ? 'Pelanggan Walk-In / Tunai' : 'Pengeluaran Toko'
-    };
-
-    setTransactions((prev) => [newTx, ...prev]);
-    setIsAddModalOpen(false);
-    setFormAmount('');
-    setFormDescription('');
-    onShowToast(`Berhasil mencatat transaksi ${newTx.transaction_number}!`);
   };
 
   // Transfer Antar Rekening
@@ -399,26 +371,28 @@ export default function FinancialTransactionsPage({
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* 1. Header Bar Bersih (Icon-only Controls, 1 Halaman 1 Entitas) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-            <Wallet size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
-              Buku Kas &amp; Jurnal Mutasi
-            </h1>
-            <p className="text-xs text-neutral-600 mt-0.5">
-              Pencatatan arus kas masuk, pengeluaran operasional toko, dan saldo konsolidasi kas &amp; bank.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <Wallet size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Buku Kas &amp; Jurnal Mutasi
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Pencatatan arus kas masuk, pengeluaran operasional toko, dan saldo konsolidasi kas &amp; bank.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Action Controls: [Catat Transaksi] -> [Transfer Rekening] -> [Filter] */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           <IconButton
             icon={Plus}
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={onNavigateToCreate}
             tooltip="Catat Transaksi Kas Baru"
             variant="primary"
           />
@@ -439,9 +413,9 @@ export default function FinancialTransactionsPage({
       </div>
 
       {/* 2. 4 Kartu KPI Ringkasan Kas */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Net Cashflow */}
-        <div className="bg-neutral-950 text-white p-4 sm:p-5 rounded-none border border-neutral-800 relative overflow-hidden shadow-2xs">
+        <div className="bg-neutral-950 text-white p-4 rounded-none border border-neutral-800 relative overflow-hidden shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-400">
               Arus Kas Bersih (Net)
@@ -457,7 +431,7 @@ export default function FinancialTransactionsPage({
         </div>
 
         {/* Total Income */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Total Pemasukan Kas
@@ -471,7 +445,7 @@ export default function FinancialTransactionsPage({
         </div>
 
         {/* Total Expense */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Total Pengeluaran Kas
@@ -485,7 +459,7 @@ export default function FinancialTransactionsPage({
         </div>
 
         {/* Total Liquid Bank Balances */}
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500">
               Saldo Kas &amp; Bank Riil
@@ -541,142 +515,24 @@ export default function FinancialTransactionsPage({
         selectedCategory={filters.selectedCategory || 'all'}
         onCategoryChange={(val) => setFilter('selectedCategory', val)}
         categories={transactionCategories}
+        paymentMethod={filters.paymentMethod || 'all'}
+        onPaymentMethodChange={(val) => setFilter('paymentMethod', val)}
+        status={filters.status || 'all'}
+        onStatusChange={(val) => setFilter('status', val)}
+        minAmount={filters.minAmount || ''}
+        onMinAmountChange={(val) => setFilter('minAmount', val)}
+        maxAmount={filters.maxAmount || ''}
+        onMaxAmountChange={(val) => setFilter('maxAmount', val)}
         dateRange={filters.dateRange || 'all'}
         onDateRangeChange={(val) => setFilter('dateRange', val)}
+        startDate={filters.startDate || ''}
+        onStartDateChange={(val) => setFilter('startDate', val)}
+        endDate={filters.endDate || ''}
+        onEndDateChange={(val) => setFilter('endDate', val)}
         onResetFilters={handleResetFilters}
       />
 
-      {/* 5. Modal Tambah Transaksi Manual */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
-          <div className="bg-white border border-neutral-300 w-full max-w-lg rounded-none shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                Catat Transaksi Kas Baru
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-neutral-400 hover:text-black cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveTransaction} className="space-y-4">
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Arah Aliran Kas
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormType('income')}
-                    className={`py-2 text-xs font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
-                      formType === 'income'
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-neutral-50 text-neutral-700 border-neutral-300'
-                    }`}
-                  >
-                    + Kas Masuk (Income)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormType('expense')}
-                    className={`py-2 text-xs font-sport font-black uppercase rounded-none border cursor-pointer transition-colors ${
-                      formType === 'expense'
-                        ? 'bg-rose-600 text-white border-rose-600'
-                        : 'bg-neutral-50 text-neutral-700 border-neutral-300'
-                    }`}
-                  >
-                    - Kas Keluar (Expense)
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Kategori Transaksi
-                </label>
-                <select
-                  value={formCategory}
-                  onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
-                >
-                  {transactionCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Nominal Transaksi (Rp)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1000"
-                  value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
-                  placeholder="Contoh: 150000"
-                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Keterangan / Memo Transaksi
-                </label>
-                <textarea
-                  rows="2"
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Rincian catatan transaksi..."
-                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
-                  Rekening Pembayaran / Sumber Kas
-                </label>
-                <select
-                  value={formPaymentMethod}
-                  onChange={(e) => setFormPaymentMethod(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
-                >
-                  {financialAccounts.map((acc) => (
-                    <option key={acc.id} value={acc.name}>
-                      {acc.name} ({acc.account_number}) - Saldo {formatRupiah(acc.balance)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 text-xs font-sport font-black uppercase text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-none cursor-pointer transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-sport font-black uppercase text-white bg-neutral-950 hover:bg-neutral-900 rounded-none cursor-pointer transition-colors"
-                >
-                  Simpan Transaksi
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Modal Transfer Antar Rekening */}
+      {/* 5. Modal Transfer Antar Rekening */}
       {isTransferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px] animate-in fade-in duration-150">
           <div className="bg-white border border-neutral-300 w-full max-w-lg rounded-none shadow-2xl p-6 space-y-4">
@@ -699,34 +555,30 @@ export default function FinancialTransactionsPage({
                   <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
                     Dari Rekening
                   </label>
-                  <select
+                  <ServerSideSelect
                     value={transferFrom}
-                    onChange={(e) => setTransferFrom(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
-                  >
-                    {financialAccounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatRupiah(acc.balance)})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setTransferFrom(val)}
+                    options={financialAccounts.map((acc) => ({
+                      value: acc.id,
+                      label: `${acc.name} (${formatRupiah(acc.balance)})`
+                    }))}
+                    placeholder="Pilih rekening asal..."
+                  />
                 </div>
 
                 <div>
                   <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
                     Ke Rekening
                   </label>
-                  <select
+                  <ServerSideSelect
                     value={transferTo}
-                    onChange={(e) => setTransferTo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none font-medium focus:outline-none focus:border-black"
-                  >
-                    {financialAccounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatRupiah(acc.balance)})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setTransferTo(val)}
+                    options={financialAccounts.map((acc) => ({
+                      value: acc.id,
+                      label: `${acc.name} (${formatRupiah(acc.balance)})`
+                    }))}
+                    placeholder="Pilih rekening tujuan..."
+                  />
                 </div>
               </div>
 
@@ -734,14 +586,14 @@ export default function FinancialTransactionsPage({
                 <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
                   Nominal Transfer (Rp)
                 </label>
-                <input
+                <TextInput
                   type="number"
                   required
                   min="1000"
+                  weight="mono"
                   value={transferAmount}
-                  onChange={(e) => setTransferAmount(e.target.value)}
+                  onChange={setTransferAmount}
                   placeholder="Contoh: 500000"
-                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
                 />
               </div>
 
@@ -749,12 +601,11 @@ export default function FinancialTransactionsPage({
                 <label className="block text-xs font-black uppercase font-sport tracking-wider text-neutral-700 mb-1">
                   Catatan Transfer
                 </label>
-                <input
+                <TextInput
                   type="text"
                   value={transferNotes}
-                  onChange={(e) => setTransferNotes(e.target.value)}
+                  onChange={setTransferNotes}
                   placeholder="Tujuan pemindahan saldo dana..."
-                  className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black"
                 />
               </div>
 

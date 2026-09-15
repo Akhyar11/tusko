@@ -13,13 +13,13 @@ import {
   Menu, 
   X, 
   ChevronRight,
-  ChevronDown,
   Sparkles,
   ClipboardList,
   FolderKanban,
   Building2,
   PackageCheck,
-  Receipt
+  Receipt,
+  Warehouse
 } from 'lucide-react';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
@@ -33,135 +33,145 @@ export default function AdminSidebar({
   lowStockCount = 0
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState({
-    'menu-products': true,
-    'menu-procurement': true
-  });
-
-  const toggleGroup = (groupId) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
-
-  const menuItems = [
+  const menuSections = [
     {
-      id: 'admin-dashboard',
-      label: 'Ringkasan Dashboard',
-      sublabel: 'KPI revenue & performa toko',
-      icon: LayoutDashboard,
-      activeViews: ['admin-dashboard']
+      id: 'section-overview',
+      title: 'Ikhtisar & Analitik',
+      items: [
+        {
+          id: 'admin-dashboard',
+          label: 'Ringkasan Dashboard',
+          sublabel: 'KPI revenue & performa toko',
+          icon: LayoutDashboard,
+          activeViews: ['admin-dashboard']
+        }
+      ]
     },
     {
-      id: 'menu-products',
-      label: 'Menu Produk',
-      sublabel: 'Katalog, SKU & Kategori',
-      icon: Package,
-      activeViews: ['products-admin', 'product-create', 'product-edit', 'categories-admin'],
-      isGroup: true,
-      subItems: [
+      id: 'section-catalog',
+      title: 'Katalog & Inventaris',
+      items: [
         {
           id: 'products-admin',
-          label: 'Produk',
-          sublabel: 'Daftar produk & varian SKU',
+          label: 'Produk & Varian SKU',
+          sublabel: 'Katalog produk, harga & SKU',
           icon: Package,
           activeViews: ['products-admin', 'product-create', 'product-edit']
         },
         {
           id: 'categories-admin',
-          label: 'Kategori Produk',
-          sublabel: 'Master kategori & taksonomi',
+          label: 'Master Kategori',
+          sublabel: 'Taksonomi & kategori olahraga',
           icon: FolderKanban,
-          activeViews: ['categories-admin']
+          activeViews: ['categories-admin', 'category-create', 'category-edit']
+        },
+        {
+          id: 'warehouses-admin',
+          label: 'Master Gudang & Lokasi',
+          sublabel: 'Fasilitas gudang & titik simpan',
+          icon: Warehouse,
+          activeViews: ['warehouses-admin', 'warehouse-create', 'warehouse-edit']
+        },
+        {
+          id: 'stock',
+          label: 'Manajemen Stok Gudang',
+          sublabel: 'Stok fisik gudang & restock',
+          icon: Boxes,
+          activeViews: ['stock', 'stock-mutation'],
+          badge: lowStockCount > 0 ? `${lowStockCount} Perlu Restok` : null,
+          badgeColor: 'bg-amber-100 text-amber-900 border border-amber-300'
         }
       ]
     },
     {
-      id: 'stock',
-      label: 'Manajemen Stok',
-      sublabel: 'Stok fisik gudang & restock',
-      icon: Boxes,
-      activeViews: ['stock'],
-      badge: lowStockCount > 0 ? `${lowStockCount} Perlu Restok` : null,
-      badgeColor: 'bg-amber-100 text-amber-900 border border-amber-300'
-    },
-    {
-      id: 'orders',
-      label: 'Daftar Pesanan',
-      sublabel: 'Antrean order & cetak resi',
-      icon: ShoppingBag,
-      activeViews: ['orders', 'order-detail'],
-      badge: orderCount > 0 ? `${orderCount}` : null,
-      badgeColor: 'bg-neutral-200 text-neutral-900'
-    },
-    {
-      id: 'menu-procurement',
-      label: 'Pengadaan & Vendor (PO)',
-      sublabel: 'PO supplier, GRN & tagihan',
-      icon: ClipboardList,
-      activeViews: ['suppliers-admin', 'procurement-pos', 'procurement-grn', 'procurement-bills', 'procurement'],
-      isGroup: true,
-      subItems: [
+      id: 'section-sales',
+      title: 'Penjualan & Pengiriman',
+      items: [
         {
-          id: 'suppliers-admin',
-          label: 'Master Supplier / Vendor',
-          sublabel: 'Direktori & data mitra vendor',
-          icon: Building2,
-          activeViews: ['suppliers-admin']
+          id: 'orders',
+          label: 'Antrean Pesanan',
+          sublabel: 'Pesanan pembeli & status order',
+          icon: ShoppingBag,
+          activeViews: ['orders', 'order-detail'],
+          badge: orderCount > 0 ? `${orderCount}` : null,
+          badgeColor: 'bg-neutral-200 text-neutral-900'
         },
+        {
+          id: 'expeditions',
+          label: 'Jasa Ekspedisi & Ongkir',
+          sublabel: 'Kurir aktif & tarif pengiriman',
+          icon: Truck,
+          activeViews: ['expeditions', 'expedition-create', 'expedition-edit']
+        }
+      ]
+    },
+    {
+      id: 'section-procurement',
+      title: 'Pengadaan & Rantai Pasok',
+      items: [
         {
           id: 'procurement-pos',
           label: 'Purchase Order (PO)',
           sublabel: 'Pemesanan stok ke supplier',
           icon: ClipboardList,
-          activeViews: ['procurement-pos', 'procurement']
+          activeViews: ['procurement-pos', 'procurement', 'procurement-po-create']
         },
         {
           id: 'procurement-grn',
           label: 'Penerimaan Barang (GRN)',
-          sublabel: 'Penerimaan fisik barang masuk',
+          sublabel: 'Cek fisik barang masuk & QC',
           icon: PackageCheck,
           activeViews: ['procurement-grn']
         },
         {
           id: 'procurement-bills',
           label: 'Tagihan Vendor (Bills)',
-          sublabel: 'Invoice & pelunasan hutang',
+          sublabel: 'Invoice hutang & pelunasan',
           icon: Receipt,
           activeViews: ['procurement-bills']
+        },
+        {
+          id: 'suppliers-admin',
+          label: 'Master Supplier & Vendor',
+          sublabel: 'Direktori mitra & syarat dagang',
+          icon: Building2,
+          activeViews: ['suppliers-admin', 'supplier-create', 'supplier-edit']
         }
       ]
     },
     {
-      id: 'transactions',
-      label: 'Buku Kas & Transaksi',
-      sublabel: 'Arus kas masuk & pengeluaran',
-      icon: Wallet,
-      activeViews: ['transactions']
-    },
-    {
-      id: 'expeditions',
-      label: 'Pengaturan Ekspedisi',
-      sublabel: 'Kurir aktif & tarif ongkir',
-      icon: Truck,
-      activeViews: ['expeditions']
-    },
-    {
-      id: 'templates',
-      label: 'Template Email & Resi',
-      sublabel: 'Format surat jalan & invoice',
-      icon: Mail,
-      activeViews: ['templates']
+      id: 'section-finance',
+      title: 'Keuangan & Sistem',
+      items: [
+        {
+          id: 'transactions',
+          label: 'Buku Kas & Transaksi',
+          sublabel: 'Arus kas masuk & beban toko',
+          icon: Wallet,
+          activeViews: ['transactions', 'transaction-create']
+        },
+        {
+          id: 'templates',
+          label: 'Template Dokumen & Resi',
+          sublabel: 'Format cetak invoice & resi',
+          icon: Mail,
+          activeViews: ['templates']
+        }
+      ]
     }
   ];
 
   // Modul operasional yang di-hide sementara pada branch production (master)
   const HIDDEN_MODULE_IDS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
 
-  const visibleMenuItems = SHOW_OPERATIONAL_MODULES
-    ? menuItems
-    : menuItems.filter((item) => !HIDDEN_MODULE_IDS.includes(item.id));
+  const visibleSections = menuSections
+    .map(section => ({
+      ...section,
+      items: SHOW_OPERATIONAL_MODULES
+        ? section.items
+        : section.items.filter(item => !HIDDEN_MODULE_IDS.includes(item.id))
+    }))
+    .filter(section => section.items.length > 0);
 
   const handleItemClick = (viewId) => {
     setIsMobileOpen(false);
@@ -217,165 +227,73 @@ export default function AdminSidebar({
         </div>
       </div>
 
-      {/* 2. Middle Section: Navigation Menu Links */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-        <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-          Menu Operasional
-        </div>
+      {/* 2. Middle Section: Navigation Menu Links by Business Domain */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        {visibleSections.map((section, sectionIdx) => (
+          <div key={section.id} className="space-y-1">
+            <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-400 font-sport ${
+              sectionIdx > 0 ? 'border-t border-neutral-100 pt-3' : ''
+            }`}>
+              {section.title}
+            </div>
 
-        {visibleMenuItems.map((item) => {
-          const isActive = item.activeViews.includes(currentView);
-          const IconComponent = item.icon;
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const isActive = item.activeViews.includes(currentView);
+                const IconComponent = item.icon;
 
-          if (item.isGroup && item.subItems) {
-            const isExpanded = expandedGroups[item.id] !== undefined ? expandedGroups[item.id] : true;
-            return (
-              <div key={item.id} className="space-y-1">
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(item.id)}
-                  className={`w-full flex items-center justify-between p-3 transition-all rounded-none text-left cursor-pointer border ${
-                    isActive && !isExpanded
-                      ? 'bg-black border-black text-white shadow-xs'
-                      : isActive
-                        ? 'bg-neutral-100 border-neutral-300 text-neutral-950 font-bold'
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleItemClick(item.id)}
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 transition-all rounded-none text-left cursor-pointer border ${
+                      isActive
+                        ? 'bg-neutral-950 border-neutral-950 text-white shadow-xs'
                         : 'bg-white hover:bg-neutral-100 border-transparent hover:border-neutral-300 text-neutral-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-8 h-8 flex items-center justify-center rounded-none shrink-0 border ${
-                      isActive 
-                        ? 'bg-neutral-900 border-neutral-700 text-amber-400' 
-                        : 'bg-neutral-100 border-neutral-200 text-neutral-700'
-                    }`}>
-                      <IconComponent size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
-                        isActive && !isExpanded ? 'text-white' : 'text-neutral-950'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-none shrink-0 border ${
+                        isActive 
+                          ? 'bg-neutral-900 border-neutral-700 text-amber-400' 
+                          : 'bg-neutral-100 border-neutral-200 text-neutral-700'
                       }`}>
-                        {item.label}
+                        <IconComponent size={16} />
                       </div>
-                      <div className={`text-[10px] truncate ${
-                        isActive && !isExpanded ? 'text-neutral-400' : 'text-neutral-500'
-                      }`}>
-                        {item.sublabel}
+                      <div className="min-w-0">
+                        <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
+                          isActive ? 'text-white' : 'text-neutral-950'
+                        }`}>
+                          {item.label}
+                        </div>
+                        <div className={`text-[10px] truncate ${
+                          isActive ? 'text-neutral-400' : 'text-neutral-500'
+                        }`}>
+                          {item.sublabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    {isExpanded ? (
-                      <ChevronDown size={14} className={isActive && !isExpanded ? 'text-amber-400' : 'text-neutral-500'} />
-                    ) : (
-                      <ChevronRight size={14} className={isActive && !isExpanded ? 'text-amber-400' : 'text-neutral-500'} />
-                    )}
-                  </div>
-                </button>
-
-                {isExpanded && (
-                  <div className="ml-3 pl-3 border-l-2 border-neutral-300 space-y-1 my-1">
-                    {item.subItems.map((sub) => {
-                      const isSubActive = sub.activeViews.includes(currentView);
-                      const SubIcon = sub.icon;
-
-                      return (
-                        <button
-                          key={sub.id}
-                          type="button"
-                          onClick={() => handleItemClick(sub.id)}
-                          className={`w-full flex items-center justify-between p-2.5 transition-all rounded-none text-left cursor-pointer border ${
-                            isSubActive
-                              ? 'bg-black border-black text-white shadow-xs'
-                              : 'bg-white hover:bg-neutral-100 border-neutral-200 hover:border-neutral-300 text-neutral-800'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className={`w-6 h-6 flex items-center justify-center rounded-none shrink-0 border ${
-                              isSubActive
-                                ? 'bg-neutral-900 border-neutral-700 text-amber-400'
-                                : 'bg-neutral-100 border-neutral-200 text-neutral-700'
-                            }`}>
-                              <SubIcon size={13} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
-                                isSubActive ? 'text-white' : 'text-neutral-950'
-                              }`}>
-                                {sub.label}
-                              </div>
-                              <div className={`text-[9px] truncate ${
-                                isSubActive ? 'text-neutral-400' : 'text-neutral-500'
-                              }`}>
-                                {sub.sublabel}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            <ChevronRight 
-                              size={12} 
-                              className={isSubActive ? 'text-amber-400' : 'text-neutral-400'} 
-                            />
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleItemClick(item.id)}
-              className={`w-full flex items-center justify-between p-3 transition-all rounded-none text-left cursor-pointer border ${
-                isActive
-                  ? 'bg-black border-black text-white shadow-xs'
-                  : 'bg-white hover:bg-neutral-100 border-transparent hover:border-neutral-300 text-neutral-800'
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-8 h-8 flex items-center justify-center rounded-none shrink-0 border ${
-                  isActive 
-                    ? 'bg-neutral-900 border-neutral-700 text-amber-400' 
-                    : 'bg-neutral-100 border-neutral-200 text-neutral-700'
-                }`}>
-                  <IconComponent size={16} />
-                </div>
-                <div className="min-w-0">
-                  <div className={`text-xs font-black uppercase font-sport tracking-wide truncate ${
-                    isActive ? 'text-white' : 'text-neutral-950'
-                  }`}>
-                    {item.label}
-                  </div>
-                  <div className={`text-[10px] truncate ${
-                    isActive ? 'text-neutral-400' : 'text-neutral-500'
-                  }`}>
-                    {item.sublabel}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 ml-2">
-                {item.badge && (
-                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-none tracking-wider ${
-                    isActive ? 'bg-amber-400 text-black' : item.badgeColor
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
-                <ChevronRight 
-                  size={14} 
-                  className={isActive ? 'text-amber-400' : 'text-neutral-400'} 
-                />
-              </div>
-            </button>
-          );
-        })}
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {item.badge && (
+                        <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-none tracking-wider ${
+                          isActive ? 'bg-amber-400 text-neutral-950' : item.badgeColor
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
+                      <ChevronRight 
+                        size={14} 
+                        className={isActive ? 'text-amber-400' : 'text-neutral-400'} 
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 3. Bottom Section: Quick Actions (Storefront & Logout) */}
@@ -398,7 +316,7 @@ export default function AdminSidebar({
             setIsMobileOpen(false);
             onLogout();
           }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-neutral-900 hover:bg-red-700 text-white font-sport font-black uppercase text-xs rounded-none transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-neutral-900 hover:bg-rose-700 text-white font-sport font-black uppercase text-xs rounded-none transition-colors cursor-pointer"
         >
           <LogOut size={15} />
           <span>Keluar Sesi Admin</span>

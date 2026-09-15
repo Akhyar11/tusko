@@ -9,9 +9,11 @@ import {
   Building2, 
   UserCheck, 
   FileText,
-  X 
+  X,
+  SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import GoodsReceiptFilterDrawer from './organisms/GoodsReceiptFilterDrawer';
 import ServerSideTable from './ServerSideTable';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
@@ -22,6 +24,7 @@ export default function GoodsReceiptListPage({
 }) {
   const [receivingNotes, setReceivingNotes] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {
@@ -72,7 +75,31 @@ export default function GoodsReceiptListPage({
       const docSum = (g.items || []).reduce((s, it) => s + (Number(it.accepted_quantity) || 0), 0);
       return sum + docSum;
     }, 0);
-    return { totalDocs, verifiedCount, totalUnits };
+    const vendorCount = new Set(receivingNotes.map(g => g.vendor_name).filter(Boolean)).size;
+    return { totalDocs, verifiedCount, totalUnits, vendorCount };
+  }, [receivingNotes]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchQuery) count++;
+    if (filters.poSearchQuery) count++;
+    if (filters.deliveryOrderQuery) count++;
+    if (filters.receiverQuery) count++;
+    if (filters.vendorFilter && filters.vendorFilter !== 'all') count++;
+    if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.receivedDateStart) count++;
+    if (filters.receivedDateEnd) count++;
+    if (filters.minUnits !== '' && filters.minUnits !== undefined) count++;
+    if (filters.maxUnits !== '' && filters.maxUnits !== undefined) count++;
+    return count;
+  }, [filters]);
+
+  const vendorOptions = useMemo(() => {
+    const names = Array.from(new Set(receivingNotes.map(g => g.vendor_name).filter(Boolean)));
+    return [
+      { value: 'all', label: 'Semua Rekanan Vendor' },
+      ...names.map(name => ({ value: name, label: name }))
+    ];
   }, [receivingNotes]);
 
   // Table Columns
@@ -210,69 +237,93 @@ export default function GoodsReceiptListPage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header Modul Bersih (0 Tabs) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-neutral-950 text-white flex items-center justify-center rounded-none shrink-0 shadow-xs">
-            <PackageCheck size={24} />
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <PackageCheck size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Penerimaan Barang (GRN)
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Pencatatan fisik barang masuk, verifikasi nomor surat jalan vendor, dan mutasi stok otomatis ke gudang pusat.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-sport font-black uppercase tracking-tight text-neutral-950">
-              Penerimaan Barang (GRN)
-            </h1>
-            <p className="text-xs text-neutral-600 font-sans mt-0.5">
-              Pencatatan fisik barang masuk, verifikasi nomor surat jalan vendor, dan mutasi stok otomatis ke gudang pusat.
-            </p>
-          </div>
+        </div>
+
+        {/* Header Action Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <IconButton
+            icon={SlidersHorizontal}
+            tooltip="Buka Filter Penerimaan"
+            onClick={() => setIsFilterDrawerOpen(true)}
+            variant="secondary"
+            badge={activeFilterCount > 0 ? activeFilterCount : undefined}
+          />
         </div>
       </div>
 
       {/* KPI Cards Khusus GRN */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Total Dokumen GRN</span>
-            <div className="w-8 h-8 bg-neutral-100 text-neutral-900 border border-neutral-300 flex items-center justify-center rounded-none">
-              <FileText size={16} />
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Dokumen GRN</span>
+            <FileText size={16} className="text-neutral-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.totalDocs} <span className="text-xs font-sans font-normal text-neutral-500">Surat Jalan</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.totalDocs}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Surat Jalan</span>
           </div>
-          <div className="text-[11px] text-neutral-600 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
             <CheckCircle2 size={12} className="text-emerald-600" />
             <span>Bukti fisik barang masuk</span>
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-300 p-5 rounded-none shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500">Penerimaan Lolos QC</span>
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center justify-center rounded-none">
-              <CheckCircle2 size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Lolos QC Gudang</span>
+            <CheckCircle2 size={16} className="text-emerald-600" />
           </div>
-          <div className="text-2xl font-sport font-black text-neutral-950 mt-2">
-            {kpis.verifiedCount} <span className="text-xs font-sans font-normal text-neutral-500">Terverifikasi</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-emerald-700 font-sport">{kpis.verifiedCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Terverifikasi</span>
           </div>
-          <div className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-700 font-bold border-t border-neutral-100 pt-1.5">
             <span>Kondisi fisik sesuai PO</span>
           </div>
         </div>
 
-        <div className="bg-neutral-950 text-white border border-black p-5 rounded-none shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-400">Total Unit Masuk Gudang</span>
-            <div className="w-8 h-8 bg-neutral-800 text-amber-400 border border-neutral-700 flex items-center justify-center rounded-none">
-              <Boxes size={16} />
-            </div>
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Unit Masuk</span>
+            <Boxes size={16} className="text-amber-500" />
           </div>
-          <div className="text-2xl font-sport font-black text-white mt-2">
-            +{kpis.totalUnits} <span className="text-xs font-sans font-normal text-neutral-400">Pcs</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">+{kpis.totalUnits}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Pcs</span>
           </div>
-          <div className="text-[11px] text-neutral-400 mt-1">
-            Persediaan fisik bertambah
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
+            <span>Persediaan fisik bertambah</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Vendor Terlibat</span>
+            <Building2 size={16} className="text-neutral-500" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-neutral-950 font-sport">{kpis.vendorCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Mitra</span>
+          </div>
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
+            <span>Pemasok persediaan aktif</span>
           </div>
         </div>
       </div>
@@ -366,6 +417,35 @@ export default function GoodsReceiptListPage({
           </div>
         </div>
       )}
+
+      {/* Drawer Filter Penerimaan Barang (GRN) */}
+      <GoodsReceiptFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        activeFilterCount={activeFilterCount}
+        searchQuery={filters.searchQuery || ''}
+        onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        poSearchQuery={filters.poSearchQuery || ''}
+        onPoSearchQueryChange={(val) => setFilter('poSearchQuery', val)}
+        deliveryOrderQuery={filters.deliveryOrderQuery || ''}
+        onDeliveryOrderQueryChange={(val) => setFilter('deliveryOrderQuery', val)}
+        receiverQuery={filters.receiverQuery || ''}
+        onReceiverQueryChange={(val) => setFilter('receiverQuery', val)}
+        vendorFilter={filters.vendorFilter || 'all'}
+        onVendorFilterChange={(val) => setFilter('vendorFilter', val)}
+        vendorOptions={vendorOptions}
+        receivedDateStart={filters.receivedDateStart || ''}
+        onReceivedDateStartChange={(val) => setFilter('receivedDateStart', val)}
+        receivedDateEnd={filters.receivedDateEnd || ''}
+        onReceivedDateEndChange={(val) => setFilter('receivedDateEnd', val)}
+        minUnits={filters.minUnits || ''}
+        onMinUnitsChange={(val) => setFilter('minUnits', val)}
+        maxUnits={filters.maxUnits || ''}
+        onMaxUnitsChange={(val) => setFilter('maxUnits', val)}
+        statusFilter={filters.statusFilter || 'all'}
+        onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        onResetFilters={resetFilters}
+      />
     </div>
   );
 }

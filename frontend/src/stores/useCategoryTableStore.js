@@ -12,6 +12,8 @@ export const useCategoryTableStore = createTableStore({
   },
   initialFilters: {
     searchQuery: '',
+    searchSlug: '',
+    searchDescription: '',
     productStatusFilter: 'all',
     iconFilter: 'all'
   },

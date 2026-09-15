@@ -12,6 +12,9 @@ import {
   Check
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import TextInput from './molecules/TextInput';
+import TextArea from './molecules/TextArea';
+import ServerSideSelect from './molecules/ServerSideSelect';
 
 export default function OrderStatusModal({
   isOpen = false,
@@ -221,13 +224,13 @@ export default function OrderStatusModal({
                 <Truck size={14} className="text-amber-600" />
                 <span>Nomor Resi Pengiriman (Airwaybill)*</span>
               </label>
-              <input
-                type="text"
+              <TextInput
                 required
                 value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
+                onChange={(val) => setTrackingNumber(val.toUpperCase())}
                 placeholder="Contoh: KRA-JNT-8829102910"
-                className="w-full px-3 py-2 text-xs font-mono font-bold bg-white border border-neutral-400 rounded-none focus:outline-none focus:border-black uppercase"
+                weight="mono"
+                className="uppercase"
               />
               <p className="text-[10px] text-neutral-600">
                 Ekspedisi: <strong>{order.expedition?.name || order.expedition_name || 'J&T Express (KiriminAja)'}</strong>
@@ -237,24 +240,25 @@ export default function OrderStatusModal({
 
           {/* Conditional Field: Cancel Reason when status is Cancelled */}
           {targetStatus === 'cancelled' && (
-            <div className="p-3.5 bg-red-50 rounded-none border border-red-200 space-y-2.5 animate-in fade-in">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-red-900">
+            <div className="p-3.5 bg-rose-50 rounded-none border border-rose-200 space-y-2.5 animate-in fade-in">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
                 <AlertTriangle size={14} />
                 <span>Alasan Pembatalan Pesanan*</span>
               </div>
-              <select
+              <ServerSideSelect
                 value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-red-300 rounded-none focus:outline-none focus:border-black text-neutral-900"
-              >
-                <option value="Stok produk habis">Stok produk habis di gudang</option>
-                <option value="Permintaan pembeli">Permintaan pembatalan dari pembeli</option>
-                <option value="Alamat tujuan tidak terjangkau">Alamat tujuan di luar jangkauan kurir</option>
-                <option value="Pembayaran kedaluwarsa">Waktu pembayaran telah kedaluwarsa</option>
-                <option value="Lainnya">Alasan lainnya</option>
-              </select>
+                onChange={(val) => setCancelReason(val)}
+                options={[
+                  { value: 'Stok produk habis', label: 'Stok produk habis di gudang' },
+                  { value: 'Permintaan pembeli', label: 'Permintaan pembatalan dari pembeli' },
+                  { value: 'Alamat tujuan tidak terjangkau', label: 'Alamat tujuan di luar jangkauan kurir' },
+                  { value: 'Pembayaran kedaluwarsa', label: 'Waktu pembayaran telah kedaluwarsa' },
+                  { value: 'Lainnya', label: 'Alasan lainnya' }
+                ]}
+                placeholder="Pilih alasan pembatalan..."
+              />
 
-              <p className="text-[10px] text-red-700">
+              <p className="text-[10px] text-rose-700">
                 &bull; Stok produk akan secara otomatis dipulihkan kembali ke inventaris gudang.
               </p>
             </div>
@@ -265,12 +269,11 @@ export default function OrderStatusModal({
             <label className="text-xs font-sport font-black uppercase text-neutral-700 block">
               Catatan Internal (Opsional):
             </label>
-            <textarea
+            <TextArea
               rows={2}
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={setNotes}
               placeholder="Tambahkan catatan internal fulfillment..."
-              className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 rounded-none focus:outline-none focus:border-black placeholder:text-neutral-400"
             />
           </div>
 

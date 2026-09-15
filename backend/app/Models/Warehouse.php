@@ -39,4 +39,9 @@ class Warehouse extends Model
     {
         return $this->hasMany(InventoryBalance::class);
     }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
 }

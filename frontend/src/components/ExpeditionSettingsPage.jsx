@@ -15,8 +15,6 @@ import {
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import ExpeditionFilterDrawer from './organisms/ExpeditionFilterDrawer';
-import AddExpeditionModal from './AddExpeditionModal';
-import EditRateModal from './EditRateModal';
 import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
@@ -30,7 +28,9 @@ export default function ExpeditionSettingsPage({
   onEditRate = () => {},
   onSetDefault = () => {},
   onToggleActive = () => {},
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onNavigateToCreate = () => {},
+  onNavigateToEdit = () => {}
 }) {
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {
@@ -60,8 +60,6 @@ export default function ExpeditionSettingsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Modals state
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editRateExpedition, setEditRateExpedition] = useState(null);
   const [expeditionToDelete, setExpeditionToDelete] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
@@ -108,8 +106,12 @@ export default function ExpeditionSettingsPage({
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
+    if (filters.searchEtd && filters.searchEtd.trim() !== '') count++;
     if (filters.selectedCategory && filters.selectedCategory !== 'Semua Kategori' && filters.selectedCategory !== 'all') count++;
     if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.defaultFilter && filters.defaultFilter !== 'all') count++;
+    if (filters.minRate) count++;
+    if (filters.maxRate) count++;
     return count;
   }, [filters]);
 
@@ -296,7 +298,7 @@ export default function ExpeditionSettingsPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    setEditRateExpedition(exp);
+                    onNavigateToEdit(exp);
                   }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
                 >
@@ -337,32 +339,34 @@ export default function ExpeditionSettingsPage({
         );
       }
     }
-  ], [paginatedExpeditions, activeActionMenuId]);
+  ], [paginatedExpeditions, activeActionMenuId, onNavigateToEdit]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* 1. Header Bar Bersih (Icon-only Controls, 0 Redundant Breadcrumbs) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-            <Truck size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
-              Pengaturan Jasa Ekspedisi
-            </h1>
-            <p className="text-xs text-neutral-600 mt-0.5">
-              Kelola daftar kurir logistik aktif, konfigurasi tarif ongkos kirim, dan opsi ekspedisi prioritas toko.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <Truck size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Pengaturan Jasa Ekspedisi
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Kelola daftar kurir logistik aktif, konfigurasi tarif ongkos kirim, dan opsi ekspedisi prioritas toko.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Action Controls: [Tambah Ekspedisi] -> [Filter] */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           <IconButton
             icon={Plus}
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={onNavigateToCreate}
             tooltip="Tambah Ekspedisi Baru"
             variant="primary"
           />
@@ -377,8 +381,8 @@ export default function ExpeditionSettingsPage({
       </div>
 
       {/* 2. 4 Kartu KPI Ekspedisi */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500 block">
             Total Layanan
           </span>
@@ -391,7 +395,7 @@ export default function ExpeditionSettingsPage({
           </p>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <span className="text-xs font-sport font-black uppercase tracking-wider text-emerald-700 block">
             Ekspedisi Aktif
           </span>
@@ -404,7 +408,7 @@ export default function ExpeditionSettingsPage({
           </p>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <span className="text-xs font-sport font-black uppercase tracking-wider text-amber-700 block">
             Ekspedisi Utama
           </span>
@@ -418,7 +422,7 @@ export default function ExpeditionSettingsPage({
           </p>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-none border border-neutral-300 shadow-2xs space-y-1">
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500 block">
             Rata-rata Tarif
           </span>
@@ -462,7 +466,7 @@ export default function ExpeditionSettingsPage({
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-rose-700 hover:bg-rose-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
             >
               Hapus Terpilih ({selectedExpeditionIds.length})
             </button>
@@ -479,39 +483,21 @@ export default function ExpeditionSettingsPage({
         totalExpeditions={totalFiltered}
         searchQuery={filters.searchQuery || ''}
         onSearchChange={(val) => setFilter('searchQuery', val)}
+        searchEtd={filters.searchEtd || ''}
+        onSearchEtdChange={(val) => setFilter('searchEtd', val)}
         selectedCategory={filters.selectedCategory || 'Semua Kategori'}
         onCategoryChange={(val) => setFilter('selectedCategory', val)}
         categories={expeditionCategoriesList}
         statusFilter={filters.statusFilter || 'all'}
         onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        defaultFilter={filters.defaultFilter || 'all'}
+        onDefaultFilterChange={(val) => setFilter('defaultFilter', val)}
+        minRate={filters.minRate || ''}
+        onMinRateChange={(val) => setFilter('minRate', val)}
+        maxRate={filters.maxRate || ''}
+        onMaxRateChange={(val) => setFilter('maxRate', val)}
         onResetFilters={handleResetFilters}
       />
-
-      {/* 5. Modals */}
-      {isAddModalOpen && (
-        <AddExpeditionModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onAddExpedition={(newExp) => {
-            onAddExpedition(newExp);
-            setIsAddModalOpen(false);
-            onShowToast(`Layanan ekspedisi ${newExp.name} berhasil ditambahkan.`);
-          }}
-        />
-      )}
-
-      {editRateExpedition && (
-        <EditRateModal
-          isOpen={Boolean(editRateExpedition)}
-          expedition={editRateExpedition}
-          onClose={() => setEditRateExpedition(null)}
-          onSaveRate={(updatedData) => {
-            onEditRate(updatedData);
-            setEditRateExpedition(null);
-            onShowToast(`Tarif ${editRateExpedition.name} berhasil diperbarui.`);
-          }}
-        />
-      )}
 
       {/* Confirmation Modal - Single Expedition Delete */}
       <ConfirmationModal

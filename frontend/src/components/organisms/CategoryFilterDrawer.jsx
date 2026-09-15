@@ -2,6 +2,7 @@ import React from 'react';
 import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import TextInput from '../molecules/TextInput';
 
 /**
  * Organism: CategoryFilterDrawer
@@ -16,11 +17,19 @@ export default function CategoryFilterDrawer({
   // Search state
   searchQuery = '',
   onSearchQueryChange = () => {},
+  searchSlug = '',
+  onSearchSlugChange = () => {},
+  searchDescription = '',
+  onSearchDescriptionChange = () => {},
   // Filter states
   productStatusFilter = 'all',
   onProductStatusFilterChange = () => {},
   iconFilter = 'all',
   onIconFilterChange = () => {},
+  minProducts = '',
+  onMinProductsChange = () => {},
+  maxProducts = '',
+  onMaxProductsChange = () => {},
   sortOption = 'name_asc',
   onSortOptionChange = () => {},
   onResetFilters = () => {}
@@ -80,11 +89,11 @@ export default function CategoryFilterDrawer({
 
           {/* Drawer Body (Filter Controls) */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-            {/* 1. Pencarian Nama / Slug Kategori */}
+            {/* 1. Pencarian Nama Kategori */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                  Pencarian Nama / Slug
+                  Nama Kategori Olahraga
                 </label>
                 {searchQuery && (
                   <button
@@ -92,7 +101,7 @@ export default function CategoryFilterDrawer({
                     onClick={() => onSearchQueryChange('')}
                     className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
                   >
-                    Reset Cari
+                    Reset Nama
                   </button>
                 )}
               </div>
@@ -100,11 +109,59 @@ export default function CategoryFilterDrawer({
                 value={searchQuery}
                 onChange={onSearchQueryChange}
                 onReset={() => onSearchQueryChange('')}
-                placeholder="Cari kategori produk atau slug..."
+                placeholder="Cari nama kategori produk..."
               />
             </div>
 
-            {/* 2. Kondisi Produk Terkait */}
+            {/* 2. Pencarian Slug URL */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Slug URL Kategori
+                </label>
+                {searchSlug && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchSlugChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Slug
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={searchSlug}
+                onChange={onSearchSlugChange}
+                onReset={() => onSearchSlugChange('')}
+                placeholder="Cari slug URL kategori..."
+              />
+            </div>
+
+            {/* 2. Pencarian Deskripsi Kategori */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Pencarian Deskripsi Kategori
+                </label>
+                {searchDescription && (
+                  <button
+                    type="button"
+                    onClick={() => onSearchDescriptionChange('')}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Deskripsi
+                  </button>
+                )}
+              </div>
+              <SearchBar
+                value={searchDescription}
+                onChange={onSearchDescriptionChange}
+                onReset={() => onSearchDescriptionChange('')}
+                placeholder="Cari penjelasan deskripsi kategori..."
+              />
+            </div>
+
+            {/* 3. Kondisi Produk Terkait */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
@@ -171,7 +228,46 @@ export default function CategoryFilterDrawer({
               />
             </div>
 
-            {/* 3. Urutan Master Kategori */}
+            {/* 3. Rentang Jumlah Produk Terdaftar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                  Rentang Jumlah Produk
+                </label>
+                {(minProducts || maxProducts) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onMinProductsChange('');
+                      onMaxProductsChange('');
+                    }}
+                    className="text-[11px] font-sport font-bold uppercase text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Reset Range
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <TextInput
+                  type="number"
+                  min="0"
+                  placeholder="Min Produk"
+                  value={minProducts}
+                  onChange={onMinProductsChange}
+                  weight="mono"
+                />
+                <TextInput
+                  type="number"
+                  min="0"
+                  placeholder="Maks Produk"
+                  value={maxProducts}
+                  onChange={onMaxProductsChange}
+                  weight="mono"
+                />
+              </div>
+            </div>
+
+            {/* 4. Urutan Master Kategori */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
@@ -204,8 +300,8 @@ export default function CategoryFilterDrawer({
             </div>
           </div>
 
-          {/* Drawer Footer Actions */}
-          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-300 flex items-center justify-between gap-3 shrink-0">
+          {/* Action Buttons */}
+          <div className="p-5 sm:p-6 bg-neutral-50 border-t border-neutral-200 flex items-center justify-between gap-3 shrink-0">
             <button
               type="button"
               onClick={onResetFilters}

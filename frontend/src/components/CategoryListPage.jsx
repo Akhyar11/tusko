@@ -30,7 +30,9 @@ export default function CategoryListPage({
   onCategoriesChange = () => {},
   onShowToast = () => {},
   onBackToShopping = () => {},
-  onNavigateToProducts = () => {}
+  onNavigateToProducts = () => {},
+  onNavigateToCreate = () => {},
+  onNavigateToEdit = () => {}
 }) {
   const [categories, setCategories] = useState(initialCategories);
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
@@ -57,15 +59,8 @@ export default function CategoryListPage({
   const [sortOption, setSortOption] = useState('name_asc');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Form Modal state: null | 'create' | 'edit'
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [formName, setFormName] = useState('');
-  const [formSlug, setFormSlug] = useState('');
-  const [formIcon, setFormIcon] = useState('Tag');
-  const [formDescription, setFormDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sync with prop
@@ -127,6 +122,8 @@ export default function CategoryListPage({
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.searchQuery && filters.searchQuery.trim() !== '') count++;
+    if (filters.searchSlug && filters.searchSlug.trim() !== '') count++;
+    if (filters.searchDescription && filters.searchDescription.trim() !== '') count++;
     if (filters.productStatusFilter && filters.productStatusFilter !== 'all') count++;
     if (filters.iconFilter && filters.iconFilter !== 'all') count++;
     if (sortOption !== 'name_asc') count++;
@@ -163,80 +160,6 @@ export default function CategoryListPage({
   const handleResetFilters = () => {
     resetFilters();
     setSortOption('name_asc');
-  };
-
-  const handleOpenCreate = () => {
-    setEditingCategory(null);
-    setFormName('');
-    setFormSlug('');
-    setFormIcon('Tag');
-    setFormDescription('');
-    setErrorMessage('');
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEdit = (cat) => {
-    setEditingCategory(cat);
-    setFormName(cat.name);
-    setFormSlug(cat.slug || '');
-    setFormIcon(cat.icon || 'Tag');
-    setFormDescription(cat.description || '');
-    setErrorMessage('');
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingCategory(null);
-    setErrorMessage('');
-  };
-
-  const handleNameChange = (val) => {
-    setFormName(val);
-    if (!editingCategory || !formSlug) {
-      const slug = val
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      setFormSlug(slug);
-    }
-  };
-
-  const handleSaveCategory = async (e) => {
-    e?.preventDefault();
-    if (!formName.trim()) {
-      setErrorMessage('Nama kategori wajib diisi!');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage('');
-    try {
-      const payload = {
-        name: formName.trim(),
-        slug: formSlug.trim() || formName.toLowerCase().replace(/\s+/g, '-'),
-        icon: formIcon,
-        description: formDescription.trim()
-      };
-
-      if (editingCategory) {
-        const updated = await categoryService.updateCategory(editingCategory.id, payload);
-        onShowToast(`Kategori "${updated.name}" berhasil diperbarui!`);
-      } else {
-        const created = await categoryService.createCategory(payload);
-        onShowToast(`Kategori "${created.name}" berhasil ditambahkan ke master!`);
-      }
-
-      await loadCategories();
-      setIsModalOpen(false);
-      setEditingCategory(null);
-    } catch (err) {
-      const msg = err.data?.message || err.message || 'Gagal menyimpan kategori.';
-      setErrorMessage(msg);
-      onShowToast(msg, { type: 'error' });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleDeleteCategory = (cat) => {
@@ -419,7 +342,7 @@ export default function CategoryListPage({
                   type="button"
                   onClick={() => {
                     setActiveActionMenuId(null);
-                    handleOpenEdit(cat);
+                    onNavigateToEdit(cat);
                   }}
                   className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
@@ -447,28 +370,30 @@ export default function CategoryListPage({
         );
       }
     }
-  ], [products, paginatedCategories, activeActionMenuId]);
+  ], [products, paginatedCategories, activeActionMenuId, onNavigateToEdit]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* 1. Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-            <FolderKanban size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
-              Master Kategori Produk
-            </h1>
-            <p className="text-xs text-neutral-600 mt-0.5">
-              Kelola master kategori produk, slug URL, standarisasi etalase, dan relasi katalog toko.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <FolderKanban size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Master Kategori Produk
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Kelola master kategori produk, slug URL, standarisasi etalase, dan relasi katalog toko.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Header Action Buttons (Icon-Only with Tooltip) */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           {onNavigateToProducts && (
             <IconButton
               icon={Package}
@@ -480,7 +405,7 @@ export default function CategoryListPage({
 
           <IconButton
             icon={Plus}
-            onClick={handleOpenCreate}
+            onClick={onNavigateToCreate}
             title="Tambah Kategori Baru"
             variant="primary"
           />
@@ -561,7 +486,7 @@ export default function CategoryListPage({
         total={totalFiltered}
         page={page}
         limit={limit}
-        limitOptions={[10, 25, 50]}
+        limitOptions={[10, 25, 50, 100]}
         onPageChange={setPage}
         onLimitChange={setLimit}
         sortBy={sortBy}
@@ -588,122 +513,7 @@ export default function CategoryListPage({
         }
       />
 
-      {/* 5. Create / Edit Category Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white border border-neutral-300 w-full max-w-lg rounded-none shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-neutral-200 bg-neutral-950 text-white">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-400 text-neutral-950 rounded-none">
-                  <FolderKanban size={18} />
-                </div>
-                <div>
-                  <h3 className="text-base font-black font-sport uppercase tracking-tight text-white">
-                    {editingCategory ? `Edit: ${editingCategory.name}` : 'Kategori Produk Baru'}
-                  </h3>
-                </div>
-              </div>
-              <IconButton
-                icon={X}
-                onClick={handleCloseModal}
-                title="Tutup Modal"
-                variant="dark"
-              />
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSaveCategory} className="p-5 space-y-4 text-xs">
-              {errorMessage && (
-                <div className="p-3 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center gap-2 font-sport font-bold uppercase">
-                  <AlertCircle size={14} className="text-rose-600 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Nama Master Kategori <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="Contoh: Jersey & Apparel"
-                  required
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-bold rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Slug URL (Identifier Kategori)
-                </label>
-                <input
-                  type="text"
-                  value={formSlug}
-                  onChange={(e) => setFormSlug(e.target.value)}
-                  placeholder="jersey-apparel"
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-mono text-xs rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Simbol Ikon Kategori
-                </label>
-                <select
-                  value={formIcon}
-                  onChange={(e) => setFormIcon(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-bold rounded-none"
-                >
-                  <option value="Shirt">Shirt (Jersey & Pakaian)</option>
-                  <option value="Footprints">Footprints (Sepatu & Sepatu Olahraga)</option>
-                  <option value="Dumbbell">Dumbbell (Peralatan & Gym)</option>
-                  <option value="Shield">Shield (Aksesoris & Deker)</option>
-                  <option value="Zap">Zap (Running & Marathon)</option>
-                  <option value="Trophy">Trophy (Futsal & Sepakbola)</option>
-                  <option value="Activity">Activity (Training & Fitness)</option>
-                  <option value="Sparkles">Sparkles (Koleksi Pro Player)</option>
-                  <option value="Tag">Tag (Kategori Umum)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Deskripsi Kategori (Opsional)
-                </label>
-                <textarea
-                  rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Penjelasan ringkas jenis produk dalam kategori ini..."
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none leading-relaxed"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-200">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-sport font-bold uppercase text-xs rounded-none transition-colors cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-black font-sport font-black uppercase text-xs rounded-none transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
-                >
-                  {isSubmitting ? 'Menyimpan...' : (editingCategory ? 'Simpan Perubahan' : 'Simpan Kategori')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Right-to-Left Category Filter Drawer */}
+      {/* 5. Right-to-Left Category Filter Drawer */}
       <CategoryFilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
@@ -712,6 +522,10 @@ export default function CategoryListPage({
         totalCategories={totalFiltered}
         searchQuery={filters.searchQuery || ''}
         onSearchQueryChange={(val) => setFilter('searchQuery', val)}
+        searchSlug={filters.searchSlug || ''}
+        onSearchSlugChange={(val) => setFilter('searchSlug', val)}
+        searchDescription={filters.searchDescription || ''}
+        onSearchDescriptionChange={(val) => setFilter('searchDescription', val)}
         productStatusFilter={filters.productStatusFilter || 'all'}
         onProductStatusFilterChange={(val) => setFilter('productStatusFilter', val)}
         iconFilter={filters.iconFilter || 'all'}

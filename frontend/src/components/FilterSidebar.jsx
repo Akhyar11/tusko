@@ -10,6 +10,8 @@ import {
   Percent,
   X
 } from 'lucide-react';
+import TextInput from './molecules/TextInput';
+import Checkbox from './molecules/Checkbox';
 
 export default function FilterSidebar({
   categories = [],
@@ -139,11 +141,9 @@ export default function FilterSidebar({
         {openSections.offer && (
           <div className="space-y-2 text-xs">
             <label className="flex items-center gap-2 text-neutral-700 hover:text-neutral-950 cursor-pointer select-none">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={onlyOfficial}
                 onChange={onToggleOfficial}
-                className="rounded text-amber-500 focus:ring-amber-400 border-neutral-300 w-4 h-4 cursor-pointer"
               />
               <span className="flex items-center gap-1 font-semibold">
                 <BadgeCheck size={14} className="text-amber-500" />
@@ -152,11 +152,9 @@ export default function FilterSidebar({
             </label>
 
             <label className="flex items-center gap-2 text-neutral-700 hover:text-neutral-950 cursor-pointer select-none">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={onlyFreeShipping}
                 onChange={onToggleFreeShipping}
-                className="rounded text-amber-500 focus:ring-amber-400 border-neutral-300 w-4 h-4 cursor-pointer"
               />
               <span className="flex items-center gap-1 font-semibold">
                 <Truck size={14} className="text-emerald-600" />
@@ -165,11 +163,9 @@ export default function FilterSidebar({
             </label>
 
             <label className="flex items-center gap-2 text-neutral-700 hover:text-neutral-950 cursor-pointer select-none">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={onlyDiscount}
                 onChange={onToggleDiscount}
-                className="rounded text-amber-500 focus:ring-amber-400 border-neutral-300 w-4 h-4 cursor-pointer"
               />
               <span className="flex items-center gap-1 font-semibold">
                 <Percent size={14} className="text-rose-500" />
@@ -193,26 +189,22 @@ export default function FilterSidebar({
 
         {openSections.price && (
           <div className="space-y-2">
-            <div className="relative">
-              <span className="absolute left-2.5 top-2 text-[11px] text-neutral-400 font-bold">Rp</span>
-              <input
-                type="number"
-                placeholder="Minimum"
-                value={minPrice}
-                onChange={(e) => onPriceChange('min', e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-none focus:outline-none focus:border-amber-500 focus:bg-white"
-              />
-            </div>
-            <div className="relative">
-              <span className="absolute left-2.5 top-2 text-[11px] text-neutral-400 font-bold">Rp</span>
-              <input
-                type="number"
-                placeholder="Maksimum"
-                value={maxPrice}
-                onChange={(e) => onPriceChange('max', e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-none focus:outline-none focus:border-amber-500 focus:bg-white"
-              />
-            </div>
+            <TextInput
+              type="number"
+              placeholder="Minimum"
+              value={minPrice}
+              onChange={(val) => onPriceChange('min', val)}
+              prefix="Rp"
+              weight="mono"
+            />
+            <TextInput
+              type="number"
+              placeholder="Maksimum"
+              value={maxPrice}
+              onChange={(val) => onPriceChange('max', val)}
+              prefix="Rp"
+              weight="mono"
+            />
 
             {/* Quick Price Filters */}
             <div className="flex flex-wrap gap-1.5 pt-1">

@@ -13,6 +13,8 @@ export const useSupplierTableStore = createTableStore({
   initialFilters: {
     searchQuery: '',
     codeSearchQuery: '',
+    contactSearchQuery: '',
+    bankSearchQuery: '',
     statusFilter: 'all',
     categoryFilter: 'all'
   },

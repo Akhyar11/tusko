@@ -22,13 +22,19 @@ import {
   UploadCloud,
   Camera,
   Info,
-  Loader2
+  Loader2,
+  Tags,
+  Boxes
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import FormTipsPanel from './organisms/FormTipsPanel';
 import { createMockProduct, generateProductSku, generateVariantSku } from '../data/mockProducts';
 import ServerSideSelect from './molecules/ServerSideSelect';
+import TextInput from './molecules/TextInput';
+import TextArea from './molecules/TextArea';
+import Checkbox from './molecules/Checkbox';
+import FileInput from './molecules/FileInput';
 import IconButton from './atoms/IconButton';
-import CategoryMasterModal from './organisms/CategoryMasterModal';
 import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../services/categoryService';
 import { vendorService } from '../services/vendorService';
@@ -50,21 +56,16 @@ export default function ProductCreateForm({
   const [categoryIds, setCategoryIds] = useState([]);
   const categoryId = categoryIds[0] || '';
   const [vendorId, setVendorId] = useState('');
-  const [isCategoryMasterOpen, setIsCategoryMasterOpen] = useState(false);
   const [categoryList, setCategoryList] = useState(categories);
    const [vendorList, setVendorList] = useState(vendors);
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const handleNavigateToCategories = () => {
-    if (onNavigateToCategories) {
-      if (name.trim() || price || description.trim()) {
-        setPendingNavigation('categories');
-        return;
-      }
-      onNavigateToCategories();
-    } else {
-      setIsCategoryMasterOpen(true);
+    if (name.trim() || price || description.trim()) {
+      setPendingNavigation('categories');
+      return;
     }
+    onNavigateToCategories();
   };
 
   const handleNavigateToSuppliers = () => {
@@ -473,8 +474,8 @@ export default function ProductCreateForm({
   };
 
   // Image upload helpers (Uploads directly to Cloudflare R2 / backend storage)
-  const handleMainImageFileUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const handleMainImageFileUpload = async (fileOrEvent) => {
+    const file = fileOrEvent?.target ? fileOrEvent.target.files?.[0] : fileOrEvent;
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       if (typeof onShowToast === 'function') {
@@ -506,8 +507,12 @@ export default function ProductCreateForm({
     }
   };
 
-  const handleGalleryFilesUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
+  const handleGalleryFilesUpload = async (filesOrEvent) => {
+    const files = Array.isArray(filesOrEvent)
+      ? filesOrEvent
+      : filesOrEvent?.target
+      ? Array.from(filesOrEvent.target.files || [])
+      : [filesOrEvent].filter(Boolean);
     if (files.length === 0) return;
 
     try {
@@ -783,12 +788,12 @@ export default function ProductCreateForm({
         </div>
       )}
 
-      {/* Main Form Layout (2 Columns) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Form Layout (3/4 form + 1/4 tips) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Left 2 Columns: Details & Variant Matrix */}
         <div className="lg:col-span-2 space-y-6">
           {/* Section 1: Informasi Dasar */}
-          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
               <Package size={16} className="text-amber-500" />
               <span>1. Informasi Dasar Produk</span>
@@ -798,13 +803,12 @@ export default function ProductCreateForm({
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                 Nama Lengkap Produk <span className="text-rose-500">*</span>
               </label>
-              <input
+              <TextInput
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={setName}
                 placeholder="Contoh: Tusko Pro Matchday Football Jersey 2026 AeroTech"
                 required
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-medium rounded-none"
               />
             </div>
 
@@ -906,18 +910,19 @@ export default function ProductCreateForm({
                   Otomatis Buat SKU
                 </button>
               </div>
-              <input
+              <TextInput
                 type="text"
+                weight="mono"
                 value={sku}
-                onChange={(e) => setSku(e.target.value.toUpperCase())}
+                onChange={(val) => setSku(val.toUpperCase())}
                 placeholder="TSK-CAT-PROD-001"
-                className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-none border focus:outline-none transition-colors ${
+                className={
                   isSkuDuplicate
-                    ? 'border-rose-500 bg-rose-50/50 text-rose-950 focus:border-rose-600'
+                    ? '!border-rose-500 !bg-rose-50/50 text-rose-950 focus:!border-rose-600'
                     : sku.trim()
-                    ? 'border-emerald-500 bg-emerald-50/30 text-neutral-950 focus:border-emerald-600'
-                    : 'border-neutral-300 bg-neutral-50 focus:bg-white focus:border-amber-500 text-neutral-950'
-                }`}
+                    ? '!border-emerald-500 !bg-emerald-50/30 text-neutral-950 focus:!border-emerald-600'
+                    : ''
+                }
               />
               {sku.trim() && (
                 <div className="mt-1.5">
@@ -941,18 +946,18 @@ export default function ProductCreateForm({
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                 Deskripsi Lengkap Produk
               </label>
-              <textarea
+              <TextArea
                 rows={4}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={setDescription}
                 placeholder="Jelaskan keunggulan performa, teknologi kain, dan petunjuk perawatan..."
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 leading-relaxed rounded-none"
+                className="leading-relaxed"
               />
             </div>
           </div>
 
           {/* Section 2: Penentuan Harga & Alokasi Stok */}
-          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none space-y-5">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-5">
             <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
               <DollarSign size={16} className="text-amber-500" />
               <span>2. Penentuan Harga &amp; Alokasi Stok</span>
@@ -966,20 +971,16 @@ export default function ProductCreateForm({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Harga Jual Ritel <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-mono font-black text-neutral-400 select-none">
-                      Rp
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="0"
-                      required
-                      className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-black font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    value={price}
+                    onChange={setPrice}
+                    placeholder="0"
+                    required
+                    prefix="Rp"
+                    weight="mono"
+                  />
                   <span className="text-[11px] text-neutral-500 mt-1 block">
                     Harga final yang dibayar oleh pembeli
                   </span>
@@ -997,19 +998,15 @@ export default function ProductCreateForm({
                       </span>
                     )}
                   </div>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-mono font-bold text-neutral-400 select-none">
-                      Rp
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={originalPrice}
-                      onChange={(e) => setOriginalPrice(e.target.value)}
-                      placeholder="0"
-                      className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-800 font-bold font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    value={originalPrice}
+                    onChange={setOriginalPrice}
+                    placeholder="0"
+                    prefix="Rp"
+                    weight="mono"
+                  />
                   <span className="text-[11px] text-neutral-500 mt-1 block">
                     Tampil dicoret jika sedang masa promo
                   </span>
@@ -1020,19 +1017,15 @@ export default function ProductCreateForm({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Harga Modal Beli / HPP
                   </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-mono font-bold text-neutral-400 select-none">
-                      Rp
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={costPrice}
-                      onChange={(e) => setCostPrice(e.target.value)}
-                      placeholder="0"
-                      className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-900 font-bold font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    value={costPrice}
+                    onChange={setCostPrice}
+                    placeholder="0"
+                    prefix="Rp"
+                    weight="mono"
+                  />
                   <span className="text-[11px] text-neutral-500 mt-1 block">
                     Biaya pokok produksi / pengadaan vendor
                   </span>
@@ -1119,20 +1112,16 @@ export default function ProductCreateForm({
                     <label className="block text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-700 mb-1">
                       {pointType === 'percentage' ? 'Persentase Poin dari Harga Jual' : 'Nominal Poin Tetap per Unit'}
                     </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step={pointType === 'percentage' ? '0.1' : '1'}
-                        min="0"
-                        value={pointValue}
-                        onChange={(e) => setPointValue(e.target.value)}
-                        placeholder={pointType === 'percentage' ? 'contoh: 2 (untuk 2%)' : 'contoh: 50'}
-                        className="w-full pl-3 pr-12 py-2 text-xs sm:text-sm bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-black font-mono rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-mono font-black text-neutral-500 select-none">
-                        {pointType === 'percentage' ? '%' : 'PTS'}
-                      </span>
-                    </div>
+                    <TextInput
+                      type="number"
+                      step={pointType === 'percentage' ? '0.1' : '1'}
+                      min="0"
+                      value={pointValue}
+                      onChange={setPointValue}
+                      placeholder={pointType === 'percentage' ? 'contoh: 2 (untuk 2%)' : 'contoh: 50'}
+                      suffix={pointType === 'percentage' ? '%' : 'PTS'}
+                      weight="bold"
+                    />
                   </div>
 
                   {/* Live Estimation Badge */}
@@ -1164,17 +1153,15 @@ export default function ProductCreateForm({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Total Stok Fisik
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      value={0}
-                      disabled={true}
-                      readOnly
-                      placeholder="0"
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono rounded-none border bg-neutral-100 border-neutral-200 text-neutral-500 cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
+                  <TextInput
+                    type="number"
+                    min="0"
+                    value={0}
+                    disabled={true}
+                    readOnly
+                    placeholder="0"
+                    weight="mono"
+                  />
                   <div className="mt-1.5 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-none">
                     <span className="text-amber-600 text-[10px] leading-tight">
                       ⚠ Stok awal 0 unit — penambahan stok fisik dikelola terstruktur melalui Purchase Order (PO) &amp; Penerimaan Barang (GRN).
@@ -1187,13 +1174,13 @@ export default function ProductCreateForm({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Batas Stok Minimum (Safety Stock)
                   </label>
-                  <input
+                  <TextInput
                     type="number"
                     min="1"
                     value={stockMinimum}
-                    onChange={(e) => setStockMinimum(e.target.value)}
+                    onChange={setStockMinimum}
                     placeholder="5"
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold font-mono bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-900 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    weight="mono"
                   />
                   <span className="text-[11px] text-neutral-500 mt-1 block">
                     Peringatan otomatis muncul saat sisa stok &le; batas minimum ini
@@ -1204,25 +1191,22 @@ export default function ProductCreateForm({
           </div>
 
           {/* Section 3: Nested Variant Matrix Generator */}
-          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2">
                 <Grid size={16} className="text-amber-500" />
                 <span>3. Generator Matriks Varian Bertingkat</span>
               </h2>
               <label className="flex items-center gap-2 cursor-pointer text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={hasVariants}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
+                  onChange={(checked) => {
                     setHasVariants(checked);
                     if (!checked) {
                       setVariantMatrix([]);
                       setRemovedRowNames(new Set());
                     }
                   }}
-                  className="rounded-none border-neutral-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
                 />
                 <span>Aktifkan Varian</span>
               </label>
@@ -1261,12 +1245,11 @@ export default function ProductCreateForm({
                           <label className="block font-sport font-bold uppercase tracking-wider text-neutral-700 mb-1">
                             Nama Tipe Varian:
                           </label>
-                          <input
+                          <TextInput
                             type="text"
                             value={attr.name}
-                            onChange={(e) => handleUpdateVariantAttribute(attr.id, 'name', e.target.value)}
+                            onChange={(val) => handleUpdateVariantAttribute(attr.id, 'name', val)}
                             placeholder="cth: Warna, Ukuran, Berat, Rasa"
-                            className="w-full px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-semibold rounded-none"
                           />
                         </div>
 
@@ -1274,10 +1257,10 @@ export default function ProductCreateForm({
                           <label className="block font-sport font-bold uppercase tracking-wider text-neutral-700 mb-1">
                             Pilihan Nilai / Opsi (Pisahkan dengan koma):
                           </label>
-                          <input
+                          <TextInput
                             type="text"
                             value={attr.values}
-                            onChange={(e) => handleUpdateVariantAttribute(attr.id, 'values', e.target.value)}
+                            onChange={(val) => handleUpdateVariantAttribute(attr.id, 'values', val)}
                             placeholder={
                               attr.name.toLowerCase().includes('warna')
                                 ? 'Triple Black, Crimson Red, Navy Blue'
@@ -1289,7 +1272,6 @@ export default function ProductCreateForm({
                                 ? 'Cokelat, Vanila, Stroberi'
                                 : 'Opsi 1, Opsi 2, Opsi 3'
                             }
-                            className="w-full px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-semibold rounded-none"
                           />
                           <p className="text-[10px] text-neutral-500 mt-1">
                             Masukkan beberapa pilihan nilai dipisahkan tanda koma.
@@ -1354,17 +1336,18 @@ export default function ProductCreateForm({
                                 {row.name}
                               </td>
                               <td className="py-2 px-3">
-                                <input
+                                <TextInput
                                   type="text"
+                                  weight="mono"
                                   value={row.sku}
-                                  onChange={(e) => handleUpdateMatrixRow(row.id, 'sku', e.target.value.toUpperCase())}
+                                  onChange={(val) => handleUpdateMatrixRow(row.id, 'sku', val.toUpperCase())}
                                   placeholder="TSK-PRD-VAR-01"
-                                  className={`w-full px-2 py-1 font-mono text-xs rounded-none border focus:outline-none transition-colors ${
+                                  className={`px-2 py-1 text-xs ${
                                     isDup
-                                      ? 'border-rose-500 bg-rose-50/50 text-rose-950 focus:border-rose-600'
+                                      ? '!border-rose-500 !bg-rose-50/50 text-rose-950 focus:!border-rose-600'
                                       : isUniq
-                                      ? 'border-emerald-500 bg-emerald-50/20 text-neutral-950 focus:border-emerald-600'
-                                      : 'border-neutral-300 bg-white focus:border-amber-500 text-neutral-950'
+                                      ? '!border-emerald-500 !bg-emerald-50/20 text-neutral-950 focus:!border-emerald-600'
+                                      : ''
                                   }`}
                                 />
                                 {isDup && (
@@ -1387,21 +1370,23 @@ export default function ProductCreateForm({
                                 )}
                               </td>
                             <td className="py-2 px-3 text-right">
-                              <input
+                              <TextInput
                                 type="number"
+                                weight="mono"
                                 value={row.price}
-                                onChange={(e) => handleUpdateMatrixRow(row.id, 'price', e.target.value)}
-                                className="w-28 px-2 py-1 bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 font-mono text-right font-bold text-neutral-950 rounded-none"
+                                onChange={(val) => handleUpdateMatrixRow(row.id, 'price', val)}
+                                className="w-28 text-right font-bold"
                               />
                             </td>
                             <td className="py-2 px-3 text-right">
-                              <input
+                              <TextInput
                                 type="number"
+                                weight="mono"
                                 value={0}
                                 disabled={true}
                                 readOnly
                                 title="Stok dikelola via Purchase Order (PO)"
-                                className="w-20 px-2 py-1 bg-neutral-100 border border-neutral-200 font-mono text-right text-neutral-400 cursor-not-allowed rounded-none"
+                                className="w-20 text-right"
                               />
                             </td>
                             <td className="py-2 px-3 text-center">
@@ -1425,7 +1410,7 @@ export default function ProductCreateForm({
           </div>
 
           {/* Section 4: Sistem Berat & Logistik Pengiriman */}
-          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
               <Scale size={16} className="text-amber-500" />
               <span>4. Sistem Berat &amp; Logistik Pengiriman</span>
@@ -1437,14 +1422,15 @@ export default function ProductCreateForm({
                 Berat Paket <span className="text-rose-500">*</span>
               </label>
               <div className="flex gap-0">
-                <input
+                <TextInput
                   type="number"
                   min="0"
                   step={weightUnit === 'kg' ? '0.1' : '1'}
                   value={weightValue}
-                  onChange={(e) => setWeightValue(e.target.value)}
+                  onChange={setWeightValue}
                   placeholder={weightUnit === 'kg' ? '0.5' : '500'}
-                  className="flex-1 px-3.5 py-2.5 text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-extrabold rounded-none"
+                  weight="bold"
+                  className="flex-1"
                 />
                 {/* Unit Toggle Buttons */}
                 <button
@@ -1520,39 +1506,39 @@ export default function ProductCreateForm({
                       <label className="block text-[10px] font-sport font-bold uppercase text-neutral-700 mb-1">
                         Panjang (cm)
                       </label>
-                      <input
+                      <TextInput
                         type="number"
                         min="0"
                         value={dimLength}
-                        onChange={(e) => setDimLength(e.target.value)}
+                        onChange={setDimLength}
                         placeholder="40"
-                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-semibold rounded-none"
+                        className="font-semibold"
                       />
                     </div>
                     <div>
                       <label className="block text-[10px] font-sport font-bold uppercase text-neutral-700 mb-1">
                         Lebar (cm)
                       </label>
-                      <input
+                      <TextInput
                         type="number"
                         min="0"
                         value={dimWidth}
-                        onChange={(e) => setDimWidth(e.target.value)}
+                        onChange={setDimWidth}
                         placeholder="30"
-                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-semibold rounded-none"
+                        className="font-semibold"
                       />
                     </div>
                     <div>
                       <label className="block text-[10px] font-sport font-bold uppercase text-neutral-700 mb-1">
                         Tinggi (cm)
                       </label>
-                      <input
+                      <TextInput
                         type="number"
                         min="0"
                         value={dimHeight}
-                        onChange={(e) => setDimHeight(e.target.value)}
+                        onChange={setDimHeight}
                         placeholder="20"
-                        className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 font-semibold rounded-none"
+                        className="font-semibold"
                       />
                     </div>
                   </div>
@@ -1590,7 +1576,7 @@ export default function ProductCreateForm({
           </div>
 
           {/* Section 5: Spesifikasi Teknis */}
-          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2">
                 <FileText size={16} className="text-amber-500" />
@@ -1609,20 +1595,23 @@ export default function ProductCreateForm({
             <div className="space-y-2">
               {specList.map((spec, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={spec.key}
-                    onChange={(e) => handleUpdateSpec(idx, 'key', e.target.value)}
-                    placeholder="Nama Parameter (cth: Bobot)"
-                    className="w-1/3 px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 text-neutral-900 font-bold focus:outline-none focus:border-amber-500 rounded-none"
-                  />
-                  <input
-                    type="text"
-                    value={spec.value}
-                    onChange={(e) => handleUpdateSpec(idx, 'value', e.target.value)}
-                    placeholder="Nilai Spesifikasi (cth: 120 gram)"
-                    className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-300 text-neutral-900 focus:outline-none focus:border-amber-500 rounded-none"
-                  />
+                  <div className="w-1/3">
+                    <TextInput
+                      type="text"
+                      weight="bold"
+                      value={spec.key}
+                      onChange={(val) => handleUpdateSpec(idx, 'key', val)}
+                      placeholder="Nama Parameter (cth: Bobot)"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <TextInput
+                      type="text"
+                      value={spec.value}
+                      onChange={(val) => handleUpdateSpec(idx, 'value', val)}
+                      placeholder="Nilai Spesifikasi (cth: 120 gram)"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveSpec(idx)}
@@ -1639,7 +1628,7 @@ export default function ProductCreateForm({
         {/* Right 1 Column: Media & Visibilitas */}
         <div className="space-y-6">
           {/* Media & Images Card */}
-          <div className="bg-white p-5 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <h2 className="text-xs font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-2.5">
               <ImageIcon size={15} className="text-amber-500" />
               <span>Foto &amp; Galeri Produk</span>
@@ -1664,23 +1653,22 @@ export default function ProductCreateForm({
 
               {/* Upload Dropzone / File Picker */}
               {!imageUrl ? (
-                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50 hover:bg-amber-50/20 transition-colors cursor-pointer group rounded-none">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMainImageFileUpload}
-                    className="hidden"
-                  />
-                  <div className="w-10 h-10 bg-neutral-200 group-hover:bg-amber-400 text-neutral-700 group-hover:text-neutral-950 flex items-center justify-center transition-colors mb-2 rounded-none">
-                    <UploadCloud size={20} />
+                <FileInput
+                  accept="image/*"
+                  onChange={handleMainImageFileUpload}
+                >
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50 hover:bg-amber-50/20 transition-colors cursor-pointer group rounded-none">
+                    <div className="w-10 h-10 bg-neutral-200 group-hover:bg-amber-400 text-neutral-700 group-hover:text-neutral-950 flex items-center justify-center transition-colors mb-2 rounded-none">
+                      <UploadCloud size={20} />
+                    </div>
+                    <span className="font-sport font-black text-xs uppercase tracking-wider text-neutral-900 group-hover:text-neutral-950 text-center">
+                      Upload Foto Asli (Pilih File)
+                    </span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5 text-center">
+                      Klik atau tarik file foto (JPG, PNG, WEBP)
+                    </span>
                   </div>
-                  <span className="font-sport font-black text-xs uppercase tracking-wider text-neutral-900 group-hover:text-neutral-950 text-center">
-                    Upload Foto Asli (Pilih File)
-                  </span>
-                  <span className="text-[10px] text-neutral-500 mt-0.5 text-center">
-                    Klik atau tarik file foto (JPG, PNG, WEBP)
-                  </span>
-                </label>
+                </FileInput>
               ) : (
                 <div className="relative aspect-video w-full overflow-hidden border border-neutral-300 bg-neutral-100 rounded-none group">
                   <img
@@ -1697,16 +1685,15 @@ export default function ProductCreateForm({
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <label className="px-3 py-1.5 bg-white text-neutral-950 text-xs font-sport font-black uppercase cursor-pointer hover:bg-amber-400 transition-colors rounded-none flex items-center gap-1.5">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleMainImageFileUpload}
-                        className="hidden"
-                      />
-                      <Camera size={13} />
-                      <span>Ganti Foto</span>
-                    </label>
+                    <FileInput
+                      accept="image/*"
+                      onChange={handleMainImageFileUpload}
+                    >
+                      <div className="px-3 py-1.5 bg-white text-neutral-950 text-xs font-sport font-black uppercase cursor-pointer hover:bg-amber-400 transition-colors rounded-none flex items-center gap-1.5">
+                        <Camera size={13} />
+                        <span>Ganti Foto</span>
+                      </div>
+                    </FileInput>
                     <button
                       type="button"
                       onClick={() => setImageUrl('')}
@@ -1729,12 +1716,12 @@ export default function ProductCreateForm({
                     + Atau masukkan URL foto eksternal
                   </summary>
                   <div className="mt-1.5">
-                    <input
+                    <TextInput
                       type="url"
+                      weight="mono"
                       value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
+                      onChange={setImageUrl}
                       placeholder="https://images.unsplash.com/..."
-                      className="w-full px-3 py-1.5 text-xs bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono rounded-none focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </details>
@@ -1751,40 +1738,41 @@ export default function ProductCreateForm({
               </div>
 
               {/* Upload Multi-Files Dropzone */}
-              <label className="flex items-center justify-center gap-2 p-3 border border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50 hover:bg-amber-50/20 transition-colors cursor-pointer text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 rounded-none">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleGalleryFilesUpload}
-                  className="hidden"
-                />
-                {isUploadingGallery ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin text-amber-500" />
-                    <span className="text-amber-600">Mengunggah galeri ke storage...</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud size={15} className="text-amber-500" />
-                    <span>+ Upload Foto Galeri Asli (Bisa Banyak)</span>
-                  </>
-                )}
-              </label>
+              <FileInput
+                accept="image/*"
+                multiple
+                onChange={handleGalleryFilesUpload}
+              >
+                <div className="flex items-center justify-center gap-2 p-3 border border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50 hover:bg-amber-50/20 transition-colors cursor-pointer text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:text-neutral-950 rounded-none">
+                  {isUploadingGallery ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin text-amber-500" />
+                      <span className="text-amber-600">Mengunggah galeri ke storage...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={15} className="text-amber-500" />
+                      <span>+ Upload Foto Galeri Asli (Bisa Banyak)</span>
+                    </>
+                  )}
+                </div>
+              </FileInput>
 
               {/* URL input fallback */}
-              <div className="flex gap-1.5">
-                <input
-                  type="text"
-                  value={newGalleryInput}
-                  onChange={(e) => setNewGalleryInput(e.target.value)}
-                  placeholder="Atau tempel URL foto..."
-                  className="flex-1 px-3 py-1.5 text-xs bg-neutral-50 border border-neutral-300 text-neutral-900 font-mono rounded-none focus:outline-none focus:border-amber-500"
-                />
+              <div className="flex gap-1.5 items-center">
+                <div className="flex-1">
+                  <TextInput
+                    type="text"
+                    weight="mono"
+                    value={newGalleryInput}
+                    onChange={setNewGalleryInput}
+                    placeholder="Atau tempel URL foto..."
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleAddGalleryUrl}
-                  className="px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-amber-400 text-xs font-sport font-black uppercase transition-colors cursor-pointer rounded-none"
+                  className="px-3.5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-amber-400 text-xs font-sport font-black uppercase transition-colors cursor-pointer rounded-none"
                 >
                   Tambah
                 </button>
@@ -1812,7 +1800,7 @@ export default function ProductCreateForm({
           </div>
 
           {/* Visibility & Badges Card */}
-          <div className="bg-white p-5 border border-neutral-300 rounded-none space-y-4">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <h2 className="text-xs font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-2.5">
               <Eye size={15} className="text-amber-500" />
               <span>Status &amp; Visibilitas</span>
@@ -1852,11 +1840,9 @@ export default function ProductCreateForm({
 
             <div className="space-y-2 pt-2.5 border-t border-neutral-200 text-xs">
               <label className="flex items-center gap-2.5 cursor-pointer p-2 hover:bg-neutral-50 border border-neutral-200 transition-colors rounded-none">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={freeShipping}
-                  onChange={(e) => setFreeShipping(e.target.checked)}
-                  className="rounded-none border-neutral-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                  onChange={setFreeShipping}
                 />
                 <div>
                   <span className="font-sport font-bold uppercase text-[11px] text-neutral-900 block leading-tight">
@@ -1869,11 +1855,9 @@ export default function ProductCreateForm({
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer p-2 hover:bg-neutral-50 border border-neutral-200 transition-colors rounded-none bg-neutral-50/50">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isOfficial}
-                  onChange={(e) => setIsOfficial(e.target.checked)}
-                  className="rounded-none border-neutral-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                  onChange={setIsOfficial}
                 />
                 <div>
                   <span className="font-sport font-bold uppercase text-[11px] text-neutral-900 block leading-tight">
@@ -1905,16 +1889,20 @@ export default function ProductCreateForm({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Category Master Modal */}
-      <CategoryMasterModal
-        isOpen={isCategoryMasterOpen}
-        onClose={() => setIsCategoryMasterOpen(false)}
-        onCategoriesChange={(updatedList) => {
-          setCategoryList(updatedList);
-        }}
-      />
+        <FormTipsPanel
+          className="lg:col-span-1"
+          title="Panduan Tambah Produk"
+          tips={[
+            { icon: Package, heading: 'Nama Produk Deskriptif', text: 'Gunakan nama lengkap yang jelas, mis. merek + jenis + teknologi kain agar mudah ditemukan pembeli.' },
+            { icon: Tags, heading: 'Kategori Multi-Pilih', text: 'Pilih minimal satu kategori yang paling relevan; boleh lebih dari satu agar produk muncul di banyak etalase.' },
+            { icon: ImageIcon, heading: 'Foto Utama & Galeri', text: 'Unggah foto utama yang tajam, lalu tambah foto galeri dari sudut berbeda untuk meyakinkan pembeli.' },
+            { icon: DollarSign, heading: 'Harga vs Harga Coret', text: 'Isi harga jual ritel sebagai harga final; isi harga coret lebih tinggi hanya saat masa promo agar badge diskon muncul.' },
+            { icon: Boxes, heading: 'SKU Otomatis & Stok Minimum', text: 'Gunakan tombol SKU otomatis agar kode unik; atur stok minimum sebagai batas pengingat restok gudang.' },
+            { icon: Eye, heading: 'Status Publikasi', text: 'Pilih Aktif untuk langsung tampil di etalase, atau Nonaktif untuk menyimpan sebagai draft.' }
+          ]}
+        />
+      </div>
 
       {/* Modal Konfirmasi Navigasi Saat Form Kotor */}
       <ConfirmationModal

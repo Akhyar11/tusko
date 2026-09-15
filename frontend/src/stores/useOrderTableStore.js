@@ -13,8 +13,13 @@ export const useOrderTableStore = createTableStore({
   initialFilters: {
     activeTab: 'all',
     searchKeyword: '',
+    searchProduct: '',
     dateFilter: 'all',
-    expeditionFilter: 'all'
+    startDate: '',
+    endDate: '',
+    expeditionFilter: 'all',
+    minTotal: '',
+    maxTotal: ''
   },
   defaultSortBy: 'created_at',
   defaultSortDir: 'desc',

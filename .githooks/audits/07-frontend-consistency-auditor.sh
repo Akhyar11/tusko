@@ -2,135 +2,213 @@
 
 echo "🤖 [Audit 7/9: Frontend Full-Stack Consistency (OpenCode AI)] Memeriksa konsistensi arsitektur, icon & helper..."
 
-STAGED_FE=$(git diff --cached --name-only -- "frontend/src/**")
+# CAKUPAN TRIPLE: staged + unstaged + untracked.
+STAGED_FE=$(git diff --cached --name-only -- "frontend/src" 2>/dev/null | grep -E '\.(jsx|js)$')
+UNSTAGED_FE=$(git diff --name-only -- "frontend/src" 2>/dev/null | grep -E '\.(jsx|js)$')
+UNTRACKED_FE=$(git ls-files --others --exclude-standard -- "frontend/src" 2>/dev/null | grep -E '\.(jsx|js)$')
 
-if [ -z "$STAGED_FE" ]; then
-    echo "ℹ️ [Audit Frontend Consistency] Tidak ada perubahan frontend yang di-stage. Skip."
+if [ -z "$STAGED_FE" ] && [ -z "$UNSTAGED_FE" ] && [ -z "$UNTRACKED_FE" ]; then
+    echo "ℹ️ [Audit Frontend Consistency] Tidak ada perubahan frontend (staged/unstaged/untracked). Skip."
     exit 0
 fi
 
-STAGED_FE_DIFF=$(git diff --cached -- "frontend/src/**/*.jsx" "frontend/src/**/*.js")
+STAGED_COUNT=$(printf "%s" "$STAGED_FE" | grep -c .)
+UNSTAGED_COUNT=$(printf "%s" "$UNSTAGED_FE" | grep -c .)
+UNTRACKED_COUNT=$(printf "%s" "$UNTRACKED_FE" | grep -c .)
+echo "ℹ️ [Audit Frontend Consistency] Cakupan: ${STAGED_COUNT} staged, ${UNSTAGED_COUNT} unstaged, ${UNTRACKED_COUNT} untracked."
 
-if [ -z "$STAGED_FE_DIFF" ]; then
-    echo "ℹ️ [Audit Frontend Consistency] Tidak ada perubahan berkas JS/JSX yang di-stage. Skip."
-    exit 0
+ALL_CHANGED=$(printf "%s\n%s\n%s" "$STAGED_FE" "$UNSTAGED_FE" "$UNTRACKED_FE" | grep -v '^$' | sort -u)
+PAGE_FILES=$(printf "%s" "$ALL_CHANGED" | grep -E '(Page|MutationPage)\.jsx$')
+LIST_FILES=$(printf "%s" "$ALL_CHANGED" | grep -E '(ListPage|ManagementPage|SettingsPage|TransactionsPage)\.jsx$')
+
+# =====================================================================
+# CEK DETERMINISTIK (tanpa AI, langsung REJECT dengan lokasi presisi)
+# Spesimen kanonis: AGENTS.md aturan 25 (form) & 26 (list utama).
+# =====================================================================
+VIOLATIONS_FILE=$(mktemp)
+# Append ke file (loop pipe berjalan di subshell — variabel tidak propagate).
+deterministic_reject() {
+    {
+        echo "REJECTED"
+        echo "  - Lokasi Berkas: $1"
+        echo "  - Pelanggaran: $2"
+        echo "  - Solusi: $3"
+    } >> "$VIOLATIONS_FILE"
+}
+
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    [ ! -f "$f" ] && continue
+
+    # A. DILARANG palet gray-* di halaman (WAJIB neutral-*).
+    grep -n -E 'gray-[0-9]' "$f" | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "Palet gray-* (aturan 25/26: hanya neutral-*/amber-*/rose-*, emerald-* untuk status sukses)." \
+            "Ganti gray-* menjadi padanan neutral-*."
+    done
+
+    # B. DILARANG sudut melengkung (WAJIB rounded-none).
+    grep -n -E 'rounded-(xl|2xl|3xl|lg)' "$f" | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "Sudut melengkung (aturan desain: seluruh komponen WAJIB rounded-none)." \
+            "Ganti dengan rounded-none."
+    done
+done <<< "$PAGE_FILES"
+
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    [ ! -f "$f" ] && continue
+
+    # C. Kartu header list WAJIB breakpoint xl (bukan sm).
+    if ! grep -q 'xl:flex-row xl:items-center justify-between gap-4 bg-white p-5' "$f"; then
+        hln=$(grep -n -m1 'justify-between gap-4 bg-white p-5' "$f" | cut -d: -f1)
+        [ -z "$hln" ] && hln=1
+        deterministic_reject "$f:$hln" \
+            "Kartu header list tidak memakai breakpoint kanonis (aturan 26: WAJIB flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs)." \
+            "Samakan kartu header persis dengan spesimen aturan 26 (termasuk min-w-0, icon-box w-10 h-10, h1 + leading-tight, deskripsi, aksi icon-only)."
+    fi
+
+    # D. Grid KPI WAJIB sm:grid-cols-4 (bukan lg:grid-cols-4).
+    grep -n 'lg:grid-cols-4' "$f" | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "Grid KPI memakai lg:grid-cols-4 (aturan 26: WAJIB grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4)." \
+            "Ganti menjadi grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4."
+    done
+
+    # E. Kartu KPI WAJIB p-4 tanpa sm:p-5 / space-y-1.
+    grep -n -E 'bg-white p-4[^"]*(sm:p-5|space-y-1)' "$f" | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "Kartu KPI menyimpang (aturan 26: WAJIB bg-white p-4 rounded-none border border-neutral-300 shadow-2xs, tanpa sm:p-5/space-y-1)." \
+            "Samakan kartu KPI persis dengan spesimen aturan 26."
+    done
+
+    # F. h1 list WAJIB memuat leading-tight.
+    if ! grep -q 'uppercase leading-tight' "$f"; then
+        hln=$(grep -n -m1 '<h1' "$f" | cut -d: -f1)
+        [ -z "$hln" ] && hln=1
+        deterministic_reject "$f:$hln" \
+            "h1 list tanpa leading-tight (aturan 26: WAJIB text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight)." \
+            "Samakan h1 persis dengan spesimen aturan 26."
+    fi
+
+    # G. limitOptions WAJIB [10, 25, 50, 100].
+    grep -n 'limitOptions' "$f" | grep -v '100' | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "limitOptions tidak kanonis (aturan 26: WAJIB limitOptions={[10, 25, 50, 100]})." \
+            "Ganti menjadi limitOptions={[10, 25, 50, 100]}."
+    done
+
+    # H. Aksi destruktif WAJIB rose (DILARANG bg-red-*, aturan 17).
+    grep -n -E 'bg-red-700|hover:bg-red-600' "$f" | while IFS= read -r hit; do
+        ln=$(printf "%s" "$hit" | cut -d: -f1)
+        deterministic_reject "$f:$ln" \
+            "Tombol destruktif memakai red (aturan 17/26: HANYA aksi destruktif berwarna, WAJIB rose: bg-rose-700 hover:bg-rose-600)." \
+            "Ganti bg-red-700→bg-rose-700 dan hover:bg-red-600→hover:bg-rose-600."
+    done
+done <<< "$LIST_FILES"
+
+if [ -s "$VIOLATIONS_FILE" ]; then
+    echo ""
+    echo "❌ =========================================================================="
+    echo "❌ [Audit Frontend Consistency] DITOLAK (Deterministic Check)!"
+    echo "❌ =========================================================================="
+    cat "$VIOLATIONS_FILE"
+    rm -f "$VIOLATIONS_FILE"
+    echo ""
+    exit 1
 fi
+rm -f "$VIOLATIONS_FILE"
+
+# =====================================================================
+# AUDIT CERDAS dengan OpenCode AI (aturan 1-28 + verdict per file)
+# =====================================================================
+COMBINED_DIFF=$(git diff HEAD -- "frontend/src/**/*.jsx" "frontend/src/**/*.js" 2>/dev/null)
 
 PROMPT_FILE=$(mktemp)
 cat << 'EOF' > "$PROMPT_FILE"
 Kamu adalah Frontend Architecture Consistency Auditor untuk proyek Tusko Performance Storefront.
-Tugasmu adalah menganalisis Git Diff berkas frontend React berikut:
+Tugasmu: untuk SETIAP file frontend yang berubah di bawah, verifikasi kepatuhan terhadap
+seluruh standar berikut + SPESIMEN KANONIS LIST (aturan 28). Yang boleh berbeda antar halaman
+HANYA: teks konten, ikon konteks, angka metrik, kolom data, opsi filter. Token class &
+struktur WAJIB identik.
 
-STANDAR KONSISTENSI FRONTEND TUSKO:
-1. Standardisasi Icon Library:
-   - Proyek Tusko 100% menggunakan `lucide-react`.
-   - DILARANG KERAS mengimpor ikon dari pustaka lain (seperti `react-icons`, `@heroicons`, `font-awesome`, `@fortawesome`, `feather-icons`).
-2. Standardisasi LocalStorage Key:
-   - Seluruh penyimpanan `localStorage` (getItem, setItem, removeItem) WAJIB menggunakan prefix `tusko_` (contoh: `tusko_token`, `tusko_user`, `tusko_cart`). Dilarang key tanpa prefix `tusko_`.
-3. Standardisasi Formatter Mata Uang:
-   - Seluruh pemformatan harga/rupiah WAJIB menggunakan fungsi `formatRupiah` dari `@/utils/formatters` (atau `../utils/formatters.js`).
-   - DILARANG membuat implementasi inline `new Intl.NumberFormat('id-ID', ...)` atau membuat fungsi formatter rupiah lokal baru.
-4. Standardisasi Desain Tajam:
-   - Komponen UI wajib menggunakan `rounded-none`. Dilarang menyisipkan `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-lg`.
-5. Standardisasi Arsitektur Atomic Design:
-   - Komponen antarmuka baru dan modularisasi frontend WAJIB menerapkan arsitektur Atomic Design (pemisahan Atoms, Molecules, Organisms, Pages).
-6. Standardisasi Tombol Header Simbol/Icon-Only dengan Tooltip:
-   - Tombol kontrol/aksi pada header tabel dan form modul produk (Daftar Produk, Tambah Produk, Edit Produk) WAJIB menggunakan format simbol/ikon saja (icon-only) bersudut siku tajam (`rounded-none`), memanfaatkan komponen reusable `IconButton`, dan WAJIB dilengkapi tooltip yang memunculkan keterangan fungsi saat di-highlight/hover/fokus. Dilarang menggunakan tombol teks biasa pada header jika dapat diwadahi oleh IconButton.
-7. Standardisasi Sentralisasi Filter & Pencarian:
-   - Seluruh kontrol filter dan pencarian data katalog/master produk WAJIB terpusat pada Sidebar Filter kanan-ke-kiri.
-   - DILARANG KERAS meletakkan/menduplikasi komponen filter, baris toolbar pencarian (SearchBar), atau tombol aksi teks (Tambah/Filter) pada kanvas halaman utama di antara kartu metrik dan tabel jika filter sidebar dan tombol aksi header sudah diterapkan. Halaman utama WAJIB bersih dan langsung menampilkan tabel data (ServerSideTable) setelah kartu metrik/header.
-8. Standardisasi Wajib Komponen Reusable (Mandatory Reusable Component Reuse):
-   - Pengembang WAJIB memanfaatkan dan mengimpor komponen reusable yang sudah ada di codebase (misalnya `IconButton` pada atoms/, `SearchBar` dan `ServerSideSelect` pada molecules/, `ServerSideTable`, `ProductFilterDrawer`, `ProductHeaderActions` pada organisms/).
-   - DILARANG KERAS membuat ulang kode mentah (inline reinventing) seperti tombol kontrol, input pencarian, tabel server-side, atau tooltip manual jika sudah ada komponen reusable yang menyediakannya.
-9. Standardisasi Kontrol Filter & Pencarian (Filter & Search Rules):
-   - Pemisahan Pencarian Nama & SKU: Pencarian nama produk dan pencarian kode SKU WAJIB dipisah menjadi input mandiri masing-masing (dua komponen SearchBar terpisah). Dilarang menyatukan pencarian nama dan SKU ke dalam satu input gabungan.
-   - Larangan Counter Redundant di Kolom Cari: Dilarang menampilkan teks counter redundant seperti "Ditemukan X dari Y produk" di bawah kotak input pencarian filter.
-   - Wajib ServerSideSelect pada Dropdown Filter: Seluruh dropdown/pilihan dalam panel filter (Kategori, Status Publikasi, Kondisi Stok, Urutan Katalog) WAJIB menggunakan komponen reusable ServerSideSelect dengan pencarian dan scroll padding.
-   - Standardisasi Format Placeholder Filter: Placeholder filter wajib berbentuk kalimat ajakan deskriptif dan jelas (contoh: "Pilih status publikasi...", "Pilih kategori olahraga...", "Pilih kondisi stok...", "Pilih urutan katalog..."), BUKAN langsung menampilkan nilai opsi seperti "Semua ..." saat filter belum dipilih.
-   - Kontras Warna Placeholder vs Label: Warna teks placeholder pada select WAJIB dibedakan jelas dari label tebal di atasnya (menggunakan warna abu-abu lembut `text-neutral-400 font-normal`, bukan hitam tebal seperti label).
-10. Standardisasi Header Modul Bersih (Clean Header & No Redundant Breadcrumbs):
-    - DILARANG menyisipkan baris navigasi teks/breadcrumb redundant di atas kartu header modul (seperti "← Etalase Storefront • ADMIN ERP • KATALOG PRODUK") jika navigasi dan aksi sudah diwadahi oleh komponen tombol aksi header (ProductHeaderActions).
-    - Header modul WAJIB bersih dan langsung berfokus pada identitas modul (ikon besar, judul halaman, deskripsi fungsi) dan kelompok tombol kontrol/aksi.
-11. Standardisasi Larangan Baris Toolbar/Container Redundant Sebelum Tabel:
-    - Pada halaman daftar data admin (admin list/table views), DILARANG menambahkan baris toolbar ekstra (seperti input pencarian SearchBar atau tombol aksi filter/tambah duplikat) ataupun container card pembungkus sebelum tabel data.
-    - Seluruh aksi navigasi/tambah/filter diwadahi oleh tombol icon-only di kartu header, seluruh pencarian/filter diwadahi oleh Sidebar Filter kanan, dan tabel data (ServerSideTable) langsung dirender bersih pada layout utama.
-12. Standardisasi Wajib Checkbox List (Multi-Select) pada Seluruh Tabel Admin:
-    - Seluruh tabel daftar data admin WAJIB memiliki kolom checkbox list untuk seleksi massal (bulk selection):
-      - Header kolom pertama (`<th>`) WAJIB memuat checkbox "Select All" (`<input type="checkbox"...>`).
-      - Setiap baris data (`<td>`) WAJIB memuat checkbox individual baris (`<input type="checkbox"...>`).
-      - Wajib menyediakan bar aksi massal (bulk actions bar) saat ada baris yang dipilih.
-    - Manfaatkan komponen reusable `ServerSideTable` dengan prop `selectable={true}` untuk memenuhi standar ini secara otomatis.
-13. Standardisasi Posisi Tombol Filter Selalu di Samping Kanan Tombol Tambah:
-    - Tombol kontrol filter (Filter Drawer/Sidebar Toggle) WAJIB selalu diletakkan di samping kanan tombol tambah (urutan aksi: `[Tombol Tambah] -> [Tombol Filter]`), BUKAN di sebelah kiri tombol tambah atau di posisi lain.
-    - Berlaku konsisten baik pada kelompok tombol kontrol header (IconButton group) maupun toolbar.
-14. Standardisasi Tampilan Tunggal Tabel Admin (Single Table View Only):
-    - Seluruh tampilan daftar data admin (seperti Daftar Produk dan Master Kategori) WAJIB hanya menggunakan tampilan tabel tunggal (`ServerSideTable`).
-    - DILARANG menampilkan tombol pengalih tampilan (`ViewModeToggle` / list vs grid switch) pada header modul admin karena daftar data admin hanya disajikan dalam format tabel.
-15. Standardisasi Kolom Aksi Tabel Admin (MoreVertical Dropdown Action Menu):
-    - Seluruh tabel daftar data admin (`ServerSideTable`) WAJIB menggunakan tombol menu titik tiga (`MoreVertical`) untuk kolom 'Aksi' yang memicu floating dropdown popup menu bersudut siku (`rounded-none`).
-    - DILARANG KERAS menampilkan tombol aksi mentah secara telanjang/sejajar (seperti icon pensil edit dan tempat sampah delete berdampingan langsung di dalam baris sel tabel). Seluruh tindakan baris (ubah, hapus, detail, dll.) WAJIB terbungkus rapi di dalam dropdown menu `MoreVertical`.
-16. Standardisasi 1 Halaman 1 Entitas Mandiri (Single-Purpose Dedicated Page - No Multi-Module Tabs):
-    - Seluruh halaman admin WAJIB berdiri sendiri untuk satu entitas/modul bisnis spesifik (1 halaman untuk 1 entitas mandiri).
-    - DILARANG KERAS menggabungkan beberapa entitas bisnis yang berbeda ke dalam sistem navigasi tab horizontal dalam satu halaman (seperti Purchase Order, Supplier, Penerimaan Barang GRN, dan Tagihan Vendor digabung dalam 1 halaman dengan tombol-tombol tab switcher).
-    - Setiap entitas bisnis wajib memiliki file komponen halaman tersendiri (`src/components/*Page.jsx`), rute URL mandiri, kartu header modul terfokus, metrik KPI yang relevan, dan tabel data tunggal yang langsung disajikan tanpa tab switcher pengalih modul.
-17. Standardisasi Sistem Notifikasi Toast (Unified Toast Notification Consistency):
-    - Seluruh halaman dan form modul admin WAJIB menggunakan sistem Toast yang sudah ada secara konsisten melalui prop/fungsi `onShowToast` atau `showToast` untuk memberikan feedback operasional (tambah data, perbarui perubahan, hapus, toggle status, dan pesan error).
-    - DILARANG KERAS membuat alert box sukses lokal atau banner notifikasi hijau/merah inline di atas kanvas halaman admin (seperti banner `successMessage` di antara header dan kartu metrik). Kanvas halaman utama harus selalu bersih dan seluruh feedback aksi pengguna wajib disalurkan melalui Toast.
-    - DILARANG menampilkan tombol aksi belanja ('Lihat Keranjang' / Cart Shortcut) secara serampangan pada toast modul admin. Tombol keranjang hanya boleh muncul secara selektif saat pembeli menambahkan produk ke keranjang di storefront (`showCart: true`).
-18. Standardisasi Larangan Mutlak Label/Badge/Pill Header pada Halaman Manapun (Strict Prohibition of Header Category Badges/Labels):
-    - DILARANG KERAS menyertakan label badge, pill, tag, atau chip kategori/modul (seperti label hitam bersudut siku dengan teks kuning/amber seperti "KATALOG ADMIN ERP", "PENGADAAN & RANTAI PASOK ERP", "LOGISTIK GUDANG", "KEUANGAN & HUTANG", "ERP Accounting & Cashflow", "ERP Inventory & Multi-Warehouse", "ERP ORDER FULFILLMENT", "OPERATIONAL ERP CONTROL", atau label modul sejenis) di atas, di bawah, atau di samping judul utama halaman (`<h1>`) pada halaman mana pun (baik storefront maupun admin ERP).
-    - Header halaman WAJIB bersih dan langsung berfokus pada judul modul (`<h1>`) dan deskripsi fungsinya tanpa label/tag/badge pengenal modul semacam itu.
-    - Setiap penambahan atau keberadaan badge/label kategori di atas judul halaman WAJIB DITOLAK (REJECTED).
-19. Standar Pewarnaan Aksi Menu Dropdown Tabel Admin (Clean Neutral Action Menu with Red Destructive Only):
-    - Pada menu aksi baris tabel (`MoreVertical` dropdown menu / popup):
-      - HANYA aksi destruktif (seperti "Hapus", "Batalkan Pesanan/PO") yang WAJIB menggunakan warna merah tegas (`text-rose-600` / `text-rose-700`, `hover:bg-rose-50`).
-      - SELURUH aksi lainnya (seperti "Lihat Detail", "Ubah / Edit", "Terima Barang / GRN", "Bayar Tagihan", "Aktifkan", "Nonaktifkan", "Cetak", dll.) WAJIB menggunakan warna netral (`text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900`, dengan ikon netral `text-neutral-500` / `text-neutral-600`).
-    - DILARANG mewarnai aksi non-destruktif dengan warna-warni mencolok (seperti teks/ikon biru, hijau, ungu, kuning) di dalam dropdown menu agar tampilan antarmuka tetap bersih, profesional, dan fokus. Aksen warna hanya diperuntukkan bagi aksi destruktif (merah) sebagai penanda risiko.
-20. Proteksi Mutlak dari Potensi Infinite Re-render Loop di React (Anti-Infinite Loop Guard):
-    - DILARANG KERAS memanggil setter state yang menghasilkan referensi objek/array/Set/Map baru (seperti `setRemovedRowNames(new Set())`, `setMatrix([])`, `setMap(new Map())`) di dalam `useEffect` di mana state tersebut (atau turunannya) dimasukkan ke dalam dependency array `useEffect` yang sama TANPA pengecekan bailout referensi stabil (`prev => prev.size === 0 ? prev : new Set()`).
-    - DILARANG KERAS menggunakan default parameter array/objek inline baru (seperti `items = []`, `vendors = []`) pada props komponen jika parameter tersebut dimasukkan ke dalam dependency array `useEffect` yang memicu pembaruan state atau fetch data asinkron saat kosong. WAJIB menggunakan konstanta referensi stabil (misalnya `const EMPTY_ARRAY = [];`) atau menjalankan efek inisialisasi/fetch asinkron hanya sekali saat komponen mount (`[]`).
-    - DILARANG mendefinisikan dependency `useEffect` yang menyebabkan circular re-render loop (Maximum update depth exceeded).
-21. Standardisasi Manajemen State Tabel dengan Zustand & Server-Side Execution:
-    - Seluruh pengelolaan state query tabel admin (filter, pagination, limit/per_page, dan sorting) WAJIB menggunakan state management store terpusat seperti Zustand (`src/stores/*`).
-    - DILARANG KERAS melakukan pemotongan data (client-side pagination dengan `.slice()`), penyaringan array in-memory (`.filter()`), atau pengurutan data in-memory (`.sort()`) pada komponen tabel halaman admin. Seluruh pagination, limit, filter, dan sorting WAJIB dieksekusi secara Server-Side melalui query API backend.
-    - Tabel WAJIB mengonsumsi data langsung dari store Zustand yang disinkronkan dengan response paginasi dari server.
-22. Standardisasi Modal Konfirmasi Kustom (Mandatory Custom ConfirmationModal & Strict Prohibition of Native Browser Dialogs):
-    - DILARANG KERAS menggunakan dialog bawaan browser (`window.confirm`, `confirm(...)`, `window.alert`, `alert(...)`, `window.prompt`, `prompt(...)`) pada seluruh komponen antarmuka, halaman, dan form admin maupun storefront.
-    - Seluruh dialog konfirmasi (seperti konfirmasi hapus data tunggal, hapus massal, pembatalan pesanan/PO, konfirmasi navigasi saat form kotor/belum disimpan, dll.) WAJIB menggunakan modal kustom terstandarisasi `ConfirmationModal` (`frontend/src/components/ConfirmationModal.jsx` atau `frontend/src/components/organisms/ConfirmationModal.jsx`) dengan sudut siku tajam `rounded-none`, header gelap atletis, varian yang relevan (`danger`, `warning`, `info`), dan tombol aksi terstandarisasi.
-    - DILARANG membuat elemen dialog konfirmasi kustom mentah inline tanpa memanfaatkan komponen reusable `ConfirmationModal`.
-23. Standardisasi Larangan Mutlak Tombol Refresh di Halaman / Header (Strict Prohibition of Page Refresh/Reload Buttons):
-    - DILARANG KERAS menambahkan tombol manual untuk refresh/reload/segarkan data halaman (seperti menggunakan icon `RefreshCw`, `RotateCcw`, atau tombol dengan label/title/tooltip "Segarkan", "Muat Ulang", "Refresh", "Reload") pada header modul, toolbar, maupun kanvas halaman mana pun.
-    - Seluruh tabel dan komponen data admin bersifat reaktif (terintegrasi langsung dengan Zustand store atau otomatis re-fetch saat filter/parameter berubah).
-    - Tombol refresh manual di dalam halaman adalah redundant, melanggar konsistensi antarmuka Tusko, dan WAJIB DITOLAK (REJECTED).
-24. Standardisasi Wajib Ikon Modul pada Seluruh Header Halaman Admin (Mandatory Module Header Icon):
-    - Seluruh kartu header halaman/modul admin (termasuk Dashboard Utama Toko, Master Supplier & Vendor, Daftar Produk & Katalog, Master Kategori, Manajemen Stok, Antrean Pesanan, Buku Kas, Pengaturan Ekspedisi, PO, GRN, Bills, Template) WAJIB menyertakan wadah ikon modul (module icon container) di sisi kiri judul halaman (`<h1>`).
-    - Format wadah ikon WAJIB bersudut siku tegas (`rounded-none`, latar gelap `bg-neutral-950 text-amber-400` atau `text-white`, ukuran `w-10 h-10` atau `w-12 h-12`) memuat ikon Lucide modul terkait (seperti LayoutDashboard, Building2, Package, Boxes, dll.).
-    - DILARANG KERAS merender header modul admin hanya berupa teks judul polos tanpa wadah ikon modul di sebelah kirinya.
+STANDAR KONSISTENSI FRONTEND TUSKO (ringkas — detail penuh di AGENTS.md):
+1. Ikon 100% `lucide-react` (larang react-icons/heroicons/font-awesome).
+2. localStorage WAJIB prefix `tusko_`.
+3. Rupiah WAJIB `formatRupiah` (larang Intl inline / formatter lokal).
+4. WAJIB `rounded-none` (larang rounded-xl/2xl/3xl/lg).
+5. Atomic Design (atoms/molecules/organisms/pages).
+6. Header tabel/form: icon-only `IconButton` + tooltip (larang tombol teks).
+7. Filter & pencarian terpusat di Sidebar Filter kanan (larang toolbar/search di kanvas utama).
+8. WAJIB komponen reusable (IconButton/SearchBar/ServerSideSelect/ServerSideTable/FilterDrawer/dll.).
+9. Filter rules: SearchBar Nama & SKU terpisah; larang counter redundant; dropdown filter WAJIB ServerSideSelect; placeholder ajakan deskriptif `text-neutral-400 font-normal`.
+10. Header modul bersih tanpa breadcrumb redundant.
+11. Larang toolbar/container ekstra sebelum tabel.
+12. Tabel admin WAJIB checkbox (selectable) + bulk bar.
+13. Tombol filter selalu di kanan tombol tambah.
+14. Daftar admin HANYA tabel tunggal (larang ViewModeToggle/grid).
+15. Kolom Aksi WAJIB menu MoreVertical dropdown (larang tombol aksi telanjang sejajar).
+16. 1 halaman 1 entitas (larang tab multi-modul).
+17. Toast via onShowToast/showToast (larang alertbox inline; larang tombol keranjang di toast admin).
+18. Larang badge/pill header redundant.
+19. Dropdown aksi: destruktif rose, lainnya netral.
+20. Anti infinite-loop (bailout referensi stabil, EMPTY_ARRAY, mount []).
+21. State tabel Zustand + server-side (larang slice/filter/sort in-memory).
+22. Larang window.confirm/alert/prompt (WAJIB ConfirmationModal); larang dialog konfirmasi mentah.
+23. Larang tombol refresh manual.
+24. Header modul admin WAJIB icon-box modul (KECUALI halaman form ikut spesimen form).
+25. Form Create/Edit WAJIB halaman terpisah (larang *CreateModal/*EditModal/*Add*Modal/*FormModal/modal inline berisi form).
+26. Form WAJIB grid lg:grid-cols-4 (form lg:col-span-3 + FormTipsPanel lg:col-span-1 sticky).
+27. Spesimen form 100% identik: label `block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5` + `*` rose; input `w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none`; dropdown WAJIB ServerSideSelect (LARANG native select); checkbox amber; h2 `text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3` + ikon amber 16; error `border-l-4 border-rose-600` + dismiss; submit amber full-width `w-full py-2.5 bg-amber-400 ... shadow-xs` + Save 15; sekunder full-width neutral; h1 `tracking-tight`; header form kanonis (back IconButton + h1, TANPA icon-box/deskripsi/tombol teks, shadow-2xs); root `animate-in fade-in`; palet form tanpa gray-*/focus:ring non-amber.
+28. SPESIMEN LIST UTAMA 100% identik (aturan 26): root `space-y-6 pb-12 animate-in fade-in duration-200`; kartu header `flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs`; kiri `min-w-0` > `flex items-start sm:items-center gap-3` > icon-box `w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0` (ikon 22) + h1 `text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight` + p `text-xs text-neutral-600 mt-0.5`; kanan HANYA IconButton `[Tambah primary][Filter secondary+badge]`; KPI grid `grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4`; kartu KPI `bg-white p-4 rounded-none border border-neutral-300 shadow-2xs` (judul uppercase + ikon 16; nilai `text-2xl font-black font-sport`; footer `border-t border-neutral-100 pt-1.5`); tabel ServerSideTable langsung + `selectable` + `limitOptions={[10, 25, 50, 100]}` + MoreVertical + bulk rose `bg-rose-700 hover:bg-rose-600`; FilterDrawer kanan; ConfirmationModal; Toast; palet tanpa gray-*.
 
+PENGECUALIAN: tab filter STATUS dalam satu entitas (mis. status pesanan) bukan pelanggaran aturan 16.
 
-Git Diff (Staged Frontend Changes):
-```
+Berkas yang berubah (staged + unstaged + untracked):
 EOF
 
-sed -n '1,120p' <<< "$STAGED_FE_DIFF" >> "$PROMPT_FILE"
+printf "%s" "$ALL_CHANGED" | grep -v '^$' >> "$PROMPT_FILE"
+echo "" >> "$PROMPT_FILE"
+echo "Kerangka gaya per file halaman (nomor_baris: isi — bandingkan ke spesimen):" >> "$PROMPT_FILE"
+echo '```' >> "$PROMPT_FILE"
+SKELETON_BUDGET=600
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    [ ! -f "$f" ] && continue
+    case "$f" in
+      *Page.jsx|*MutationPage.jsx) ;;
+      *) continue ;;
+    esac
+    [ "$SKELETON_BUDGET" -le 0 ] && break
+    echo "--- FILE: $f ---" >> "$PROMPT_FILE"
+    TAKEN=$(grep -n -E 'className|<select|<input|<textarea|<button|<h1|<h2|<label|ServerSideSelect|FormTipsPanel|lg:col-span|limitOptions|selectable|MoreVertical|bulkActions' "$f" | head -n 120 | wc -l)
+    grep -n -E 'className|<select|<input|<textarea|<button|<h1|<h2|<label|ServerSideSelect|FormTipsPanel|lg:col-span|limitOptions|selectable|MoreVertical|bulkActions' "$f" | head -n 120 >> "$PROMPT_FILE"
+    SKELETON_BUDGET=$((SKELETON_BUDGET - TAKEN))
+done <<< "$ALL_CHANGED"
+echo '```' >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
-```
 
-FORMAT JAWABAN:
-- Jika seluruh standar konsistensi frontend terpenuhi: Jawab HANYA kata "PASSED".
-- Jika melanggar:
+FORMAT JAWABAN (WAJIB verdict per file — DILARANG PASSED global tanpa memeriksa tiap file):
+- Untuk SETIAP file halaman di atas tulis: `[path] : PASSED` atau `[path] : REJECTED (baris X — penyimpangan vs aturan N — seharusnya: ...)`.
+- Jika SEMUA PASSED: jawab HANYA kata "PASSED".
+- Jika ada penyimpangan:
   REJECTED
-  - Lokasi Berkas: [WAJIB sebutkan path berkas lengkap dan nomor baris yang harus diperbaiki, contoh: frontend/src/components/ProductListPage.jsx:145]
-  - Pelanggaran: [Detail aturan konsistensi frontend apa yang dilanggar secara spesifik]
-  - Solusi: [Tindakan perbaikan konkret yang harus dilakukan pengembang]
+  - Lokasi Berkas: [path lengkap + nomor baris]
+  - Pelanggaran: [aturan + token menyimpang]
+  - Solusi: [samakan dengan spesimen]
 EOF
 
 AUDITOR_RESULT=""
 if command -v opencode &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 30s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
+    AUDITOR_RESULT=$(timeout 90s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
 elif command -v agy &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 20s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
+    AUDITOR_RESULT=$(timeout 60s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
 fi
 rm -f "$PROMPT_FILE"
 

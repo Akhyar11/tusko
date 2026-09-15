@@ -129,26 +129,36 @@ export default function OrderListPage({
 
   const activeTab = filters.activeTab || 'all';
   const searchKeyword = filters.searchKeyword || '';
+  const searchProduct = filters.searchProduct || '';
   const dateFilter = filters.dateFilter || 'all';
+  const startDate = filters.startDate || '';
+  const endDate = filters.endDate || '';
   const expeditionFilter = filters.expeditionFilter || 'all';
+  const minTotal = filters.minTotal || '';
+  const maxTotal = filters.maxTotal || '';
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (activeTab !== 'all') count++;
     if (searchKeyword.trim() !== '') count++;
+    if (searchProduct.trim() !== '') count++;
     if (dateFilter !== 'all') count++;
+    if (startDate) count++;
+    if (endDate) count++;
     if (expeditionFilter !== 'all') count++;
+    if (minTotal) count++;
+    if (maxTotal) count++;
     return count;
-  }, [activeTab, searchKeyword, dateFilter, expeditionFilter]);
+  }, [activeTab, searchKeyword, searchProduct, dateFilter, startDate, endDate, expeditionFilter, minTotal, maxTotal]);
 
   const handleResetFilters = () => {
     resetFilters();
   };
 
   // Paginated records directly from server-side store
-  const paginatedOrders = tableOrders.length > 0 || totalOrdersCount === 0 ? tableOrders : orders;
-  const totalFiltered = totalOrdersCount > 0 || tableOrders.length > 0 ? totalOrdersCount : orders.length;
+  const paginatedOrders = tableOrders.length > 0 ? tableOrders : (orders && orders.length > 0 ? orders : []);
+  const totalFiltered = totalOrdersCount > 0 ? totalOrdersCount : (tableOrders.length > 0 ? tableOrders.length : (orders ? orders.length : 0));
 
   // Metric KPI calculation
   const metrics = useMemo(() => {
@@ -458,23 +468,25 @@ export default function OrderListPage({
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* 1. Header Bar Bersih (Icon-only Controls, 0 Cross-Module Tabs) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-            <ShoppingBag size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase">
-              Antrean Pesanan &amp; Transaksi
-            </h1>
-            <p className="text-xs text-neutral-600 mt-0.5">
-              Monitoring antrean pesanan terbayar, booking pickup kurir otomatis, dan pencetakan label resi thermal.
-            </p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <ShoppingBag size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Antrean Pesanan &amp; Transaksi
+              </h1>
+              <p className="text-xs text-neutral-600 mt-0.5">
+                Monitoring antrean pesanan terbayar, booking pickup kurir otomatis, dan pencetakan label resi thermal.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons: Icon-Only with Tooltip */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start xl:self-auto">
           <IconButton
             icon={SlidersHorizontal}
             onClick={() => setIsFilterDrawerOpen(true)}
@@ -581,7 +593,7 @@ export default function OrderListPage({
             <button
               type="button"
               onClick={handleBulkCancel}
-              className="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-rose-700 hover:bg-rose-600 text-white font-sport font-bold text-[11px] uppercase rounded-none transition-colors cursor-pointer"
             >
               Batalkan Terpilih ({selectedOrderIds.length})
             </button>
@@ -598,10 +610,20 @@ export default function OrderListPage({
         totalOrders={totalFiltered}
         searchKeyword={searchKeyword}
         onSearchChange={(val) => setFilter('searchKeyword', val)}
+        searchProduct={searchProduct}
+        onSearchProductChange={(val) => setFilter('searchProduct', val)}
         statusFilter={activeTab}
         onStatusFilterChange={(val) => setFilter('activeTab', val)}
+        minTotal={minTotal}
+        onMinTotalChange={(val) => setFilter('minTotal', val)}
+        maxTotal={maxTotal}
+        onMaxTotalChange={(val) => setFilter('maxTotal', val)}
         dateFilter={dateFilter}
         onDateFilterChange={(val) => setFilter('dateFilter', val)}
+        startDate={startDate}
+        onStartDateChange={(val) => setFilter('startDate', val)}
+        endDate={endDate}
+        onEndDateChange={(val) => setFilter('endDate', val)}
         expeditionFilter={expeditionFilter}
         onExpeditionFilterChange={(val) => setFilter('expeditionFilter', val)}
         expeditions={uniqueExpeditions}

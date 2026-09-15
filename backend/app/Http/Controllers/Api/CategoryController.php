@@ -28,6 +28,11 @@ class CategoryController extends Controller
             });
         }
 
+        if ($request->filled('slug')) {
+            $slug = $request->input('slug');
+            $query->where('slug', 'like', "%{$slug}%");
+        }
+
         // Sorting
         $sortBy = $request->input('sort_by', 'name');
         $sortDir = $request->input('sort_dir', 'asc');

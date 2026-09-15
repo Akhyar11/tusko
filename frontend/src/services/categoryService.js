@@ -36,6 +36,9 @@ export const categoryService = {
       const search = params.search || params.searchQuery;
       if (search) urlParams.append('search', search);
 
+      const slug = params.slug || params.searchSlug;
+      if (slug) urlParams.append('slug', slug);
+
       const sortBy = params.sort_by || params.sortBy;
       if (sortBy) urlParams.append('sort_by', sortBy);
 
@@ -73,6 +76,11 @@ export const categoryService = {
       if (search && search.trim()) {
         const q = search.toLowerCase();
         list = list.filter(c => c.name.toLowerCase().includes(q) || c.slug?.toLowerCase().includes(q));
+      }
+      const slug = params.slug || params.searchSlug;
+      if (slug && slug.trim()) {
+        const sq = slug.toLowerCase();
+        list = list.filter(c => c.slug?.toLowerCase().includes(sq));
       }
       return {
         data: list,

@@ -191,10 +191,10 @@ export default function OrderDetailPage({
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
       {/* Top Breadcrumb & Action Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-neutral-300 rounded-none shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
         <button
           type="button"
           onClick={onBack}
@@ -310,7 +310,7 @@ export default function OrderDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         
         {/* Shipping & Expedition Logistics Card */}
-        <div className="bg-white rounded-none border border-neutral-300 p-5 shadow-2xs space-y-3">
+        <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 shadow-2xs space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
             <div className="flex items-center gap-2 font-sport font-black text-neutral-950 text-sm uppercase tracking-wide">
               <Truck size={16} className="text-amber-600" />
@@ -389,7 +389,7 @@ export default function OrderDetailPage({
         </div>
 
         {/* Shipping Address Card */}
-        <div className="bg-white rounded-none border border-neutral-300 p-5 shadow-2xs space-y-3">
+        <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 shadow-2xs space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b border-neutral-200 font-sport font-black text-neutral-950 text-sm uppercase tracking-wide">
             <MapPin size={16} className="text-amber-600" />
             <span>Alamat Tujuan Pengiriman</span>
@@ -420,7 +420,7 @@ export default function OrderDetailPage({
       </div>
 
       {/* Ordered Items Card */}
-      <div className="bg-white rounded-none border border-neutral-300 p-5 shadow-2xs space-y-4">
+      <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-neutral-200 font-sport font-black text-neutral-950 text-sm uppercase tracking-wide">
           <div className="flex items-center gap-2">
             <ShoppingBag size={16} className="text-amber-600" />
@@ -476,7 +476,7 @@ export default function OrderDetailPage({
       </div>
 
       {/* Payment & Financial Breakdown Card */}
-      <div className="bg-white rounded-none border border-neutral-300 p-5 shadow-2xs space-y-4">
+      <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-neutral-200 font-sport font-black text-neutral-950 text-sm uppercase tracking-wide">
           <div className="flex items-center gap-2">
             <CreditCard size={16} className="text-amber-600" />
@@ -554,7 +554,7 @@ export default function OrderDetailPage({
       </div>
 
       {/* Footer Actions */}
-      <div className="bg-white rounded-none border border-neutral-300 p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 text-xs text-neutral-500">
           <ShieldCheck size={16} className="text-emerald-700" />
           <span>Fulfillment sistem Tusko terverifikasi dengan SLA pengiriman 24 jam.</span>

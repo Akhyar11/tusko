@@ -10,3 +10,6 @@ vendor/
 invoice_*.html
 INVOICE_*.pdf
 *.pdf
+
+# Agent Testing Evidence & Proofs (Temporary files created before commit, deleted after audit pass)
+.agent-test-proofs/
