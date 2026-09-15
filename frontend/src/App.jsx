@@ -40,6 +40,7 @@ import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
 import AdminDashboardPage from './components/AdminDashboardPage';
 import PurchaseOrderListPage from './components/PurchaseOrderListPage';
+import PurchaseOrderDetailPage from './components/PurchaseOrderDetailPage';
 import GoodsReceiptListPage from './components/GoodsReceiptListPage';
 import VendorBillListPage from './components/VendorBillListPage';
 import SupplierListPage from './components/SupplierListPage';
@@ -84,6 +85,7 @@ const VALID_VIEWS = [
   'transactions',
   'transaction-create',
   'procurement-po-create',
+  'procurement-po-detail',
   'expeditions',
   'expedition-create',
   'expedition-edit',
@@ -122,6 +124,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/templates' || rawPath === '/admin/template') return 'templates';
     if (rawPath === '/admin/products/create' || rawPath === '/admin/product/create') return 'product-create';
     if (rawPath === '/admin/procurement/pos/create') return 'procurement-po-create';
+    if (rawPath.startsWith('/admin/procurement/pos/')) return 'procurement-po-detail';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/register') return 'register';
     if (rawPath === '/profile') return 'profile';
@@ -252,6 +255,7 @@ export default function App() {
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
+  const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
@@ -306,7 +310,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-grn', 'procurement-bills'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-bills'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -382,6 +386,12 @@ export default function App() {
     } else if (currentView === 'procurement-po-create') {
       if (window.location.pathname !== '/admin/procurement/pos/create') {
         window.history.pushState(null, '', '/admin/procurement/pos/create');
+      }
+    } else if (currentView === 'procurement-po-detail') {
+      const poParam = selectedPoForDetail?.po_number || selectedPoForDetail?.id || '';
+      const targetPath = poParam ? `/admin/procurement/pos/${poParam}` : '/admin/procurement/pos';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
       }
     } else if (currentView === 'procurement-grn') {
       if (window.location.pathname !== '/admin/procurement/grn') {
@@ -488,6 +498,7 @@ export default function App() {
       'procurement', 
       'procurement-pos',
       'procurement-po-create',
+      'procurement-po-detail',
       'procurement-grn',
       'procurement-bills',
       'templates', 
@@ -1370,10 +1381,48 @@ export default function App() {
             onNavigateToGRN={() => setCurrentView('procurement-grn')}
             onNavigateToBills={() => setCurrentView('procurement-bills')}
             onNavigateToCreate={() => setCurrentView('procurement-po-create')}
+            onViewDetail={(targetPO) => {
+              setSelectedPoForDetail(targetPO);
+              setCurrentView('procurement-po-detail');
+            }}
           />
         ) : currentView === 'procurement-po-create' ? (
           <PurchaseOrderCreatePage
             onNavigateBack={() => setCurrentView('procurement-pos')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'procurement-po-detail' ? (
+          <PurchaseOrderDetailPage
+            po={selectedPoForDetail}
+            poId={(() => {
+              const rawPath = window.location.pathname.replace(/\/+$/, '');
+              if (rawPath.startsWith('/admin/procurement/pos/') && rawPath !== '/admin/procurement/pos/create') {
+                return decodeURIComponent(rawPath.replace('/admin/procurement/pos/', ''));
+              }
+              return null;
+            })()}
+            onNavigateBack={() => {
+              setSelectedPoForDetail(null);
+              setCurrentView('procurement-pos');
+            }}
+            onReceivePO={(targetPO) => {
+              try {
+                const res = procurementService.receivePurchaseOrder(targetPO.id, {
+                  delivery_order_number: `DO-${Date.now().toString().slice(-6)}`,
+                  received_by: currentUser?.name || 'Admin Gudang',
+                  notes: 'Penerimaan fisik diproses via Halaman Detail PO'
+                });
+                showToast(`Penerimaan ${res.grn.grn_number} berhasil. Dokumen GRN & Tagihan diterbitkan.`);
+                setSelectedPoForDetail(procurementService.getPurchaseOrderById(targetPO.id));
+              } catch (err) {
+                showToast('Gagal memproses penerimaan barang.');
+              }
+            }}
+            onCancelPO={(targetPO) => {
+              procurementService.cancelPurchaseOrder(targetPO.id);
+              showToast(`Purchase Order ${targetPO.po_number} berhasil dibatalkan.`);
+              setSelectedPoForDetail(procurementService.getPurchaseOrderById(targetPO.id));
+            }}
             onShowToast={showToast}
           />
         ) : currentView === 'procurement-grn' ? (

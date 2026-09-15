@@ -114,7 +114,7 @@ export default function AdminSidebar({
           label: 'Purchase Order (PO)',
           sublabel: 'Pemesanan stok ke supplier',
           icon: ClipboardList,
-          activeViews: ['procurement-pos', 'procurement', 'procurement-po-create']
+          activeViews: ['procurement-pos', 'procurement', 'procurement-po-create', 'procurement-po-detail']
         },
         {
           id: 'procurement-grn',

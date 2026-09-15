@@ -43,6 +43,11 @@ export const procurementService = {
     return initialPurchaseOrders;
   },
 
+  getPurchaseOrderById(poIdOrNumber) {
+    const pos = this.getPurchaseOrders();
+    return pos.find(p => String(p.id) === String(poIdOrNumber) || p.po_number === poIdOrNumber) || null;
+  },
+
   savePurchaseOrders(pos) {
     try {
       localStorage.setItem(STORAGE_KEYS.POS, JSON.stringify(pos));

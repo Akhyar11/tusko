@@ -77,14 +77,13 @@ done <<< "$FORM_FILES"
 
 # 5. DILARANG nama berkas modal create/edit baru (staged-added ATAU untracked).
 STAGED_ADDED=$(git diff --cached --name-only --diff-filter=A -- "frontend/src" 2>/dev/null | grep -E '\.(jsx|js)$')
-NEW_FILES=$(printf "%s\n%s" "$STAGED_ADDED" "$UNTRACKED_FE" | grep -v '^$' | sort -u)
-NEW_MODALS=$(printf "%s" "$NEW_FILES" | grep -E '(CreateModal|EditModal|Add.+Modal|FormModal).*\.jsx$')
+NEW_MODALS=$(printf "%s" "$NEW_FILES" | grep -E '(CreateModal|EditModal|Add.+Modal|FormModal|DetailModal).*\.jsx$')
 if [ -n "$NEW_MODALS" ]; then
     while IFS= read -r f; do
         [ -z "$f" ] && continue
         deterministic_reject "$f:1" \
-            "Berkas modal create/edit baru (aturan 23: form Create/Edit WAJIB halaman terpisah *CreatePage.jsx/*EditPage.jsx)." \
-            "Pindahkan form ke halaman terpisah mandiri dengan rute/view mandiri, kartu header modul, tombol kembali, dan feedback via Toast."
+            "Berkas modal create/edit/detail baru (aturan 23 & 30: form Create/Edit dan tampilan Detail WAJIB halaman terpisah *CreatePage.jsx/*EditPage.jsx/*DetailPage.jsx)." \
+            "Pindahkan konten ke halaman terpisah mandiri dengan rute/view mandiri, kartu header modul, tombol kembali, dan feedback via Toast."
     done <<< "$NEW_MODALS"
 fi
 

@@ -112,7 +112,7 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
 23. **Wajib Halaman Terpisah untuk Seluruh Form Create & Edit (Mandatory Dedicated Create/Edit Page — No Create/Edit Modals)**:
     - Seluruh form **Create** (tambah record baru) dan **Edit** (ubah field record) data entitas — Produk, Kategori, Supplier/Vendor, Ekspedisi, Mutasi Stok (restock/kurangi/penyesuaian), Transaksi Keuangan, PO/GRN/Bill, Alamat, Voucher — WAJIB hidup di **halaman terpisah mandiri** (`*CreatePage.jsx` / `*EditPage.jsx`) dengan URL rute/view mandiri, kartu header modul (ikon + judul + deskripsi), tombol kembali, dan feedback via Toast.
     - DILARANG KERAS membungkus form create/edit dalam modal overlay (`fixed inset-0` + `isOpen`) seperti `*CreateModal`, `*EditModal`, `*Add*Modal`, `*FormModal`, atau modal inline berisi input + tombol Simpan/Perbarui.
-    - Pengecualian yang DIIZINKAN tetap sebagai modal/drawer (bukan form create/edit record): `ConfirmationModal` (konfirmasi hapus/batal), `*FilterDrawer` (sidebar filter), picker penilih data existing (`MapPickerModal`, pemilih alamat/ekspedisi), pratinjau read-only (`Print*Modal`, detail viewer), dialog aksi satu-langkah (`OrderStatusModal`), dropdown menu aksi & `UserMenuDropdown`.
+    - Pengecualian yang DIIZINKAN tetap sebagai modal/drawer (bukan form create/edit record maupun detail viewer): `ConfirmationModal` (konfirmasi hapus/batal), `*FilterDrawer` (sidebar filter), picker penilih data existing (`MapPickerModal`, pemilih alamat/ekspedisi), pratinjau cetak read-only (`Print*Modal`), dialog aksi satu-langkah (`OrderStatusModal`), dropdown menu aksi & `UserMenuDropdown`.
 24. **Standar Layout Form 3/4 + 1/4 dengan Panel Tips (Form Grid with Guidance Sidebar)**:
     - Seluruh halaman form (Create/Edit dan form operasional lain) WAJIB memakai grid desktop `grid grid-cols-1 lg:grid-cols-4 gap-6`: kolom utama form `lg:col-span-3`, panel tips/dokumentasi cara mengisi `lg:col-span-1` (sticky di desktop via `lg:sticky lg:top-6`, menumpuk vertikal di mobile).
     - Panel tips WAJIB memakai komponen reusable `organisms/FormTipsPanel` berisi panduan singkat cara mengisi tiap field/section (ikon Lucide + heading + teks, bahasa Indonesia). DILARANG membuat panel tips mentah inline berulang di tiap halaman form.
@@ -174,6 +174,18 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
     - **Kanvas Layout Utama Admin (<main>)**:
       * Layout container admin pada `App.jsx` WAJIB: `px-4 sm:px-8 lg:px-10 py-6`.
       * Seluruh tampilan modul admin WAJIB terdaftar dalam `adminCoreViews` agar padding kanvas seragam.
+30. **Wajib Halaman Terpisah untuk Seluruh Tampilan Detail Entitas (Mandatory Dedicated Detail Page — Strict Prohibition of Detail Modals/Popups)**:
+    - Seluruh tampilan detail rekaman transaksi bisnis dan master data (seperti Purchase Order / PO, Pesanan Pelanggan / Order, Penerimaan Barang / GRN, Tagihan Vendor / Bills, Transaksi Keuangan & Jurnal Kas) WAJIB disajikan dalam **halaman mandiri terdedikasi** (`*DetailPage.jsx`, misal: `PurchaseOrderDetailPage.jsx`, `OrderDetailPage.jsx`, dll.) dengan URL rute/view state mandiri.
+    - DILARANG KERAS menyajikan informasi detail entitas dalam bentuk modal overlay, popup dialog, atau inline drawer popup (`*DetailModal`, `fixed inset-0` + `isOpen`, atau `selected*Detail && (...)`) pada halaman list/tabel admin.
+    - **Spesimen Kanonis Halaman Detail Admin (100% Identik)**:
+      * **Root**: `space-y-6 pb-12 animate-in fade-in duration-200`.
+      * **Kartu Header**: `flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs`.
+      * **Kiri Header**: Tombol kembali `IconButton` (`ArrowLeft`, `outline`, tooltip "Kembali ke Antrean ...") + judul identitas entitas / nomor dokumen `h1` (`text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950`) + status badge atletis (`rounded-none px-2.5 py-1 text-[11px] font-sport font-black uppercase tracking-wider border`).
+      * **Kanan Header**: Kelompok tombol aksi konteks icon-only `IconButton` bersudut siku (`rounded-none`) dengan tooltip deskriptif (misal: `Printer` cetak dokumen, aksi operasional `PackageCheck` / status, aksi pembatalan).
+      * **Grid KPI Metrik Entitas**: `grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4` berisi 4 kartu metrik kanonis (`bg-white p-4 rounded-none border border-neutral-300 shadow-2xs`).
+      * **Kartu Seksi Informasi Terstruktur**: Menggunakan kartu form/detail kanonis `bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-5` dengan section heading `h2` (`text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3` + ikon Lucide amber 16).
+      * **Tabel Rincian Item / Matriks Varian**: Menampilkan tabel transparan dan komprehensif (Produk, Varian, SKU, Kuantitas Pesan vs Terima vs Sisa, Harga Satuan, Subtotal Nilai).
+      * **Pelacakan Alur Dokumen & Audit Trail (*3-Way Matching Flow*)**: Menampilkan keterhubungan status dokumen upstream/downstream (PO ↔ GRN ↔ Vendor Bill ↔ Kas/Bank).
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>

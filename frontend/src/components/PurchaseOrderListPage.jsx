@@ -31,7 +31,8 @@ export default function PurchaseOrderListPage({
   onShowToast = () => {},
   onNavigateToGRN = () => {},
   onNavigateToBills = () => {},
-  onNavigateToCreate = () => {}
+  onNavigateToCreate = () => {},
+  onViewDetail = () => {}
 }) {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
@@ -74,7 +75,6 @@ export default function PurchaseOrderListPage({
   const [selectedPOIds, setSelectedPOIds] = useState([]);
 
   // Modals
-  const [selectedPODetail, setSelectedPODetail] = useState(null);
   const [selectedPOForReceive, setSelectedPOForReceive] = useState(null);
   const [receiveForm, setReceiveForm] = useState({
     delivery_order_number: '',
@@ -165,10 +165,15 @@ export default function PurchaseOrderListPage({
       sortable: true,
       render: (val, row) => {
         const r = row || (typeof val === 'object' ? val : {}) || {};
+        const poNum = typeof val === 'string' ? val : (r.po_number || '-');
         return (
-          <div className="font-mono font-bold text-neutral-950 text-xs">
-            {typeof val === 'string' ? val : (r.po_number || '-')}
-          </div>
+          <button
+            type="button"
+            onClick={() => onViewDetail(r)}
+            className="font-mono font-bold text-neutral-950 hover:text-amber-600 text-xs text-left cursor-pointer transition-colors"
+          >
+            {poNum}
+          </button>
         );
       }
     },
@@ -274,7 +279,7 @@ export default function PurchaseOrderListPage({
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedPODetail(r);
+                    onViewDetail(r);
                     setActiveActionMenuId(null);
                   }}
                   className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
@@ -429,79 +434,6 @@ export default function PurchaseOrderListPage({
         isLoading={isLoading}
         emptyMessage="Belum ada Purchase Order yang terdaftar."
       />
-
-      {/* MODAL: DETAIL PURCHASE ORDER */}
-      {selectedPODetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-xl p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
-              <div>
-                <span className="font-mono font-bold text-base text-neutral-950">{selectedPODetail.po_number}</span>
-                <span className="ml-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-neutral-100 border border-neutral-300 rounded-none">
-                  Status: {selectedPODetail.status}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPODetail(null)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 bg-neutral-50 p-3 border border-neutral-200 rounded-none">
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Vendor / Supplier:</span>
-                  <strong className="text-neutral-900">{selectedPODetail.vendor_name}</strong>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Gudang Penerima:</span>
-                  <span className="text-neutral-800">{selectedPODetail.warehouse_name}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Tgl Pemesanan:</span>
-                  <span className="font-mono">{selectedPODetail.order_date}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Perkiraan Tiba:</span>
-                  <span className="font-mono">{selectedPODetail.expected_delivery_date}</span>
-                </div>
-              </div>
-
-              <div>
-                <span className="font-sport font-black uppercase text-neutral-900 block mb-2">Item Barang:</span>
-                <div className="border border-neutral-200 divide-y divide-neutral-200">
-                  {selectedPODetail.items.map(it => (
-                    <div key={it.id} className="p-2.5 flex items-center justify-between hover:bg-neutral-50">
-                      <div>
-                        <div className="font-bold text-neutral-900">{it.product_name}</div>
-                        <div className="font-mono text-[11px] text-neutral-500">{it.sku} • {it.variant_name}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono font-bold text-neutral-950">
-                          {it.ordered_quantity} Unit @ {formatRupiah(it.unit_price)}
-                        </div>
-                        <div className="text-[11px] text-neutral-600 font-sport font-bold">
-                          Total: {formatRupiah(it.subtotal || (it.ordered_quantity * it.unit_price))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-3 bg-neutral-950 text-white rounded-none flex items-center justify-between">
-                <span className="font-sport font-bold uppercase text-neutral-400">Total Nilai Transaksi:</span>
-                <span className="font-sport font-black text-lg text-amber-400">
-                  {formatRupiah(selectedPODetail.total_amount)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* MODAL: TERIMA BARANG (GRN CONFIRMATION) */}
       {selectedPOForReceive && (
