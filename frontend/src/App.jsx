@@ -388,7 +388,10 @@ export default function App() {
         window.history.pushState(null, '', '/admin/procurement/pos/create');
       }
     } else if (currentView === 'procurement-po-detail') {
-      const poParam = selectedPoForDetail?.po_number || selectedPoForDetail?.id || '';
+      const urlPoParam = window.location.pathname.startsWith('/admin/procurement/pos/') && window.location.pathname !== '/admin/procurement/pos/create'
+        ? window.location.pathname.replace('/admin/procurement/pos/', '')
+        : '';
+      const poParam = selectedPoForDetail?.po_number || selectedPoForDetail?.id || urlPoParam;
       const targetPath = poParam ? `/admin/procurement/pos/${poParam}` : '/admin/procurement/pos';
       if (window.location.pathname !== targetPath) {
         window.history.pushState(null, '', targetPath);

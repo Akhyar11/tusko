@@ -381,4 +381,43 @@ class PurchaseOrderController extends Controller
             'data' => $po,
         ]);
     }
+
+    /**
+     * Approve / Authorize a purchase order.
+     */
+    public function approve(Request $request, string $idOrPoNumber): JsonResponse
+    {
+        $po = PurchaseOrder::where(function ($q) use ($idOrPoNumber) {
+            if (is_numeric($idOrPoNumber)) {
+                $q->where('id', (int) $idOrPoNumber)->orWhere('po_number', $idOrPoNumber);
+            } else {
+                $q->where('po_number', $idOrPoNumber);
+            }
+        })->first();
+
+        if (!$po) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Purchase Order tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($po->status !== 'draft') {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Hanya dokumen Purchase Order berstatus Draft yang dapat disetujui. Status saat ini: {$po->status}.",
+            ], 422);
+        }
+
+        $po->update([
+            'status' => 'approved',
+            'approved_by' => $request->user()?->id,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Purchase Order {$po->po_number} berhasil diotorisasi.",
+            'data' => $po->fresh(['vendor', 'warehouse', 'items.product', 'items.variant']),
+        ]);
+    }
 }

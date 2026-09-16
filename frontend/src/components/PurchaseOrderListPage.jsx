@@ -15,11 +15,10 @@ import {
   Calendar, 
   Building2,
   AlertCircle,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ShieldCheck
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
-import TextInput from './molecules/TextInput';
-import TextArea from './molecules/TextArea';
 import PurchaseOrderFilterDrawer from './organisms/PurchaseOrderFilterDrawer';
 import ServerSideTable from './ServerSideTable';
 import ConfirmationModal from './ConfirmationModal';
@@ -37,6 +36,7 @@ export default function PurchaseOrderListPage({
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [poToCancel, setPoToCancel] = useState(null);
+  const [poToApprove, setPoToApprove] = useState(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
@@ -73,15 +73,8 @@ export default function PurchaseOrderListPage({
   }, [filters]);
 
   const [selectedPOIds, setSelectedPOIds] = useState([]);
-
-  // Modals
-  const [selectedPOForReceive, setSelectedPOForReceive] = useState(null);
-  const [receiveForm, setReceiveForm] = useState({
-    delivery_order_number: '',
-    received_by: '',
-    accepted_quantities: {},
-    notes: ''
-  });
+  const [poToReceive, setPoToReceive] = useState(null);
+  const [isBulkCancelModalOpen, setIsBulkCancelModalOpen] = useState(false);
 
   const loadPOs = () => {
     const data = procurementService.getPurchaseOrders();
@@ -112,35 +105,63 @@ export default function PurchaseOrderListPage({
     return { totalCount, ongoingCount, completedCount, totalProcurementValue };
   }, [purchaseOrders, paginatedPOs, totalFiltered]);
 
-  // Open Receive Modal
+  // Open Receive Confirmation
   const handleOpenReceiveModal = (po) => {
-    const initialAcc = {};
-    po.items.forEach(it => {
-      initialAcc[it.id] = it.ordered_quantity;
-    });
-    setReceiveForm({
-      delivery_order_number: `DO-${Date.now().toString().slice(-6)}`,
-      received_by: '',
-      accepted_quantities: initialAcc,
-      notes: ''
-    });
-    setSelectedPOForReceive(po);
     setActiveActionMenuId(null);
+    setPoToReceive(po);
   };
 
-  // Confirm Goods Receipt
-  const handleConfirmReceive = (e) => {
-    e.preventDefault();
-    if (!selectedPOForReceive) return;
+  // Confirm Goods Receipt via ConfirmationModal
+  const confirmReceivePO = () => {
+    if (!poToReceive) return;
 
     try {
-      const result = procurementService.receivePurchaseOrder(selectedPOForReceive.id, receiveForm);
-      setSelectedPOForReceive(null);
+      const initialAcc = {};
+      (poToReceive.items || []).forEach(it => {
+        initialAcc[it.id] = it.ordered_quantity;
+      });
+      const result = procurementService.receivePurchaseOrder(poToReceive.id, {
+        delivery_order_number: `DO-${Date.now().toString().slice(-6)}`,
+        received_by: 'Admin Gudang',
+        accepted_quantities: initialAcc,
+        notes: 'Penerimaan fisik barang lengkap dikonfirmasi'
+      });
+      setPoToReceive(null);
       onShowToast(`Penerimaan ${result.grn.grn_number} berhasil. Dokumen GRN & Tagihan otomatis diterbitkan.`);
     } catch (err) {
       console.error(err);
       onShowToast('Gagal memproses penerimaan barang.');
     }
+  };
+
+  // Bulk Cancel
+  const handleBulkCancel = () => {
+    if (selectedPOIds.length === 0) return;
+    setIsBulkCancelModalOpen(true);
+  };
+
+  const confirmBulkCancel = () => {
+    selectedPOIds.forEach(id => {
+      procurementService.cancelPurchaseOrder(id);
+    });
+    onShowToast(`${selectedPOIds.length} Purchase Order berhasil dibatalkan.`);
+    setSelectedPOIds([]);
+    setIsBulkCancelModalOpen(false);
+    fetchData();
+  };
+
+  // Approve PO
+  const handleApprovePO = (po) => {
+    setActiveActionMenuId(null);
+    setPoToApprove(po);
+  };
+
+  const confirmApprovePO = () => {
+    if (!poToApprove) return;
+    procurementService.approvePurchaseOrder(poToApprove.id);
+    onShowToast(`Purchase Order ${poToApprove.po_number} berhasil diotorisasi.`);
+    setPoToApprove(null);
+    fetchData();
   };
 
   // Cancel PO
@@ -288,6 +309,17 @@ export default function PurchaseOrderListPage({
                   <span>Lihat Detail Item PO</span>
                 </button>
 
+                {r.status === 'draft' && (
+                  <button
+                    type="button"
+                    onClick={() => handleApprovePO(r)}
+                    className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <ShieldCheck size={14} className="text-neutral-500" />
+                    <span>Otorisasi / Setujui PO</span>
+                  </button>
+                )}
+
                 {['approved', 'sent'].includes(r.status) && (
                   <button
                     type="button"
@@ -423,6 +455,24 @@ export default function PurchaseOrderListPage({
         selectable={true}
         selectedRows={selectedPOIds}
         onSelectRows={setSelectedPOIds}
+        limitOptions={[10, 25, 50, 100]}
+        bulkActions={
+          selectedPOIds.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-600 font-medium">
+                <strong className="font-mono text-neutral-900">{selectedPOIds.length}</strong> PO dipilih
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkCancel}
+                className="px-2.5 py-1 bg-rose-700 hover:bg-rose-600 text-white font-sport font-bold text-[11px] uppercase rounded-none cursor-pointer flex items-center gap-1.5 transition-colors"
+              >
+                <XCircle size={12} />
+                <span>Batalkan Terpilih</span>
+              </button>
+            </div>
+          ) : null
+        }
         total={totalFiltered}
         page={page}
         limit={limit}
@@ -435,124 +485,67 @@ export default function PurchaseOrderListPage({
         emptyMessage="Belum ada Purchase Order yang terdaftar."
       />
 
-      {/* MODAL: TERIMA BARANG (GRN CONFIRMATION) */}
-      {selectedPOForReceive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-lg p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4 shrink-0">
-              <div className="flex items-center gap-2">
-                <PackageCheck size={18} className="text-emerald-600" />
-                <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                  Penerimaan Fisik Barang Masuk Gudang (GRN)
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPOForReceive(null)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
+      {/* Modal Konfirmasi Penerimaan Barang (GRN) */}
+      <ConfirmationModal
+        isOpen={!!poToReceive}
+        onClose={() => setPoToReceive(null)}
+        onConfirm={confirmReceivePO}
+        title="Konfirmasi Penerimaan Barang (GRN)"
+        subtitle="Penerimaan Fisik & Pembukuan Stok Gudang"
+        message={`Apakah Anda yakin ingin memproses penerimaan fisik untuk Purchase Order ${poToReceive?.po_number}? Seluruh kuantitas pesanan akan dicatat sebagai diterima lengkap, dokumen GRN dan Tagihan Vendor (Bill) otomatis diterbitkan, serta stok gudang langsung diperbarui.`}
+        confirmText="Konfirmasi Penerimaan"
+        variant="info"
+      >
+        {poToReceive && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Supplier:</span>
+              <span className="font-bold text-neutral-900">{poToReceive.vendor?.company_name || poToReceive.vendor_name || '-'}</span>
             </div>
-
-            <form onSubmit={handleConfirmReceive} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-neutral-500">Nomor PO:</span>
-                  <span className="font-mono font-bold text-neutral-950">{selectedPOForReceive.po_number}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-neutral-500">Vendor Supplier:</span>
-                  <span className="font-bold text-neutral-900">{selectedPOForReceive.vendor_name}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 mb-1">Nomor Surat Jalan (DO) Vendor</label>
-                <TextInput
-                  value={receiveForm.delivery_order_number}
-                  onChange={(val) => setReceiveForm(p => ({ ...p, delivery_order_number: val }))}
-                  placeholder="Contoh: SJ-VENDOR-88992"
-                  required
-                  weight="mono"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 mb-1">Petugas Penerima Gudang</label>
-                <TextInput
-                  value={receiveForm.received_by}
-                  onChange={(val) => setReceiveForm(p => ({ ...p, received_by: val }))}
-                  placeholder="Nama staf penerima..."
-                  required
-                />
-              </div>
-
-              <div>
-                <span className="font-sport font-black uppercase text-neutral-900 block mb-2">Verifikasi Jumlah Fisik:</span>
-                <div className="space-y-2">
-                  {selectedPOForReceive.items.map(it => (
-                    <div key={it.id} className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-neutral-900 block">{it.product_name}</span>
-                        <span className="font-mono text-[11px] text-neutral-500">{it.sku} • Dipesan: {it.ordered_quantity} Unit</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-neutral-600">Diterima:</span>
-                        <TextInput
-                          type="number"
-                          required
-                          min="0"
-                          max={it.ordered_quantity}
-                          value={receiveForm.accepted_quantities[it.id] ?? it.ordered_quantity}
-                          onChange={(val) => {
-                            setReceiveForm(p => ({
-                              ...p,
-                              accepted_quantities: {
-                                ...p.accepted_quantities,
-                                [it.id]: val
-                              }
-                            }));
-                          }}
-                          className="w-20"
-                          weight="mono"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 mb-1">Catatan QC / Kondisi Kemasan</label>
-                <TextArea
-                  rows={2}
-                  value={receiveForm.notes}
-                  onChange={(val) => setReceiveForm(p => ({ ...p, notes: val }))}
-                  placeholder="Catatan hasil inspeksi..."
-                />
-              </div>
-
-              <div className="pt-3 border-t border-neutral-200 flex items-center justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSelectedPOForReceive(null)}
-                  className="px-4 py-2 border border-neutral-300 hover:bg-neutral-100 text-neutral-800 text-xs font-sport font-bold uppercase rounded-none cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5"
-                >
-                  <PackageCheck size={14} />
-                  <span>Konfirmasi Penerimaan Fisik</span>
-                </button>
-              </div>
-            </form>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total Nilai Pemesanan:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(poToReceive.total_amount || 0)}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </ConfirmationModal>
+
+      {/* Modal Konfirmasi Pembatalan Massal Purchase Order */}
+      <ConfirmationModal
+        isOpen={isBulkCancelModalOpen}
+        onClose={() => setIsBulkCancelModalOpen(false)}
+        onConfirm={confirmBulkCancel}
+        title="Konfirmasi Pembatalan Massal PO"
+        subtitle="Tindakan ini tidak dapat dibatalkan."
+        message={`Apakah Anda yakin ingin membatalkan ${selectedPOIds.length} Purchase Order yang dipilih? Status dokumen pengadaan terpilih akan diubah menjadi dibatalkan.`}
+        confirmText="Batalkan PO Terpilih"
+        variant="danger"
+      />
+
+      {/* Modal Konfirmasi Otorisasi Purchase Order */}
+      <ConfirmationModal
+        isOpen={!!poToApprove}
+        onClose={() => setPoToApprove(null)}
+        onConfirm={confirmApprovePO}
+        title="Otorisasi Purchase Order"
+        subtitle="Pengesahan Dokumen Pengadaan Resmi"
+        message={`Apakah Anda yakin ingin menyetujui dan mengotorisasi Purchase Order ${poToApprove?.po_number}? Status dokumen pengadaan akan diubah menjadi APPROVED sehingga barang dapat dikirim supplier dan siap diterima di gudang.`}
+        confirmText="Otorisasi PO"
+        variant="info"
+      >
+        {poToApprove && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Supplier:</span>
+              <span className="font-bold text-neutral-900">{poToApprove.vendor?.company_name || poToApprove.vendor_name || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total Komitmen Anggaran:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(poToApprove.total_amount || 0)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
 
       {/* Modal Konfirmasi Pembatalan Purchase Order */}
       <ConfirmationModal

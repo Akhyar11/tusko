@@ -10,7 +10,8 @@ import {
   Warehouse,
   Boxes,
   Save,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideSelect from './molecules/ServerSideSelect';
@@ -228,8 +229,8 @@ export default function PurchaseOrderCreatePage({
   const totalOrderedUnits = allVariants.reduce((sum, v) => sum + (Number(v.ordered_quantity) || 0), 0);
   const totalAmount = allVariants.reduce((sum, v) => sum + ((Number(v.ordered_quantity) || 0) * (Number(v.unit_price) || 0)), 0);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (e, targetStatus = 'approved') => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!formData.vendor_id) {
       setErrorMessage('Pilih rekanan vendor terlebih dahulu.');
       return;
@@ -266,7 +267,7 @@ export default function PurchaseOrderCreatePage({
         vendor_name: vendor ? (vendor.company_name || vendor.name) : 'Supplier Partner',
         warehouse_id: warehouseId,
         warehouse_name: warehouseName,
-        status: 'approved',
+        status: targetStatus,
         expected_delivery_date: formData.expected_delivery_date,
         total_amount: totalAmount,
         notes: formData.notes || 'Pengadaan batch baru perlengkapan atletik.',
@@ -285,7 +286,11 @@ export default function PurchaseOrderCreatePage({
       };
 
       const created = procurementService.createPurchaseOrder(poRecord);
-      onShowToast(`Purchase Order ${created.po_number} berhasil diterbitkan.`);
+      onShowToast(
+        targetStatus === 'draft'
+          ? `Draft Purchase Order ${created.po_number} berhasil disimpan.`
+          : `Purchase Order ${created.po_number} berhasil diterbitkan dan diotorisasi.`
+      );
       onNavigateBack();
     } catch (err) {
       setErrorMessage(err.message || 'Gagal menerbitkan Purchase Order.');
@@ -299,15 +304,15 @@ export default function PurchaseOrderCreatePage({
       {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
         <div className="flex items-center gap-3">
-          <IconButton icon={ArrowLeft} onClick={onNavigateBack} title="Kembali ke Antrean PO" variant="outline" />
+          <IconButton icon={ArrowLeft} onClick={onNavigateBack} tooltip="Kembali ke Antrean PO" variant="outline" />
           <div>
             <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">Penerbitan Purchase Order Baru</h1>
           </div>
         </div>
         {/* Header Action Buttons (Icon-Only with Tooltip) */}
         <div className="flex items-center gap-2">
-          <IconButton icon={X} onClick={onNavigateBack} title="Batal" variant="secondary" />
-          <IconButton icon={Save} onClick={() => document.getElementById('po-form')?.requestSubmit()} title="Simpan Purchase Order" variant="primary" />
+          <IconButton icon={X} onClick={onNavigateBack} tooltip="Batal" variant="secondary" />
+          <IconButton icon={Save} onClick={() => handleSubmit(null, 'approved')} tooltip="Terbitkan & Otorisasi Langsung" variant="primary" />
         </div>
       </div>
 
@@ -315,7 +320,7 @@ export default function PurchaseOrderCreatePage({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Form Card */}
         <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs lg:col-span-3">
-          <form id="po-form" onSubmit={handleSubmit} className="space-y-6">
+          <form id="po-form" onSubmit={(e) => handleSubmit(e, 'approved')} className="space-y-6">
             {errorMessage && (
               <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between animate-in fade-in duration-150">
                 <div className="flex items-center gap-2 text-xs font-sport font-bold uppercase">
@@ -641,18 +646,28 @@ export default function PurchaseOrderCreatePage({
             {/* Action Buttons */}
             <div className="pt-3 border-t border-neutral-200 space-y-2">
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => handleSubmit(e, 'approved')}
                 disabled={isSubmitting}
                 className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer rounded-none"
               >
                 <Save size={15} />
-                <span>{isSubmitting ? 'Menerbitkan...' : 'Terbitkan Purchase Order'}</span>
+                <span>{isSubmitting ? 'Memproses...' : 'Terbitkan & Otorisasi Langsung'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, 'draft')}
+                disabled={isSubmitting}
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none flex items-center justify-center gap-2"
+              >
+                <FileText size={15} />
+                <span>Simpan sebagai Draft PO</span>
               </button>
               <button
                 type="button"
                 onClick={onNavigateBack}
                 disabled={isSubmitting}
-                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none"
+                className="w-full py-2 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-600 text-xs font-sport font-bold uppercase tracking-wider transition-colors cursor-pointer rounded-none"
               >
                 Batal
               </button>
@@ -668,6 +683,7 @@ export default function PurchaseOrderCreatePage({
             { icon: Boxes, heading: 'Matriks Varian Otomatis', text: 'Semua varian produk langsung muncul serempak. Anda dapat mengisi kuantitas tiap varian atau memakai fitur isi cepat.' },
             { icon: Warehouse, heading: 'Gudang Tujuan', text: 'Pastikan gudang penerima benar supaya stok masuk tercatat di lokasi penyimpanan yang tepat.' },
             { icon: Calendar, heading: 'Tanggal Tiba', text: 'Isi perkiraan tanggal kirim tiba secara realistis untuk acuan jadwal penerimaan barang.' },
+            { icon: FileText, heading: 'Draft vs Otorisasi', text: 'Simpan sebagai Draft jika PO butuh peninjauan. Pilih Terbitkan & Otorisasi jika pesanan sudah disetujui dikirim ke supplier.' },
             { icon: Check, heading: 'Cek Total Komitmen', text: 'Periksa panel total belanja modal di bawah form sebelum menerbitkan agar anggaran tetap terkendali.' },
           ]}
         />

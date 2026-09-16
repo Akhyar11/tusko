@@ -102,13 +102,32 @@ export const procurementService = {
     const newPO = {
       id: Date.now(),
       po_number: `PO-${dateStr}-${countStr}`,
-      status: 'approved',
+      status: poData.status || 'draft',
       order_date: new Date().toISOString().split('T')[0],
       ...poData
     };
     const updated = [newPO, ...currentPOs];
     this.savePurchaseOrders(updated);
     return newPO;
+  },
+
+  approvePurchaseOrder(poId, approverName = 'Admin Tusko') {
+    const currentPOs = this.getPurchaseOrders();
+    let targetApprovedPO = null;
+    const updated = currentPOs.map(po => {
+      if (po.id === poId || po.po_number === poId) {
+        targetApprovedPO = {
+          ...po,
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: approverName
+        };
+        return targetApprovedPO;
+      }
+      return po;
+    });
+    this.savePurchaseOrders(updated);
+    return targetApprovedPO;
   },
 
   cancelPurchaseOrder(poId) {

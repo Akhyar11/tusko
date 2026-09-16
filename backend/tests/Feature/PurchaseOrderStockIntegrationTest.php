@@ -310,4 +310,43 @@ class PurchaseOrderStockIntegrationTest extends TestCase
         $po->refresh();
         $this->assertEquals('cancelled', $po->status);
     }
+
+    public function test_can_approve_draft_purchase_order(): void
+    {
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-202609-TEST-APPROVE',
+            'vendor_id' => $this->vendor->id,
+            'warehouse_id' => $this->warehouse->id,
+            'status' => 'draft',
+            'total_amount' => 2500000,
+            'order_date' => now()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($this->admin)->postJson("/api/purchase-orders/{$po->id}/approve");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.status', 'approved');
+
+        $po->refresh();
+        $this->assertEquals('approved', $po->status);
+        $this->assertEquals($this->admin->id, $po->approved_by);
+    }
+
+    public function test_cannot_approve_already_approved_purchase_order(): void
+    {
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-202609-TEST-ALREADY',
+            'vendor_id' => $this->vendor->id,
+            'warehouse_id' => $this->warehouse->id,
+            'status' => 'approved',
+            'total_amount' => 1500000,
+            'order_date' => now()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($this->admin)->postJson("/api/purchase-orders/{$po->id}/approve");
+
+        $response->assertStatus(422)
+            ->assertJsonPath('status', 'error');
+    }
 }

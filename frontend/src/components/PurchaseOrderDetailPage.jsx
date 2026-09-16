@@ -21,9 +21,11 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  Package
+  Package,
+  ShieldCheck
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { vendorService } from '../services/vendorService';
@@ -42,43 +44,68 @@ export default function PurchaseOrderDetailPage({
   const [warehouseDetails, setWarehouseDetails] = useState(null);
   const [relatedGRN, setRelatedGRN] = useState(null);
   const [relatedBill, setRelatedBill] = useState(null);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+
+  const handleConfirmApprove = () => {
+    if (!currentPO) return;
+    try {
+      const updated = procurementService.approvePurchaseOrder(currentPO.id);
+      setCurrentPO(updated || { ...currentPO, status: 'approved' });
+      setIsApproveModalOpen(false);
+      onShowToast(`Purchase Order ${currentPO.po_number} berhasil diotorisasi.`);
+    } catch (err) {
+      console.error(err);
+      onShowToast('Gagal mengotorisasi Purchase Order.');
+    }
+  };
 
   useEffect(() => {
-    let resolvedPO = po;
-    if (!resolvedPO && poId) {
-      resolvedPO = procurementService.getPurchaseOrderById(poId);
-    }
-    setCurrentPO(resolvedPO);
-
-    if (resolvedPO) {
-      // Find vendor details
-      if (resolvedPO.vendor_id) {
-        vendorService.fetchVendors({}).then(res => {
-          const vList = res?.data || [];
-          const found = vList.find(v => String(v.id) === String(resolvedPO.vendor_id));
-          if (found) setVendorDetails(found);
-        }).catch(() => {});
+    const refreshPO = () => {
+      let resolvedPO = null;
+      const lookupKey = poId || po?.id || po?.po_number;
+      if (lookupKey) {
+        resolvedPO = procurementService.getPurchaseOrderById(lookupKey);
       }
-
-      // Find warehouse details
-      if (resolvedPO.warehouse_id) {
-        warehouseService.fetchWarehouses({}).then(res => {
-          const wList = res?.data || [];
-          const found = wList.find(w => String(w.id) === String(resolvedPO.warehouse_id));
-          if (found) setWarehouseDetails(found);
-        }).catch(() => {});
+      if (!resolvedPO) {
+        resolvedPO = po;
       }
+      setCurrentPO(resolvedPO);
 
-      // Find linked GRN
-      const allGRNs = procurementService.getGoodsReceivingNotes();
-      const grn = allGRNs.find(g => g.po_number === resolvedPO.po_number);
-      if (grn) setRelatedGRN(grn);
+      if (resolvedPO) {
+        // Find vendor details
+        if (resolvedPO.vendor_id) {
+          vendorService.fetchVendors({}).then(res => {
+            const vList = res?.data || [];
+            const found = vList.find(v => String(v.id) === String(resolvedPO.vendor_id));
+            if (found) setVendorDetails(found);
+          }).catch(() => {});
+        }
 
-      // Find linked Bill
-      const allBills = procurementService.getVendorBills();
-      const bill = allBills.find(b => b.po_number === resolvedPO.po_number);
-      if (bill) setRelatedBill(bill);
-    }
+        // Find warehouse details
+        if (resolvedPO.warehouse_id) {
+          warehouseService.fetchWarehouses({ all: true }).then(res => {
+            const wList = res?.data || [];
+            const found = wList.find(w => String(w.id) === String(resolvedPO.warehouse_id));
+            if (found) setWarehouseDetails(found);
+          }).catch(() => {});
+        }
+
+        // Find related GRN and Bills
+        const allGRNs = procurementService.getGoodsReceivingNotes();
+        const grn = allGRNs.find(g => g.purchase_order_id === resolvedPO.id || g.po_number === resolvedPO.po_number);
+        if (grn) setRelatedGRN(grn);
+
+        const allBills = procurementService.getVendorBills();
+        const bill = allBills.find(b => b.po_number === resolvedPO.po_number);
+        if (bill) setRelatedBill(bill);
+      }
+    };
+
+    refreshPO();
+    const unsubscribe = procurementService.subscribe(() => {
+      refreshPO();
+    });
+    return () => unsubscribe();
   }, [po, poId]);
 
   if (!currentPO) {
@@ -139,6 +166,12 @@ export default function PurchaseOrderDetailPage({
           className: 'bg-rose-50 text-rose-800 border-rose-300',
           dot: 'bg-rose-500'
         };
+      case 'draft':
+        return {
+          label: 'Menunggu Otorisasi / Draft',
+          className: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+          dot: 'bg-neutral-500'
+        };
       default:
         return {
           label: status || 'Draft',
@@ -184,6 +217,14 @@ export default function PurchaseOrderDetailPage({
             tooltip="Cetak Purchase Order"
             variant="secondary"
           />
+          {currentPO.status === 'draft' && (
+            <IconButton
+              icon={ShieldCheck}
+              onClick={() => setIsApproveModalOpen(true)}
+              tooltip="Otorisasi / Setujui PO"
+              variant="primary"
+            />
+          )}
           {['approved', 'ordered', 'sent', 'partially_received'].includes(currentPO.status) && onReceivePO && (
             <IconButton
               icon={PackageCheck}
@@ -554,6 +595,31 @@ export default function PurchaseOrderDetailPage({
           {currentPO.notes ? currentPO.notes : 'Tidak ada catatan atau instruksi khusus dari tim pengadaan.'}
         </p>
       </div>
+
+      {/* Modal Konfirmasi Otorisasi Dokumen PO */}
+      <ConfirmationModal
+        isOpen={isApproveModalOpen}
+        onClose={() => setIsApproveModalOpen(false)}
+        onConfirm={handleConfirmApprove}
+        title="Otorisasi Purchase Order"
+        subtitle="Pengesahan Dokumen Pengadaan Resmi"
+        message={`Apakah Anda yakin ingin menyetujui dan mengotorisasi Purchase Order ${currentPO?.po_number}? Status dokumen pengadaan akan diubah menjadi APPROVED sehingga barang dapat dikirim supplier dan siap diterima di gudang.`}
+        confirmText="Otorisasi PO"
+        variant="info"
+      >
+        {currentPO && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Supplier:</span>
+              <span className="font-bold text-neutral-900">{currentPO.vendor?.company_name || currentPO.vendor_name || '-'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total Komitmen Anggaran:</span>
+              <span className="font-mono font-bold text-neutral-900">{formatRupiah(currentPO.total_amount || 0)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmationModal>
     </div>
   );
 }

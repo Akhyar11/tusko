@@ -138,6 +138,7 @@ Route::prefix('purchase-orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'store']);
     Route::get('/{idOrPoNumber}', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'show']);
+    Route::post('/{idOrPoNumber}/approve', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'approve']);
     Route::post('/{idOrPoNumber}/receive', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'receive']);
     Route::post('/{idOrPoNumber}/cancel', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'cancel']);
 });
