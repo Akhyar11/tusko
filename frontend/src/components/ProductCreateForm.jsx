@@ -790,8 +790,10 @@ export default function ProductCreateForm({
 
       {/* Main Form Layout (3/4 form + 1/4 tips) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Left 2 Columns: Details & Variant Matrix */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Main Form Area (3/4) */}
+        <div className="lg:col-span-3 grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+          {/* Left Columns: Details & Variant Matrix */}
+          <div className="xl:col-span-2 space-y-6">
           {/* Section 1: Informasi Dasar */}
           <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
             <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
@@ -813,19 +815,22 @@ export default function ProductCreateForm({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5 gap-2">
-                  <label className="text-xs font-sport font-black uppercase tracking-wider text-neutral-900 whitespace-nowrap">
-                    Kategori Produk (Bisa Pilih Lebih Dari Satu) <span className="text-rose-500">*</span>
+              <div className="min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                    Kategori Produk <span className="text-rose-500">*</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleNavigateToCategories}
-                    className="text-[11px] font-sport font-bold uppercase tracking-wider text-amber-700 hover:text-amber-800 hover:underline cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap"
-                  >
-                    <FolderKanban size={12} />
-                    <span>Master Kategori</span>
-                  </button>
+                  {onNavigateToCategories && (
+                    <button
+                      type="button"
+                      onClick={handleNavigateToCategories}
+                      className="text-[10px] font-sport font-bold uppercase tracking-wider text-amber-700 hover:text-amber-800 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
+                      title="Kelola Master Kategori Produk"
+                    >
+                      <FolderKanban size={11} />
+                      <span>Master</span>
+                    </button>
+                  )}
                 </div>
                 <ServerSideSelect
                   isMulti={true}
@@ -866,19 +871,20 @@ export default function ProductCreateForm({
                 )}
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5 gap-2">
-                  <label className="text-xs font-sport font-black uppercase tracking-wider text-neutral-900 whitespace-nowrap">
+              <div className="min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                     Mitra Supplier
                   </label>
                   {onNavigateToSuppliers && (
                     <button
                       type="button"
                       onClick={handleNavigateToSuppliers}
-                      className="text-[11px] font-sport font-bold uppercase tracking-wider text-amber-700 hover:text-amber-800 hover:underline cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap"
+                      className="text-[10px] font-sport font-bold uppercase tracking-wider text-amber-700 hover:text-amber-800 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
+                      title="Kelola Master Supplier / Vendor"
                     >
-                      <Building2 size={12} />
-                      <span>Master Supplier</span>
+                      <Building2 size={11} />
+                      <span>Master</span>
                     </button>
                   )}
                 </div>
@@ -1137,7 +1143,7 @@ export default function ProductCreateForm({
                     </div>
                     <div className="text-right text-[10px] font-sport text-neutral-500 max-w-[140px] leading-tight hidden sm:block">
                       {pointType === 'percentage'
-                        ? `${pointValue || 0}% dari Rp ${(Number(price) || 0).toLocaleString('id-ID')}`
+                        ? `${pointValue || 0}% dari ${formatRupiah(Number(price) || 0)}`
                         : 'Reward flat per unit'}
                     </div>
                   </div>
@@ -1888,6 +1894,7 @@ export default function ProductCreateForm({
               </button>
             </div>
           </div>
+        </div>
         </div>
 
         <FormTipsPanel
