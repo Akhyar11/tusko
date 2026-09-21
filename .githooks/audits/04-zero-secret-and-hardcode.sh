@@ -75,7 +75,7 @@ echo "$APP_CHANGES" >> "$PROMPT_FILE"
 echo "" >> "$PROMPT_FILE"
 echo "Git Diff (Staged Changes):" >> "$PROMPT_FILE"
 echo '```diff' >> "$PROMPT_FILE"
-sed -n '1,120p' <<< "$STAGED_APP_DIFF" >> "$PROMPT_FILE"
+echo "${STAGED_APP_DIFF:0:80000}" >> "$PROMPT_FILE"
 echo '```' >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"

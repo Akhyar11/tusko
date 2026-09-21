@@ -26,7 +26,7 @@ Git Diff (Staged Frontend Changes):
 ```diff
 EOF
 
-sed -n '1,120p' <<< "$STAGED_DIFF" >> "$PROMPT_FILE"
+echo "${STAGED_DIFF:0:80000}" >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
 ```

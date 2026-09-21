@@ -39,7 +39,7 @@ Git Diff (Staged Backend Changes):
 ```diff
 EOF
 
-sed -n '1,120p' <<< "$STAGED_BE_DIFF" >> "$PROMPT_FILE"
+echo "${STAGED_BE_DIFF:0:80000}" >> "$PROMPT_FILE"
 
 cat << 'EOF' >> "$PROMPT_FILE"
 ```

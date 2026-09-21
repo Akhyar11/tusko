@@ -185,10 +185,12 @@ while IFS= read -r f; do
       *) continue ;;
     esac
     [ "$SKELETON_BUDGET" -le 0 ] && break
-    echo "--- FILE: $f ---" >> "$PROMPT_FILE"
-    TAKEN=$(grep -n -E 'className|<select|<input|<textarea|<button|<h1|<h2|<label|ServerSideSelect|FormTipsPanel|lg:col-span|limitOptions|selectable|MoreVertical|bulkActions' "$f" | head -n 120 | wc -l)
-    grep -n -E 'className|<select|<input|<textarea|<button|<h1|<h2|<label|ServerSideSelect|FormTipsPanel|lg:col-span|limitOptions|selectable|MoreVertical|bulkActions' "$f" | head -n 120 >> "$PROMPT_FILE"
-    SKELETON_BUDGET=$((SKELETON_BUDGET - TAKEN))
+    MATCHES=$(grep -m 120 -n -E 'className|<select|<input|<textarea|<button|<h1|<h2|<label|ServerSideSelect|FormTipsPanel|lg:col-span|limitOptions|selectable|MoreVertical|bulkActions' "$f")
+    if [ -n "$MATCHES" ]; then
+        echo "$MATCHES" >> "$PROMPT_FILE"
+        TAKEN=$(printf "%s\n" "$MATCHES" | wc -l)
+        SKELETON_BUDGET=$((SKELETON_BUDGET - TAKEN))
+    fi
 done <<< "$ALL_CHANGED"
 echo '```' >> "$PROMPT_FILE"
 

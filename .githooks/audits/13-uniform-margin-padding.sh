@@ -42,7 +42,7 @@ while IFS= read -r f; do
     if [[ "$basename_file" =~ (ListPage|ManagementPage|SettingsPage|TransactionsPage|CreatePage|EditPage|ProductCreateForm|ProductEditForm|StockMutationPage|AdminDashboardPage)\.jsx$ ]]; then
         # Cek apakah ada tag root div yang menggunakan space-y-6 tanpa pb-12
         if grep -q -E 'className=["'\'']space-y-6(["'\'']|[[:space:]]+(animate-in|bg-))' "$f" && ! grep -q 'pb-12' "$f"; then
-            ln=$(grep -n -E 'className=["'\'']space-y-6' "$f" | head -n1 | cut -d: -f1)
+            ln=$(grep -m 1 -n -E 'className=["'\'']space-y-6' "$f" | cut -d: -f1)
             [ -z "$ln" ] && ln=1
             deterministic_reject "$f:$ln" \
                 "Root container halaman admin tidak memakai padding bottom kanonis (Aturan 29: WAJIB 'space-y-6 pb-12 animate-in fade-in duration-200')." \

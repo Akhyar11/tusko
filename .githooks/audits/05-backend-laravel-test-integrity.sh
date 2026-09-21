@@ -40,7 +40,7 @@ ATURAN INTEGRITAS BACKEND & TEST:
 Git Diff:
 ```diff
 EOF
-    sed -n '1,120p' <<< "$STAGED_PHP_DIFF" >> "$PROMPT_FILE"
+    echo "${STAGED_PHP_DIFF:0:80000}" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 

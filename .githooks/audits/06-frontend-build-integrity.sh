@@ -26,7 +26,7 @@ ATURAN INTEGRITAS FRONTEND BUILD:
 Git Diff:
 ```diff
 EOF
-    sed -n '1,120p' <<< "$STAGED_FE_DIFF" >> "$PROMPT_FILE"
+    echo "${STAGED_FE_DIFF:0:80000}" >> "$PROMPT_FILE"
     cat << 'EOF' >> "$PROMPT_FILE"
 ```
 

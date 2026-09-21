@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 [Tusko Agent Audit Runner] Menjalankan modul-modul pengujian terpisah..."
+echo "🚀 [Tusko Agent Audit Runner] Memulai pipeline audit commit..."
 
 STAGED_DIFF=$(git diff --cached)
 
@@ -9,25 +9,163 @@ if [ -z "$STAGED_DIFF" ]; then
     exit 0
 fi
 
-HOOKS_DIR="$(dirname "$0")/audits"
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$REPO_ROOT" || exit 1
 
-if [ -d "$HOOKS_DIR" ]; then
-    for script in "$HOOKS_DIR"/*.sh; do
-        if [ -x "$script" ]; then
-            "$script"
-            EXIT_CODE=$?
-            if [ $EXIT_CODE -ne 0 ]; then
+# ==============================================================================
+# FASE 1: FAIL-FAST CHECKS (< 1 - 2 Detik)
+# Uji proteksi dasar, sintaks PHP & kompilasi frontend SEBELUM memanggil AI.
+# Jika ada typo kode / error sintaks, commit BERHENTI SEKETIKA tanpa buang waktu.
+# ==============================================================================
+echo "⚡ [Fase 1: Fail-Fast] Menjalankan verifikasi sintaks & build lokal..."
+
+# 1. Branch Protection Hard Check
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [ "$CURRENT_BRANCH" = "master" ] || [ "$CURRENT_BRANCH" = "main" ]; then
+    if [ "$ALLOW_MASTER_COMMIT" != "1" ]; then
+        echo ""
+        echo "❌ =============================================================================="
+        echo "❌ [Fail-Fast Branch Protection] DILARANG COMMIT LANGSUNG DI BRANCH '$CURRENT_BRANCH'!"
+        echo "❌ =============================================================================="
+        echo "💡 Sesuai SOP kolaborasi tim di PANDUAN_PEMBAGIAN_TUGAS_TIM.md:"
+        echo "   1. Buat branch fitur baru: git checkout -b feat/nama-fitur-anda"
+        echo "   2. Lakukan commit pada branch fitur tersebut."
+        echo "   (Bypass darurat jika diizinkan: ALLOW_MASTER_COMMIT=1 git commit -m '...')"
+        echo ""
+        exit 1
+    fi
+fi
+
+# 2. PHP Syntax Lint (Fail-Fast untuk Backend)
+STAGED_PHP=$(git diff --cached --name-only -- "backend/**/*.php" 2>/dev/null)
+if [ -n "$STAGED_PHP" ]; then
+    for file in $STAGED_PHP; do
+        if [ -f "$REPO_ROOT/$file" ]; then
+            LINT_OUTPUT=$(php -l "$REPO_ROOT/$file" 2>&1)
+            if [ $? -ne 0 ]; then
                 echo ""
-                echo "❌ ====================================================="
-                echo "❌ COMMIT DITOLAK: Audit $(basename "$script") gagal!"
-                echo "❌ ====================================================="
-                echo "💡 Harap perbaiki masalah pada audit di atas sebelum commit."
+                echo "❌ =============================================================================="
+                echo "❌ [Fail-Fast Backend] SYNTAX ERROR PADA FILE: $file"
+                echo "❌ =============================================================================="
+                echo "$LINT_OUTPUT"
+                echo "💡 Perbaiki kesalahan sintaks PHP di atas sebelum commit."
                 echo ""
-                exit $EXIT_CODE
+                exit 1
             fi
         fi
     done
 fi
 
+# 3. Frontend Build & JSX Integrity (Fail-Fast untuk Frontend)
+STAGED_FE=$(git diff --cached --name-only -- "frontend/src/**" "frontend/package.json" "frontend/vite.config.js" 2>/dev/null)
+if [ -n "$STAGED_FE" ]; then
+    echo "🔍 [Fail-Fast Frontend] Menguji bundling & kompilasi JSX (npm run build)..."
+    BUILD_OUTPUT=$(cd "$REPO_ROOT/frontend" && npm run build 2>&1)
+    BUILD_EXIT=$?
+    if [ $BUILD_EXIT -ne 0 ]; then
+        echo ""
+        echo "❌ =============================================================================="
+        echo "❌ [Fail-Fast Frontend] NPM RUN BUILD GAGAL!"
+        echo "❌ =============================================================================="
+        echo "$BUILD_OUTPUT" | tail -n 25
+        echo "------------------------------------------------------------------------------"
+        echo "💡 Ditemukan kesalahan sintaks atau impor modul JSX pada frontend."
+        echo "   Harap perbaiki sebelum melakukan commit."
+        echo ""
+        exit 1
+    fi
+fi
+
+echo "✅ [Fase 1: Fail-Fast] Lolos! Sintaks & build lokal valid."
+
+# ==============================================================================
+# FASE 2: PARALLEL AI AUDITS (~30 - 45 Detik)
+# Menjalankan seluruh skrip audit AI secara bersamaan di background.
+# ==============================================================================
+HOOKS_DIR="$(dirname "$0")/audits"
+
+if [ ! -d "$HOOKS_DIR" ]; then
+    echo "⚠️ Direktori audit tidak ditemukan di $HOOKS_DIR."
+    exit 0
+fi
+
+TMP_AUDIT_DIR=$(mktemp -d -t tusko-audit-XXXXXX)
+cleanup() {
+    rm -rf "$TMP_AUDIT_DIR"
+}
+trap cleanup EXIT INT TERM
+
+declare -a AUDIT_PIDS
+declare -a AUDIT_NAMES
+declare -a AUDIT_LOGS
+
+echo "⚡ [Fase 2: Parallel AI Audits] Menjalankan seluruh modul audit AI secara paralel..."
+
+idx=0
+for script in "$HOOKS_DIR"/*.sh; do
+    if [ -x "$script" ]; then
+        audit_name=$(basename "$script")
+        log_file="$TMP_AUDIT_DIR/${audit_name}.log"
+        
+        # Jalankan audit script di background
+        "$script" > "$log_file" 2>&1 &
+        
+        AUDIT_PIDS[$idx]=$!
+        AUDIT_NAMES[$idx]="$audit_name"
+        AUDIT_LOGS[$idx]="$log_file"
+        ((idx++))
+    fi
+done
+
+# ==============================================================================
+# FASE 3: AGGREGATE & VERDICT
+# Tunggu semua proses selesai, tampilkan log jika ada yang gagal/REJECTED.
+# ==============================================================================
+echo "⏳ Menunggu seluruh modul audit (${#AUDIT_PIDS[@]} modul) selesai dievaluasi..."
+
+HAS_FAILURE=0
+declare -a FAILED_AUDITS
+
+for i in "${!AUDIT_PIDS[@]}"; do
+    pid="${AUDIT_PIDS[$i]}"
+    name="${AUDIT_NAMES[$i]}"
+    log="${AUDIT_LOGS[$i]}"
+    
+    wait "$pid"
+    exit_code=$?
+    
+    # Cek apakah exit_code gagal ATAU ada kata penolakan tegas di log
+    if [ $exit_code -ne 0 ] || grep -E -q "(^|[[:space:]]|\*\*)(REJECTED|DITOLAK)([[:space:]]|:|\*\*|$)" "$log"; then
+        HAS_FAILURE=1
+        FAILED_AUDITS+=("$name")
+        echo ""
+        echo "❌ =============================================================================="
+        echo "❌ AUDIT DITOLAK / GAGAL: $name"
+        echo "❌ =============================================================================="
+        cat "$log"
+        echo ""
+    else
+        # Jika berhasil, cetak baris konfirmasi
+        pass_msg=$(grep -E '(PASSED|Skip|lolos|sukses|berhasil)' "$log" | tail -n 1)
+        if [ -n "$pass_msg" ]; then
+            echo "$pass_msg"
+        else
+            echo "✅ [$name] PASSED."
+        fi
+    fi
+done
+
+if [ $HAS_FAILURE -ne 0 ]; then
+    echo "❌ =============================================================================="
+    echo "❌ COMMIT DITOLAK! Ditemukan pelanggaran pada audit berikut:"
+    for fa in "${FAILED_AUDITS[@]}"; do
+        echo "   - $fa"
+    done
+    echo "❌ =============================================================================="
+    echo "💡 Harap perbaiki seluruh pelanggaran di atas sebelum melakukan commit."
+    exit 1
+fi
+
+echo ""
 echo "🎉 [Tusko Agent Audit Runner] Seluruh modul pengujian independen PASSED! Commit dilanjutkan."
 exit 0
