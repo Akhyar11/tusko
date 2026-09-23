@@ -22,6 +22,9 @@ export default function VendorBillFilterDrawer({
   // Status filter
   statusFilter = 'all',
   onStatusFilterChange = () => {},
+  // Invoice proof filter
+  invoiceStatus = 'all',
+  onInvoiceStatusChange = () => {},
   // Date range (Bill Date)
   billDateStart = '',
   onBillDateStartChange = () => {},
@@ -41,9 +44,16 @@ export default function VendorBillFilterDrawer({
 }) {
   const billStatusOptions = [
     { value: 'all', label: 'Semua Status Pelunasan' },
-    { value: 'unpaid', label: '🟡 Belum Lunas (Kewajiban Aktif)' },
+    { value: 'unpaid', label: '🔴 Belum Lunas (Kewajiban Aktif)' },
+    { value: 'partially_paid', label: '🟡 Dibayar Sebagian (Cicilan)' },
     { value: 'paid', label: '🟢 Telah Lunas (Kas Terbayar)' },
     { value: 'overdue', label: '🔴 Melewati Jatuh Tempo' }
+  ];
+
+  const invoiceStatusOptions = [
+    { value: 'all', label: 'Semua Status Bukti Invoice' },
+    { value: 'attached', label: '🟢 Invoice Terlampir' },
+    { value: 'missing', label: '🔴 Belum Ada Bukti Invoice' }
   ];
 
   return (
@@ -148,6 +158,19 @@ export default function VendorBillFilterDrawer({
                 value={statusFilter}
                 onChange={onStatusFilterChange}
                 placeholder="Pilih status pelunasan..."
+              />
+            </div>
+
+            {/* 4b. Status Bukti Invoice */}
+            <div className="space-y-2">
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                Status Bukti Invoice Vendor
+              </label>
+              <ServerSideSelect
+                options={invoiceStatusOptions}
+                value={invoiceStatus}
+                onChange={onInvoiceStatusChange}
+                placeholder="Pilih status bukti invoice..."
               />
             </div>
 

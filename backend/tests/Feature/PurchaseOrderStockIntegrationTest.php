@@ -13,6 +13,7 @@ use App\Models\Vendor;
 use App\Models\VendorBill;
 use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class PurchaseOrderStockIntegrationTest extends TestCase
@@ -237,7 +238,11 @@ class PurchaseOrderStockIntegrationTest extends TestCase
             ],
         ];
 
-        $response = $this->actingAs($this->admin)->postJson("/api/purchase-orders/{$po->id}/receive", $receivePayload);
+        $response = $this->actingAs($this->admin)->post(
+            "/api/purchase-orders/{$po->id}/receive",
+            array_merge($receivePayload, ['invoice_file' => UploadedFile::fake()->image('invoice.jpg')]),
+            ['Accept' => 'application/json']
+        );
 
         $response->assertStatus(200)
             ->assertJsonPath('status', 'success');

@@ -3,14 +3,16 @@ import {
   AlertCircle,
   Boxes,
   ClipboardCheck,
+  FileText,
   PackageCheck,
   PackageX,
   Truck,
-  Wallet
+  Upload
 } from 'lucide-react';
 import TextInput from '../molecules/TextInput';
 import TextArea from '../molecules/TextArea';
 import ServerSideSelect from '../molecules/ServerSideSelect';
+import FileInput from '../molecules/FileInput';
 import { procurementService } from '../../services/procurementService';
 import { formatRupiah } from '../../utils/formatters';
 
@@ -57,6 +59,8 @@ export default function GoodsReceivingForm({
   const [rows, setRows] = useState(() => buildRows(po));
   const [deliveryOrderNumber, setDeliveryOrderNumber] = useState('');
   const [notes, setNotes] = useState('');
+  const [invoiceFile, setInvoiceFile] = useState(null);
+  const [billAmountInput, setBillAmountInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -78,8 +82,11 @@ export default function GoodsReceivingForm({
     const totalAccepted = rows.reduce((s, r) => s + (Number(r.accepted) || 0), 0);
     const totalRejected = rows.reduce((s, r) => s + (Number(r.rejected) || 0), 0);
     const billAmount = rows.reduce((s, r) => s + (Number(r.accepted) || 0) * r.unitPrice, 0);
-    return { totalRemaining, totalAccepted, totalRejected, billAmount };
+    const poTotal = rows.reduce((s, r) => s + r.ordered * r.unitPrice, 0);
+    return { totalRemaining, totalAccepted, totalRejected, billAmount, poTotal };
   }, [rows]);
+
+  const effectiveBillAmount = billAmountInput === '' ? totals.billAmount : (Number(billAmountInput) || 0);
 
   const updateRow = (index, field, value) => {
     setRows((prev) => {
@@ -114,6 +121,16 @@ export default function GoodsReceivingForm({
       return;
     }
 
+    if (!invoiceFile) {
+      setErrorMessage('Bukti invoice vendor (foto/PDF) wajib diunggah.');
+      return;
+    }
+
+    if (Number(billAmountInput) < 0) {
+      setErrorMessage('Nominal tagihan tidak boleh negatif.');
+      return;
+    }
+
     const acceptedQuantities = {};
     const rejectedQuantities = {};
     const rejectionReasons = {};
@@ -130,6 +147,8 @@ export default function GoodsReceivingForm({
       const result = await procurementService.receivePurchaseOrder(po.id, {
         delivery_order_number: deliveryOrderNumber,
         notes,
+        bill_amount: effectiveBillAmount,
+        invoice_file: invoiceFile,
         accepted_quantities: acceptedQuantities,
         rejected_quantities: rejectedQuantities,
         rejection_reasons: rejectionReasons
@@ -290,6 +309,51 @@ export default function GoodsReceivingForm({
           </table>
         </div>
 
+        {/* Bukti Invoice Vendor & Nominal Tagihan */}
+        <div>
+          <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+            <FileText size={16} className="text-amber-500" />
+            <span>Bukti Invoice Vendor &amp; Nominal Tagihan</span>
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                Bukti Invoice Vendor (Foto/PDF) <span className="text-rose-500">*</span>
+              </label>
+              <FileInput accept="image/*,application/pdf" onChange={setInvoiceFile}>
+                <div className="w-full min-h-[42px] px-3.5 py-2.5 bg-neutral-50 hover:bg-neutral-100 border border-dashed border-neutral-300 hover:border-amber-500 rounded-none flex items-center gap-2 cursor-pointer transition-colors">
+                  <Upload size={15} className="text-neutral-500 shrink-0" />
+                  <span className="text-xs font-medium text-neutral-700 truncate">
+                    {invoiceFile ? invoiceFile.name : 'Pilih berkas invoice (JPG/PNG/PDF, maks 5MB)...'}
+                  </span>
+                </div>
+              </FileInput>
+              {invoiceFile && (
+                <span className="text-[11px] text-emerald-700 font-bold mt-1 block">
+                  Terlampir: {invoiceFile.name}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                Nominal Tagihan Vendor (Rp) <span className="text-rose-500">*</span>
+              </label>
+              <TextInput
+                type="number"
+                min="0"
+                weight="mono"
+                value={billAmountInput === '' ? totals.billAmount : billAmountInput}
+                onChange={setBillAmountInput}
+              />
+              <span className="text-[11px] text-neutral-500 mt-1 block">
+                Nilai barang diterima: <span className="font-mono font-bold">{formatRupiah(totals.billAmount)}</span> • Total PO: <span className="font-mono font-bold">{formatRupiah(totals.poTotal)}</span>. Ubah bila vendor tetap menagih penuh walau ada barang hilang.
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Catatan & Rekap */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
           <div>
@@ -319,10 +383,10 @@ export default function GoodsReceivingForm({
             </div>
             <div className="flex justify-between items-center border-t border-neutral-200 pt-2">
               <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
-                Nilai Tagihan Diterima
+                Nominal Tagihan Vendor
               </span>
               <span className="text-lg font-mono font-black text-amber-700">
-                {formatRupiah(totals.billAmount)}
+                {formatRupiah(effectiveBillAmount)}
               </span>
             </div>
           </div>

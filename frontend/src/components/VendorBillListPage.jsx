@@ -10,19 +10,20 @@ import {
   Calendar, 
   Building2, 
   Check, 
+  FileText,
   SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import VendorBillFilterDrawer from './organisms/VendorBillFilterDrawer';
 import ServerSideTable from './ServerSideTable';
-import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { useBillTableStore } from '../stores/useProcurementTableStores';
 
 export default function VendorBillListPage({
   onShowToast = () => {},
-  onViewDetail = () => {}
+  onViewDetail = () => {},
+  onPayBill = () => {}
 }) {
   const [vendorBills, setVendorBills] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
@@ -52,6 +53,7 @@ export default function VendorBillListPage({
     if (filters.poSearchQuery) count++;
     if (filters.vendorSearchQuery) count++;
     if (filters.statusFilter && filters.statusFilter !== 'all') count++;
+    if (filters.invoiceStatus && filters.invoiceStatus !== 'all') count++;
     if (filters.billDateStart) count++;
     if (filters.billDateEnd) count++;
     if (filters.dueDateStart) count++;
@@ -68,9 +70,6 @@ export default function VendorBillListPage({
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
-
-  // Modals
-  const [payingBill, setPayingBill] = useState(null);
 
   const loadBills = async () => {
     try {
@@ -107,27 +106,14 @@ export default function VendorBillListPage({
   // KPIs
   const kpis = useMemo(() => {
     const totalCount = vendorBills.length;
-    const unpaidBills = vendorBills.filter(b => b.status === 'unpaid');
+    const unpaidBills = vendorBills.filter(b => b.status === 'unpaid' || b.status === 'partially_paid');
     const unpaidCount = unpaidBills.length;
     const unpaidAmount = unpaidBills.reduce((sum, b) => sum + (Number(b.amount) - Number(b.paid_amount || 0)), 0);
     const paidCount = vendorBills.filter(b => b.status === 'paid').length;
     const totalPaidAmount = vendorBills.reduce((sum, b) => sum + (Number(b.paid_amount) || 0), 0);
-    return { totalCount, unpaidCount, unpaidAmount, paidCount, totalPaidAmount };
+    const missingInvoiceCount = vendorBills.filter(b => !b.has_invoice && !b.invoice_file_url).length;
+    return { totalCount, unpaidCount, unpaidAmount, paidCount, totalPaidAmount, missingInvoiceCount };
   }, [vendorBills]);
-
-  // Handler: Pay Bill
-  const handleConfirmPay = async () => {
-    if (!payingBill) return;
-    try {
-      await procurementService.payVendorBill(payingBill.id);
-      onShowToast(`Pelunasan tagihan ${payingBill.bill_number} berhasil dicatat.`);
-      setPayingBill(null);
-      setActiveActionMenuId(null);
-      loadBills();
-    } catch (err) {
-      onShowToast(err.message || 'Gagal mencatat pelunasan tagihan.', { type: 'error' });
-    }
-  };
 
   // Table Columns
   const columns = [
@@ -201,6 +187,32 @@ export default function VendorBillListPage({
       }
     },
     {
+      key: 'invoice_file_url',
+      label: 'Bukti Invoice',
+      align: 'center',
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' ? val : {}) || {};
+        const hasInvoice = Boolean(r.invoice_file_url || r.has_invoice);
+        if (!hasInvoice) {
+          return (
+            <span className="inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border bg-rose-50 text-rose-800 border-rose-300">
+              Belum Ada
+            </span>
+          );
+        }
+        return (
+          <a
+            href={r.invoice_file_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 transition-colors"
+          >
+            Terlampir
+          </a>
+        );
+      }
+    },
+    {
       key: 'status',
       label: 'Status Pembayaran',
       align: 'center',
@@ -208,11 +220,16 @@ export default function VendorBillListPage({
         const r = row || (typeof val === 'object' ? val : {}) || {};
         const status = typeof val === 'string' ? val : (r.status || 'unpaid');
         const isPaid = status === 'paid';
+        const isPartial = status === 'partially_paid';
+        const cls = isPaid
+          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+          : isPartial
+          ? 'bg-amber-50 text-amber-800 border-amber-300'
+          : 'bg-rose-50 text-rose-800 border-rose-300';
+        const label = isPaid ? 'LUNAS' : isPartial ? 'DIBAYAR SEBAGIAN' : 'BELUM BAYAR';
         return (
-          <span className={`inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border ${
-            isPaid ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-800 border-amber-300'
-          }`}>
-            {isPaid ? 'LUNAS' : 'BELUM BAYAR'}
+          <span className={`inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border ${cls}`}>
+            {label}
           </span>
         );
       }
@@ -255,7 +272,7 @@ export default function VendorBillListPage({
                   <button
                     type="button"
                     onClick={() => {
-                      setPayingBill(r);
+                      onPayBill(r);
                       setActiveActionMenuId(null);
                     }}
                     className="w-full px-3 py-2 text-left text-xs font-sport font-bold uppercase text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
@@ -360,6 +377,22 @@ export default function VendorBillListPage({
             <span>Realisasi pembayaran vendor</span>
           </div>
         </div>
+
+        <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Tagihan Tanpa Bukti</span>
+            <FileText size={16} className={kpis.missingInvoiceCount > 0 ? 'text-rose-500' : 'text-emerald-600'} />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-black font-sport ${kpis.missingInvoiceCount > 0 ? 'text-rose-700' : 'text-neutral-950'}`}>
+              {kpis.missingInvoiceCount}
+            </span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Faktur</span>
+          </div>
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
+            <span>Belum ada lampiran invoice</span>
+          </div>
+        </div>
       </div>
 
       {/* Tabel Data Tunggal ServerSideTable */}
@@ -391,31 +424,6 @@ export default function VendorBillListPage({
         emptyMessage="Belum ada data tagihan vendor."
       />
 
-      {/* Modal Konfirmasi Pelunasan Tagihan */}
-      <ConfirmationModal
-        isOpen={Boolean(payingBill)}
-        onClose={() => setPayingBill(null)}
-        onConfirm={handleConfirmPay}
-        title="Konfirmasi Pelunasan Hutang"
-        subtitle="Pencatatan pembayaran kas ke vendor."
-        message={`Apakah Anda yakin ingin mencatat pelunasan penuh tagihan ${payingBill?.bill_number || ''} sebesar ${formatRupiah(payingBill?.amount || 0)}?`}
-        confirmText="Konfirmasi Bayar"
-        variant="info"
-      >
-        {payingBill && (
-          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Vendor:</span>
-              <span className="font-bold text-neutral-900">{payingBill.vendor_name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Nominal Tagihan:</span>
-              <span className="font-mono font-bold text-neutral-950">{formatRupiah(payingBill.amount)}</span>
-            </div>
-          </div>
-        )}
-      </ConfirmationModal>
-
       {/* Drawer Filter Tagihan Vendor (Bills) */}
       <VendorBillFilterDrawer
         isOpen={isFilterDrawerOpen}
@@ -429,6 +437,8 @@ export default function VendorBillListPage({
         onVendorSearchQueryChange={(val) => setFilter('vendorSearchQuery', val)}
         statusFilter={filters.statusFilter || 'all'}
         onStatusFilterChange={(val) => setFilter('statusFilter', val)}
+        invoiceStatus={filters.invoiceStatus || 'all'}
+        onInvoiceStatusChange={(val) => setFilter('invoiceStatus', val)}
         billDateStart={filters.billDateStart || ''}
         onBillDateStartChange={(val) => setFilter('billDateStart', val)}
         billDateEnd={filters.billDateEnd || ''}

@@ -3,10 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\VendorBillPaymentResource;
 use App\Http\Resources\VendorBillResource;
+use App\Models\Transaction;
 use App\Models\VendorBill;
+use App\Models\VendorBillPayment;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class VendorBillController extends Controller
 {
@@ -40,6 +46,13 @@ class VendorBillController extends Controller
         $status = $request->input('status', $request->input('statusFilter'));
         if (!empty($status) && $status !== 'all') {
             $query->where('status', $status);
+        }
+
+        $invoiceStatus = $request->input('invoice_status', $request->input('invoiceStatus'));
+        if ($invoiceStatus === 'attached') {
+            $query->whereNotNull('invoice_file_path');
+        } elseif ($invoiceStatus === 'missing') {
+            $query->whereNull('invoice_file_path');
         }
 
         $billStart = $request->input('bill_date_start', $request->input('billDateStart'));
@@ -97,21 +110,169 @@ class VendorBillController extends Controller
     }
 
     /**
-     * Tandai tagihan vendor sebagai lunas.
+     * Tampilkan detail satu tagihan vendor beserta rincian item & riwayat pembayaran.
      */
-    public function pay(string $id): JsonResponse
+    public function show(string $id): JsonResponse
     {
-        $bill = VendorBill::with(['vendor', 'purchaseOrder', 'receivingNote'])->findOrFail($id);
-
-        $bill->update([
-            'paid_amount' => $bill->amount,
-            'status' => 'paid',
-        ]);
+        $bill = VendorBill::with([
+            'vendor',
+            'purchaseOrder',
+            'receivingNote.items.product',
+            'receivingNote.items.variant',
+            'payments.creator',
+        ])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
-            'message' => "Tagihan {$bill->bill_number} berhasil dilunasi.",
-            'data' => new VendorBillResource($bill->fresh(['vendor', 'purchaseOrder', 'receivingNote'])),
+            'data' => new VendorBillResource($bill),
         ]);
+    }
+
+    /**
+     * Daftar riwayat pembayaran tagihan.
+     */
+    public function payments(string $id): JsonResponse
+    {
+        $bill = VendorBill::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => VendorBillPaymentResource::collection(
+                $bill->payments()->with('creator')->latest('paid_at')->latest('id')->get()
+            ),
+        ]);
+    }
+
+    /**
+     * Catat pembayaran tagihan vendor (boleh sebagian) beserta bukti bayar.
+     */
+    public function storePayment(Request $request, string $id): JsonResponse
+    {
+        $bill = VendorBill::with(['vendor', 'purchaseOrder', 'receivingNote'])->findOrFail($id);
+
+        if ($bill->status === 'paid') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tagihan ini sudah lunas.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string|max:100',
+            'reference_number' => 'nullable|string|max:100',
+            'paid_at' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
+            'proof_file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $outstanding = max(0, (float) $bill->amount - (float) $bill->paid_amount);
+        if ((float) $validated['amount'] > $outstanding + 0.001) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nominal pembayaran melebihi sisa hutang tagihan.',
+                'errors' => [
+                    'amount' => ['Nominal tidak boleh melebihi sisa hutang (Rp ' . number_format($outstanding, 0, ',', '.') . ').'],
+                ],
+            ], 422);
+        }
+
+        $proofFile = $request->file('proof_file');
+        $proofStored = FileStorageService::storeUploadedFile($proofFile, 'bills/payments');
+
+        $result = DB::transaction(function () use ($bill, $validated, $request, $proofStored, $proofFile) {
+            $payment = VendorBillPayment::create([
+                'vendor_bill_id' => $bill->id,
+                'amount' => (float) $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'paid_at' => $validated['paid_at'] ?? now()->toDateString(),
+                'proof_file_path' => $proofStored['path'],
+                'proof_file_name' => $proofFile->getClientOriginalName(),
+                'proof_file_mime' => $proofFile->getClientMimeType(),
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => $request->user()?->id,
+            ]);
+
+            $this->recalculateBill($bill);
+
+            Transaction::create([
+                'transaction_number' => Transaction::generateTransactionNumber('expense'),
+                'type' => 'expense',
+                'category' => 'vendor_payment',
+                'category_label' => 'Pembayaran Hutang Vendor',
+                'amount' => (float) $validated['amount'],
+                'description' => "Pembayaran tagihan {$bill->bill_number} ({$bill->vendor?->company_name})",
+                'payment_method' => $validated['payment_method'],
+                'status' => 'settled',
+                'customer_name' => $bill->vendor?->company_name,
+                'reference_type' => 'vendor_bill_payment',
+                'reference_id' => $payment->id,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            return $payment;
+        });
+
+        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Pembayaran tagihan {$bill->bill_number} berhasil dicatat.",
+            'data' => [
+                'bill' => new VendorBillResource($bill),
+                'payment' => new VendorBillPaymentResource($result->load('creator')),
+            ],
+        ], 201);
+    }
+
+    /**
+     * Batalkan (void) sebuah pembayaran tagihan dan hitung ulang status tagihan.
+     */
+    public function destroyPayment(string $id, string $paymentId): JsonResponse
+    {
+        $bill = VendorBill::with(['vendor', 'purchaseOrder', 'receivingNote'])->findOrFail($id);
+        $payment = VendorBillPayment::where('vendor_bill_id', $bill->id)->findOrFail($paymentId);
+
+        DB::transaction(function () use ($bill, $payment) {
+            if ($payment->proof_file_path) {
+                Storage::disk(config('filesystems.default', 'public'))->delete($payment->proof_file_path);
+            }
+
+            Transaction::where('reference_type', 'vendor_bill_payment')
+                ->where('reference_id', $payment->id)
+                ->delete();
+
+            $payment->delete();
+
+            $this->recalculateBill($bill);
+        });
+
+        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Pembayaran tagihan {$bill->bill_number} berhasil dibatalkan.",
+            'data' => new VendorBillResource($bill),
+        ]);
+    }
+
+    /**
+     * Hitung ulang paid_amount & status tagihan dari total pembayaran.
+     */
+    private function recalculateBill(VendorBill $bill): void
+    {
+        $paid = (float) $bill->payments()->sum('amount');
+        $bill->paid_amount = $paid;
+
+        if ($paid <= 0) {
+            $bill->status = 'unpaid';
+        } elseif ($paid + 0.001 < (float) $bill->amount) {
+            $bill->status = 'partially_paid';
+        } else {
+            $bill->status = 'paid';
+        }
+
+        $bill->save();
     }
 }

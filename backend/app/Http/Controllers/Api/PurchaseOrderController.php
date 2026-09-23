@@ -16,6 +16,7 @@ use App\Models\StockMutation;
 use App\Models\Vendor;
 use App\Models\VendorBill;
 use App\Models\Warehouse;
+use App\Services\FileStorageService;
 use App\Services\IdentityCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -250,6 +251,8 @@ class PurchaseOrderController extends Controller
         $validated = $request->validate([
             'delivery_order_number' => 'nullable|string',
             'notes' => 'nullable|string',
+            'invoice_file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'bill_amount' => 'nullable|numeric|min:0',
             'accepted_quantities' => 'nullable|array', // key: item_id, val: accepted_qty
             'accepted_quantities.*' => 'nullable|integer|min:0',
             'rejected_quantities' => 'nullable|array', // key: item_id, val: rejected_qty (rusak/hilang)
@@ -290,7 +293,13 @@ class PurchaseOrderController extends Controller
             ];
         }
 
-        return DB::transaction(function () use ($po, $validated, $plan, $request) {
+        // Simpan bukti invoice vendor ke Storage (foto/PDF) setelah validasi lolos.
+        $invoiceFile = $request->file('invoice_file');
+        $invoiceStored = FileStorageService::storeUploadedFile($invoiceFile, 'bills/invoices');
+        $invoiceFileName = $invoiceFile->getClientOriginalName();
+        $invoiceFileMime = $invoiceFile->getClientMimeType();
+
+        return DB::transaction(function () use ($po, $validated, $plan, $request, $invoiceStored, $invoiceFileName, $invoiceFileMime) {
             $dateStr = now()->format('Ym');
             $grnCount = GoodsReceivingNote::whereYear('created_at', now()->year)
                 ->whereMonth('created_at', now()->month)
@@ -407,10 +416,11 @@ class PurchaseOrderController extends Controller
             }
 
             // Create Vendor Bill
-            $billCount = VendorBill::whereYear('created_at', now()->year)
-                ->whereMonth('created_at', now()->month)
-                ->count() + 1;
-            $billNumber = sprintf('BILL-%s-%03d', $dateStr, $billCount);
+            $billNumber = IdentityCodeService::generate(VendorBill::class, 'BILL', 'bill_number');
+
+            $billAmount = (array_key_exists('bill_amount', $validated) && $validated['bill_amount'] !== null)
+                ? (float) $validated['bill_amount']
+                : $totalBillAmount;
 
             $termsDays = $po->vendor?->payment_terms_days ?? 30;
             $bill = VendorBill::create([
@@ -418,11 +428,14 @@ class PurchaseOrderController extends Controller
                 'vendor_id' => $po->vendor_id,
                 'purchase_order_id' => $po->id,
                 'grn_id' => $grn->id,
-                'amount' => $totalBillAmount,
+                'amount' => $billAmount,
                 'paid_amount' => 0.00,
                 'status' => 'unpaid',
                 'bill_date' => now()->toDateString(),
                 'due_date' => now()->addDays($termsDays)->toDateString(),
+                'invoice_file_path' => $invoiceStored['path'],
+                'invoice_file_name' => $invoiceFileName,
+                'invoice_file_mime' => $invoiceFileMime,
             ]);
 
             if ($hasRejection) {

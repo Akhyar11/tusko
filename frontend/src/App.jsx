@@ -265,6 +265,7 @@ export default function App() {
   const [poReceiveMode, setPoReceiveMode] = useState(false);
   const [selectedGrnForDetail, setSelectedGrnForDetail] = useState(null);
   const [selectedBillForDetail, setSelectedBillForDetail] = useState(null);
+  const [billPayMode, setBillPayMode] = useState(false);
   const [orders, setOrders] = useState(mockOrders);
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
@@ -1474,14 +1475,22 @@ export default function App() {
             }}
             onViewDetail={(bill) => {
               setSelectedBillForDetail(bill);
+              setBillPayMode(false);
+              setCurrentView('procurement-bill-detail');
+            }}
+            onPayBill={(bill) => {
+              setSelectedBillForDetail(bill);
+              setBillPayMode(true);
               setCurrentView('procurement-bill-detail');
             }}
           />
         ) : currentView === 'procurement-bill-detail' ? (
           <VendorBillDetailPage
             bill={selectedBillForDetail}
+            initialPayMode={billPayMode}
             onNavigateBack={() => {
               setSelectedBillForDetail(null);
+              setBillPayMode(false);
               setCurrentView('procurement-bills');
             }}
             onShowToast={showToast}

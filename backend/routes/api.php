@@ -153,7 +153,10 @@ Route::prefix('goods-receiving-notes')->group(function () {
 
 Route::prefix('vendor-bills')->group(function () {
     Route::get('/', [VendorBillController::class, 'index']);
-    Route::post('/{id}/pay', [VendorBillController::class, 'pay']);
+    Route::get('/{id}', [VendorBillController::class, 'show']);
+    Route::get('/{id}/payments', [VendorBillController::class, 'payments']);
+    Route::post('/{id}/payments', [VendorBillController::class, 'storePayment']);
+    Route::delete('/{id}/payments/{paymentId}', [VendorBillController::class, 'destroyPayment']);
 });
 
 Route::prefix('warehouses')->group(function () {

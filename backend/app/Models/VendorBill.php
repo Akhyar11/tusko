@@ -20,6 +20,9 @@ class VendorBill extends Model
         'status',
         'bill_date',
         'due_date',
+        'invoice_file_path',
+        'invoice_file_name',
+        'invoice_file_mime',
     ];
 
     protected $casts = [
@@ -42,5 +45,10 @@ class VendorBill extends Model
     public function receivingNote(): BelongsTo
     {
         return $this->belongsTo(GoodsReceivingNote::class, 'grn_id');
+    }
+
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VendorBillPayment::class);
     }
 }

@@ -78,7 +78,7 @@ const GRN_FILTER_KEYS = [
 ];
 
 const BILL_FILTER_KEYS = [
-  'search', 'searchQuery', 'poSearchQuery', 'vendorSearchQuery', 'statusFilter',
+  'search', 'searchQuery', 'poSearchQuery', 'vendorSearchQuery', 'statusFilter', 'invoiceStatus',
   'billDateStart', 'billDateEnd', 'dueDateStart', 'dueDateEnd', 'minAmount', 'maxAmount'
 ];
 
@@ -228,13 +228,30 @@ export const procurementService = {
 
   async receivePurchaseOrder(poId, receiveFormData = {}) {
     try {
-      const res = await apiClient.post(`/api/purchase-orders/${encodeURIComponent(poId)}/receive`, {
-        delivery_order_number: receiveFormData.delivery_order_number,
-        notes: receiveFormData.notes,
-        accepted_quantities: receiveFormData.accepted_quantities,
-        rejected_quantities: receiveFormData.rejected_quantities,
-        rejection_reasons: receiveFormData.rejection_reasons
+      const formData = new FormData();
+      if (receiveFormData.delivery_order_number) {
+        formData.append('delivery_order_number', receiveFormData.delivery_order_number);
+      }
+      if (receiveFormData.notes) {
+        formData.append('notes', receiveFormData.notes);
+      }
+      if (receiveFormData.bill_amount !== undefined && receiveFormData.bill_amount !== null && receiveFormData.bill_amount !== '') {
+        formData.append('bill_amount', receiveFormData.bill_amount);
+      }
+      Object.entries(receiveFormData.accepted_quantities || {}).forEach(([k, v]) => {
+        formData.append(`accepted_quantities[${k}]`, v);
       });
+      Object.entries(receiveFormData.rejected_quantities || {}).forEach(([k, v]) => {
+        formData.append(`rejected_quantities[${k}]`, v);
+      });
+      Object.entries(receiveFormData.rejection_reasons || {}).forEach(([k, v]) => {
+        formData.append(`rejection_reasons[${k}]`, v);
+      });
+      if (receiveFormData.invoice_file) {
+        formData.append('invoice_file', receiveFormData.invoice_file);
+      }
+
+      const res = await apiClient.post(`/api/purchase-orders/${encodeURIComponent(poId)}/receive`, formData);
       const data = res.data || {};
       notifyListeners();
       return {
@@ -248,15 +265,36 @@ export const procurementService = {
     }
   },
 
-  async payVendorBill(billId) {
-    try {
-      const res = await apiClient.post(`/api/vendor-bills/${encodeURIComponent(billId)}/pay`);
-      notifyListeners();
-      return res.data || null;
-    } catch (err) {
-      if (!err.isNetworkError) throw err;
-      return this._payVendorBillLocal(billId);
-    }
+  async getVendorBillById(billId) {
+    const res = await apiClient.get(`/api/vendor-bills/${encodeURIComponent(billId)}`);
+    return res.data || null;
+  },
+
+  async fetchVendorBillPayments(billId) {
+    const res = await apiClient.get(`/api/vendor-bills/${encodeURIComponent(billId)}/payments`);
+    return res.data || [];
+  },
+
+  async createVendorBillPayment(billId, paymentData = {}) {
+    const formData = new FormData();
+    formData.append('amount', paymentData.amount);
+    if (paymentData.payment_method) formData.append('payment_method', paymentData.payment_method);
+    if (paymentData.reference_number) formData.append('reference_number', paymentData.reference_number);
+    if (paymentData.paid_at) formData.append('paid_at', paymentData.paid_at);
+    if (paymentData.notes) formData.append('notes', paymentData.notes);
+    if (paymentData.proof_file) formData.append('proof_file', paymentData.proof_file);
+
+    const res = await apiClient.post(`/api/vendor-bills/${encodeURIComponent(billId)}/payments`, formData);
+    notifyListeners();
+    return res.data || null;
+  },
+
+  async voidVendorBillPayment(billId, paymentId) {
+    const res = await apiClient.delete(
+      `/api/vendor-bills/${encodeURIComponent(billId)}/payments/${encodeURIComponent(paymentId)}`
+    );
+    notifyListeners();
+    return res.data || null;
   },
 
   // ==========================================================================
@@ -390,14 +428,17 @@ export const procurementService = {
       grnRecord.status = 'discrepancy';
     }
 
-    const billNumber = `BILL-${yearMonth}-${String(currentBills.length + 1).padStart(3, '0')}`;
+    const billNumber = `BILL/${datePart}/${String(currentBills.length + 1).padStart(3, '0')}`;
+    const localBillAmount = (receiveFormData.bill_amount !== undefined && receiveFormData.bill_amount !== null && receiveFormData.bill_amount !== '')
+      ? Number(receiveFormData.bill_amount)
+      : totalBillAmount;
     const billRecord = {
       id: Date.now() + 1,
       bill_number: billNumber,
       po_number: targetPO.po_number,
       grn_number: grnNumber,
       vendor_name: targetPO.vendor_name,
-      amount: totalBillAmount,
+      amount: localBillAmount,
       paid_amount: 0,
       status: 'unpaid',
       bill_date: now.toISOString().split('T')[0],
@@ -411,18 +452,5 @@ export const procurementService = {
 
     const updatedTargetPO = updatedPOs.find((po) => po.id === poId) || targetPO;
     return { po: updatedTargetPO, grn: grnRecord, bill: billRecord };
-  },
-
-  _payVendorBillLocal(billId) {
-    const currentBills = this.getVendorBills();
-    const updated = currentBills.map((b) => {
-      if (b.id === billId) {
-        return { ...b, paid_amount: b.amount, status: 'paid' };
-      }
-      return b;
-    });
-    writeCache(STORAGE_KEYS.BILLS, updated);
-    notifyListeners();
-    return updated.find((b) => b.id === billId) || null;
   }
 };

@@ -21,6 +21,7 @@ class TransactionController extends Controller
         ['id' => 'shipping_fee', 'label' => 'Ongkos Kirim Kurir', 'type' => 'expense'],
         ['id' => 'gateway_fee', 'label' => 'Biaya Payment Gateway', 'type' => 'expense'],
         ['id' => 'restock', 'label' => 'Pengadaan Stok Produk', 'type' => 'expense'],
+        ['id' => 'vendor_payment', 'label' => 'Pembayaran Hutang Vendor', 'type' => 'expense'],
         ['id' => 'operational', 'label' => 'Operasional & Kemasan', 'type' => 'expense'],
         ['id' => 'refund', 'label' => 'Pengembalian Dana', 'type' => 'expense'],
     ];

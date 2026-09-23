@@ -213,6 +213,13 @@ export const useBillTableStore = createTableStore({
     if (status && status !== 'all') {
       list = list.filter(b => b.status === status);
     }
+    if (params.invoiceStatus && params.invoiceStatus !== 'all') {
+      if (params.invoiceStatus === 'attached') {
+        list = list.filter(b => b.invoice_file_url || b.has_invoice);
+      } else if (params.invoiceStatus === 'missing') {
+        list = list.filter(b => !(b.invoice_file_url || b.has_invoice));
+      }
+    }
     if (params.billDateStart) {
       list = list.filter(b => b.bill_date && b.bill_date >= params.billDateStart);
     }
@@ -239,6 +246,7 @@ export const useBillTableStore = createTableStore({
     poSearchQuery: '',
     vendorSearchQuery: '',
     statusFilter: 'all',
+    invoiceStatus: 'all',
     billDateStart: '',
     billDateEnd: '',
     dueDateStart: '',
