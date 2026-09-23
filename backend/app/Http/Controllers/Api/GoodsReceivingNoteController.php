@@ -5,11 +5,29 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\GoodsReceivingNoteResource;
 use App\Models\GoodsReceivingNote;
+use App\Services\IdentityCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class GoodsReceivingNoteController extends Controller
 {
+    /**
+     * Pratinjau nomor Surat Jalan (DO) berikutnya dengan format baku DO/ddmmyyyy/increment.
+     */
+    public function nextDeliveryOrderNumber(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'delivery_order_number' => IdentityCodeService::generate(
+                    GoodsReceivingNote::class,
+                    'DO',
+                    'delivery_order_number'
+                ),
+            ],
+        ]);
+    }
+
     /**
      * Tampilkan daftar Penerimaan Barang (GRN) dengan filter server-side.
      */

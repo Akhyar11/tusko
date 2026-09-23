@@ -59,7 +59,10 @@ class VendorApiTest extends TestCase
         $response = $this->postJson('/api/vendors', $payload);
         $response->assertStatus(201);
         $this->assertEquals('PT Tusko Material Global', $response->json('data.company_name'));
-        $this->assertNotEmpty($response->json('data.code'));
+        $this->assertMatchesRegularExpression(
+            '/^VND\/\d{8}\/\d{3,}$/',
+            (string) $response->json('data.code')
+        );
 
         $this->assertDatabaseHas('vendors', [
             'company_name' => 'PT Tusko Material Global',

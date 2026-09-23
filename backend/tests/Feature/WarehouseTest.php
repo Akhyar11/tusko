@@ -91,10 +91,11 @@ class WarehouseTest extends TestCase
         $response = $this->postJson('/api/warehouses', $payload);
         $response->assertStatus(201);
         $this->assertEquals('Gudang Transit Semarang', $response->json('data.name'));
-        $this->assertEquals('WH-001', $response->json('data.code'));
+        $expectedCode = 'WH/' . now()->format('dmY') . '/001';
+        $this->assertEquals($expectedCode, $response->json('data.code'));
         $this->assertDatabaseHas('warehouses', [
             'name' => 'Gudang Transit Semarang',
-            'code' => 'WH-001',
+            'code' => $expectedCode,
         ]);
     }
 

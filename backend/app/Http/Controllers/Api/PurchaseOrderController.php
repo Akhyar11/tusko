@@ -16,6 +16,7 @@ use App\Models\StockMutation;
 use App\Models\Vendor;
 use App\Models\VendorBill;
 use App\Models\Warehouse;
+use App\Services\IdentityCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -296,13 +297,22 @@ class PurchaseOrderController extends Controller
                 ->count() + 1;
             $grnNumber = sprintf('GRN-%s-%03d', $dateStr, $grnCount);
 
+            $deliveryOrderNumber = trim((string) ($validated['delivery_order_number'] ?? ''));
+            if ($deliveryOrderNumber === '') {
+                $deliveryOrderNumber = IdentityCodeService::generate(
+                    GoodsReceivingNote::class,
+                    'DO',
+                    'delivery_order_number'
+                );
+            }
+
             $grn = GoodsReceivingNote::create([
                 'grn_number' => $grnNumber,
                 'purchase_order_id' => $po->id,
                 'warehouse_id' => $po->warehouse_id,
                 'received_by' => $request->user()?->id,
                 'received_date' => now()->toDateString(),
-                'delivery_order_number' => $validated['delivery_order_number'] ?? ('DO-' . substr((string) time(), -6)),
+                'delivery_order_number' => $deliveryOrderNumber,
                 'status' => 'verified',
                 'notes' => $validated['notes'] ?? null,
             ]);

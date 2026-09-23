@@ -42,7 +42,6 @@ import AdminDashboardPage from './components/AdminDashboardPage';
 import PurchaseOrderListPage from './components/PurchaseOrderListPage';
 import PurchaseOrderDetailPage from './components/PurchaseOrderDetailPage';
 import GoodsReceiptListPage from './components/GoodsReceiptListPage';
-import GoodsReceivingCreatePage from './components/GoodsReceivingCreatePage';
 import GoodsReceivingDetailPage from './components/GoodsReceivingDetailPage';
 import VendorBillListPage from './components/VendorBillListPage';
 import VendorBillDetailPage from './components/VendorBillDetailPage';
@@ -70,7 +69,6 @@ const VALID_VIEWS = [
   'procurement',
   'procurement-pos',
   'procurement-grn',
-  'procurement-grn-create',
   'procurement-grn-detail',
   'procurement-bills',
   'procurement-bill-detail',
@@ -121,7 +119,6 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement') return 'procurement-pos';
     if (rawPath === '/admin/procurement/pos' || rawPath === '/admin/procurement/po') return 'procurement-pos';
     if (rawPath === '/admin/procurement/grn') return 'procurement-grn';
-    if (rawPath === '/admin/procurement/grn/create') return 'procurement-grn-create';
     if (rawPath === '/admin/procurement/grn/detail') return 'procurement-grn-detail';
     if (rawPath === '/admin/procurement/bills' || rawPath === '/admin/procurement/bill') return 'procurement-bills';
     if (rawPath === '/admin/procurement/bills/detail' || rawPath === '/admin/procurement/bill/detail') return 'procurement-bill-detail';
@@ -265,7 +262,7 @@ export default function App() {
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
-  const [selectedPoForReceive, setSelectedPoForReceive] = useState(null);
+  const [poReceiveMode, setPoReceiveMode] = useState(false);
   const [selectedGrnForDetail, setSelectedGrnForDetail] = useState(null);
   const [selectedBillForDetail, setSelectedBillForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
@@ -322,7 +319,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-create', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -411,10 +408,6 @@ export default function App() {
     } else if (currentView === 'procurement-grn') {
       if (window.location.pathname !== '/admin/procurement/grn') {
         window.history.pushState(null, '', '/admin/procurement/grn');
-      }
-    } else if (currentView === 'procurement-grn-create') {
-      if (window.location.pathname !== '/admin/procurement/grn/create') {
-        window.history.pushState(null, '', '/admin/procurement/grn/create');
       }
     } else if (currentView === 'procurement-grn-detail') {
       if (window.location.pathname !== '/admin/procurement/grn/detail') {
@@ -527,7 +520,6 @@ export default function App() {
       'procurement-po-create',
       'procurement-po-detail',
       'procurement-grn',
-      'procurement-grn-create',
       'procurement-grn-detail',
       'procurement-bills',
       'procurement-bill-detail',
@@ -1412,11 +1404,13 @@ export default function App() {
             onNavigateToBills={() => setCurrentView('procurement-bills')}
             onNavigateToCreate={() => setCurrentView('procurement-po-create')}
             onNavigateToReceive={(targetPO) => {
-              setSelectedPoForReceive(targetPO);
-              setCurrentView('procurement-grn-create');
+              setSelectedPoForDetail(targetPO);
+              setPoReceiveMode(true);
+              setCurrentView('procurement-po-detail');
             }}
             onViewDetail={(targetPO) => {
               setSelectedPoForDetail(targetPO);
+              setPoReceiveMode(false);
               setCurrentView('procurement-po-detail');
             }}
           />
@@ -1428,6 +1422,7 @@ export default function App() {
         ) : currentView === 'procurement-po-detail' ? (
           <PurchaseOrderDetailPage
             po={selectedPoForDetail}
+            initialReceiveMode={poReceiveMode}
             poId={(() => {
               const rawPath = window.location.pathname.replace(/\/+$/, '');
               if (rawPath.startsWith('/admin/procurement/pos/') && rawPath !== '/admin/procurement/pos/create') {
@@ -1437,11 +1432,8 @@ export default function App() {
             })()}
             onNavigateBack={() => {
               setSelectedPoForDetail(null);
+              setPoReceiveMode(false);
               setCurrentView('procurement-pos');
-            }}
-            onReceivePO={(targetPO) => {
-              setSelectedPoForReceive(targetPO);
-              setCurrentView('procurement-grn-create');
             }}
             onCancelPO={async (targetPO) => {
               try {
@@ -1451,15 +1443,6 @@ export default function App() {
               } catch (err) {
                 showToast('Gagal membatalkan Purchase Order.');
               }
-            }}
-            onShowToast={showToast}
-          />
-        ) : currentView === 'procurement-grn-create' ? (
-          <GoodsReceivingCreatePage
-            po={selectedPoForReceive}
-            onNavigateBack={() => {
-              setSelectedPoForReceive(null);
-              setCurrentView('procurement-pos');
             }}
             onShowToast={showToast}
           />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, 
   Building2, 
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ConfirmationModal from './ConfirmationModal';
+import GoodsReceivingForm from './organisms/GoodsReceivingForm';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { vendorService } from '../services/vendorService';
@@ -34,6 +35,7 @@ import { warehouseService } from '../services/warehouseService';
 export default function PurchaseOrderDetailPage({
   po = null,
   poId = null,
+  initialReceiveMode = false,
   onNavigateBack = () => {},
   onReceivePO = null,
   onCancelPO = null,
@@ -46,6 +48,24 @@ export default function PurchaseOrderDetailPage({
   const [relatedBill, setRelatedBill] = useState(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReceiving, setIsReceiving] = useState(Boolean(initialReceiveMode));
+  const receiveFormRef = useRef(null);
+
+  useEffect(() => {
+    if (isReceiving && receiveFormRef.current) {
+      receiveFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isReceiving]);
+
+  const handleReceived = async () => {
+    setIsReceiving(false);
+    try {
+      const refreshed = await procurementService.getPurchaseOrderById(currentPO?.id);
+      if (refreshed) setCurrentPO(refreshed);
+    } catch (err) {
+      // biarkan data lama tampil bila refresh gagal
+    }
+  };
 
   const handleConfirmApprove = async () => {
     if (!currentPO) return;
@@ -243,10 +263,10 @@ export default function PurchaseOrderDetailPage({
               variant="primary"
             />
           )}
-          {['approved', 'ordered', 'sent', 'partially_received'].includes(currentPO.status) && onReceivePO && (
+          {['approved', 'ordered', 'sent', 'partially_received'].includes(currentPO.status) && (
             <IconButton
               icon={PackageCheck}
-              onClick={() => onReceivePO(currentPO)}
+              onClick={() => setIsReceiving(true)}
               tooltip="Terima Barang Fisik (GRN)"
               variant="primary"
             />
@@ -261,6 +281,18 @@ export default function PurchaseOrderDetailPage({
           )}
         </div>
       </div>
+
+      {/* Panel Penerimaan Barang Inline (tanpa pindah halaman) */}
+      {isReceiving && (
+        <div ref={receiveFormRef} className="scroll-mt-24">
+          <GoodsReceivingForm
+            po={currentPO}
+            onCancel={() => setIsReceiving(false)}
+            onReceived={handleReceived}
+            onShowToast={onShowToast}
+          />
+        </div>
+      )}
 
       {/* Grid KPI Metrik Pengadaan Kanonis (4 Kartu) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">

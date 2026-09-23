@@ -147,6 +147,7 @@ Route::prefix('purchase-orders')->group(function () {
 
 Route::prefix('goods-receiving-notes')->group(function () {
     Route::get('/', [GoodsReceivingNoteController::class, 'index']);
+    Route::get('/next-number', [GoodsReceivingNoteController::class, 'nextDeliveryOrderNumber']);
     Route::get('/{id}', [GoodsReceivingNoteController::class, 'show']);
 });
 

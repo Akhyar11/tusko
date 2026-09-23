@@ -16,6 +16,28 @@ if [ -z "$STAGED_BE_DIFF" ]; then
     exit 0
 fi
 
+# =====================================================================
+# CEK DETERMINISTIK: Format kode identitas model (Aturan 6)
+# Model identitas (Vendor, Warehouse) WAJIB memakai format baku
+# PREFIK/ddmmyyyy/increment via App\Services\IdentityCodeService.
+# Daftar pengecualian (kode semantik/referensi): Voucher, Expedition,
+# Attribute, OrderStatus, PaymentStatus, Permission.
+# =====================================================================
+LEGACY_CODE_HITS=$(git diff --cached -- "backend/app/**" 2>/dev/null | grep -nE "^\+.*['\"](VND|WH|DO)-" || true)
+if [ -n "$LEGACY_CODE_HITS" ]; then
+    echo ""
+    echo "❌ =========================================================================="
+    echo "❌ [Audit Backend Consistency] DITOLAK (Deterministic Check)!"
+    echo "❌ =========================================================================="
+    echo "REJECTED"
+    echo "  - Lokasi Berkas: (baris diff berikut pada backend/app)"
+    echo "$LEGACY_CODE_HITS"
+    echo "  - Pelanggaran: Format kode identitas lama 'VND-'/'WH-'/'DO-' terdeteksi. Aturan 6 mewajibkan format baku 'PREFIK/ddmmyyyy/increment'."
+    echo "  - Solusi: Gunakan App\\Services\\IdentityCodeService::generate(\$modelClass, 'VND'|'WH'|'DO', \$column) alih-alih str_pad/time manual."
+    echo "❌ =========================================================================="
+    exit 1
+fi
+
 PROMPT_FILE=$(mktemp)
 cat << 'EOF' > "$PROMPT_FILE"
 Kamu adalah Backend Architecture Consistency Auditor untuk aplikasi Laravel 11.
@@ -34,6 +56,12 @@ STANDAR KONSISTENSI BACKEND TUSKO:
 5. Standardisasi Penyimpanan File & Media ke Storage:
    - Seluruh operasi penyimpanan atau pengunggahan berkas/media (bukti transfer, foto/gambar produk, avatar pengguna, dokumen, dsb.) WAJIB disimpan ke disk storage melalui Laravel Storage facade atau FileStorageService (`Storage::disk(config('filesystems.default', 'public'))`).
    - DILARANG KERAS menyimpan file secara manual ke folder lokal statis atau menggunakan hardcoded disk `'local'`/`'public'` tanpa melalui dynamic storage disk configuration, dan DILARANG menyimpan string data base64 gambar langsung ke kolom database text/varchar tanpa dipindahkan ke Storage.
+6. Standardisasi Kode Identitas Model (Kolom `code`):
+   - Model yang kolom `code`-nya merepresentasikan IDENTITAS dan di-generate otomatis WAJIB memakai format baku `PREFIK/ddmmyyyy/increment` (contoh: `VND/23092026/001`, `WH/23092026/001`), increment direset per tanggal.
+   - Nomor Surat Jalan / Delivery Order (`delivery_order_number`) pada GRN WAJIB memakai format baku yang sama: `DO/ddmmyyyy/increment`.
+   - Generator WAJIB memakai service reusable `App\Services\IdentityCodeService` (DILARANG menulis ulang logika prefix/str_pad/time manual di controller).
+   - DAFTAR PENGECUALIAN (kode semantik/referensi, BUKAN identitas sequence — JANGAN ditolak dan JANGAN di-loop): Voucher, Expedition, Attribute, OrderStatus, PaymentStatus, Permission.
+   - JIKA ada model/migrasi BARU yang memperkenalkan kolom `code` di luar daftar pengecualian di atas dan tidak mengikuti format baku: REJECT, dan instruksikan agar agen MENANYAKAN format kode ke user/prompter terlebih dahulu sebelum melanjutkan.
 
 Git Diff (Staged Backend Changes):
 ```diff

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, ChevronDown, ChevronUp, Check, X, Loader2 } from 'lucide-react';
 
 /**
@@ -45,8 +46,30 @@ export default function ServerSideSelect({
 
   const containerRef = useRef(null);
   const dropdownListRef = useRef(null);
+  const dropdownPanelRef = useRef(null);
   const searchInputRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState(null);
+
+  // Hitung posisi floating panel (fixed) agar TIDAK terpotong container/table overflow.
+  const updateMenuPosition = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+    const width = Math.min(Math.max(rect.width, 240), viewportW - 16);
+    const left = Math.max(8, Math.min(rect.left, viewportW - width - 8));
+    const spaceBelow = viewportH - rect.bottom;
+    const openUp = spaceBelow < 280 && rect.top > spaceBelow;
+    setMenuPosition({
+      left,
+      width,
+      top: openUp ? undefined : rect.bottom + 4,
+      bottom: openUp ? viewportH - rect.top + 4 : undefined,
+      maxHeight: Math.max(180, (openUp ? rect.top : spaceBelow) - 16),
+    });
+  }, []);
 
   // Normalize static options to { value, label } format
   const normalizedStaticOptions = useCallback(() => {
@@ -109,6 +132,7 @@ export default function ServerSideSelect({
   // Open dropdown & focus search input
   const handleOpen = () => {
     if (disabled) return;
+    updateMenuPosition();
     setIsOpen(true);
     setSearchQuery('');
     setPage(1);
@@ -151,7 +175,9 @@ export default function ServerSideSelect({
   // Click outside and Escape key handler
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const insideTrigger = containerRef.current && containerRef.current.contains(e.target);
+      const insidePanel = dropdownPanelRef.current && dropdownPanelRef.current.contains(e.target);
+      if (!insideTrigger && !insidePanel) {
         setIsOpen(false);
       }
     };
@@ -160,17 +186,22 @@ export default function ServerSideSelect({
         setIsOpen(false);
       }
     };
+    const handleReposition = () => updateMenuPosition();
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('scroll', handleReposition, true);
+      window.addEventListener('resize', handleReposition);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('resize', handleReposition);
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [isOpen]);
+  }, [isOpen, updateMenuPosition]);
 
   // Find currently selected option(s)
   const selectedValues = isMulti
@@ -329,9 +360,20 @@ export default function ServerSideSelect({
         </div>
       </div>
 
-      {/* Dropdown Floating Panel */}
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-neutral-300 rounded-none shadow-xl z-50 animate-in fade-in duration-150">
+      {/* Dropdown Floating Panel (portal agar tidak terpotong container/table overflow) */}
+      {isOpen && menuPosition && createPortal(
+        <div
+          ref={dropdownPanelRef}
+          style={{
+            position: 'fixed',
+            top: menuPosition.top,
+            bottom: menuPosition.bottom,
+            left: menuPosition.left,
+            width: menuPosition.width,
+            zIndex: 9999,
+          }}
+          className="bg-white border border-neutral-300 rounded-none shadow-xl animate-in fade-in duration-150"
+        >
           
           {/* Server-side Search Input Inside Dropdown */}
           <div className="p-2 border-b border-neutral-200 bg-neutral-50">
@@ -431,7 +473,8 @@ export default function ServerSideSelect({
             )}
           </div>
 
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

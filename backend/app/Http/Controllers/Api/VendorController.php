@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vendor;
+use App\Services\IdentityCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -79,13 +80,7 @@ class VendorController extends Controller
         ]);
 
         if (empty($validated['code'])) {
-            $count = Vendor::count() + 1;
-            $code = 'VND-' . str_pad($count, 3, '0', STR_PAD_LEFT);
-            while (Vendor::where('code', $code)->exists()) {
-                $count++;
-                $code = 'VND-' . str_pad($count, 3, '0', STR_PAD_LEFT);
-            }
-            $validated['code'] = $code;
+            $validated['code'] = IdentityCodeService::generate(Vendor::class, 'VND');
         } else {
             $validated['code'] = strtoupper(trim($validated['code']));
         }

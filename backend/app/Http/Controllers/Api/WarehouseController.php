@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Warehouse;
+use App\Services\IdentityCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -104,13 +105,7 @@ class WarehouseController extends Controller
         ]);
 
         if (empty($validated['code'])) {
-            $count = Warehouse::count() + 1;
-            $code = 'WH-' . str_pad($count, 3, '0', STR_PAD_LEFT);
-            while (Warehouse::where('code', $code)->exists()) {
-                $count++;
-                $code = 'WH-' . str_pad($count, 3, '0', STR_PAD_LEFT);
-            }
-            $validated['code'] = $code;
+            $validated['code'] = IdentityCodeService::generate(Warehouse::class, 'WH');
         } else {
             $validated['code'] = strtoupper(trim($validated['code']));
         }

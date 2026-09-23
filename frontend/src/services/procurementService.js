@@ -159,6 +159,24 @@ export const procurementService = {
     }
   },
 
+  /**
+   * Pratinjau nomor Surat Jalan (DO) berikutnya (format baku DO/ddmmyyyy/increment).
+   */
+  async getNextDeliveryOrderNumber() {
+    try {
+      const res = await apiClient.get('/api/goods-receiving-notes/next-number');
+      return res?.data?.delivery_order_number || null;
+    } catch (err) {
+      if (!err.isNetworkError) throw err;
+      const now = new Date();
+      const datePart = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+      const todayCount = this.getGoodsReceivingNotes().filter(
+        (g) => typeof g.delivery_order_number === 'string' && g.delivery_order_number.startsWith(`DO/${datePart}/`)
+      ).length;
+      return `DO/${datePart}/${String(todayCount + 1).padStart(3, '0')}`;
+    }
+  },
+
   // ==========================================================================
   // MUTATIONS (API-first, fallback lokal saat backend offline)
   // ==========================================================================
@@ -305,6 +323,12 @@ export const procurementService = {
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
     const grnNumber = `GRN-${yearMonth}-${String(currentGRNs.length + 1).padStart(3, '0')}`;
 
+    const datePart = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+    const todayDoCount = currentGRNs.filter(
+      (g) => typeof g.delivery_order_number === 'string' && g.delivery_order_number.startsWith(`DO/${datePart}/`)
+    ).length;
+    const fallbackDoNumber = `DO/${datePart}/${String(todayDoCount + 1).padStart(3, '0')}`;
+
     const grnRecord = {
       id: Date.now(),
       grn_number: grnNumber,
@@ -312,7 +336,7 @@ export const procurementService = {
       vendor_name: targetPO.vendor_name,
       warehouse_name: targetPO.warehouse_name,
       received_date: now.toISOString().split('T')[0],
-      delivery_order_number: receiveFormData.delivery_order_number || `DO-${Date.now().toString().slice(-6)}`,
+      delivery_order_number: receiveFormData.delivery_order_number || fallbackDoNumber,
       received_by: receiveFormData.received_by || '',
       status: 'verified',
       items: (targetPO.items || []).map((it) => {

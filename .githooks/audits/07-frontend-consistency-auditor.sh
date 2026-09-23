@@ -112,6 +112,17 @@ while IFS= read -r f; do
     done
 done <<< "$LIST_FILES"
 
+# I. Dropdown WAJIB keluar dari container tabel (portal), agar tidak terpotong
+#    overflow-x-auto / overflow-hidden pada wrapper tabel.
+SSS_PATH="frontend/src/components/molecules/ServerSideSelect.jsx"
+if printf "%s\n" "$ALL_CHANGED" | grep -qx "$SSS_PATH" && [ -f "$SSS_PATH" ]; then
+    if ! grep -q 'createPortal' "$SSS_PATH"; then
+        deterministic_reject "$SSS_PATH:1" \
+            "Dropdown ServerSideSelect tidak dirender keluar dari container tabel (WAJIB portal ke document.body; dropdown apapun DILARANG terpotong oleh overflow-x-auto/overflow-hidden wrapper tabel)." \
+            "Render floating panel dropdown via createPortal(..., document.body) dengan position: fixed + kalkulasi rect trigger."
+    fi
+fi
+
 if [ -s "$VIOLATIONS_FILE" ]; then
     echo ""
     echo "❌ =========================================================================="
@@ -166,6 +177,7 @@ STANDAR KONSISTENSI FRONTEND TUSKO (ringkas — detail penuh di AGENTS.md):
 26. Form WAJIB grid lg:grid-cols-4 (form lg:col-span-3 + FormTipsPanel lg:col-span-1 sticky).
 27. Spesimen form 100% identik: label `block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5` + `*` rose; input `w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 focus:outline-none focus:border-amber-500 text-neutral-950 rounded-none`; dropdown WAJIB ServerSideSelect (LARANG native select); checkbox amber; h2 `text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3` + ikon amber 16; error `border-l-4 border-rose-600` + dismiss; submit amber full-width `w-full py-2.5 bg-amber-400 ... shadow-xs` + Save 15; sekunder full-width neutral; h1 `tracking-tight`; header form kanonis (back IconButton + h1, TANPA icon-box/deskripsi/tombol teks, shadow-2xs); root `animate-in fade-in`; palet form tanpa gray-*/focus:ring non-amber.
 28. SPESIMEN LIST UTAMA 100% identik (aturan 26): root `space-y-6 pb-12 animate-in fade-in duration-200`; kartu header `flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs`; kiri `min-w-0` > `flex items-start sm:items-center gap-3` > icon-box `w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0` (ikon 22) + h1 `text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight` + p `text-xs text-neutral-600 mt-0.5`; kanan HANYA IconButton `[Tambah primary][Filter secondary+badge]`; KPI grid `grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4`; kartu KPI `bg-white p-4 rounded-none border border-neutral-300 shadow-2xs` (judul uppercase + ikon 16; nilai `text-2xl font-black font-sport`; footer `border-t border-neutral-100 pt-1.5`); tabel ServerSideTable langsung + `selectable` + `limitOptions={[10, 25, 50, 100]}` + MoreVertical + bulk rose `bg-rose-700 hover:bg-rose-600`; FilterDrawer kanan; ConfirmationModal; Toast; palet tanpa gray-*.
+29. DROPDOWN WAJIB KELUAR DARI CONTAINER TABEL: Semua dropdown/popover (khususnya `ServerSideSelect` dan dropdown apapun) WAJIB dirender KELUAR dari container tabel (portal ke `document.body` dengan `position: fixed`), sehingga TIDAK terpotong oleh `overflow-x-auto`/`overflow-hidden` pada wrapper tabel. Dropdown yang ter-clip/terpotong di dalam sel/wrapper tabel = PELANGGARAN (REJECT).
 
 PENGECUALIAN: tab filter STATUS dalam satu entitas (mis. status pesanan) bukan pelanggaran aturan 16.
 

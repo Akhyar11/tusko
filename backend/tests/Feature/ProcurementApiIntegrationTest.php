@@ -294,4 +294,50 @@ class ProcurementApiIntegrationTest extends TestCase
         $this->assertEquals(0, $this->product->stock);
         $this->assertDatabaseCount('goods_receiving_notes', 0);
     }
+
+    public function test_receiving_po_generates_canonical_delivery_order_number_when_empty(): void
+    {
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-202609-API-DO',
+            'vendor_id' => $this->vendor->id,
+            'warehouse_id' => $this->warehouse->id,
+            'status' => 'approved',
+            'total_amount' => 1500000,
+            'order_date' => now()->toDateString(),
+        ]);
+
+        $item = $po->items()->create([
+            'product_id' => $this->product->id,
+            'product_variant_id' => null,
+            'ordered_quantity' => 5,
+            'received_quantity' => 0,
+            'unit_price' => 150000,
+            'subtotal' => 750000,
+        ]);
+
+        $response = $this->actingAs($this->admin)->postJson("/api/purchase-orders/{$po->id}/receive", [
+            'accepted_quantities' => [$item->id => 5],
+        ]);
+
+        $response->assertStatus(200);
+        $doNumber = (string) $response->json('data.grn.delivery_order_number');
+        $this->assertMatchesRegularExpression(
+            '/^DO\/' . now()->format('dmY') . '\/\d{3,}$/',
+            $doNumber
+        );
+        $this->assertDatabaseHas('goods_receiving_notes', ['delivery_order_number' => $doNumber]);
+    }
+
+    public function test_next_delivery_order_number_endpoint_returns_canonical_format(): void
+    {
+        $response = $this->actingAs($this->admin)->getJson('/api/goods-receiving-notes/next-number');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', 'success');
+
+        $this->assertMatchesRegularExpression(
+            '/^DO\/' . now()->format('dmY') . '\/\d{3,}$/',
+            (string) $response->json('data.delivery_order_number')
+        );
+    }
 }

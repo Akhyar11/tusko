@@ -186,6 +186,10 @@ Sesuai dokumen kanonis `PANDUAN_PEMBAGIAN_TUGAS_TIM.md`, pengerjaan proyek dibag
       * **Kartu Seksi Informasi Terstruktur**: Menggunakan kartu form/detail kanonis `bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-5` dengan section heading `h2` (`text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3` + ikon Lucide amber 16).
       * **Tabel Rincian Item / Matriks Varian**: Menampilkan tabel transparan dan komprehensif (Produk, Varian, SKU, Kuantitas Pesan vs Terima vs Sisa, Harga Satuan, Subtotal Nilai).
       * **Pelacakan Alur Dokumen & Audit Trail (*3-Way Matching Flow*)**: Menampilkan keterhubungan status dokumen upstream/downstream (PO ↔ GRN ↔ Vendor Bill ↔ Kas/Bank).
+31. **Wajib Dropdown Keluar dari Container Tabel (Portal Dropdown)**:
+    - Seluruh dropdown/popover (khususnya `molecules/ServerSideSelect` dan dropdown apapun) WAJIB dirender KELUAR dari container tabel menggunakan portal ke `document.body` dengan `position: fixed` (memanfaatkan `createPortal` + kalkulasi `getBoundingClientRect` trigger).
+    - DILARANG KERAS menampilkan dropdown yang terpotong/ter-clip oleh `overflow-x-auto` atau `overflow-hidden` pada wrapper tabel/sel. Dropdown yang tertutup container tabel adalah pelanggaran.
+    - Penegakan melalui modul auditor frontend yang sudah ada (`07-frontend-consistency-auditor.sh`), bukan auditor baru.
 </RULE[tusko_design_system]>
 
 <RULE[pre_commit_auditor]>
@@ -210,3 +214,14 @@ Repository ini dilengkapi dengan sistem auditor otomatis berbasis **OpenCode AI*
 Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang wajib memperbaiki masalah yang dilaporkan.
 </RULE[pre_commit_auditor]>
 
+
+<RULE[identity_code_standard]>
+# Standar Kode Identitas Model (Kolom `code`)
+
+1. **Format Baku Wajib**: Model yang kolom `code`-nya merepresentasikan IDENTITAS dan di-generate otomatis WAJIB memakai format baku `PREFIK/ddmmyyyy/increment` (contoh: `VND/23092026/001`, `WH/23092026/001`). Increment direset per tanggal.
+2. **Generator Reusable**: Pembuatan kode identitas WAJIB melalui service reusable `App\Services\IdentityCodeService` (`IdentityCodeService::generate($modelClass, 'PREFIK')`). DILARANG menulis ulang logika prefix/`str_pad` manual di controller.
+3. **Model Terdaftar**: Model identitas yang tunduk pada aturan ini saat ini adalah **Vendor** (prefix `VND`) dan **Warehouse** (prefix `WH`).
+4. **Daftar Pengecualian (Kode Semantik/Referensi)**: `Voucher`, `Expedition`, `Attribute`, `OrderStatus`, `PaymentStatus`, `Permission`. Kolom `code` pada model ini bersifat semantik/referensi (kode promo, kode kurir, kunci status/atribut/permission) sehingga DILARANG diformat sebagai sequence identitas. Auditor TIDAK BOLEH menolak/loop pada model-model ini.
+5. **Model/Table Baru yang Bersinggungan dengan `code`**: Jika Agent akan membuat model atau tabel baru yang memiliki kolom `code` di luar daftar pengecualian di atas, Agent WAJIB MENANYAKAN terlebih dahulu kepada user/prompter format kode yang diinginkan (apakah memakai format baku identitas atau format semantik khusus) sebelum menuliskannya.
+6. **Penegakan Auditor**: Aturan ini ditegakkan melalui modul auditor backend yang sudah ada (`08-backend-consistency-auditor.sh`), bukan auditor baru.
+</RULE[identity_code_standard]>
