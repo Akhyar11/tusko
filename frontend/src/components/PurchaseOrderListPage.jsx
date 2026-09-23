@@ -31,6 +31,7 @@ export default function PurchaseOrderListPage({
   onNavigateToGRN = () => {},
   onNavigateToBills = () => {},
   onNavigateToCreate = () => {},
+  onNavigateToReceive = () => {},
   onViewDetail = () => {}
 }) {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -73,12 +74,16 @@ export default function PurchaseOrderListPage({
   }, [filters]);
 
   const [selectedPOIds, setSelectedPOIds] = useState([]);
-  const [poToReceive, setPoToReceive] = useState(null);
   const [isBulkCancelModalOpen, setIsBulkCancelModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadPOs = () => {
-    const data = procurementService.getPurchaseOrders();
-    setPurchaseOrders(data);
+  const loadPOs = async () => {
+    try {
+      const res = await procurementService.fetchPurchaseOrders({ page: 1, per_page: 100 });
+      setPurchaseOrders(res.data || []);
+    } catch (err) {
+      setPurchaseOrders(procurementService.getPurchaseOrders());
+    }
     fetchData();
   };
 
@@ -105,33 +110,10 @@ export default function PurchaseOrderListPage({
     return { totalCount, ongoingCount, completedCount, totalProcurementValue };
   }, [purchaseOrders, paginatedPOs, totalFiltered]);
 
-  // Open Receive Confirmation
+  // Open dedicated Goods Receiving page
   const handleOpenReceiveModal = (po) => {
     setActiveActionMenuId(null);
-    setPoToReceive(po);
-  };
-
-  // Confirm Goods Receipt via ConfirmationModal
-  const confirmReceivePO = () => {
-    if (!poToReceive) return;
-
-    try {
-      const initialAcc = {};
-      (poToReceive.items || []).forEach(it => {
-        initialAcc[it.id] = it.ordered_quantity;
-      });
-      const result = procurementService.receivePurchaseOrder(poToReceive.id, {
-        delivery_order_number: `DO-${Date.now().toString().slice(-6)}`,
-        received_by: 'Admin Gudang',
-        accepted_quantities: initialAcc,
-        notes: 'Penerimaan fisik barang lengkap dikonfirmasi'
-      });
-      setPoToReceive(null);
-      onShowToast(`Penerimaan ${result.grn.grn_number} berhasil. Dokumen GRN & Tagihan otomatis diterbitkan.`);
-    } catch (err) {
-      console.error(err);
-      onShowToast('Gagal memproses penerimaan barang.');
-    }
+    onNavigateToReceive(po);
   };
 
   // Bulk Cancel
@@ -140,14 +122,36 @@ export default function PurchaseOrderListPage({
     setIsBulkCancelModalOpen(true);
   };
 
-  const confirmBulkCancel = () => {
-    selectedPOIds.forEach(id => {
-      procurementService.cancelPurchaseOrder(id);
-    });
-    onShowToast(`${selectedPOIds.length} Purchase Order berhasil dibatalkan.`);
-    setSelectedPOIds([]);
-    setIsBulkCancelModalOpen(false);
-    fetchData();
+  // Checkbox selection handlers
+  const handleSelectRow = (id) => {
+    setSelectedPOIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const currentPageIds = paginatedPOs.map((p) => p.id);
+    const allSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedPOIds.includes(id));
+    if (allSelected) {
+      setSelectedPOIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+    } else {
+      setSelectedPOIds(Array.from(new Set([...selectedPOIds, ...currentPageIds])));
+    }
+  };
+
+  const confirmBulkCancel = async () => {
+    setIsSubmitting(true);
+    try {
+      for (const id of selectedPOIds) {
+        await procurementService.cancelPurchaseOrder(id);
+      }
+      onShowToast(`${selectedPOIds.length} Purchase Order berhasil dibatalkan.`);
+      setSelectedPOIds([]);
+      setIsBulkCancelModalOpen(false);
+      fetchData();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Approve PO
@@ -156,12 +160,17 @@ export default function PurchaseOrderListPage({
     setPoToApprove(po);
   };
 
-  const confirmApprovePO = () => {
+  const confirmApprovePO = async () => {
     if (!poToApprove) return;
-    procurementService.approvePurchaseOrder(poToApprove.id);
-    onShowToast(`Purchase Order ${poToApprove.po_number} berhasil diotorisasi.`);
-    setPoToApprove(null);
-    fetchData();
+    setIsSubmitting(true);
+    try {
+      await procurementService.approvePurchaseOrder(poToApprove.id);
+      onShowToast(`Purchase Order ${poToApprove.po_number} berhasil diotorisasi.`);
+      setPoToApprove(null);
+      fetchData();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Cancel PO
@@ -170,12 +179,17 @@ export default function PurchaseOrderListPage({
     setPoToCancel(po);
   };
 
-  const confirmCancelPO = () => {
+  const confirmCancelPO = async () => {
     if (!poToCancel) return;
-    procurementService.cancelPurchaseOrder(poToCancel.id);
-    onShowToast(`Purchase Order ${poToCancel.po_number} berhasil dibatalkan.`);
-    setPoToCancel(null);
-    fetchData();
+    setIsSubmitting(true);
+    try {
+      await procurementService.cancelPurchaseOrder(poToCancel.id);
+      onShowToast(`Purchase Order ${poToCancel.po_number} berhasil dibatalkan.`);
+      setPoToCancel(null);
+      fetchData();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Table Columns
@@ -262,10 +276,10 @@ export default function PurchaseOrderListPage({
         const status = typeof val === 'string' ? val : (r.status || 'draft');
         const statusConfig = {
           draft: { bg: 'bg-neutral-100 text-neutral-800 border-neutral-300', text: 'DRAFT' },
-          approved: { bg: 'bg-blue-50 text-blue-800 border-blue-300', text: 'APPROVED' },
-          sent: { bg: 'bg-purple-50 text-purple-800 border-purple-300', text: 'DIKIRIM' },
+          approved: { bg: 'bg-amber-50 text-amber-800 border-amber-300', text: 'APPROVED' },
+          sent: { bg: 'bg-neutral-100 text-neutral-800 border-neutral-300', text: 'DIKIRIM' },
           received: { bg: 'bg-emerald-50 text-emerald-800 border-emerald-300', text: 'DITERIMA' },
-          cancelled: { bg: 'bg-red-50 text-red-800 border-red-300', text: 'DIBATALKAN' }
+          cancelled: { bg: 'bg-rose-50 text-rose-800 border-rose-300', text: 'DIBATALKAN' }
         };
         const conf = statusConfig[status] || { bg: 'bg-neutral-100 text-neutral-800 border-neutral-300', text: status };
         return (
@@ -320,7 +334,7 @@ export default function PurchaseOrderListPage({
                   </button>
                 )}
 
-                {['approved', 'sent'].includes(r.status) && (
+                {['approved', 'sent', 'partially_received'].includes(r.status) && (
                   <button
                     type="button"
                     onClick={() => handleOpenReceiveModal(r)}
@@ -453,8 +467,10 @@ export default function PurchaseOrderListPage({
         columns={columns}
         data={paginatedPOs}
         selectable={true}
-        selectedRows={selectedPOIds}
-        onSelectRows={setSelectedPOIds}
+        selectedIds={selectedPOIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        idKey="id"
         limitOptions={[10, 25, 50, 100]}
         bulkActions={
           selectedPOIds.length > 0 ? (
@@ -485,31 +501,6 @@ export default function PurchaseOrderListPage({
         emptyMessage="Belum ada Purchase Order yang terdaftar."
       />
 
-      {/* Modal Konfirmasi Penerimaan Barang (GRN) */}
-      <ConfirmationModal
-        isOpen={!!poToReceive}
-        onClose={() => setPoToReceive(null)}
-        onConfirm={confirmReceivePO}
-        title="Konfirmasi Penerimaan Barang (GRN)"
-        subtitle="Penerimaan Fisik & Pembukuan Stok Gudang"
-        message={`Apakah Anda yakin ingin memproses penerimaan fisik untuk Purchase Order ${poToReceive?.po_number}? Seluruh kuantitas pesanan akan dicatat sebagai diterima lengkap, dokumen GRN dan Tagihan Vendor (Bill) otomatis diterbitkan, serta stok gudang langsung diperbarui.`}
-        confirmText="Konfirmasi Penerimaan"
-        variant="info"
-      >
-        {poToReceive && (
-          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Supplier:</span>
-              <span className="font-bold text-neutral-900">{poToReceive.vendor?.company_name || poToReceive.vendor_name || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Total Nilai Pemesanan:</span>
-              <span className="font-mono font-bold text-neutral-900">{formatRupiah(poToReceive.total_amount || 0)}</span>
-            </div>
-          </div>
-        )}
-      </ConfirmationModal>
-
       {/* Modal Konfirmasi Pembatalan Massal Purchase Order */}
       <ConfirmationModal
         isOpen={isBulkCancelModalOpen}
@@ -520,6 +511,7 @@ export default function PurchaseOrderListPage({
         message={`Apakah Anda yakin ingin membatalkan ${selectedPOIds.length} Purchase Order yang dipilih? Status dokumen pengadaan terpilih akan diubah menjadi dibatalkan.`}
         confirmText="Batalkan PO Terpilih"
         variant="danger"
+        isLoading={isSubmitting}
       />
 
       {/* Modal Konfirmasi Otorisasi Purchase Order */}
@@ -532,6 +524,7 @@ export default function PurchaseOrderListPage({
         message={`Apakah Anda yakin ingin menyetujui dan mengotorisasi Purchase Order ${poToApprove?.po_number}? Status dokumen pengadaan akan diubah menjadi APPROVED sehingga barang dapat dikirim supplier dan siap diterima di gudang.`}
         confirmText="Otorisasi PO"
         variant="info"
+        isLoading={isSubmitting}
       >
         {poToApprove && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
@@ -557,6 +550,7 @@ export default function PurchaseOrderListPage({
         message={`Apakah Anda yakin ingin membatalkan Purchase Order ${poToCancel?.po_number}? Status dokumen pengadaan akan diubah menjadi dibatalkan.`}
         confirmText="Batalkan PO"
         variant="danger"
+        isLoading={isSubmitting}
       >
         {poToCancel && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">

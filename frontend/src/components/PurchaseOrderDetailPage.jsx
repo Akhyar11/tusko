@@ -45,26 +45,34 @@ export default function PurchaseOrderDetailPage({
   const [relatedGRN, setRelatedGRN] = useState(null);
   const [relatedBill, setRelatedBill] = useState(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleConfirmApprove = () => {
+  const handleConfirmApprove = async () => {
     if (!currentPO) return;
+    setIsSubmitting(true);
     try {
-      const updated = procurementService.approvePurchaseOrder(currentPO.id);
+      const updated = await procurementService.approvePurchaseOrder(currentPO.id);
       setCurrentPO(updated || { ...currentPO, status: 'approved' });
       setIsApproveModalOpen(false);
       onShowToast(`Purchase Order ${currentPO.po_number} berhasil diotorisasi.`);
     } catch (err) {
       console.error(err);
       onShowToast('Gagal mengotorisasi Purchase Order.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
-    const refreshPO = () => {
+    const refreshPO = async () => {
       let resolvedPO = null;
       const lookupKey = poId || po?.id || po?.po_number;
       if (lookupKey) {
-        resolvedPO = procurementService.getPurchaseOrderById(lookupKey);
+        try {
+          resolvedPO = await procurementService.getPurchaseOrderById(lookupKey);
+        } catch (err) {
+          resolvedPO = null;
+        }
       }
       if (!resolvedPO) {
         resolvedPO = po;
@@ -91,13 +99,23 @@ export default function PurchaseOrderDetailPage({
         }
 
         // Find related GRN and Bills
-        const allGRNs = procurementService.getGoodsReceivingNotes();
-        const grn = allGRNs.find(g => g.purchase_order_id === resolvedPO.id || g.po_number === resolvedPO.po_number);
-        if (grn) setRelatedGRN(grn);
+        try {
+          const grnRes = await procurementService.fetchGoodsReceivingNotes({ page: 1, per_page: 100 });
+          const grn = (grnRes.data || []).find(g => g.purchase_order_id === resolvedPO.id || g.po_number === resolvedPO.po_number);
+          setRelatedGRN(grn || null);
+        } catch (err) {
+          const grn = procurementService.getGoodsReceivingNotes().find(g => g.purchase_order_id === resolvedPO.id || g.po_number === resolvedPO.po_number);
+          setRelatedGRN(grn || null);
+        }
 
-        const allBills = procurementService.getVendorBills();
-        const bill = allBills.find(b => b.po_number === resolvedPO.po_number);
-        if (bill) setRelatedBill(bill);
+        try {
+          const billRes = await procurementService.fetchVendorBills({ page: 1, per_page: 100 });
+          const bill = (billRes.data || []).find(b => b.po_number === resolvedPO.po_number);
+          setRelatedBill(bill || null);
+        } catch (err) {
+          const bill = procurementService.getVendorBills().find(b => b.po_number === resolvedPO.po_number);
+          setRelatedBill(bill || null);
+        }
       }
     };
 
@@ -606,6 +624,7 @@ export default function PurchaseOrderDetailPage({
         message={`Apakah Anda yakin ingin menyetujui dan mengotorisasi Purchase Order ${currentPO?.po_number}? Status dokumen pengadaan akan diubah menjadi APPROVED sehingga barang dapat dikirim supplier dan siap diterima di gudang.`}
         confirmText="Otorisasi PO"
         variant="info"
+        isLoading={isSubmitting}
       >
         {currentPO && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">

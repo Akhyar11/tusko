@@ -42,7 +42,10 @@ import AdminDashboardPage from './components/AdminDashboardPage';
 import PurchaseOrderListPage from './components/PurchaseOrderListPage';
 import PurchaseOrderDetailPage from './components/PurchaseOrderDetailPage';
 import GoodsReceiptListPage from './components/GoodsReceiptListPage';
+import GoodsReceivingCreatePage from './components/GoodsReceivingCreatePage';
+import GoodsReceivingDetailPage from './components/GoodsReceivingDetailPage';
 import VendorBillListPage from './components/VendorBillListPage';
+import VendorBillDetailPage from './components/VendorBillDetailPage';
 import SupplierListPage from './components/SupplierListPage';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
@@ -67,7 +70,10 @@ const VALID_VIEWS = [
   'procurement',
   'procurement-pos',
   'procurement-grn',
+  'procurement-grn-create',
+  'procurement-grn-detail',
   'procurement-bills',
+  'procurement-bill-detail',
   'suppliers-admin',
   'transactions',
   'stock',
@@ -115,7 +121,10 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement') return 'procurement-pos';
     if (rawPath === '/admin/procurement/pos' || rawPath === '/admin/procurement/po') return 'procurement-pos';
     if (rawPath === '/admin/procurement/grn') return 'procurement-grn';
+    if (rawPath === '/admin/procurement/grn/create') return 'procurement-grn-create';
+    if (rawPath === '/admin/procurement/grn/detail') return 'procurement-grn-detail';
     if (rawPath === '/admin/procurement/bills' || rawPath === '/admin/procurement/bill') return 'procurement-bills';
+    if (rawPath === '/admin/procurement/bills/detail' || rawPath === '/admin/procurement/bill/detail') return 'procurement-bill-detail';
     if (rawPath === '/admin/procurement/vendors' || rawPath === '/admin/procurement/vendor') return 'suppliers-admin';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
     if (rawPath === '/admin/transactions/create') return 'transaction-create';
@@ -256,6 +265,9 @@ export default function App() {
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
+  const [selectedPoForReceive, setSelectedPoForReceive] = useState(null);
+  const [selectedGrnForDetail, setSelectedGrnForDetail] = useState(null);
+  const [selectedBillForDetail, setSelectedBillForDetail] = useState(null);
   const [orders, setOrders] = useState(mockOrders);
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
@@ -310,7 +322,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-bills'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-create', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -400,9 +412,21 @@ export default function App() {
       if (window.location.pathname !== '/admin/procurement/grn') {
         window.history.pushState(null, '', '/admin/procurement/grn');
       }
+    } else if (currentView === 'procurement-grn-create') {
+      if (window.location.pathname !== '/admin/procurement/grn/create') {
+        window.history.pushState(null, '', '/admin/procurement/grn/create');
+      }
+    } else if (currentView === 'procurement-grn-detail') {
+      if (window.location.pathname !== '/admin/procurement/grn/detail') {
+        window.history.pushState(null, '', '/admin/procurement/grn/detail');
+      }
     } else if (currentView === 'procurement-bills') {
       if (window.location.pathname !== '/admin/procurement/bills') {
         window.history.pushState(null, '', '/admin/procurement/bills');
+      }
+    } else if (currentView === 'procurement-bill-detail') {
+      if (window.location.pathname !== '/admin/procurement/bills/detail') {
+        window.history.pushState(null, '', '/admin/procurement/bills/detail');
       }
     } else if (currentView === 'orders' && currentUser?.role === 'admin') {
       if (window.location.pathname !== '/admin/orders') {
@@ -503,7 +527,10 @@ export default function App() {
       'procurement-po-create',
       'procurement-po-detail',
       'procurement-grn',
+      'procurement-grn-create',
+      'procurement-grn-detail',
       'procurement-bills',
+      'procurement-bill-detail',
       'templates', 
       'expeditions', 
       'expedition-create',
@@ -1384,6 +1411,10 @@ export default function App() {
             onNavigateToGRN={() => setCurrentView('procurement-grn')}
             onNavigateToBills={() => setCurrentView('procurement-bills')}
             onNavigateToCreate={() => setCurrentView('procurement-po-create')}
+            onNavigateToReceive={(targetPO) => {
+              setSelectedPoForReceive(targetPO);
+              setCurrentView('procurement-grn-create');
+            }}
             onViewDetail={(targetPO) => {
               setSelectedPoForDetail(targetPO);
               setCurrentView('procurement-po-detail');
@@ -1409,22 +1440,26 @@ export default function App() {
               setCurrentView('procurement-pos');
             }}
             onReceivePO={(targetPO) => {
+              setSelectedPoForReceive(targetPO);
+              setCurrentView('procurement-grn-create');
+            }}
+            onCancelPO={async (targetPO) => {
               try {
-                const res = procurementService.receivePurchaseOrder(targetPO.id, {
-                  delivery_order_number: `DO-${Date.now().toString().slice(-6)}`,
-                  received_by: currentUser?.name || 'Admin Gudang',
-                  notes: 'Penerimaan fisik diproses via Halaman Detail PO'
-                });
-                showToast(`Penerimaan ${res.grn.grn_number} berhasil. Dokumen GRN & Tagihan diterbitkan.`);
-                setSelectedPoForDetail(procurementService.getPurchaseOrderById(targetPO.id));
+                await procurementService.cancelPurchaseOrder(targetPO.id);
+                showToast(`Purchase Order ${targetPO.po_number} berhasil dibatalkan.`);
+                setSelectedPoForDetail(await procurementService.getPurchaseOrderById(targetPO.id));
               } catch (err) {
-                showToast('Gagal memproses penerimaan barang.');
+                showToast('Gagal membatalkan Purchase Order.');
               }
             }}
-            onCancelPO={(targetPO) => {
-              procurementService.cancelPurchaseOrder(targetPO.id);
-              showToast(`Purchase Order ${targetPO.po_number} berhasil dibatalkan.`);
-              setSelectedPoForDetail(procurementService.getPurchaseOrderById(targetPO.id));
+            onShowToast={showToast}
+          />
+        ) : currentView === 'procurement-grn-create' ? (
+          <GoodsReceivingCreatePage
+            po={selectedPoForReceive}
+            onNavigateBack={() => {
+              setSelectedPoForReceive(null);
+              setCurrentView('procurement-pos');
             }}
             onShowToast={showToast}
           />
@@ -1434,6 +1469,19 @@ export default function App() {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
+            onViewDetail={(grn) => {
+              setSelectedGrnForDetail(grn);
+              setCurrentView('procurement-grn-detail');
+            }}
+          />
+        ) : currentView === 'procurement-grn-detail' ? (
+          <GoodsReceivingDetailPage
+            grn={selectedGrnForDetail}
+            onNavigateBack={() => {
+              setSelectedGrnForDetail(null);
+              setCurrentView('procurement-grn');
+            }}
+            onShowToast={showToast}
           />
         ) : currentView === 'procurement-bills' ? (
           <VendorBillListPage
@@ -1441,6 +1489,19 @@ export default function App() {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
+            onViewDetail={(bill) => {
+              setSelectedBillForDetail(bill);
+              setCurrentView('procurement-bill-detail');
+            }}
+          />
+        ) : currentView === 'procurement-bill-detail' ? (
+          <VendorBillDetailPage
+            bill={selectedBillForDetail}
+            onNavigateBack={() => {
+              setSelectedBillForDetail(null);
+              setCurrentView('procurement-bills');
+            }}
+            onShowToast={showToast}
           />
         ) : currentView === 'templates' ? (
           <TemplateManagementPage

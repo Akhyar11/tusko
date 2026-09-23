@@ -16,6 +16,7 @@ class GoodsReceivingItem extends Model
         'product_variant_id',
         'accepted_quantity',
         'rejected_quantity',
+        'rejection_reason',
         'unit_cost',
         'notes',
     ];

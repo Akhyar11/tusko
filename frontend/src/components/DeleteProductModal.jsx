@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EyeOff, AlertCircle } from 'lucide-react';
 import ConfirmationModal from './organisms/ConfirmationModal';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
@@ -11,8 +11,19 @@ export default function DeleteProductModal({
   onConfirmDelete = () => {},
   onDeactivateInstead = () => {}
 }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isBulk = Boolean(products && Array.isArray(products) && products.length > 0);
   if (!isOpen || (!product && !isBulk)) return null;
+
+  const runAction = async (action) => {
+    setIsSubmitting(true);
+    try {
+      await action(isBulk ? products : product);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const count = isBulk ? products.length : 1;
   const totalStock = isBulk
@@ -24,10 +35,8 @@ export default function DeleteProductModal({
     <ConfirmationModal
       isOpen={isOpen}
       onClose={onClose}
-      onConfirm={() => {
-        onConfirmDelete(isBulk ? products : product);
-        onClose();
-      }}
+      isLoading={isSubmitting}
+      onConfirm={() => runAction(onConfirmDelete)}
       title={isBulk ? `Konfirmasi Hapus ${count} Produk Terpilih` : 'Konfirmasi Hapus Produk'}
       subtitle="Tindakan ini permanen dan tidak dapat dibatalkan."
       message={
@@ -42,10 +51,7 @@ export default function DeleteProductModal({
         label: 'Nonaktifkan Saja',
         icon: EyeOff,
         title: 'Sembunyikan dari pembeli tanpa menghapus data',
-        onClick: () => {
-          onDeactivateInstead(isBulk ? products : product);
-          onClose();
-        }
+        onClick: () => runAction(onDeactivateInstead)
       }}
     >
       {/* Product Preview (Single or Bulk) */}

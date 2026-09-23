@@ -229,7 +229,7 @@ export default function PurchaseOrderCreatePage({
   const totalOrderedUnits = allVariants.reduce((sum, v) => sum + (Number(v.ordered_quantity) || 0), 0);
   const totalAmount = allVariants.reduce((sum, v) => sum + ((Number(v.ordered_quantity) || 0) * (Number(v.unit_price) || 0)), 0);
 
-  const handleSubmit = (e, targetStatus = 'approved') => {
+  const handleSubmit = async (e, targetStatus = 'approved') => {
     if (e && e.preventDefault) e.preventDefault();
     if (!formData.vendor_id) {
       setErrorMessage('Pilih rekanan vendor terlebih dahulu.');
@@ -285,7 +285,7 @@ export default function PurchaseOrderCreatePage({
         }))
       };
 
-      const created = procurementService.createPurchaseOrder(poRecord);
+      const created = await procurementService.createPurchaseOrder(poRecord);
       onShowToast(
         targetStatus === 'draft'
           ? `Draft Purchase Order ${created.po_number} berhasil disimpan.`
@@ -667,7 +667,7 @@ export default function PurchaseOrderCreatePage({
                 type="button"
                 onClick={onNavigateBack}
                 disabled={isSubmitting}
-                className="w-full py-2 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-600 text-xs font-sport font-bold uppercase tracking-wider transition-colors cursor-pointer rounded-none"
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none"
               >
                 Batal
               </button>

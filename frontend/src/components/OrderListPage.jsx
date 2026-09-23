@@ -70,6 +70,7 @@ export default function OrderListPage({
   const [printInvoiceOrder, setPrintInvoiceOrder] = useState(null);
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [isBulkCancelOpen, setIsBulkCancelOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initial fetch on mount
   useEffect(() => {
@@ -101,12 +102,12 @@ export default function OrderListPage({
       case 'processing':
         return {
           label: 'Diproses Gudang',
-          bg: 'bg-blue-50 text-blue-900 border-blue-300'
+          bg: 'bg-neutral-100 text-neutral-800 border-neutral-300'
         };
       case 'shipped':
         return {
           label: 'Sedang Dikirim',
-          bg: 'bg-purple-50 text-purple-900 border-purple-300'
+          bg: 'bg-amber-50 text-amber-900 border-amber-300'
         };
       case 'completed':
         return {
@@ -117,7 +118,7 @@ export default function OrderListPage({
       case 'failed':
         return {
           label: 'Dibatalkan',
-          bg: 'bg-red-50 text-red-900 border-red-300'
+          bg: 'bg-rose-50 text-rose-900 border-rose-300'
         };
       default:
         return {
@@ -209,21 +210,31 @@ export default function OrderListPage({
     setIsBulkCancelOpen(true);
   };
 
-  const confirmBulkCancel = () => {
-    selectedOrderIds.forEach(id => {
-      const order = orders.find(o => (o.id || o.order_number || o.invoice_number) === id);
-      if (order) onCancelOrder(order);
-    });
-    onShowToast(`${selectedOrderIds.length} pesanan berhasil dibatalkan.`);
-    setSelectedOrderIds([]);
-    setIsBulkCancelOpen(false);
+  const confirmBulkCancel = async () => {
+    setIsSubmitting(true);
+    try {
+      for (const id of selectedOrderIds) {
+        const order = orders.find(o => (o.id || o.order_number || o.invoice_number) === id);
+        if (order) await onCancelOrder(order);
+      }
+      onShowToast(`${selectedOrderIds.length} pesanan berhasil dibatalkan.`);
+      setSelectedOrderIds([]);
+      setIsBulkCancelOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const confirmCancelOrder = () => {
+  const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
-    onCancelOrder(orderToCancel);
-    onShowToast(`Pesanan ${orderToCancel.order_number || orderToCancel.invoice_number} berhasil dibatalkan.`);
-    setOrderToCancel(null);
+    setIsSubmitting(true);
+    try {
+      await onCancelOrder(orderToCancel);
+      onShowToast(`Pesanan ${orderToCancel.order_number || orderToCancel.invoice_number} berhasil dibatalkan.`);
+      setOrderToCancel(null);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Table Columns Definition for ServerSideTable
@@ -536,15 +547,15 @@ export default function OrderListPage({
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 mb-1.5">
             <span className="text-xs font-sport font-black uppercase tracking-wider">Fulfillment</span>
-            <Truck size={16} className="text-blue-600" />
+            <Truck size={16} className="text-neutral-900" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className={`text-2xl font-black font-sport ${metrics.processing > 0 ? 'text-blue-700' : 'text-neutral-950'}`}>
+            <span className={`text-2xl font-black font-sport ${metrics.processing > 0 ? 'text-amber-700' : 'text-neutral-950'}`}>
               {metrics.processing}
             </span>
             <span className="text-[11px] font-mono font-bold text-neutral-400">Paket</span>
           </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-blue-700 font-bold border-t border-neutral-100 pt-1.5">
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600 font-bold border-t border-neutral-100 pt-1.5">
             <span>Gudang & siap pickup</span>
           </div>
         </div>
@@ -670,6 +681,7 @@ export default function OrderListPage({
         message={`Apakah Anda yakin ingin membatalkan pesanan ${orderToCancel?.order_number || orderToCancel?.invoice_number}? Status pesanan akan diubah menjadi dibatalkan.`}
         confirmText="Batalkan Pesanan"
         variant="danger"
+        isLoading={isSubmitting}
       >
         {orderToCancel && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
@@ -695,6 +707,7 @@ export default function OrderListPage({
         message={`Apakah Anda yakin ingin membatalkan ${selectedOrderIds.length} pesanan terpilih? Semua pesanan terpilih akan dibatalkan.`}
         confirmText={`Batalkan ${selectedOrderIds.length} Pesanan`}
         variant="danger"
+        isLoading={isSubmitting}
       />
     </div>
   );

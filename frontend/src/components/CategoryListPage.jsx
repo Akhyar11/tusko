@@ -177,6 +177,7 @@ export default function CategoryListPage({
 
   const confirmDeleteCategory = async () => {
     if (!categoryToDelete) return;
+    setIsSubmitting(true);
     try {
       await categoryService.deleteCategory(categoryToDelete.id);
       onShowToast(`Kategori "${categoryToDelete.name}" berhasil dihapus.`);
@@ -185,6 +186,8 @@ export default function CategoryListPage({
     } catch (err) {
       onShowToast(err.data?.message || err.message || 'Gagal menghapus kategori.', { type: 'error' });
       setCategoryToDelete(null);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -467,7 +470,7 @@ export default function CategoryListPage({
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
           <div className="flex items-center justify-between text-neutral-500 mb-1.5">
             <span className="text-xs font-sport font-black uppercase tracking-wider">Produk Terkait</span>
-            <Package size={16} className="text-blue-600" />
+            <Package size={16} className="text-amber-600" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black text-neutral-950 font-sport">{metrics.totalAssignedProducts}</span>
@@ -546,6 +549,7 @@ export default function CategoryListPage({
         message={`Apakah Anda yakin ingin menghapus master kategori "${categoryToDelete?.name}"?`}
         confirmText="Hapus Kategori"
         variant="danger"
+        isLoading={isSubmitting}
       >
         {categoryToDelete && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport text-neutral-600">

@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\GoodsReceivingNoteController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\VendorBillController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -141,6 +143,16 @@ Route::prefix('purchase-orders')->group(function () {
     Route::post('/{idOrPoNumber}/approve', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'approve']);
     Route::post('/{idOrPoNumber}/receive', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'receive']);
     Route::post('/{idOrPoNumber}/cancel', [\App\Http\Controllers\Api\PurchaseOrderController::class, 'cancel']);
+});
+
+Route::prefix('goods-receiving-notes')->group(function () {
+    Route::get('/', [GoodsReceivingNoteController::class, 'index']);
+    Route::get('/{id}', [GoodsReceivingNoteController::class, 'show']);
+});
+
+Route::prefix('vendor-bills')->group(function () {
+    Route::get('/', [VendorBillController::class, 'index']);
+    Route::post('/{id}/pay', [VendorBillController::class, 'pay']);
 });
 
 Route::prefix('warehouses')->group(function () {

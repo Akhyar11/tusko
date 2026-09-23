@@ -9,18 +9,17 @@ import {
   Building2, 
   UserCheck, 
   FileText,
-  X,
   SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import GoodsReceiptFilterDrawer from './organisms/GoodsReceiptFilterDrawer';
 import ServerSideTable from './ServerSideTable';
-import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { useGRNTableStore } from '../stores/useProcurementTableStores';
 
 export default function GoodsReceiptListPage({
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onViewDetail = () => {}
 }) {
   const [receivingNotes, setReceivingNotes] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
@@ -46,12 +45,29 @@ export default function GoodsReceiptListPage({
 
   const [selectedGRNIds, setSelectedGRNIds] = useState([]);
 
-  // Modal
-  const [selectedGRNDetail, setSelectedGRNDetail] = useState(null);
+  const handleSelectRow = (id) => {
+    setSelectedGRNIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
-  const loadGRNs = () => {
-    const data = procurementService.getGoodsReceivingNotes();
-    setReceivingNotes(data);
+  const handleSelectAll = () => {
+    const currentPageIds = paginatedGRNs.map((g) => g.id);
+    const allSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedGRNIds.includes(id));
+    if (allSelected) {
+      setSelectedGRNIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+    } else {
+      setSelectedGRNIds(Array.from(new Set([...selectedGRNIds, ...currentPageIds])));
+    }
+  };
+
+  const loadGRNs = async () => {
+    try {
+      const res = await procurementService.fetchGoodsReceivingNotes({ page: 1, per_page: 100 });
+      setReceivingNotes(res.data || []);
+    } catch (err) {
+      setReceivingNotes(procurementService.getGoodsReceivingNotes());
+    }
     fetchData();
   };
 
@@ -189,11 +205,19 @@ export default function GoodsReceiptListPage({
       key: 'status',
       label: 'Status QC',
       align: 'center',
-      render: (val, row) => (
-        <span className="inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border bg-emerald-50 text-emerald-800 border-emerald-300">
-          TERVERIFIKASI
-        </span>
-      )
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' ? val : {}) || {};
+        const isDiscrepancy = r.status === 'discrepancy';
+        return (
+          <span className={`inline-block px-2 py-0.5 text-[10px] font-sport font-bold uppercase rounded-none border ${
+            isDiscrepancy
+              ? 'bg-rose-50 text-rose-800 border-rose-300'
+              : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+          }`}>
+            {isDiscrepancy ? 'Ada Selisih' : 'Terverifikasi'}
+          </span>
+        );
+      }
     },
     {
       key: 'actions',
@@ -220,7 +244,7 @@ export default function GoodsReceiptListPage({
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedGRNDetail(r);
+                    onViewDetail(r);
                     setActiveActionMenuId(null);
                   }}
                   className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
@@ -333,8 +357,11 @@ export default function GoodsReceiptListPage({
         columns={columns}
         data={paginatedGRNs}
         selectable={true}
-        selectedRows={selectedGRNIds}
-        onSelectRows={setSelectedGRNIds}
+        selectedIds={selectedGRNIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        idKey="id"
+        limitOptions={[10, 25, 50, 100]}
         total={totalFiltered}
         page={page}
         limit={limit}
@@ -346,77 +373,6 @@ export default function GoodsReceiptListPage({
         isLoading={isLoading}
         emptyMessage="Belum ada riwayat Penerimaan Barang (GRN)."
       />
-
-      {/* MODAL: DETAIL FISIK GRN */}
-      {selectedGRNDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-xl p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
-              <div>
-                <span className="font-mono font-bold text-base text-neutral-950">{selectedGRNDetail.grn_number}</span>
-                <span className="ml-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-none">
-                  {selectedGRNDetail.status}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedGRNDetail(null)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 bg-neutral-50 p-3 border border-neutral-200 rounded-none">
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Vendor / Supplier:</span>
-                  <strong className="text-neutral-900">{selectedGRNDetail.vendor_name}</strong>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Nomor Surat Jalan (DO):</span>
-                  <span className="font-mono font-bold text-neutral-950">{selectedGRNDetail.delivery_order_number}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Referensi No. PO:</span>
-                  <span className="font-mono text-neutral-800">{selectedGRNDetail.po_number}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 block text-[11px]">Petugas Penerima:</span>
-                  <span className="text-neutral-800">{selectedGRNDetail.received_by}</span>
-                </div>
-              </div>
-
-              <div>
-                <span className="font-sport font-black uppercase text-neutral-900 block mb-2">Item Fisik Diterima:</span>
-                <div className="border border-neutral-200 divide-y divide-neutral-200">
-                  {(selectedGRNDetail.items || []).map(it => (
-                    <div key={it.id || it.sku} className="p-3 flex items-center justify-between hover:bg-neutral-50">
-                      <div>
-                        <div className="font-bold text-neutral-900">{it.product_name}</div>
-                        <div className="font-mono text-[11px] text-neutral-500">{it.sku}</div>
-                        {it.notes && (
-                          <div className="text-[11px] text-emerald-700 mt-0.5 italic">Catatan QC: {it.notes}</div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono font-bold text-neutral-950">
-                          +{it.accepted_quantity} Pcs Diterima
-                        </div>
-                        {it.unit_cost && (
-                          <div className="text-[11px] text-neutral-500">
-                            HPP: {formatRupiah(it.unit_cost)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Drawer Filter Penerimaan Barang (GRN) */}
       <GoodsReceiptFilterDrawer

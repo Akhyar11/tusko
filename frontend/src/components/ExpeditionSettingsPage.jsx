@@ -62,6 +62,7 @@ export default function ExpeditionSettingsPage({
   // Modals state
   const [expeditionToDelete, setExpeditionToDelete] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Close action popup when clicking outside
   useEffect(() => {
@@ -74,15 +75,15 @@ export default function ExpeditionSettingsPage({
   const getCourierColor = (code) => {
     switch (code) {
       case 'jne':
-        return 'bg-blue-600 text-white';
+        return 'bg-neutral-900 text-white';
       case 'sicepat':
         return 'bg-rose-600 text-white';
       case 'jnt':
-        return 'bg-red-600 text-white';
+        return 'bg-rose-600 text-white';
       case 'gosend':
         return 'bg-emerald-600 text-white';
       case 'grab':
-        return 'bg-green-600 text-white';
+        return 'bg-emerald-600 text-white';
       case 'anteraja':
         return 'bg-amber-600 text-white';
       default:
@@ -143,21 +144,31 @@ export default function ExpeditionSettingsPage({
     setIsBulkDeleteOpen(true);
   };
 
-  const confirmBulkDelete = () => {
-    selectedExpeditionIds.forEach(id => {
-      const target = expeditions.find(e => e.id === id);
-      if (target) onDeleteExpedition(target);
-    });
-    onShowToast(`${selectedExpeditionIds.length} ekspedisi berhasil dihapus.`);
-    setSelectedExpeditionIds([]);
-    setIsBulkDeleteOpen(false);
+  const confirmBulkDelete = async () => {
+    setIsSubmitting(true);
+    try {
+      for (const id of selectedExpeditionIds) {
+        const target = expeditions.find(e => e.id === id);
+        if (target) await onDeleteExpedition(target);
+      }
+      onShowToast(`${selectedExpeditionIds.length} ekspedisi berhasil dihapus.`);
+      setSelectedExpeditionIds([]);
+      setIsBulkDeleteOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const confirmDeleteSingle = () => {
+  const confirmDeleteSingle = async () => {
     if (!expeditionToDelete) return;
-    onDeleteExpedition(expeditionToDelete);
-    onShowToast(`Layanan ${expeditionToDelete.name} berhasil dihapus.`);
-    setExpeditionToDelete(null);
+    setIsSubmitting(true);
+    try {
+      await onDeleteExpedition(expeditionToDelete);
+      onShowToast(`Layanan ${expeditionToDelete.name} berhasil dihapus.`);
+      setExpeditionToDelete(null);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Table Columns Definition
@@ -509,6 +520,7 @@ export default function ExpeditionSettingsPage({
         message={`Apakah Anda yakin ingin menghapus layanan ${expeditionToDelete?.name} (${expeditionToDelete?.service})?`}
         confirmText="Hapus Layanan"
         variant="danger"
+        isLoading={isSubmitting}
       >
         {expeditionToDelete && (
           <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
@@ -534,6 +546,7 @@ export default function ExpeditionSettingsPage({
         message={`Apakah Anda yakin ingin menghapus ${selectedExpeditionIds.length} layanan ekspedisi terpilih? Seluruh konfigurasi tarif layanan terkait akan dihapus.`}
         confirmText={`Hapus ${selectedExpeditionIds.length} Ekspedisi`}
         variant="danger"
+        isLoading={isSubmitting}
       />
     </div>
   );

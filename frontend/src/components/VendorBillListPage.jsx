@@ -10,18 +10,19 @@ import {
   Calendar, 
   Building2, 
   Check, 
-  X,
   SlidersHorizontal
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import VendorBillFilterDrawer from './organisms/VendorBillFilterDrawer';
 import ServerSideTable from './ServerSideTable';
+import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
 import { useBillTableStore } from '../stores/useProcurementTableStores';
 
 export default function VendorBillListPage({
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onViewDetail = () => {}
 }) {
   const [vendorBills, setVendorBills] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
@@ -62,13 +63,22 @@ export default function VendorBillListPage({
 
   const [selectedBillIds, setSelectedBillIds] = useState([]);
 
+  const handleSelectRow = (id) => {
+    setSelectedBillIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
   // Modals
-  const [selectedBillDetail, setSelectedBillDetail] = useState(null);
   const [payingBill, setPayingBill] = useState(null);
 
-  const loadBills = () => {
-    const data = procurementService.getVendorBills();
-    setVendorBills(data);
+  const loadBills = async () => {
+    try {
+      const res = await procurementService.fetchVendorBills({ page: 1, per_page: 100 });
+      setVendorBills(res.data || []);
+    } catch (err) {
+      setVendorBills(procurementService.getVendorBills());
+    }
     fetchData();
   };
 
@@ -84,6 +94,16 @@ export default function VendorBillListPage({
   const paginatedBills = storeBills.length > 0 || totalBillsCount === 0 ? storeBills : vendorBills;
   const totalFiltered = totalBillsCount > 0 || storeBills.length > 0 ? totalBillsCount : vendorBills.length;
 
+  const handleSelectAll = () => {
+    const currentPageIds = paginatedBills.map((b) => b.id);
+    const allSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedBillIds.includes(id));
+    if (allSelected) {
+      setSelectedBillIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+    } else {
+      setSelectedBillIds(Array.from(new Set([...selectedBillIds, ...currentPageIds])));
+    }
+  };
+
   // KPIs
   const kpis = useMemo(() => {
     const totalCount = vendorBills.length;
@@ -96,12 +116,17 @@ export default function VendorBillListPage({
   }, [vendorBills]);
 
   // Handler: Pay Bill
-  const handleConfirmPay = () => {
+  const handleConfirmPay = async () => {
     if (!payingBill) return;
-    procurementService.payVendorBill(payingBill.id);
-    onShowToast(`Pelunasan tagihan ${payingBill.bill_number} berhasil dicatat.`);
-    setPayingBill(null);
-    setActiveActionMenuId(null);
+    try {
+      await procurementService.payVendorBill(payingBill.id);
+      onShowToast(`Pelunasan tagihan ${payingBill.bill_number} berhasil dicatat.`);
+      setPayingBill(null);
+      setActiveActionMenuId(null);
+      loadBills();
+    } catch (err) {
+      onShowToast(err.message || 'Gagal mencatat pelunasan tagihan.', { type: 'error' });
+    }
   };
 
   // Table Columns
@@ -217,7 +242,7 @@ export default function VendorBillListPage({
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedBillDetail(r);
+                    onViewDetail(r);
                     setActiveActionMenuId(null);
                   }}
                   className="w-full px-3 py-2 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 cursor-pointer transition-colors"
@@ -342,8 +367,18 @@ export default function VendorBillListPage({
         columns={columns}
         data={paginatedBills}
         selectable={true}
-        selectedRows={selectedBillIds}
-        onSelectRows={setSelectedBillIds}
+        selectedIds={selectedBillIds}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        idKey="id"
+        limitOptions={[10, 25, 50, 100]}
+        bulkActions={
+          selectedBillIds.length > 0 ? (
+            <span className="text-xs text-neutral-600 font-medium">
+              <strong className="font-mono text-neutral-900">{selectedBillIds.length}</strong> tagihan dipilih
+            </span>
+          ) : null
+        }
         total={totalFiltered}
         page={page}
         limit={limit}
@@ -356,125 +391,30 @@ export default function VendorBillListPage({
         emptyMessage="Belum ada data tagihan vendor."
       />
 
-      {/* MODAL: DETAIL TAGIHAN */}
-      {selectedBillDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-lg p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
-              <div>
-                <span className="font-mono font-bold text-base text-neutral-950">{selectedBillDetail.bill_number}</span>
-                <span className={`ml-2 px-2 py-0.5 text-[10px] font-bold uppercase rounded-none border ${
-                  selectedBillDetail.status === 'paid' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-800 border-amber-300'
-                }`}>
-                  {selectedBillDetail.status === 'paid' ? 'Lunas' : 'Belum Bayar'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedBillDetail(null)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
+      {/* Modal Konfirmasi Pelunasan Tagihan */}
+      <ConfirmationModal
+        isOpen={Boolean(payingBill)}
+        onClose={() => setPayingBill(null)}
+        onConfirm={handleConfirmPay}
+        title="Konfirmasi Pelunasan Hutang"
+        subtitle="Pencatatan pembayaran kas ke vendor."
+        message={`Apakah Anda yakin ingin mencatat pelunasan penuh tagihan ${payingBill?.bill_number || ''} sebesar ${formatRupiah(payingBill?.amount || 0)}?`}
+        confirmText="Konfirmasi Bayar"
+        variant="info"
+      >
+        {payingBill && (
+          <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 text-xs font-sport space-y-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Vendor:</span>
+              <span className="font-bold text-neutral-900">{payingBill.vendor_name}</span>
             </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Nama Vendor:</span>
-                  <strong className="text-neutral-900">{selectedBillDetail.vendor_name}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Referensi Dokumen PO:</span>
-                  <span className="font-mono text-neutral-800">{selectedBillDetail.po_number}</span>
-                </div>
-                {selectedBillDetail.grn_number && (
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Referensi Dokumen GRN:</span>
-                    <span className="font-mono text-neutral-800">{selectedBillDetail.grn_number}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Tanggal Faktur:</span>
-                  <span className="font-mono">{selectedBillDetail.bill_date}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Jatuh Tempo Pembayaran:</span>
-                  <span className="font-mono font-bold text-neutral-950">{selectedBillDetail.due_date}</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-neutral-950 text-white rounded-none flex items-center justify-between">
-                <span className="font-sport font-bold uppercase text-neutral-400">Total Nominal Tagihan:</span>
-                <span className="font-sport font-black text-xl text-amber-400">
-                  {formatRupiah(selectedBillDetail.amount)}
-                </span>
-              </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Nominal Tagihan:</span>
+              <span className="font-mono font-bold text-neutral-950">{formatRupiah(payingBill.amount)}</span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* MODAL: KONFIRMASI PELUNASAN TAGIHAN */}
-      {payingBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white border border-neutral-400 w-full max-w-md p-6 rounded-none shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
-              <div className="flex items-center gap-2">
-                <CreditCard size={18} className="text-neutral-950" />
-                <h3 className="font-sport font-black text-base uppercase text-neutral-950">
-                  Konfirmasi Pelunasan Hutang
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPayingBill(null)}
-                className="p-1 text-neutral-400 hover:text-black cursor-pointer rounded-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <p className="text-neutral-600">
-                Anda akan mencatat pelunasan faktur tagihan berikut ke kas pengeluaran toko:
-              </p>
-
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none space-y-1.5 font-mono">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Faktur:</span>
-                  <span className="font-bold text-neutral-950">{payingBill.bill_number}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Vendor:</span>
-                  <span className="font-bold text-neutral-900">{payingBill.vendor_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Nominal:</span>
-                  <span className="font-bold text-neutral-950">{formatRupiah(payingBill.amount)}</span>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-neutral-200 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPayingBill(null)}
-                  className="px-4 py-2 border border-neutral-300 hover:bg-neutral-100 text-neutral-800 text-xs font-sport font-bold uppercase rounded-none cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmPay}
-                  className="px-5 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none cursor-pointer"
-                >
-                  Konfirmasi Bayar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </ConfirmationModal>
 
       {/* Drawer Filter Tagihan Vendor (Bills) */}
       <VendorBillFilterDrawer
