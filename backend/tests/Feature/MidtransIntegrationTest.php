@@ -73,6 +73,8 @@ class MidtransIntegrationTest extends TestCase
             'midtrans_snap_token' => null,
         ]);
 
+        $this->actingAs($order->user);
+
         $response = $this->postJson("/api/orders/{$order->order_number}/snap-token");
 
         $response->assertOk()

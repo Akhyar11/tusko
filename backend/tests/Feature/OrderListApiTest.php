@@ -150,6 +150,8 @@ class OrderListApiTest extends TestCase
 
     public function test_can_show_single_order_by_order_number(): void
     {
+        $this->actingAs(\App\Models\User::factory()->create(['role' => 'admin']));
+
         $order = Order::create([
             'order_number' => 'INV/20260907/TK/SHOW123',
             'recipient_name' => 'Detail Customer',

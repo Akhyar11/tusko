@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
+use App\Http\Controllers\Api\Concerns\AuthorizesOrderAccess;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
@@ -22,6 +23,8 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
+    use AuthorizesOrderAccess;
+
     public function __construct(private readonly InventoryService $inventoryService)
     {
     }
@@ -335,12 +338,15 @@ class CheckoutController extends Controller
     /**
      * Generate or re-fetch Midtrans Snap Token for an order.
      */
-    public function getSnapToken(string $idOrOrderNumber): JsonResponse
+    public function getSnapToken(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with('items')
             ->where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();
+
+        // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
+        $this->ensureOrderAccess($request, $order);
 
         $midtransService = app(\App\Services\MidtransService::class);
         $result = $midtransService->createSnapToken($order);

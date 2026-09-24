@@ -5,12 +5,21 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class OrderDetailApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // T27.1: endpoint detail order memerlukan otorisasi (admin/pemilik).
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+    }
 
     public function test_can_get_order_detail_by_id(): void
     {

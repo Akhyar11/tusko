@@ -128,6 +128,8 @@ class GenerateShippingReceiptApiTest extends TestCase
 
     public function test_can_fetch_existing_receipt(): void
     {
+        $this->actingAs(\App\Models\User::factory()->create(['role' => 'admin']));
+
         $order = Order::create([
             'order_number' => 'INV/20260908/TK/778899',
             'tracking_number' => 'JNT-20260908-XYZ999',

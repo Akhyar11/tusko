@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\AuthorizesOrderAccess;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    use AuthorizesOrderAccess;
+
     /**
      * Display a listing of orders with comprehensive filters, search, and tab counts.
      */
@@ -159,12 +162,15 @@ class OrderController extends Controller
     /**
      * Display the specified single order details.
      */
-    public function show(string $idOrOrderNumber): JsonResponse
+    public function show(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
             ->where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();
+
+        // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
+        $this->ensureOrderAccess($request, $order);
 
         return response()->json([
             'data' => new OrderResource($order),
@@ -416,6 +422,9 @@ class OrderController extends Controller
             ->where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();
+
+        // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
+        $this->ensureOrderAccess($request, $order);
 
         $receipt = $this->buildReceiptPayload($order, []);
 
