@@ -236,3 +236,21 @@ Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang waj
 5. **Pasca-Selesai**: Setelah task selesai & ter-commit (auditor PASSED), Agent WAJIB memperbarui status task terkait di `taks.txt` (`[TODO]`/`[PARTIAL]`/`[DONE]`).
 6. **Penegakan**: Protokol ini didukung skill `taks-workflow`; ditegakkan melalui mekanisme auditor yang ada (tidak membuat auditor baru).
 </RULE[task_correlation_protocol]>
+
+<RULE[merge_policy]>
+# Kebijakan Kapan Harus Merge (Merge Policy)
+
+1. **Merge per MAJOR TASK (epic), bukan per minor.** Branch fitur (`feat/*`) di-merge ke `main` saat SELURUH minor task major tersebut `[DONE]`, 13 auditor pre-commit PASSED, `php artisan test` 100% lolos, dan `npm run build` sukses. Minor task hanya di-commit di branch fitur, TIDAK di-merge satu per satu.
+2. **Jalur Kritis / Fondasi di-merge SEGERA.** Task fondasi yang memblokir agent lain (mis. FASE 0 A2: `T12.1a–d`, `T12.2`, `T33.1/2/3`, `T30.1`, `T16.4`, `T21.1/2/3`, `T15.1a`) WAJIB di-merge begitu selesai — tidak menunggu major penuh — agar agent lain tidak terblokir. Setelah merge, beri tahu agent lain untuk `git fetch && git rebase origin/main`.
+3. **Alur merge (wajib fast-forward, dilarang merge-commit di `main`):**
+   a. `git fetch origin`
+   b. Pada branch fitur: `git rebase origin/main` (selesaikan konflik bila ada).
+   c. Jalankan `php artisan test` + `npm run build` (harus lolos).
+   d. Fast-forward `main`: `git checkout main && git merge --ff-only <branch>` (di worktree khusus `main`).
+   e. `git push origin main` — **HANYA dengan persetujuan eksplisit user.**
+4. **DILARANG** membuat merge-commit di `main` (proteksi branch akan menolak); DILARANG commit langsung di `main`/`master`.
+5. **`main` → `master` (Production)** hanya saat rilis/milestone (lihat T23), setelah validasi menyeluruh + persetujuan user.
+6. **Setelah merge:** branch fitur dapat dihapus, atau di-rebase ulang dari `main` untuk task berikutnya. Setiap agent WAJIB `git fetch origin && git rebase origin/main` sebelum memulai major task berikutnya.
+7. **Konflik `taks.txt`:** selesaikan dengan menggabungkan status kedua pihak (biasanya auto-merge karena region berbeda; bila konflik, gabungkan penanda `[TODO]/[PARTIAL]/[DONE]`).
+8. **Satu branch fitur per major task** dibuat dari `main` terbaru (mis. A1: `feat/cart-checkout`, `feat/payment`; A2: `feat/stock-mutation`, `feat/orders-operations`).
+</RULE[merge_policy]>

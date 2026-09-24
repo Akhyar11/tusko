@@ -87,6 +87,17 @@ G7. Setiap minor menyertakan TEST sesuai G3.
 G8. Perbarui status task di berkas kanonis `taks.txt` setelah commit (auditor PASSED).
 G9. AUDIT LOG WAJIB: setiap perubahan HARGA, STOK, dan ROLE wajib tercatat di
     `activity_logs` (T33.1). Tidak boleh ada jalur perubahan tanpa log.
+G10. KAPAN MERGE (ringkas — detail di AGENTS.md RULE[merge_policy]):
+    - Merge branch fitur -> `main` per MAJOR TASK (semua minor [DONE] + 13 auditor
+      PASSED + test 100% + build sukses). Minor TIDAK di-merge satu-satu.
+    - Task FONDASI/jalur kritis yang memblokir agent lain di-merge SEGERA
+      (mis. FASE 0 A2: T12.1a-d, T12.2, T33.1/2/3, T30.1, T16.4, T21.x, T15.1a).
+    - WAJIB fast-forward (rebase branch ke `main` dulu); DILARANG merge-commit di
+      `main`/`master`; DILARANG commit langsung di `main`/`master`.
+    - Push `main` HANYA dengan persetujuan eksplisit user.
+    - `main` -> `master` hanya saat rilis/milestone (T23) + validasi.
+    - Setelah merge: branch dihapus/rebased dari `main`; agent lain
+      `git fetch origin && git rebase origin/main`.
 
 LEGENDA STATUS: [DONE] / [PARTIAL] / [TODO] / [OPS] / [KEPUTUSAN DIBUTUHKAN].
               [NEW] = belum ada di schema.
