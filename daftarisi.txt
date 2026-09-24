@@ -1,0 +1,202 @@
+# DAFTAR ISI taks.txt — dibuat otomatis (jangan edit manual).
+# Regenerasi: python3 scripts/generate_daftarisi.py
+#
+# Alur pemakaian (hemat token):
+#   1) Baca baris task di file ini -> dapatkan nomor baris.
+#   2) Baca presisi:  sed -n '<baris>,<baris+25>p' taks.txt
+#      atau grep minor: grep -n '<T06.5>' taks.txt
+#
+# FORMAT: <baris>|<jenis>|<judul/ringkas>
+
+15|SEKSI|BUKTI VERIFIKASI (kode & DB DEV — bukan klaim dokumen; TIDAK digeneralisasi ke produksi)
+30|SEKSI|KEPUTUSAN ARSITEKTUR TERKUNCI (D1–D7)
+71|SEKSI|ATURAN GLOBAL
+106|SEKSI|DI LUAR SCOPE (OUT-OF-SCOPE) — EKSPLISIT (diputuskan)
+117|SEKSI|AGENT ASSIGNMENT & KOORDINASI (2 AGENT AI)
+168|SEKSI|MASTER DATABASE SCHEMA (SEMUA KOLOM — SUMBER KEBENARAN)
+322|SEKSI|GAP ANALYSIS (REVISI 3 — berbasis bukti verifikasi)
+339|SEKSI|FASE 0 — FONDASI & QUALITY GATE
+342|MAJOR|T00. Fondasi, Design System & Auditor Pre-Commit .................... [DONE]  [OWNER:SHARE
+346|SEKSI|FASE 1 — ETALASE & VARIAN
+349|MAJOR|T01. Katalog Produk Publik (Grid, Multi-filter, Search, Sorting) .... [PARTIAL]  [OWNER:A1
+356|MINOR|T01.1 [DONE] katalog + filter + search (existing).
+357|MINOR|T01.2 [TODO] Filter rating dari agregat product_reviews (depend T32.1).
+359|MAJOR|T02. Detail Produk & Varian Bertingkat (Matrix SKU) ................ [DONE]  [OWNER:A1]
+362|MAJOR|T03. Manajemen Produk Admin (CRUD + Galeri + Matriks Varian) ....... [PARTIAL]  [OWNER:A2]
+366|MINOR|T03.1 [DONE] CRUD + galeri + matriks varian (existing).
+367|MINOR|T03.2 [TODO] Refaktor penulisan stok produk -> InventoryService (D1) + test.
+369|MAJOR|T04. Master Kategori ............................................... [DONE]  [OWNER:A2]
+373|SEKSI|FASE 2 — CHECKOUT & BAYAR
+376|MAJOR|T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [OWNER:A1]
+383|MINOR|T05.1 [DONE] `cartService.js` (wrapper 5 endpoint + session guest).
+384|MINOR|T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed
+385|MINOR|T05.3 [DONE] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
+386|MINOR|T05.4 [DONE] Merge keranjang guest (session_id) -> user saat login (FE kirim sessio
+387|MINOR|T05.5 [TODO] [KEPUTUSAN DIBUTUHKAN] Kebijakan keranjang guest: hapus gate login
+392|MAJOR|T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1
+398|MINOR|T06.1 [DONE] `checkoutService.js` + wiring CheckoutPage -> POST /api/checkout.
+399|MINOR|T06.2 [DONE] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
+401|MINOR|T06.3 [DONE] FE pilih alamat + layanan kurir (tarif API live).
+402|MINOR|T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
+403|MINOR|T06.5 [PARTIAL] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` 
+409|MINOR|T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
+410|MINOR|T06.7 [NEW] Peta kode wilayah (province/city/district/subdistrict) dari KiriminAja
+414|MINOR|T06.8 [NEW] Caching tarif pengiriman per (asal, tujuan, berat, kurir) + TTL
+418|MAJOR|T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1
+428|MINOR|T07.1 [TODO] FE getSnapToken + Snap popup + polling status.
+429|MINOR|T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
+430|MINOR|T07.3 [TODO] Backend verifikasi signature webhook (idempoten) + approve/reject + te
+431|MINOR|T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.
+432|MINOR|T07.5 [NEW] Migrasi `payments` (method, channel, amount, status, reference,
+435|MAJOR|T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  [OWNER:A1]
+443|MINOR|T08.1 [TODO] FE daftar + klaim voucher (ProfilePage).
+444|MINOR|T08.2 [NEW] POST /api/vouchers/validate (min belanja/kuota/cakupan/per-user/
+446|MINOR|T08.3 [TODO] FE terapkan kupon di CheckoutPage (server-authoritative T28.2).
+447|MINOR|T08.4 [TODO] FE tukar poin di CheckoutPage -> server hitung (T28.2) + ledger (T31).
+450|SEKSI|FASE 3 — PESANAN, KIRIM & AKUN
+453|MAJOR|T09. Manajemen Pesanan Admin (Antrean, Tab Status, Update Status) ... [PARTIAL]  [OWNER:A2
+459|MINOR|T09.1 [TODO] `orderService.js` + wiring OrderListPage via useOrderTableStore.
+460|MINOR|T09.2 [NEW] Catat `order_status_histories` SETIAP update status (PRASYARAT T09.3).
+461|MINOR|T09.3 [TODO] FE update status (OrderStatusModal) -> PATCH + Toast (tulis history T0
+462|MINOR|T09.4 [TODO] FE batal pesanan (single & bulk) via ConfirmationModal + refresh.
+463|MINOR|T09.5 [TODO] FE OrderDetailPage API-backed (item, alamat, pembayaran, riwayat statu
+465|MAJOR|T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL]  [OWNER:A2
+472|MINOR|T10.1 [NEW] Backend booking pickup -> buat `shipments` (waybill, status,
+474|MINOR|T10.2 [TODO] FE aksi booking pickup di OrderDetailPage + Toast resi.
+475|MINOR|T10.3 [TODO] FE PrintReceiptModal (label termal 100x150 + barcode) dari API.
+476|MINOR|T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3).
+478|MAJOR|T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL]  [OWNER:A1
+484|MINOR|T11.1 [TODO] FE ProfilePage -> API (biodata + password + sesi) via authService.
+485|MINOR|T11.2 [TODO] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS)
+486|MINOR|T11.3 [TODO] FE riwayat poin loyalitas (depend T31).
+489|SEKSI|FASE 4 — PRODUK, STOK, PENGADAAN & PROMOSI (ERP)
+492|MAJOR|T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  [OWNER:A2]
+500|MINOR|T12.1a [DONE] Backfill awal `inventory_balances` dari products.stock &
+502|MINOR|T12.1b [DONE] Konversi `orders.total_weight` ke GRAM + backfill (D3) + test.
+503|MINOR|T12.1c [DONE] Standardisasi presisi kolom uang menyimpang ke DECIMAL(14,2) (D4).
+504|MINOR|T12.1d [DONE] Migrasi deprecate+backfill: products.min_stock->stock_minimum,
+506|MINOR|T12.2 [DONE] InventoryService OTORITATIF D1: semua mutasi dalam transaksi DB +
+509|MINOR|T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
+510|MINOR|T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
+511|MINOR|T12.5 [TODO] FE kartu mutasi stok + filter.
+512|MINOR|T12.6 [NEW] Refaktor penulisan stok saat CHECKOUT -> InventoryService (D1):
+517|MAJOR|T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL]  [OWNER:A2
+527|MINOR|T13.1 [TODO] FE LowStockAlertWidget -> GET /api/inventory/low-stock.
+528|MINOR|T13.2 [TODO] FE saldo stok per gudang.
+529|MINOR|T13.3 [NEW] Reservasi stok (stock_reservations) saat checkout (atomik +
+531|MINOR|T13.4 [NEW] Kelola `warehouse_bins` + relasi inventory_balances.
+532|MINOR|T13.5 [NEW] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
+535|MAJOR|T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL]  [OWNER:A2
+544|MINOR|T14.1 [DONE] Vendor/PO/GRN/Bills + pembayaran (existing).
+545|MINOR|T14.2 [TODO] Refaktor receive GRN -> InventoryService (D1) agar tidak menulis
+547|MINOR|T14.3 [NEW] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18
+548|MINOR|T14.4 [NEW] Receive GRN -> update `inventory_balances` (D1).
+549|MINOR|T14.5 [NEW] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
+551|MAJOR|T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OWNER:A1]
+559|MINOR|T15.1a [DONE] Migrasi quota/used_count/per_user_limit/is_free_shipping/stackable
+561|MINOR|T15.1b [NEW] Siklus pemakaian voucher: increment `used_count` + catat
+563|MINOR|T15.2 [NEW] Backend CRUD voucher admin + validasi + test.
+564|MINOR|T15.3 [TODO] FE VoucherListPage + FilterDrawer (server-side).
+565|MINOR|T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
+568|SEKSI|FASE 5 — KEUANGAN & ANALITIK (BI)
+571|MAJOR|T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  [OWNER:A2]
+578|MINOR|T16.1 [TODO] `transactionService.js` + FinancialTransactionsPage via
+580|MINOR|T16.2 [TODO] FE FinancialTransactionCreatePage -> POST + Toast.
+581|MINOR|T16.3 [TODO] FE kategori & ringkasan cashflow.
+582|MINOR|T16.4 [DONE] MESIN JURNAL: `financial_accounts` (saldo rekening) +
+587|MAJOR|T17. E-Invoice & Cetak (Invoice/Resi/PO/GRN/Bill) .................. [PARTIAL]  [OWNER:A2]
+593|MINOR|T17.1 [TODO] FE PrintInvoiceModal dari data API (bukan mock).
+594|MINOR|T17.2 [TODO] FE cetak dokumen procurement (PO/GRN/Bill) konsisten kanonik.
+595|MINOR|T17.3 [NEW] Migrasi `invoices` + nomor invoice legal berurutan + generate PDF.
+597|MAJOR|T18. Analisis Profit & HPP/COGS .................................... [PARTIAL]  [OWNER:A2]
+604|MINOR|T18.1 [NEW] Pipeline COGS (PRIORITAS AWAL, sebelum checkout live):
+608|MINOR|T18.2 [NEW] ReportQueryService bersama (dipakai T18.3 & T19.1).
+609|MINOR|T18.3 [NEW] Backend endpoint laporan laba kotor + test (depend T18.1).
+610|MINOR|T18.4 [TODO] FE halaman laporan profit (filter periode + tabel + ringkasan).
+612|MAJOR|T19. Dashboard BI (Revenue, Tren, Fast/Slow Moving, Liabilitas Poin) [TODO]  [OWNER:A2]
+618|MINOR|T19.1 [NEW] Endpoint agregasi BI via ReportQueryService (T18.2) + cache + test
+620|MINOR|T19.2 [TODO] FE AdminDashboardPage API-backed (KPI, tren, fast/slow moving).
+623|SEKSI|CROSS-CUTTING
+626|MAJOR|T20. Template Notifikasi (Email & Resi) API-backed ................. [PARTIAL]  [OWNER:A2]
+632|MINOR|T20.1 [TODO] `emailTemplateService.js` + wiring TemplateManagementPage (email).
+633|MINOR|T20.2 [TODO] FE editor template resi (receipt) + preview.
+634|MINOR|T20.3 [NEW] Catat `email_logs` setiap pengiriman email.
+635|MINOR|T20.4 [NEW] Event/Listener email (order created/paid/shipped/cancelled)
+638|MAJOR|T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [OWNER:A2]
+644|MINOR|T21.1 [DONE] Tabel `integrations` + endpoint config (KiriminAja/api.co.id)
+646|MINOR|T21.2 [DONE] Midtrans config + API refund (dipakai T07.3, T29.3) via integrations.
+647|MINOR|T21.3 [PARTIAL] STORAGE R2 (D7): bucket PRIVAT untuk file sensitif
+651|MINOR|T21.4 [NEW] [OWNER:A2] FE "Kurir & Layanan" sync-based: tombol "Sinkron dari
+656|MAJOR|T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
+659|MAJOR|T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OWNER:A2]
+666|MINOR|T23.1 [TODO] Merge seluruh branch fitur ke `main` + stabilisasi (test+build+audit).
+667|MINOR|T23.2 [TODO] Sembunyikan menu operasional lanjutan di `master` via FEATURE FLAG
+669|MINOR|T23.3 [TODO] Deploy VPS/Nginx + supervisor queue worker + cron scheduler
+671|MINOR|T23.4 [TODO] Smoke test produksi (storefront + admin).
+674|SEKSI|MAJOR TAMBAHAN (menutup gap audit)
+677|MAJOR|T24. RBAC & Keamanan Admin (Roles & Permissions) ................... [TODO]  [OWNER:A2]
+683|MINOR|T24.1 [NEW] Middleware EnsureRole/EnsurePermission + registrasi.
+684|MINOR|T24.2 [TODO] Terapkan middleware ke endpoint admin.
+685|MINOR|T24.3 [NEW] Endpoint + FE kelola role & permission (opsional).
+686|MINOR|T24.4 [TODO] FE guard menu AdminSidebar berdasarkan role/permission.
+687|MINOR|T24.5 [NEW] Sinkron `users.role` <-> `user_roles` (D5).
+689|MAJOR|T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
+695|MINOR|T25.1 [NEW] Controller + routes stock opname (create, input fisik, submit).
+696|MINOR|T25.2 [TODO] FE StockOpnameListPage + FilterDrawer (server-side).
+697|MINOR|T25.3 [TODO] FE StockOpnameCreatePage/DetailPage (input fisik + selisih).
+698|MINOR|T25.4 [NEW] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
+701|MAJOR|T26. Auth Pelanggan ................................................ [DONE]  [OWNER:A1]
+708|MINOR|T26.1 [DONE] Backend forgot/reset password + email (notifikasi ShouldQueue, aman di
+709|MINOR|T26.2 [DONE] Backend verifikasi email (signed URL) + resend + test.
+710|MINOR|T26.3 [DONE] FE Forgot/Reset password pages + wiring (StorefrontAuthLayout, form re
+711|MINOR|T26.4 [DONE] FE verifikasi email (banner global + kirim ulang) + halaman /email-ver
+712|MINOR|T26.5 [DONE] Merge keranjang guest (session_id) -> user saat login + test (CartServ
+714|MAJOR|T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OWNER:A2]
+721|MINOR|T27.1 [NEW] Otorisasi kepemilikan resource (anti-IDOR) menyeluruh untuk
+723|MINOR|T27.2 [TODO] FE daftar pesanan pelanggan + filter status.
+724|MINOR|T27.3 [TODO] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
+725|MINOR|T27.4 [NEW] Guest order lookup (order_number + email/phone).
+726|MINOR|T27.5 [NEW] Audit konsistensi endpoint guest-allowed (auth opsional):
+731|MAJOR|T28. Checkout Server-Authoritative ................................. [TODO]  [OWNER:A1]
+740|MINOR|T28.1 [NEW] Server hitung ulang product_price/subtotal dari DB + test.
+741|MINOR|T28.2 [NEW] Server hitung discount (T08.2, gratis ongkir, stacking) + ongkir
+743|MINOR|T28.3 [NEW] Test tampering end-to-end.
+745|MAJOR|T29. Retur & Refund ................................................ [TODO]  [OWNER:A2]
+753|MINOR|T29.1 [NEW] Migrasi returns + return_items.
+754|MINOR|T29.2 [NEW] Backend alur retur (request, approve, reject) + test.
+755|MINOR|T29.3 [NEW] Refund + stok kembali (inventory_balances) + poin reversal +
+757|MINOR|T29.4 [TODO] FE pelanggan ajukan retur + admin kelola.
+759|MAJOR|T30. Scheduler & Queue ............................................. [TODO]  [OWNER:A2]
+765|MINOR|T30.1 [DONE] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
+766|MINOR|T30.2 [NEW] Scheduled: auto-cancel order expired + release reservasi (T13.3).
+767|MINOR|T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
+769|MAJOR|T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [TODO]  [OWNER:A1]
+776|MINOR|T31.1 [NEW] Earning poin saat paid (idempoten) + ledger + test.
+777|MINOR|T31.2 [NEW] Expiry poin via scheduler (T30.3) — durasi
+779|MINOR|T31.3 [REMOVED] Aturan tier DIHAPUS (D9 — semua member flat).
+780|MINOR|T31.4 [NEW] Reversal poin saat refund/cancel.
+782|MAJOR|T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OWNER:A2]
+788|MINOR|T32.1 [NEW] Migrasi product_reviews + model.
+789|MINOR|T32.2 [NEW] Endpoint ulasan (list + create hanya pembeli) + moderasi + test.
+790|MINOR|T32.3 [TODO] FE form + tampilan ulasan + agregat rating (dipakai T01.2).
+792|MAJOR|T33. Audit Log & Seeder Referensi (SISA) ........................... [PARTIAL]  [OWNER:A2]
+798|MINOR|T33.1 [DONE] Migrasi activity_logs + logging aksi admin (HARGA/STOK/ROLE, G9).
+799|MINOR|T33.2 [DONE] Seeder `permissions` (melengkapi roles).
+800|MINOR|T33.3 [DONE] Seeder `receipt_templates` default.
+802|MAJOR|T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
+807|MINOR|T34.1 [DONE] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
+810|MINOR|T34.2 [NEW] Laporan laba rugi + neraca saldo.
+811|MINOR|T34.3 [NEW] Laporan aging hutang vendor (menyerap T14.5 lama).
+812|MINOR|T34.4 [NEW] Ekspor CSV/Excel/PDF laporan.
+814|MAJOR|T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
+816|MINOR|T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime
+817|MINOR|T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
+818|MINOR|T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
+819|MINOR|T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
+822|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+835|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+865|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+896|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+912|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+930|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+949|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
