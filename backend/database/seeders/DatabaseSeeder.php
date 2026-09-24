@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call(MasterReferenceSeeder::class);
         $this->call(PermissionSeeder::class);
         $this->call(ReceiptTemplateSeeder::class);
+        $this->call(SettingsSeeder::class);
     }
 }

@@ -851,7 +851,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
            (kelengkapan, keunikan key, konsistensi grup).
     T36.2 [DONE] `SettingsService`: baca/tulis per grup via `IntegrationService`,
            cast tipe, MASK secret, deteksi perubahan, resolusi default; + test.
-    T36.3 [NEW] Migrasi/seeder default settings semua grup + command
+    T36.3 [DONE] Migrasi/seeder default settings semua grup + command
            `settings:sync-defaults` (idempotent, TIDAK menimpa nilai yang sudah diubah
            admin) + test.
     T36.4 [NEW] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
