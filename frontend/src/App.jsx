@@ -16,6 +16,8 @@ import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import ProfilePage from './components/ProfilePage';
 import ProductListPage from './components/ProductListPage';
 import ProductCreateForm from './components/ProductCreateForm';
@@ -98,6 +100,8 @@ const VALID_VIEWS = [
   'warehouse-edit',
   'login',
   'register',
+  'forgot-password',
+  'reset-password',
   'profile',
 ];
 
@@ -133,6 +137,8 @@ const getViewFromPathOrHash = () => {
     if (rawPath.startsWith('/admin/procurement/pos/')) return 'procurement-po-detail';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/register') return 'register';
+    if (rawPath === '/forgot-password') return 'forgot-password';
+    if (rawPath === '/reset-password') return 'reset-password';
     if (rawPath === '/profile') return 'profile';
     if (rawPath === '/cart') return 'cart';
     if (rawPath === '/checkout') return 'checkout';
@@ -449,6 +455,14 @@ export default function App() {
     } else if (currentView === 'product-create') {
       if (window.location.pathname !== '/admin/products/create') {
         window.history.pushState(null, '', '/admin/products/create');
+      }
+    } else if (currentView === 'forgot-password') {
+      if (window.location.pathname !== '/forgot-password') {
+        window.history.pushState(null, '', '/forgot-password');
+      }
+    } else if (currentView === 'reset-password') {
+      if (window.location.pathname !== '/reset-password') {
+        window.history.pushState(null, '', '/reset-password' + window.location.search);
       }
     } else if (currentView === 'catalog') {
       if (window.location.pathname !== '/' || window.location.hash) {
@@ -973,6 +987,7 @@ export default function App() {
       <LoginPage
         onLoginSuccess={(user) => handleAuthSuccess(user, 'Berhasil masuk')}
         onNavigateRegister={() => setCurrentView('register')}
+        onNavigateForgotPassword={() => setCurrentView('forgot-password')}
         onBackToHome={() => {
           const returnView = pendingCartAction?.returnView || 'catalog';
           setPendingCartAction(null);
@@ -986,6 +1001,32 @@ export default function App() {
     return (
       <RegisterPage
         onRegisterSuccess={(user) => handleAuthSuccess(user, 'Selamat datang')}
+        onNavigateLogin={() => setCurrentView('login')}
+        onBackToHome={() => {
+          const returnView = pendingCartAction?.returnView || 'catalog';
+          setPendingCartAction(null);
+          setCurrentView(returnView);
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'forgot-password') {
+    return (
+      <ForgotPasswordPage
+        onNavigateLogin={() => setCurrentView('login')}
+        onBackToHome={() => {
+          const returnView = pendingCartAction?.returnView || 'catalog';
+          setPendingCartAction(null);
+          setCurrentView(returnView);
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'reset-password') {
+    return (
+      <ResetPasswordPage
         onNavigateLogin={() => setCurrentView('login')}
         onBackToHome={() => {
           const returnView = pendingCartAction?.returnView || 'catalog';

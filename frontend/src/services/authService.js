@@ -167,6 +167,57 @@ export const authService = {
   },
 
   /**
+   * Kirim permintaan tautan reset kata sandi ke email terdaftar.
+   */
+  async forgotPassword(email) {
+    try {
+      const response = await apiClient.post('/api/auth/forgot-password', {
+        email: (email || '').trim().toLowerCase(),
+      });
+
+      return {
+        success: true,
+        message: response.message || 'Tautan reset kata sandi telah dikirim ke email Anda.',
+        isLiveApi: true,
+      };
+    } catch (error) {
+      if (error.isNetworkError) {
+        const networkError = new Error('Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.');
+        networkError.isNetworkError = true;
+        throw networkError;
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Reset kata sandi menggunakan token dari email.
+   */
+  async resetPassword({ token, email, password, passwordConfirmation }) {
+    try {
+      const response = await apiClient.post('/api/auth/reset-password', {
+        token,
+        email: (email || '').trim().toLowerCase(),
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+
+      return {
+        success: true,
+        message: response.message || 'Kata sandi berhasil direset.',
+        isLiveApi: true,
+      };
+    } catch (error) {
+      if (error.isNetworkError) {
+        const networkError = new Error('Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.');
+        networkError.isNetworkError = true;
+        throw networkError;
+      }
+      throw error;
+    }
+  },
+
+  /**
    * Ambil data profil user yang sedang aktif.
    */
   async getProfile() {

@@ -11,10 +11,13 @@ import {
 } from 'lucide-react';
 import { mockDemoUsers } from '../data/mockAuthData';
 import { authService } from '../services/authService';
+import TextInput from './molecules/TextInput';
+import Checkbox from './molecules/Checkbox';
 
 export default function LoginPage({
   onLoginSuccess = () => {},
   onNavigateRegister = () => {},
+  onNavigateForgotPassword = () => {},
   onBackToHome = () => {},
 }) {
   const [email, setEmail] = useState('budi.pratama@gmail.com');
@@ -214,14 +217,13 @@ export default function LoginPage({
               >
                 ALAMAT EMAIL / NO. WHATSAPP *
               </label>
-              <input 
+              <TextInput 
                 type="text" 
-                id="login-email" 
+                name="login-email" 
                 required 
                 placeholder="nama@email.com atau 0812xxxx" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                onChange={setEmail}
               />
             </div>
 
@@ -235,21 +237,21 @@ export default function LoginPage({
                 </label>
                 <button 
                   type="button" 
-                  onClick={() => alert('Tautan pemulihan kata sandi telah dikirimkan ke email terdaftar Anda.')}
+                  onClick={onNavigateForgotPassword}
                   className="text-[11px] font-bold text-neutral-500 hover:text-black underline cursor-pointer"
                 >
                   Lupa Password?
                 </button>
               </div>
               <div className="relative">
-                <input 
+                <TextInput 
                   type={showPassword ? 'text' : 'password'} 
-                  id="login-password" 
+                  name="login-password" 
                   required 
                   placeholder="••••••••" 
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+                  onChange={setPassword}
+                  className="pr-10"
                 />
                 <button 
                   type="button" 
@@ -265,11 +267,10 @@ export default function LoginPage({
             {/* Remember Me Checkbox */}
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer text-xs text-neutral-600 select-none">
-                <input 
-                  type="checkbox" 
+                <Checkbox 
                   checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-black w-4 h-4 rounded-none cursor-pointer"
+                  onChange={setRememberMe}
+                  ariaLabel="Ingat saya di perangkat ini"
                 />
                 <span>Ingat saya di perangkat ini</span>
               </label>
