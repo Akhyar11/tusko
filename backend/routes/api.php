@@ -128,6 +128,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/admin/settings', [\App\Http\Controllers\Api\SettingsController::class, 'index']);
     Route::get('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'show']);
+    Route::put('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'update']);
 });
 
 Route::prefix('inventory')->group(function () {
