@@ -110,6 +110,8 @@ Route::prefix('transactions')->group(function () {
 
 Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
 
+Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class, 'profit']);
+
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'index']);
     Route::put('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'update']);
