@@ -150,6 +150,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/profile') return 'profile';
     if (rawPath === '/cart') return 'cart';
     if (rawPath === '/checkout') return 'checkout';
+    if (rawPath === '/order-success') return 'order-success';
     if (rawPath === '') {
       const hashCheck = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
       if (!hashCheck || hashCheck === 'catalog') {
@@ -205,7 +206,8 @@ const getInitialView = () => {
       return 'expeditions';
     }
     if (rawView === 'order-success') {
-      return 'orders';
+      // Jangan arahkan ke antrean admin; OrderSuccessPage menangani orderData null.
+      return 'order-success';
     }
     return rawView;
   }
