@@ -1678,9 +1678,16 @@ export default function App() {
             checkoutItems={checkoutItems}
             availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
-            onFinishOrder={(order) => {
-              // Remove checked out items from cart
-              setCart(prev => prev.filter(item => !checkoutItems.some(ci => ci.id === item.id)));
+            onFinishOrder={async (order) => {
+              // Hapus item yang sudah di-checkout dari keranjang server (mendukung checkout sebagian).
+              try {
+                await Promise.all(
+                  checkoutItems.map((ci) => cartService.removeItem(ci.id).catch(() => null))
+                );
+                await refreshCart();
+              } catch {
+                // abaikan; keranjang akan disinkronkan pada refresh berikutnya
+              }
               setLastCompletedOrder(order);
 
               // Add to orders list

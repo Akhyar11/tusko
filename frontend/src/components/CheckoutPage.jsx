@@ -18,10 +18,15 @@ import {
   Tag,
   Sparkles,
   Loader2,
-  Shield
+  Shield,
+  ShoppingBag
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
+import { checkoutService } from '../services/checkoutService';
+import TextInput from './molecules/TextInput';
+import Checkbox from './molecules/Checkbox';
+import IconButton from './atoms/IconButton';
 import AddressModal from './AddressModal';
 import ExpeditionModal from './ExpeditionModal';
 import PaymentInstructionModal from './PaymentInstructionModal';
@@ -214,37 +219,75 @@ export default function CheckoutPage({
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState(null);
   const [copiedVa, setCopiedVa] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     setIsProcessing(true);
+    setCheckoutError('');
 
-    // Simulate gateway API response
-    setTimeout(() => {
-      setIsProcessing(false);
+    const isManualTransfer = /manual|bank|transfer/i.test(selectedPayment?.name || '');
 
-      const generatedInvoice = `INV/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/TSK-${Math.floor(100000 + Math.random() * 900000)}`;
-      const generatedVa = `8808${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+    const payload = {
+      items: checkoutItems.map((item) => ({
+        product_id: item.product_id ?? item.id,
+        product_variant_id: item.product_variant_id ?? null,
+        quantity: item.quantity,
+        notes: item.notes || null,
+      })),
+      recipient_name: currentAddress.recipient_name,
+      phone: currentAddress.phone,
+      full_address: currentAddress.full_address,
+      province: currentAddress.province,
+      city: currentAddress.city,
+      district: currentAddress.district || null,
+      postal_code: currentAddress.postal_code,
+      address_label: currentAddress.label,
+      expedition_name: selectedExpedition?.name || 'Ekspedisi',
+      expedition_service: selectedExpedition?.service || selectedExpedition?.service_name || 'Reguler',
+      expedition_etd: selectedExpedition?.etd || null,
+      shipping_cost: shippingCost,
+      insurance_cost: insuranceCost,
+      service_fee: serviceFee,
+      discount_amount: discountAmount,
+      coupon_code: appliedCoupon?.code || null,
+      payment_method: isManualTransfer ? 'manual_transfer' : 'midtrans',
+      payment_channel: selectedPayment?.name || null,
+    };
 
-      const orderPayload = {
-        invoiceNumber: generatedInvoice,
-        vaNumber: generatedVa,
+    try {
+      const response = await checkoutService.createOrder(payload);
+      const order = response.data || {};
+
+      const completedOrder = {
+        invoiceNumber: order.order_number,
+        vaNumber: order.va_number,
         address: currentAddress,
         items: checkoutItems,
         expedition: selectedExpedition,
         paymentMethod: selectedPayment,
-        totalAmount: grandTotal,
+        totalAmount: Number(order.grand_total ?? grandTotal),
         totalSavings,
-        createdAt: new Date().toISOString()
+        createdAt: order.created_at || new Date().toISOString(),
       };
 
-      setOrderSuccessData(orderPayload);
-    }, 600);
+      setOrderSuccessData(completedOrder);
+      onFinishOrder(completedOrder);
+    } catch (err) {
+      const firstValidation = err.errors ? Object.values(err.errors)[0] : null;
+      setCheckoutError(
+        (Array.isArray(firstValidation) ? firstValidation[0] : firstValidation)
+        || err.message
+        || 'Gagal membuat pesanan. Silakan coba lagi.'
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (checkoutItems.length === 0) {
     return (
       <div className="w-full py-16 px-4 text-center">
-        <div className="bg-white rounded-none border-2 border-black p-12 shadow-none max-w-xl mx-auto">
+        <div className="bg-white rounded-none border border-neutral-300 shadow-2xs p-5 sm:p-6 max-w-xl mx-auto">
           <p className="text-black font-sport font-bold uppercase text-sm">Tidak ada barang yang dipilih untuk checkout.</p>
           <button
             onClick={onBackToCart}
@@ -258,36 +301,41 @@ export default function CheckoutPage({
   }
 
   return (
-    <div className="py-4 space-y-6">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header Bar */}
-      <div className="flex items-center justify-between border-b-2 border-black pb-4">
-        <button
-          onClick={onBackToCart}
-          className="flex items-center gap-2 text-xs font-sport font-black uppercase text-black hover:text-white bg-white hover:bg-black px-4 py-2 rounded-none border border-black transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={16} />
-          <span>Kembali ke Keranjang</span>
-        </button>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
+              <ShoppingBag size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
+                Checkout
+              </h1>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex items-center gap-2 text-xs font-sport font-bold uppercase text-black">
-          <ShieldCheck size={18} className="text-amber-500" />
-          <span>Checkout Aman &amp; Terenkripsi</span>
+        <div className="flex items-center gap-2">
+          <IconButton icon={ShieldCheck} variant="secondary" tooltip="Checkout aman &amp; terenkripsi" />
+          <IconButton icon={ArrowLeft} variant="outline" tooltip="Kembali ke Keranjang" onClick={onBackToCart} />
         </div>
       </div>
 
       {/* Main Layout: Checkout Details (8 cols) | Summary (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         
         {/* Left Form: Address, Items, Courier, Payment */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           
           {/* 1. Alamat Pengiriman */}
           <div className="bg-white rounded-none border border-neutral-300 p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <h3 className="font-sport font-black uppercase text-sm tracking-wider text-black flex items-center gap-2">
-                <MapPin size={16} className="text-black" />
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                <MapPin size={16} className="text-amber-500" />
                 <span>Alamat Pengiriman</span>
-              </h3>
+              </h2>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -369,11 +417,10 @@ export default function CheckoutPage({
               </div>
 
               {/* Courier Selection */}
-              <div className="pt-3 border-t border-neutral-200 bg-neutral-50 p-4 rounded-none space-y-3">
+              <div className="border-t border-neutral-200 bg-neutral-50 p-4 rounded-none space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-sport font-black uppercase tracking-wide text-black flex items-center gap-1.5">
-                    <Truck size={15} className="text-black" />
-                    <span>Opsi Pengiriman (Ekspedisi)</span>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Opsi Pengiriman (Ekspedisi)
                   </label>
                   <button
                     type="button"
@@ -388,7 +435,7 @@ export default function CheckoutPage({
                 {/* Selected Expedition Card */}
                 <div 
                   onClick={() => setIsExpeditionModalOpen(true)}
-                  className="p-3.5 bg-white border-2 border-black rounded-none cursor-pointer hover:bg-neutral-50 transition-all flex items-center justify-between"
+                  className="p-3.5 bg-white border border-neutral-300 shadow-2xs rounded-none cursor-pointer hover:bg-neutral-50 transition-all flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-none bg-black text-white font-sport font-black flex items-center justify-center text-xs shrink-0 -skew-x-6">
@@ -448,11 +495,11 @@ export default function CheckoutPage({
 
           {/* 3. Metode Pembayaran */}
           <div className="bg-white rounded-none border border-neutral-300 p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <h3 className="font-sport font-black uppercase text-sm tracking-wider text-black flex items-center gap-2">
-                <CreditCard size={16} className="text-black" />
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                <CreditCard size={16} className="text-amber-500" />
                 <span>Pilih Metode Pembayaran</span>
-              </h3>
+              </h2>
               <span className="text-[11px] font-sport font-bold uppercase text-neutral-400">Midtrans Gateway</span>
             </div>
 
@@ -540,18 +587,17 @@ export default function CheckoutPage({
         </div>
 
         {/* Right Sidebar: Ringkasan Pembayaran (Sticky) */}
-        <div className="lg:col-span-4">
-          <div className="sticky top-24 bg-white rounded-none border-2 border-black p-5 sm:p-6 space-y-4">
-            <h3 className="font-sport font-black uppercase text-base tracking-wider pb-3 border-b-2 border-black flex items-center justify-between text-black">
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 bg-white rounded-none border border-neutral-300 shadow-2xs p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
               <span>Ringkasan Pembayaran</span>
               <span className="text-xs font-sport font-bold text-neutral-500">{checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} barang</span>
-            </h3>
+            </h2>
 
             {/* Promo / Coupon Input */}
             <div className="space-y-2">
-              <label className="text-xs font-sport font-bold uppercase text-black flex items-center gap-1.5">
-                <Tag size={14} className="text-amber-500" />
-                <span>Kupon Promo (Coba: "DISKON20")</span>
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                Kupon Promo (Coba: "DISKON20")
               </label>
 
               {appliedCoupon ? (
@@ -566,31 +612,39 @@ export default function CheckoutPage({
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="text-xs font-sport font-black uppercase text-red-600 hover:text-red-800 cursor-pointer"
+                    className="text-xs font-sport font-black uppercase text-rose-600 hover:text-rose-800 cursor-pointer"
                   >
                     Hapus
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <input
-                    type="text"
+                <form onSubmit={handleApplyCoupon} className="space-y-3">
+                  <TextInput
                     value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
+                    onChange={setCouponInput}
                     placeholder="Kode Kupon..."
-                    className="flex-1 px-3 py-2 text-xs bg-neutral-100 border border-neutral-300 rounded-none focus:outline-none focus:border-black uppercase font-mono"
+                    weight="mono"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+                    className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer rounded-none"
                   >
-                    Terapkan
+                    <Tag size={15} />
+                    <span>Terapkan</span>
                   </button>
                 </form>
               )}
 
               {couponError && (
-                <span className="text-[10px] font-sport font-bold uppercase text-red-600 block bg-red-50 border border-red-200 p-2 rounded-none">{couponError}</span>
+                <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between animate-in fade-in duration-150">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span className="text-xs font-sport font-bold uppercase">{couponError}</span>
+                  </div>
+                  <button type="button" onClick={() => setCouponError('')} className="text-rose-600 hover:text-rose-800 cursor-pointer shrink-0" title="Tutup pesan">
+                    <AlertCircle size={15} />
+                  </button>
+                </div>
               )}
             </div>
 
@@ -630,11 +684,10 @@ export default function CheckoutPage({
               {/* Insurance Checkbox */}
               <div className="flex items-center justify-between pt-1 border-t border-neutral-100">
                 <label className="flex items-center gap-2 cursor-pointer select-none text-black font-medium">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={withInsurance}
-                    onChange={(e) => setWithInsurance(e.target.checked)}
-                    className="w-4 h-4 rounded-none accent-black border-neutral-300"
+                    onChange={setWithInsurance}
+                    ariaLabel="Asuransi Pengiriman"
                   />
                   <span>Asuransi Pengiriman</span>
                 </label>
@@ -660,7 +713,7 @@ export default function CheckoutPage({
             {totalSavings > 0 && (
               <div className="p-3 bg-neutral-100 border border-neutral-300 rounded-none flex items-center justify-between text-xs font-sport font-black uppercase text-black">
                 <span>Total Hemat:</span>
-                <span className="text-red-600 font-black">{formatRupiah(totalSavings)}</span>
+                <span className="text-rose-600 font-black">{formatRupiah(totalSavings)}</span>
               </div>
             )}
 
@@ -681,6 +734,13 @@ export default function CheckoutPage({
                 <span>Metode:</span>
                 <strong className="text-black truncate max-w-[180px]">{selectedPayment.name}</strong>
               </div>
+
+              {checkoutError && (
+                <div className="p-3 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-start gap-2">
+                  <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                  <span className="text-[11px] font-sport font-bold uppercase">{checkoutError}</span>
+                </div>
+              )}
 
               <button
                 type="button"
@@ -769,17 +829,9 @@ export default function CheckoutPage({
       {/* Order Success / Payment Instructions Modal */}
       <PaymentInstructionModal
         isOpen={Boolean(orderSuccessData)}
-        onClose={() => {
-          const completed = orderSuccessData;
-          setOrderSuccessData(null);
-          if (completed) onFinishOrder(completed);
-        }}
+        onClose={() => setOrderSuccessData(null)}
         orderData={orderSuccessData}
-        onPaymentConfirmed={(order) => {
-          const completed = order || orderSuccessData;
-          setOrderSuccessData(null);
-          if (completed) onFinishOrder(completed);
-        }}
+        onPaymentConfirmed={() => setOrderSuccessData(null)}
       />
     </div>
   );

@@ -149,6 +149,43 @@ class CheckoutApiTest extends TestCase
         $this->assertEquals(4, $product->fresh()->stock);
     }
 
+    public function test_checkout_resolves_user_from_bearer_token(): void
+    {
+        // Membuktikan checkout mengenali token Bearer Sanctum (bukan hanya sesi web),
+        // sehingga order tersimpan pada user yang benar.
+        $user = User::factory()->create();
+        $token = $user->createToken('checkout_test')->plainTextToken;
+        $product = Product::factory()->create([
+            'name' => 'Botol Minum',
+            'price' => 90000,
+            'stock' => 4,
+        ]);
+
+        $payload = [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'recipient_name' => 'Dewi Lestari',
+            'phone' => '081399887766',
+            'full_address' => 'Jl. Anggrek No. 2',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'shipping_cost' => 15000,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+        ];
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/checkout', $payload);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'recipient_name' => 'Dewi Lestari',
+        ]);
+    }
+
     public function test_can_checkout_using_saved_shipping_address(): void
     {
         $user = User::factory()->create();
