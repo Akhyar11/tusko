@@ -854,7 +854,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
     T36.3 [DONE] Migrasi/seeder default settings semua grup + command
            `settings:sync-defaults` (idempotent, TIDAK menimpa nilai yang sudah diubah
            admin) + test.
-    T36.4 [NEW] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
+    T36.4 [DONE] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
     T36.5 [NEW] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
            transaksi, catat activity_logs G9 tanpa secret) + test.
     T36.6 [NEW] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
