@@ -461,7 +461,7 @@ T09. Manajemen Pesanan Admin (Antrean, Tab Status, Update Status) ... [PARTIAL] 
     T09.1 [TODO] `orderService.js` + wiring OrderListPage via useOrderTableStore.
     T09.2 [DONE] Catat `order_status_histories` SETIAP update status (PRASYARAT T09.3).
     T09.3 [DONE] FE update status (OrderStatusModal) -> PATCH + Toast (tulis history T09.2).
-    T09.4 [TODO] FE batal pesanan (single & bulk) via ConfirmationModal + refresh.
+    T09.4 [DONE] FE batal pesanan (single & bulk) via ConfirmationModal + refresh.
     T09.5 [TODO] FE OrderDetailPage API-backed (item, alamat, pembayaran, riwayat status).
 
 T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL]  [OWNER:A2]

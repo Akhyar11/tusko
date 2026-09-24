@@ -11,13 +11,13 @@ import {
   PackageCheck, 
   Eye, 
   Edit3, 
-  MoreVertical, 
   FileText, 
   Printer, 
   SlidersHorizontal, 
   ExternalLink
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import RowActionMenu from './molecules/RowActionMenu';
 import ServerSideTable from './ServerSideTable';
 import OrderFilterDrawer from './organisms/OrderFilterDrawer';
 import OrderStatusModal from './OrderStatusModal';
@@ -214,10 +214,9 @@ export default function OrderListPage({
     setIsSubmitting(true);
     try {
       for (const id of selectedOrderIds) {
-        const order = orders.find(o => (o.id || o.order_number || o.invoice_number) === id);
+        const order = tableOrders.find(o => (o.id || o.order_number || o.invoice_number) === id);
         if (order) await onCancelOrder(order);
       }
-      onShowToast(`${selectedOrderIds.length} pesanan berhasil dibatalkan.`);
       setSelectedOrderIds([]);
       setIsBulkCancelOpen(false);
     } finally {
@@ -230,7 +229,6 @@ export default function OrderListPage({
     setIsSubmitting(true);
     try {
       await onCancelOrder(orderToCancel);
-      onShowToast(`Pesanan ${orderToCancel.order_number || orderToCancel.invoice_number} berhasil dibatalkan.`);
       setOrderToCancel(null);
     } finally {
       setIsSubmitting(false);
@@ -375,105 +373,82 @@ export default function OrderListPage({
       sortable: false,
       align: 'right',
       width: 'w-24',
-      render: (_, order, rowIdx) => {
-        const rowId = order.id || order.order_number || order.invoice_number;
-        const isOpen = activeActionMenuId === rowId;
-        const isNearBottom = rowIdx >= paginatedOrders.length - 2 && paginatedOrders.length > 3;
-
-        return (
-          <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setActiveActionMenuId(isOpen ? null : rowId)}
-              className={`p-1.5 rounded-none border transition-colors cursor-pointer ${
-                isOpen 
-                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
-                  : 'text-neutral-700 hover:text-black hover:bg-neutral-100 border-neutral-300 bg-white shadow-2xs'
-              }`}
-              title="Menu Aksi Pesanan"
-            >
-              <MoreVertical size={16} />
-            </button>
-
-            {isOpen && (
-              <div 
-                className={`absolute right-0 ${
-                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
-                } w-52 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100`}
+      render: (_, order) => (
+        <RowActionMenu buttonTitle="Menu Aksi Pesanan">
+          {(close) => (
+            <>
+              {/* 1. Lihat Detail */}
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  onViewOrderDetail(order);
+                }}
+                className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
               >
-                {/* 1. Lihat Detail */}
+                <Eye size={14} className="text-neutral-500" />
+                <span>Lihat Detail Pesanan</span>
+              </button>
+
+              {/* 2. Ubah Status */}
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  setStatusModalOrder(order);
+                }}
+                className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <Edit3 size={14} className="text-neutral-500" />
+                <span>Ubah Status Pesanan</span>
+              </button>
+
+              {/* 3. Cetak Resi */}
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  setPrintReceiptOrder(order);
+                }}
+                className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <Printer size={14} className="text-neutral-500" />
+                <span>Cetak Label Resi</span>
+              </button>
+
+              {/* 4. Cetak Invoice */}
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  setPrintInvoiceOrder(order);
+                }}
+                className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <FileText size={14} className="text-neutral-500" />
+                <span>Cetak Faktur Invoice</span>
+              </button>
+
+              {/* 5. Batalkan Pesanan (Destructive Red) */}
+              {order.status !== 'cancelled' && order.status !== 'completed' && (
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveActionMenuId(null);
-                    onViewOrderDetail(order);
+                    close();
+                    setOrderToCancel(order);
                   }}
-                  className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                 >
-                  <Eye size={14} className="text-neutral-500" />
-                  <span>Lihat Detail Pesanan</span>
+                  <XCircle size={14} className="text-rose-600" />
+                  <span>Batalkan Pesanan</span>
                 </button>
-
-                {/* 2. Ubah Status */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveActionMenuId(null);
-                    setStatusModalOrder(order);
-                  }}
-                  className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Edit3 size={14} className="text-neutral-500" />
-                  <span>Ubah Status Pesanan</span>
-                </button>
-
-                {/* 3. Cetak Resi */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveActionMenuId(null);
-                    setPrintReceiptOrder(order);
-                  }}
-                  className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Printer size={14} className="text-neutral-500" />
-                  <span>Cetak Label Resi</span>
-                </button>
-
-                {/* 4. Cetak Invoice */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveActionMenuId(null);
-                    setPrintInvoiceOrder(order);
-                  }}
-                  className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <FileText size={14} className="text-neutral-500" />
-                  <span>Cetak Faktur Invoice</span>
-                </button>
-
-                {/* 5. Batalkan Pesanan (Destructive Red) */}
-                {order.status !== 'cancelled' && order.status !== 'completed' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveActionMenuId(null);
-                      setOrderToCancel(order);
-                    }}
-                    className="w-full px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
-                  >
-                    <XCircle size={14} className="text-rose-600" />
-                    <span>Batalkan Pesanan</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      }
+              )}
+            </>
+          )}
+        </RowActionMenu>
+      )
     }
-  ], [paginatedOrders, activeActionMenuId, copiedInvoice]);
+  ], [paginatedOrders, copiedInvoice]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">

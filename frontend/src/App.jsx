@@ -963,6 +963,38 @@ export default function App() {
     }
   };
 
+  // T09.4: batalkan pesanan via API + refresh tabel (single & bulk).
+  const handleCancelOrder = async (order) => {
+    const id = order?.id || order?.order_number || order?.invoice_number;
+    if (!id) return;
+
+    try {
+      await orderService.updateOrderStatus(id, {
+        status: 'cancelled',
+        cancellation_reason: 'Dibatalkan dari panel admin',
+      });
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          (o.id === order.id || (o.order_number && o.order_number === order.order_number))
+            ? { ...o, status: 'cancelled', payment_status: 'cancelled' }
+            : o
+        )
+      );
+
+      setSelectedOrderForDetail((prev) =>
+        prev && (prev.id === order.id || prev.order_number === order.order_number)
+          ? { ...prev, status: 'cancelled', payment_status: 'cancelled' }
+          : prev
+      );
+
+      useOrderTableStore.getState().fetchData();
+      showToast(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
+    } catch (err) {
+      showToast(err?.message || 'Gagal membatalkan pesanan.', { type: 'error' });
+    }
+  };
+
   const handleAuthSuccess = async (user, successPrefix = 'Berhasil masuk') => {
     handleUpdateUser(user);
     showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
@@ -1340,15 +1372,7 @@ export default function App() {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
               handleBuyNow(foundProd, 1);
             }}
-            onCancelOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
-                  : o
-              ));
-              setSelectedOrderForDetail(prev => ({ ...prev, status: 'cancelled', payment_status: 'cancelled' }));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
-            }}
+            onCancelOrder={handleCancelOrder}
             onCompleteOrder={(order) => {
               setOrders(prev => prev.map(o => 
                 (o.id === order.id || (o.order_number && o.order_number === order.order_number))
@@ -1377,14 +1401,7 @@ export default function App() {
               const foundProd = products.find(p => p.id === (item.product_id || item.id)) || item;
               handleBuyNow(foundProd, 1);
             }}
-            onCancelOrder={(order) => {
-              setOrders(prev => prev.map(o => 
-                (o.id === order.id || (o.order_number && o.order_number === order.order_number))
-                  ? { ...o, status: 'cancelled', payment_status: 'cancelled' } 
-                  : o
-              ));
-              setToastMessage(`Pesanan ${order.order_number || order.invoice_number} berhasil dibatalkan.`);
-            }}
+            onCancelOrder={handleCancelOrder}
             onCompleteOrder={(order) => {
               setOrders(prev => prev.map(o => 
                 (o.id === order.id || (o.order_number && o.order_number === order.order_number))
