@@ -350,6 +350,42 @@ export default function CheckoutPage({
   const [copiedVa, setCopiedVa] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
 
+  // Muat Snap.js dari URL yang dikonfigurasi admin (G6 — tanpa hardcode).
+  const loadSnapScript = (clientKey, snapUrl) => new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
+      resolve(true);
+      return;
+    }
+    if (!snapUrl) {
+      reject(new Error('Snap URL tidak dikonfigurasi.'));
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'midtrans-snap-script';
+    script.src = snapUrl;
+    script.setAttribute('data-client-key', clientKey);
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error('Gagal memuat Snap.js.'));
+    document.body.appendChild(script);
+  });
+
+  // Polling status pembayaran sampai terminal (paid/expired/cancelled/failed).
+  const pollPaymentStatus = async (orderNumber) => {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      try {
+        const fresh = await checkoutService.getOrder(orderNumber);
+        const status = fresh?.payment_status;
+        setOrderSuccessData((prev) => (prev ? { ...prev, paymentStatus: status } : prev));
+        if (['paid', 'expired', 'cancelled', 'failed'].includes(status)) {
+          break;
+        }
+      } catch {
+        break;
+      }
+    }
+  };
+
   const handlePayNow = async () => {
     setIsProcessing(true);
     setCheckoutError('');
@@ -403,6 +439,27 @@ export default function CheckoutPage({
 
       setOrderSuccessData(completedOrder);
       onFinishOrder(completedOrder);
+
+      // T07.1: Snap popup (bila Midtrans) + polling status pembayaran.
+      if (payload.payment_method === 'midtrans') {
+        try {
+          const snap = await checkoutService.getSnapToken(order.order_number);
+          if (snap?.snap_token && snap?.client_key) {
+            await loadSnapScript(snap.client_key, snap.snap_js_url);
+
+            if (window.snap && typeof window.snap.pay === 'function') {
+              window.snap.pay(snap.snap_token, {
+                onSuccess: () => pollPaymentStatus(order.order_number),
+                onPending: () => pollPaymentStatus(order.order_number),
+                onError: () => {},
+                onClose: () => {},
+              });
+            }
+          }
+        } catch {
+          // Fallback: modal instruksi pembayaran tetap tampil.
+        }
+      }
     } catch (err) {
       const firstValidation = err.errors ? Object.values(err.errors)[0] : null;
       setCheckoutError(
@@ -867,7 +924,7 @@ export default function CheckoutPage({
                   <span>Asuransi Pengiriman</span>
                 </label>
                 <span className="font-sport font-bold text-black">
-                  {withInsurance ? formatRupiah(2500) : 'Rp 0'}
+                  {withInsurance ? formatRupiah(2500) : formatRupiah(0)}
                 </span>
               </div>
 

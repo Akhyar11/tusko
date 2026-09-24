@@ -378,6 +378,9 @@ class CheckoutController extends Controller
                 'order_number' => $order->order_number,
                 'snap_token' => $result['token'],
                 'redirect_url' => $result['redirect_url'],
+                'client_key' => $midtransService->clientKey() ?: null,
+                'is_production' => $midtransService->isProduction(),
+                'snap_js_url' => $midtransService->snapJsUrl() ?: null,
             ],
         ]);
     }

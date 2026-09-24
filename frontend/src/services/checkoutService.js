@@ -48,6 +48,14 @@ export const checkoutService = {
   },
 
   /**
+   * Ambil/regenerate Midtrans Snap token untuk sebuah pesanan.
+   */
+  async getSnapToken(idOrOrderNumber) {
+    const response = await apiClient.post(`/api/orders/${encodeURIComponent(idOrOrderNumber)}/snap-token`);
+    return response.data;
+  },
+
+  /**
    * Ambil detail pesanan berdasarkan ID atau nomor pesanan.
    */
   async getOrder(idOrOrderNumber) {

@@ -34,6 +34,31 @@ class MidtransService
     }
 
     /**
+     * Client key Midtrans (untuk Snap.js popup di frontend).
+     */
+    public function clientKey(): string
+    {
+        return $this->clientKey;
+    }
+
+    /**
+     * Apakah menggunakan environment production Midtrans.
+     */
+    public function isProduction(): bool
+    {
+        return $this->isProduction;
+    }
+
+    /**
+     * URL Snap.js (dari konfigurasi admin/G6 — tanpa hardcode).
+     */
+    public function snapJsUrl(): string
+    {
+        return (string) ($this->integrations->get('midtrans.snap_js_url')
+            ?? config('midtrans.snap_js_url', ''));
+    }
+
+    /**
      * Create Midtrans Snap Token for an Order.
      *
      * @return array{token: string, redirect_url: string}
