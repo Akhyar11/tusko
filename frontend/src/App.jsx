@@ -59,7 +59,9 @@ import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
 import { productService } from './services/productService';
+import { orderService } from './services/orderService';
 import { useProductTableStore } from './stores/useProductTableStore';
+import { useOrderTableStore } from './stores/useOrderTableStore';
 import { formatRupiah } from './utils/formatters';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
@@ -906,7 +908,7 @@ export default function App() {
     setSearchQuery('');
   };
 
-  const handleUpdateOrderStatus = (orderId, newStatus, additionalData = {}) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus, additionalData = {}) => {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id === orderId || (o.order_number && o.order_number === orderId)) {
@@ -946,7 +948,19 @@ export default function App() {
       }));
     }
 
-    setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
+    // T09.3: kirim perubahan status ke server + refresh tabel (server-side store).
+    try {
+      await orderService.updateOrderStatus(orderId, {
+        status: newStatus,
+        tracking_number: additionalData.tracking_number,
+        cancellation_reason: additionalData.cancel_reason,
+        notes: additionalData.notes,
+      });
+      useOrderTableStore.getState().fetchData();
+      showToast(`Status pesanan berhasil diubah menjadi: ${String(newStatus).toUpperCase()}`);
+    } catch (err) {
+      showToast(err?.message || 'Gagal memperbarui status pesanan.', { type: 'error' });
+    }
   };
 
   const handleAuthSuccess = async (user, successPrefix = 'Berhasil masuk') => {

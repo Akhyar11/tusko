@@ -103,8 +103,11 @@ export const orderService = {
     return res.data || res;
   },
 
-  async updateOrderStatus(idOrOrderNumber, status) {
-    const res = await apiClient.put(`/api/orders/${idOrOrderNumber}/status`, { status });
+  async updateOrderStatus(idOrOrderNumber, statusOrPayload) {
+    const payload = typeof statusOrPayload === 'string'
+      ? { status: statusOrPayload }
+      : (statusOrPayload || {});
+    const res = await apiClient.patch(`/api/orders/${idOrOrderNumber}/status`, payload);
     return res.data || res;
   },
 
