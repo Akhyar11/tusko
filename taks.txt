@@ -671,7 +671,7 @@ T26. Auth Pelanggan ................................................ [TODO]  [OW
   Minor:
     T26.1 [DONE] Backend forgot/reset password + email (notifikasi ShouldQueue, aman di driver sync) + test.
     T26.2 [DONE] Backend verifikasi email (signed URL) + resend + test.
-    T26.3 [TODO] FE Forgot/Reset password pages + wiring.
+    T26.3 [DONE] FE Forgot/Reset password pages + wiring (StorefrontAuthLayout, form reusable).
     T26.4 [TODO] FE verifikasi email (banner + resend).
     T26.5 [NEW] Merge keranjang guest (session_id) -> user saat login + test.
 
