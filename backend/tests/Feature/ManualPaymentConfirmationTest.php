@@ -13,14 +13,25 @@ class ManualPaymentConfirmationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_get_manual_bank_accounts(): void
+    public function test_manual_bank_accounts_are_empty_when_not_configured(): void
     {
-        $response = $this->getJson('/api/payment-methods/manual-banks');
+        $this->getJson('/api/payment-methods/manual-banks')
+            ->assertOk()
+            ->assertJson(['data' => [], 'configured' => false]);
+    }
 
-        $response->assertOk()
-            ->assertJsonCount(4, 'data')
-            ->assertJsonFragment(['bank' => 'BCA'])
-            ->assertJsonFragment(['bank' => 'Mandiri']);
+    public function test_manual_bank_accounts_are_loaded_from_configuration(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('payment.manual_banks', json_encode([
+            ['bank' => 'BCA', 'bank_code' => '014', 'account_number' => '1234567890', 'account_name' => 'PT Tusko'],
+            ['bank' => 'Mandiri', 'bank_code' => '008', 'account_number' => '9876543210123', 'account_name' => 'PT Tusko'],
+        ]), 'payment');
+
+        $this->getJson('/api/payment-methods/manual-banks')
+            ->assertOk()
+            ->assertJsonPath('configured', true)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['bank' => 'BCA']);
     }
 
     public function test_can_confirm_payment_with_proof_upload(): void

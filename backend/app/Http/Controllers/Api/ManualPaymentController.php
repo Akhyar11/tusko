@@ -7,6 +7,7 @@ use App\Http\Requests\ConfirmManualPaymentRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\IntegrationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,39 +19,17 @@ class ManualPaymentController extends Controller
     /**
      * Get list of destination bank accounts for manual bank transfer.
      */
-    public function bankAccounts(): JsonResponse
+    public function bankAccounts(IntegrationService $integrations): JsonResponse
     {
+        // G6: rekening bank manual dikonfigurasi Admin (tabel `integrations`,
+        // key `payment.manual_banks` disimpan sebagai JSON string), tanpa hardcode.
+        $raw = $integrations->get('payment.manual_banks');
+        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+        $banks = is_array($decoded) ? array_values($decoded) : [];
+
         return response()->json([
-            'data' => [
-                [
-                    'bank' => 'BCA',
-                    'bank_code' => '014',
-                    'account_number' => '1234567890',
-                    'account_name' => 'PT Toko Online Indonesia',
-                    'logo' => 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg',
-                ],
-                [
-                    'bank' => 'Mandiri',
-                    'bank_code' => '008',
-                    'account_number' => '9876543210123',
-                    'account_name' => 'PT Toko Online Indonesia',
-                    'logo' => 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg',
-                ],
-                [
-                    'bank' => 'BRI',
-                    'bank_code' => '002',
-                    'account_number' => '012345678901234',
-                    'account_name' => 'PT Toko Online Indonesia',
-                    'logo' => 'https://upload.wikimedia.org/wikipedia/commons/6/68/BANK_BRI_logo.svg',
-                ],
-                [
-                    'bank' => 'BNI',
-                    'bank_code' => '009',
-                    'account_number' => '1122334455',
-                    'account_name' => 'PT Toko Online Indonesia',
-                    'logo' => 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg',
-                ],
-            ],
+            'data' => $banks,
+            'configured' => $banks !== [],
         ]);
     }
 
