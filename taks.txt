@@ -508,7 +508,7 @@ T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL] 
     T13.2 [TODO] FE saldo stok per gudang.
     T13.3 [NEW] Reservasi stok (stock_reservations) saat checkout (atomik +
             lockForUpdate) + release saat batal/expired + pelihara inventory_balances + test.
-    T13.4 [NEW] Kelola `warehouse_bins` + relasi inventory_balances.
+    T13.4 [DONE] Kelola `warehouse_bins` + relasi inventory_balances.
     T13.5 [NEW] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
             stock_transfers/items + alur transfer antar gudang + test.
 

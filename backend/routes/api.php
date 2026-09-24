@@ -181,5 +181,9 @@ Route::prefix('warehouses')->group(function () {
     Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'update']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\WarehouseController::class, 'destroy']);
     Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\WarehouseController::class, 'toggleStatus']);
+    Route::get('/{idOrCode}/bins', [\App\Http\Controllers\Api\WarehouseBinController::class, 'index']);
+    Route::post('/{idOrCode}/bins', [\App\Http\Controllers\Api\WarehouseBinController::class, 'store']);
+    Route::match(['put', 'patch'], '/{idOrCode}/bins/{binId}', [\App\Http\Controllers\Api\WarehouseBinController::class, 'update']);
+    Route::delete('/{idOrCode}/bins/{binId}', [\App\Http\Controllers\Api\WarehouseBinController::class, 'destroy']);
 });
 
