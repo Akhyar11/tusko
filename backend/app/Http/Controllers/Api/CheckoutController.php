@@ -25,7 +25,7 @@ class CheckoutController extends Controller
      */
     public function checkout(CheckoutRequest $request): JsonResponse
     {
-        $user = $request->user() ?: $request->user('sanctum');
+        $user = $request->user();
         $sessionId = $request->input('session_id')
             ?: $request->header('X-Session-ID')
             ?: $request->cookie('cart_session')
@@ -299,7 +299,7 @@ class CheckoutController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user() ?: $request->user('sanctum');
+        $user = $request->user();
         $query = Order::with(['items'])->latest();
 
         if ($user) {

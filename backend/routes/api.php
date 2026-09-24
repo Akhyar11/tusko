@@ -54,7 +54,7 @@ Route::prefix('products')->group(function () {
 });
 Route::post('/upload', [ProductController::class, 'uploadImage']);
 
-Route::prefix('cart')->group(function () {
+Route::prefix('cart')->middleware('auth.optional')->group(function () {
     Route::get('/', [CartController::class, 'index']);
     Route::post('/items', [CartController::class, 'addItem']);
     Route::put('/items/{id}', [CartController::class, 'updateItem']);
@@ -81,7 +81,7 @@ Route::prefix('expeditions')->group(function () {
 });
 
 
-Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout']);
+Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware('auth.optional');
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index']);
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
