@@ -126,10 +126,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'index']);
     Route::put('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'update']);
 
-    Route::get('/admin/settings', [\App\Http\Controllers\Api\SettingsController::class, 'index']);
-    Route::get('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'show']);
-    Route::put('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'update']);
-    Route::post('/admin/settings/{group}/test-connection', [\App\Http\Controllers\Api\SettingsController::class, 'testConnection']);
+    Route::middleware(['permission:settings.manage', 'throttle:30,1'])->group(function () {
+        Route::get('/admin/settings', [\App\Http\Controllers\Api\SettingsController::class, 'index']);
+        Route::get('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'show']);
+        Route::put('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'update']);
+        Route::post('/admin/settings/{group}/test-connection', [\App\Http\Controllers\Api\SettingsController::class, 'testConnection']);
+    });
 });
 
 Route::prefix('inventory')->group(function () {

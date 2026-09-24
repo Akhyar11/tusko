@@ -880,7 +880,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
     T36.6 [DONE] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
            payment (kredensial Midtrans), storage (put/head objek R2) + test
            (Http::fake / Storage::fake).
-    T36.7 [NEW] Guard keamanan: route admin-only (role/permission T24), rate limit,
+    T36.7 [DONE] Guard keamanan: route admin-only (role/permission T24), rate limit,
            larangan secret di respons/log, masking parsial; + test 401/403 & anti-kebocoran.
     T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + error handling.
     T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 +
