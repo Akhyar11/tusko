@@ -354,4 +354,67 @@ class PurchaseOrderStockIntegrationTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonPath('status', 'error');
     }
+
+    public function test_receiving_writes_authoritative_inventory_balance(): void
+    {
+        $product = Product::create([
+            'category_id' => $this->category->id,
+            'vendor_id' => $this->vendor->id,
+            'name' => 'Tusko Training Tee',
+            'slug' => 'tusko-training-tee',
+            'sku' => 'TSK-TEE-BAL',
+            'price' => 120000,
+            'cost_price' => 60000,
+            'stock' => 5,
+        ]);
+
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-202609-TEST-BAL',
+            'vendor_id' => $this->vendor->id,
+            'warehouse_id' => $this->warehouse->id,
+            'status' => 'approved',
+            'total_amount' => 600000,
+            'order_date' => now()->toDateString(),
+        ]);
+
+        $item = $po->items()->create([
+            'product_id' => $product->id,
+            'product_variant_id' => null,
+            'ordered_quantity' => 10,
+            'received_quantity' => 0,
+            'unit_price' => 60000,
+            'subtotal' => 600000,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(
+            "/api/purchase-orders/{$po->id}/receive",
+            [
+                'accepted_quantities' => [$item->id => 10],
+                'invoice_file' => UploadedFile::fake()->image('invoice-bal.jpg'),
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(200);
+
+        // D1: saldo otoritatif di inventory_balances (stok legacy 5 + terima 10).
+        $this->assertDatabaseHas('inventory_balances', [
+            'warehouse_id' => $this->warehouse->id,
+            'product_id' => $product->id,
+            'product_variant_id' => null,
+            'on_hand_stock' => 15,
+            'available_stock' => 15,
+        ]);
+
+        $this->assertEquals(15, (int) $product->fresh()->stock);
+
+        $this->assertDatabaseHas('stock_mutations', [
+            'product_id' => $product->id,
+            'warehouse_id' => $this->warehouse->id,
+            'type' => 'in',
+            'quantity' => 10,
+            'reference_type' => 'purchase_order',
+            'reference_id' => $po->po_number,
+        ]);
+    }
 }

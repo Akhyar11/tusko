@@ -12,18 +12,21 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
-use App\Models\StockMutation;
 use App\Models\Vendor;
 use App\Models\VendorBill;
 use App\Models\Warehouse;
 use App\Services\FileStorageService;
 use App\Services\IdentityCodeService;
+use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller
 {
+    public function __construct(private readonly InventoryService $inventoryService)
+    {
+    }
     /**
      * Display a listing of purchase orders.
      */
@@ -225,7 +228,7 @@ class PurchaseOrderController extends Controller
      */
     public function receive(Request $request, string $idOrPoNumber): JsonResponse
     {
-        $po = PurchaseOrder::with(['items.product', 'items.variant', 'vendor'])
+        $po = PurchaseOrder::with(['items.product', 'items.variant', 'vendor', 'warehouse'])
             ->where(function ($q) use ($idOrPoNumber) {
                 if (is_numeric($idOrPoNumber)) {
                     $q->where('id', (int) $idOrPoNumber)->orWhere('po_number', $idOrPoNumber);
@@ -360,56 +363,26 @@ class PurchaseOrderController extends Controller
                 ]);
 
                 if ($acceptedQty > 0) {
-                    // Update Stock: Variant if present, else Product (Self-Variant)
-                    if ($item->product_variant_id) {
-                        $variant = ProductVariant::find($item->product_variant_id);
+                    $variant = $item->product_variant_id
+                        ? ProductVariant::find($item->product_variant_id)
+                        : null;
+                    $product = Product::find($item->product_id);
+
+                    if ($product) {
+                        // D1: seluruh mutasi stok lewat InventoryService (inventory_balances otoritatif).
+                        $this->inventoryService->increase($product, $acceptedQty, [
+                            'reference_type' => 'purchase_order',
+                            'reference_id' => $po->po_number,
+                            'notes' => "Penerimaan PO #{$po->po_number}" . ($variant ? " (Varian: {$variant->variant_name})" : ' (Single SKU / Unit Utama)'),
+                            'created_by' => $request->user()?->name ?? 'Admin Gudang',
+                            'warehouse' => $po->warehouse,
+                        ], $variant);
+
+                        // Harga pokok / HPP terkini (pencatatan cogs_histories menyusul di T14.3).
                         if ($variant) {
-                            $stockBefore = $variant->stock;
-                            $variant->increment('stock', $acceptedQty);
                             $variant->update(['current_cogs' => $item->unit_price]);
-
-                            // Recalculate parent product total stock
-                            $parentProduct = Product::find($item->product_id);
-                            if ($parentProduct) {
-                                $parentProduct->recalculateTotalStockFromVariants();
-                                $parentProduct->update(['last_restock_at' => now()]);
-                            }
-
-                            // Log stock mutation
-                            StockMutation::create([
-                                'product_id' => $item->product_id,
-                                'type' => 'in',
-                                'quantity' => $acceptedQty,
-                                'stock_before' => $stockBefore,
-                                'stock_after' => $variant->stock,
-                                'reference_type' => 'purchase_order',
-                                'reference_id' => $po->po_number,
-                                'notes' => "Penerimaan PO #{$po->po_number} (Varian: {$variant->variant_name})",
-                                'created_by' => $request->user()?->name ?? 'Admin Gudang',
-                            ]);
-                        }
-                    } else {
-                        $product = Product::find($item->product_id);
-                        if ($product) {
-                            $stockBefore = $product->stock;
-                            $product->increment('stock', $acceptedQty);
-                            $product->update([
-                                'cost_price' => $item->unit_price,
-                                'last_restock_at' => now(),
-                            ]);
-
-                            // Log stock mutation
-                            StockMutation::create([
-                                'product_id' => $product->id,
-                                'type' => 'in',
-                                'quantity' => $acceptedQty,
-                                'stock_before' => $stockBefore,
-                                'stock_after' => $product->stock,
-                                'reference_type' => 'purchase_order',
-                                'reference_id' => $po->po_number,
-                                'notes' => "Penerimaan PO #{$po->po_number} (Single SKU / Unit Utama)",
-                                'created_by' => $request->user()?->name ?? 'Admin Gudang',
-                            ]);
+                        } else {
+                            $product->update(['cost_price' => $item->unit_price]);
                         }
                     }
                 }

@@ -522,7 +522,7 @@ T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL] 
   Test: VendorApiTest, PurchaseOrderStockIntegrationTest, ProcurementApiIntegrationTest.
   Minor:
     T14.1 [DONE] Vendor/PO/GRN/Bills + pembayaran (existing).
-    T14.2 [TODO] Refaktor receive GRN -> InventoryService (D1) agar tidak menulis
+    T14.2 [DONE] Refaktor receive GRN -> InventoryService (D1) agar tidak menulis
             products.stock langsung (T14.1 -> [PARTIAL]) + test.
     T14.3 [NEW] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18.3).
     T14.4 [NEW] Receive GRN -> update `inventory_balances` (D1).
