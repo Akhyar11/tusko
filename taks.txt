@@ -775,7 +775,7 @@ T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OW
   API: [NEW] /api/reports/income-statement, /trial-balance, /vendor-aging; export CSV.
   Test: [NEW] JournalPostingTest, FinancialReportApiTest.
   Minor:
-    T34.1 [NEW] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
+    T34.1 [DONE] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
            GRN, bayar bill, refund, opname) + test.
            (TIDAK bergantung pada T07/T14/T25/T29 — sebaliknya task tsb memanggil mapping.)
     T34.2 [NEW] Laporan laba rugi + neraca saldo.
