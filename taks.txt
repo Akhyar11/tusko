@@ -739,7 +739,7 @@ T30. Scheduler & Queue ............................................. [TODO]  [OW
   Test: [NEW] SchedulerJobTest.
   Minor:
     T30.1 [DONE] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
-    T30.2 [NEW] Scheduled: auto-cancel order expired + release reservasi (T13.3).
+    T30.2 [DONE] Scheduled: auto-cancel order expired + release reservasi (T13.3).
     T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
 
 T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [TODO]  [OWNER:A1]

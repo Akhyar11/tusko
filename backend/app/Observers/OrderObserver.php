@@ -112,7 +112,11 @@ class OrderObserver
                 ->where('reference_id', $order->order_number)
                 ->exists();
 
-            if (!$hasRestored) {
+            // Bila order memakai reservasi stok (D1/T13.3), pengembalian stok
+            // ditangani StockReservationService (release), bukan restore langsung.
+            $hasReservations = \App\Models\StockReservation::where('order_id', $order->id)->exists();
+
+            if (!$hasRestored && !$hasReservations) {
                 foreach ($order->items as $item) {
                     $product = $item->product ?: \App\Models\Product::find($item->product_id);
                     if ($product) {

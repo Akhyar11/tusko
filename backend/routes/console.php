@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Infrastruktur antrean (T30.1): pembersihan berkala data queue.
 Schedule::command('queue:prune-failed --hours=168')->weekly();
 Schedule::command('queue:prune-batches --hours=48')->daily();
+
+// T30.2: auto-cancel pesanan kedaluwarsa + lepaskan reservasi stok.
+Schedule::command('orders:cancel-expired')->everyTenMinutes();
