@@ -8,6 +8,8 @@ use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -54,14 +56,16 @@ class CartController extends Controller
     /**
      * Add a product to the cart or increment quantity if already present.
      */
-    public function addItem(AddToCartRequest $request): JsonResponse
+    public function addItem(AddToCartRequest $request, InventoryService $inventory): JsonResponse
     {
         $cart = $this->resolveCart($request);
         $productId = (int) $request->input('product_id');
         $quantityToAdd = (int) ($request->input('quantity') ?: 1);
         $notes = $request->input('notes');
+        $variantId = $request->input('product_variant_id');
 
         $product = Product::findOrFail($productId);
+        $variant = $variantId ? ProductVariant::findOrFail((int) $variantId) : null;
 
         if (!$product->active) {
             return response()->json([
@@ -76,10 +80,13 @@ class CartController extends Controller
         $currentQuantity = $existingItem ? (int) $existingItem->quantity : 0;
         $totalRequested = $currentQuantity + $quantityToAdd;
 
-        if ($totalRequested > $product->stock) {
+        // Validasi stok live dari inventory_balances (D1).
+        $availableStock = $inventory->availableStock($product, $variant);
+
+        if ($totalRequested > $availableStock) {
             return response()->json([
-                'message' => "Stok produk tidak mencukupi. Tersisa {$product->stock} unit di gudang.",
-                'available_stock' => $product->stock,
+                'message' => "Stok produk tidak mencukupi. Tersisa {$availableStock} unit di gudang.",
+                'available_stock' => $availableStock,
             ], 422);
         }
 
@@ -87,11 +94,13 @@ class CartController extends Controller
             $existingItem->update([
                 'quantity' => $totalRequested,
                 'notes' => $notes !== null ? $notes : $existingItem->notes,
+                'product_variant_id' => $variant?->id ?? $existingItem->product_variant_id,
             ]);
         } else {
             CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $product->id,
+                'product_variant_id' => $variant?->id,
                 'quantity' => $quantityToAdd,
                 'notes' => $notes,
             ]);
@@ -108,7 +117,7 @@ class CartController extends Controller
     /**
      * Update quantity and notes for an existing cart item.
      */
-    public function updateItem(Request $request, int $id): JsonResponse
+    public function updateItem(Request $request, int $id, InventoryService $inventory): JsonResponse
     {
         $request->validate([
             'quantity' => ['required', 'integer', 'min:1'],
@@ -118,17 +127,18 @@ class CartController extends Controller
 
         $cart = $this->resolveCart($request);
 
-        $cartItem = CartItem::with('product')
+        $cartItem = CartItem::with(['product', 'variant'])
             ->where('cart_id', $cart->id)
             ->where('id', $id)
             ->firstOrFail();
 
         $newQuantity = (int) $request->input('quantity');
+        $availableStock = $inventory->availableStock($cartItem->product, $cartItem->variant);
 
-        if ($newQuantity > $cartItem->product->stock) {
+        if ($newQuantity > $availableStock) {
             return response()->json([
-                'message' => "Jumlah barang melebihi stok yang tersedia ({$cartItem->product->stock} unit).",
-                'available_stock' => $cartItem->product->stock,
+                'message' => "Jumlah barang melebihi stok yang tersedia ({$availableStock} unit).",
+                'available_stock' => $availableStock,
             ], 422);
         }
 

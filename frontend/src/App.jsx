@@ -60,6 +60,7 @@ import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
 import { productService } from './services/productService';
 import { useProductTableStore } from './stores/useProductTableStore';
+import { formatRupiah } from './utils/formatters';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
 const VALID_VIEWS = [
@@ -219,7 +220,7 @@ const mapCartItems = (cartData) =>
     name: item.product?.name || 'Produk',
     price: Number(item.product?.price ?? 0),
     image_url: item.product?.image_url || '',
-    stock: Number(item.product?.stock ?? 0),
+    stock: Number(item.available_stock ?? item.product?.stock ?? 0),
     quantity: Number(item.quantity ?? 1),
     notes: item.notes || '',
     subtotal: Number(item.subtotal ?? 0),
@@ -1444,7 +1445,7 @@ export default function App() {
                 customer_name: 'Gudang & Inventaris'
               };
               setTransactions(prev => [newFinancialTx, ...prev]);
-              setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${tx.amount.toLocaleString('id-ID')})!`);
+              setToastMessage(`Pengadaan stok dicatat ke laporan keuangan (-${formatRupiah(tx.amount)})!`);
             }}
           />
         ) : currentView === 'suppliers-admin' ? (

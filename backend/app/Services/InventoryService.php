@@ -47,6 +47,25 @@ class InventoryService
     }
 
     /**
+     * Stok tersedia otoritatif (D1) dihitung dari `inventory_balances`
+     * (total `available_stock` seluruh gudang). Bila belum ada baris saldo,
+     * jatuh kembali ke stok agregat legacy agar tetap aman sebelum backfill.
+     */
+    public function availableStock(Product $product, ?ProductVariant $variant = null): int
+    {
+        $query = InventoryBalance::query()
+            ->where('product_id', $product->id)
+            ->when($variant, fn ($q) => $q->where('product_variant_id', $variant->id))
+            ->when(! $variant, fn ($q) => $q->whereNull('product_variant_id'));
+
+        if ((clone $query)->exists()) {
+            return max(0, (int) $query->sum('available_stock'));
+        }
+
+        return max(0, (int) ($variant ? $variant->stock : $product->stock));
+    }
+
+    /**
      * Inti mutasi stok: lock saldo -> validasi -> update saldo -> sinkron agregat -> kartu stok.
      */
     private function mutate(Product $product, ?ProductVariant $variant, int $signedQuantity, string $type, array $attributes): StockMutation

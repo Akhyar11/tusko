@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,10 +15,16 @@ class CartItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $availableStock = $this->product
+            ? app(InventoryService::class)->availableStock($this->product, $this->product_variant_id ? $this->variant : null)
+            : 0;
+
         return [
             'id' => $this->id,
             'cart_id' => $this->cart_id,
             'product_id' => $this->product_id,
+            'product_variant_id' => $this->product_variant_id,
+            'available_stock' => $availableStock,
             'product' => [
                 'id' => $this->product?->id,
                 'name' => $this->product?->name,
