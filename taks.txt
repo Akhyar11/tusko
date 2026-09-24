@@ -621,7 +621,7 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
   API: [NEW opsional] endpoint konfigurasi (admin-only).
   Test: MidtransIntegrationTest, MidtransWebhookTest.
   Minor:
-    T21.1 [NEW] Tabel `integrations` + endpoint config (KiriminAja/api.co.id)
+    T21.1 [DONE] Tabel `integrations` + endpoint config (KiriminAja/api.co.id)
            — dipakai T06.2.
     T21.2 [NEW] Midtrans config + API refund (dipakai T07.3, T29.3) via integrations.
     T21.3 [NEW] STORAGE R2 (D7): bucket PRIVAT untuk file sensitif

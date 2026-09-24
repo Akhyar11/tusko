@@ -109,6 +109,11 @@ Route::prefix('transactions')->group(function () {
 
 Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
 
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'index']);
+    Route::put('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'update']);
+});
+
 Route::prefix('inventory')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
     Route::get('/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
