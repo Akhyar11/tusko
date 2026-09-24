@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call(VoucherSeeder::class);
         $this->call(MasterReferenceSeeder::class);
         $this->call(PermissionSeeder::class);
+        $this->call(ReceiptTemplateSeeder::class);
     }
 }
