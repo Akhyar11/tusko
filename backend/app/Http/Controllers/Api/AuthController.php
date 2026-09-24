@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\FileStorageService;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -61,6 +62,9 @@ class AuthController extends Controller
             'membership_tier' => 'Member',
             'is_active' => true,
         ]);
+
+        // Kirim tautan verifikasi email ke pengguna baru.
+        $user->sendEmailVerificationNotification();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -202,6 +206,62 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.',
         ], 422);
+    }
+
+    /**
+     * Verifikasi alamat email pengguna melalui tautan bertanda tangan (signed URL).
+     *
+     * @param Request $request
+     * @param int $id
+     * @param string $hash
+     * @return JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function verifyEmail(Request $request, int $id, string $hash)
+    {
+        $user = User::findOrFail($id);
+
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Tautan verifikasi email tidak valid.');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+
+            event(new Verified($user));
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Alamat email berhasil diverifikasi.',
+            ]);
+        }
+
+        return redirect()->away(
+            rtrim((string) config('app.frontend_url'), '/') . '/email-verified?status=success'
+        );
+    }
+
+    /**
+     * Kirim ulang tautan verifikasi email.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Alamat email Anda sudah terverifikasi.',
+            ]);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'message' => 'Tautan verifikasi telah dikirim ulang ke email Anda.',
+        ]);
     }
 
     /**
@@ -496,6 +556,7 @@ class AuthController extends Controller
             'membership_tier' => $user->membership_tier ?: 'Member',
             'role' => $user->role,
             'is_active' => (bool) $user->is_active,
+            'email_verified_at' => $user->email_verified_at,
             'default_address' => $formattedAddress,
             'defaultAddress' => $formattedAddress,
             'stats' => $user->getProfileStats(),
