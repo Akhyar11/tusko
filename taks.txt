@@ -408,11 +408,12 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
            [TODO-A2] FE "Kurir & Layanan": tombol "Sinkron dari KiriminAja" + refaktor
                   ExpeditionSettingsPage (lihat T21.4, [OWNER:A2]).
     T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
-    T06.7 [PARTIAL] Peta kode wilayah (province/city/district/subdistrict) KiriminAja.
+    T06.7 [DONE] Peta kode wilayah (province/city/district/subdistrict) KiriminAja.
            [DONE] Backend: LocationService + `/api/locations/*` + migrasi kolom kode pada
-                  `shipping_addresses` + simpan kode via alamat + test [OWNER:A1].
-           [TODO] T06.7b FE: dropdown bertingkat provinsi->kota->kecamatan->kelurahan di
-                  `AddressFormPage` (isi `*_code`) + backfill kode alamat lama [OWNER:A1].
+                  `shipping_addresses` + simpan kode via alamat + resource + test [OWNER:A1].
+           [DONE] T06.7b FE: dropdown bertingkat provinsi->kota->kecamatan->kelurahan di
+                  `AddressFormPage` + restyle kanonis + simpan `*_code` [OWNER:A1].
+           [TODO] Backfill kode alamat LAMA (opsional; butuh mapping nama->kode).
     T06.8 [DONE] Caching tarif per (asal, tujuan, berat, kurir, dimensi) + TTL
            (integrations `shipping.rate_cache_ttl`) + retry/backoff provider + test. [OWNER:A1]
 
