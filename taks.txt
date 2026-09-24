@@ -727,7 +727,7 @@ T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OW
     T27.2 [TODO] FE daftar pesanan pelanggan + filter status.
     T27.3 [TODO] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
     T27.4 [NEW] Guest order lookup (order_number + email/phone).
-    T27.5 [NEW] Audit konsistensi endpoint guest-allowed (auth opsional):
+    T27.5 [DONE] Audit konsistensi endpoint guest-allowed (auth opsional):
            rute yang menerima tamu + token (cart, checkout, shipping, tracking)
            WAJIB memakai middleware `auth.optional` (bukan `$request->user('sanctum')`
            ad-hoc) + test. [OWNER:A2]
