@@ -1,5 +1,5 @@
 ==============================================================================
-TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 3)
+TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 4)
 E-Commerce Olahraga + Full ERP (Laravel 11 + React 19)
 ==============================================================================
 Acuan kanonis : PRD_DAN_DESAIN_SISTEM_TUSKO.md (Roadmap 5 Fase)
@@ -384,6 +384,10 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
     T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed).
     T05.3 [DONE] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
     T05.4 [DONE] Merge keranjang guest (session_id) -> user saat login (FE kirim session_id).
+    T05.5 [TODO] [KEPUTUSAN DIBUTUHKAN] Kebijakan keranjang guest: hapus gate login
+           pada add-to-cart (App.handleAddToCart) agar guest benar-benar bisa belanja
+           (backend `auth.optional` sudah siap) ATAU pertahankan wajib login. Jika
+           dihapus: sesuaikan badge/pending action + test browser.
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
@@ -403,6 +407,13 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
            [TODO-A2] FE "Kurir & Layanan": tombol "Sinkron dari KiriminAja" + refaktor
                   ExpeditionSettingsPage (lihat T21.4, [OWNER:A2]).
     T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
+    T06.7 [NEW] Peta kode wilayah (province/city/district/subdistrict) dari KiriminAja
+           (`/api/mitra/province|city|kecamatan|kelurahan`, `GET /api/mitra/v6.1/addresses`)
+           + simpan kode wilayah pada `shipping_addresses` (kolom kode) + backfill.
+           PRASYARAT integrasi tarif kurir asli (T06.2). + test. [OWNER:A1]
+    T06.8 [NEW] Caching tarif pengiriman per (asal, tujuan, berat, kurir) + TTL
+           + rate limiting/retry-backoff untuk provider (api.co.id menagih per
+           panggilan) + test. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
@@ -499,6 +510,10 @@ T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  
     T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
     T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
     T12.5 [TODO] FE kartu mutasi stok + filter.
+    T12.6 [NEW] Refaktor penulisan stok saat CHECKOUT -> InventoryService (D1):
+           `CheckoutController` saat ini masih `decrement products.stock` langsung;
+           pindahkan ke InventoryService agar otoritatif + tulis stock_mutations
+           + test. [OWNER:A2] (menyentuh CheckoutController -> koordinasi dgn A1).
 
 T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL]  [OWNER:A2]
   DB: stock_reservations, inventory_balances, warehouses(+priority),
@@ -712,6 +727,10 @@ T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OW
     T27.2 [TODO] FE daftar pesanan pelanggan + filter status.
     T27.3 [TODO] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
     T27.4 [NEW] Guest order lookup (order_number + email/phone).
+    T27.5 [NEW] Audit konsistensi endpoint guest-allowed (auth opsional):
+           rute yang menerima tamu + token (cart, checkout, shipping, tracking)
+           WAJIB memakai middleware `auth.optional` (bukan `$request->user('sanctum')`
+           ad-hoc) + test. [OWNER:A2]
 
 T28. Checkout Server-Authoritative ................................. [TODO]  [OWNER:A1]
   Fitur: server hitung ulang harga, diskon, ongkir, poin, grand_total (anti-tampering).
@@ -823,6 +842,9 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T03.2 -> T12.2 (D1)
 - T05.3 -> T12.2 ; T05.4 -> T26.5
 - T06.2 -> T21.1 ; T06.5 -> T12.2 ; T06.6 -> T13.5
+- T06.7 -> T21.1 (lokasi) ; T06.8 -> T06.2 (cache tarif)
+- T05.5 -> T05.2 (keputusan kebijakan guest)
+- T12.6 -> T12.2 (D1) ; T27.5 -> T06.1 (auth.optional)
 - T07.3 -> T21.2 ; T07.5 -> (independen)
 - T08.2 -> T15.1a ; T08.3 -> T28.2 ; T08.4 -> T28.2, T31.1
 - T09.3 -> T09.2 (T09.2 prasyarat) ; T09.x -> T09.1
@@ -853,14 +875,16 @@ URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
 2)  T26 Auth Pelanggan.
 3)  T15.1a + T15.1b (schema + siklus voucher) + T08.2 (validasi voucher)
     — SEBELUM T28.
-4)  T05 Cart + T06 Checkout/Ongkir (+ T21.1 config).
+4)  T05 Cart (+ T05.5 kebijakan keranjang guest) + T06 Checkout/Ongkir
+    (+ T21.1 config) + T06.7 peta kode wilayah + T06.8 caching tarif
+    (PRA SYARAT integrasi tarif kurir asli).
 5)  T18.1 COGS (sebelum checkout live).
 6)  T16.4 Mesin Jurnal + T34.1 Mapping (event lunas/fee) — SEBELUM T07.
 7)  T28 Checkout Server-Authoritative — TAHAP 1: nominal dasar (harga/ongkir/diskon).
-8)  T13 Reservasi + inventory_balances.
+8)  T13 Reservasi + inventory_balances + T12.6 (refaktor stok checkout -> InventoryService).
 9)  T07 Pembayaran (+ T21.2 config) — jurnal fee via T34.1 (sudah ada di langkah 6).
 10) T30 Scheduler (T30.2 auto-cancel + release reservasi).
-11) T09 Pesanan Admin + T27 Pesanan Pelanggan (+ T27.1 anti-IDOR).
+11) T09 Pesanan Admin + T27 Pesanan Pelanggan (+ T27.1 anti-IDOR + T27.5 audit auth.optional).
 12) T10 Fulfillment/Label/Tracking.
 13) T31 Loyalitas (T31.1 earning, T31.2 expiry, T31.4 reversal).
     -> T28 TAHAP 2: poin redeem (setelah T31).
@@ -875,10 +899,10 @@ URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
 
 MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
 - FONDASI: T12.1a–d, T12.2, T33.1, T33.2, T33.3, T30.1
-- AUTH & BELANJA: T26, T15.1a, T15.1b, T08.2, T05, T06, T21.1
-- UANG & STOK: T18.1, T16.4, T34.1 (mapping lunas/fee), T28 TAHAP 1, T13,
+- AUTH & BELANJA: T26, T15.1a, T15.1b, T08.2, T05 (+T05.5), T06, T06.7, T06.8, T21.1
+- UANG & STOK: T18.1, T16.4, T34.1 (mapping lunas/fee), T28 TAHAP 1, T13, T12.6,
   T07, T21.2, T30.2
-- OPERASIONAL: T09, T27, T27.1, T10
+- OPERASIONAL: T09, T27, T27.1, T27.5, T10
 - KEAMANAN: T21.3 (R2 privat), T24, T35.1, T35.2, T35.3
 CATATAN MILESTONE:
 - Kepemilikan test konkurensi + idempotensi webhook = **T35.2** (T13/T07 hanya
@@ -925,6 +949,49 @@ PATCH 3.1 (perbaikan atas review Revisi 3)
 - Koreksi kecil: "ETALATE"->"ETALASE"; T30.1 "(depend: tidak ada)"->"INDEPENDEN";
   matriks T09.3->T09.2; gap analysis A konsisten (mesin T16.4 + mapping T34.1);
   bukti verifikasi dinyatakan berasal dari DB DEV (bukan produksi).
+==============================================================================
+REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+==============================================================================
+Ringkasan: T26 [DONE], T05 [DONE] (di main). T06 [PARTIAL]; T12.2/T16.4/T34.1/
+T21.1/T21.2/T15.1a/T30.1/T33.1 [DONE] (di main, milik A2).
+
+TAMBAHAN MINOR (menutup gap nyata saat eksekusi):
+- T05.5 [TODO][KEPUTUSAN DIBUTUHKAN] Kebijakan keranjang guest (hapus gate login
+  add-to-cart ATAU pertahankan wajib login). Backend `auth.optional` sudah siap.
+- T06.7 [NEW][A1] Peta kode wilayah KiriminAja + simpan kode di shipping_addresses
+  (PRA SYARAT tarif kurir asli; API butuh district/village code).
+- T06.8 [NEW][A1] Caching tarif + TTL + rate limit/retry (provider menagih/panggilan).
+- T12.6 [NEW][A2] Refaktor penulisan stok CHECKOUT -> InventoryService (D1).
+- T27.5 [NEW][A2] Audit konsistensi endpoint guest-allowed pakai `auth.optional`.
+- T21.4 [NEW][A2] FE "Kurir & Layanan" sync-based (tombol Sinkron KiriminAja +
+  refaktor ExpeditionSettingsPage) — backend sudah disiapkan A1
+  (ExpeditionSyncService + `php artisan expeditions:sync`).
+- T06.5 [PARTIAL]: sinkron expeditions DONE (A1); konsumsi expedition_services
+  di checkout masih TODO (A1); UI admin = T21.4 (A2).
+
+TEMUAN TEKNIS PENTING:
+- Rute cart/checkout sebelumnya TIDAK punya middleware auth -> ditambahkan
+  `auth.optional` (AuthenticateOptional) agar Bearer dikenali tanpa menolak tamu.
+  Pola ini diwajibkan untuk endpoint guest-allowed (lihat T27.5).
+- Kontrak ShippingRateService & ExpeditionSyncService sudah DISELARASKAN dengan
+  dokumentasi RESMI KiriminAja/api.co.id (bukan asumsi):
+  * KiriminAja: POST /api/mitra/v6.1/shipping_price; POST /api/mitra/couriers;
+    POST /api/mitra/courier_services; coverage /api/mitra/province|city|kecamatan|kelurahan.
+  * api.co.id: GET /courier/v2/rates (header x-api-co-id, berat KILOGRAM).
+- Reset password memakai `Hash::make` (selaras docs Laravel 13).
+
+CATATAN PENYELARASAN AUDITOR (perlu keputusan user, belum diubah di AGENTS.md):
+- Auditor 07/13 menerapkan spesimen form ADMIN (aturan 25/26) ke halaman
+  STOREFRONT (CartPage/CheckoutPage) sehingga memicu iterasi berulang.
+- Usulan: tambahkan pengecualian eksplisit di AGENTS.md bahwa halaman auth/checkout
+  storefront TIDAK tunduk pada spesimen header/kartu form admin, ATAU jadwalkan
+  tugas "kanonikalisasi storefront" tersendiri.
+- Catatan: auditor AI bersifat NONDETERMINISTIK -> jangan dijadikan satu-satunya
+  gerbang; percepat T35.3 (CI deterministik) sebagai gerbang kedua.
+
+KEPUTUSAN MASIH MENGGANTUNG (menghambat T31.2 & T29):
+- Durasi expiry poin (usulan default 12 bulan, via config G6).
+- Aturan refund (usulan: Midtrans untuk channel online, manual untuk transfer manual).
 ==============================================================================
 
 
