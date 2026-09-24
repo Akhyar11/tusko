@@ -396,7 +396,12 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
            (config dari T21.1) + test.
     T06.3 [DONE] FE pilih alamat + layanan kurir (tarif API live).
     T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
-    T06.5 [NEW] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
+    T06.5 [PARTIAL] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
+           [DONE] ExpeditionSyncService + command `expeditions:sync` (kontrak resmi KiriminAja)
+                  + upsert idempotent `expeditions`/`expedition_services` [OWNER:A1].
+           [TODO] Konsumsi `expedition_services` pada alur ongkir/checkout [OWNER:A1].
+           [TODO-A2] FE "Kurir & Layanan": tombol "Sinkron dari KiriminAja" + refaktor
+                  ExpeditionSettingsPage (lihat T21.4, [OWNER:A2]).
     T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
@@ -632,6 +637,10 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
            (payment_proof/invoice/proof) + akses `temporaryUrl()`; bucket publik
            hanya untuk aset publik. (MENYERAP T35.3 lama.)
            SISA: payment_proof di ManualPaymentController (milik A1) -> storePrivate.
+    T21.4 [NEW] [OWNER:A2] FE "Kurir & Layanan" sync-based: tombol "Sinkron dari
+           KiriminAja" di ExpeditionSettingsPage + refaktor CRUD -> master tersinkron
+           + override admin (fee/priority/aktif); penjadwalan `expeditions:sync` via T30.
+           Backend siap [OWNER:A1]: ExpeditionSyncService + `php artisan expeditions:sync`.
 
 T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
   Minor: (berjalan terus tiap minor task).
