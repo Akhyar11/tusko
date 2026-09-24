@@ -413,9 +413,8 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
                   `shipping_addresses` + simpan kode via alamat + test [OWNER:A1].
            [TODO] T06.7b FE: dropdown bertingkat provinsi->kota->kecamatan->kelurahan di
                   `AddressFormPage` (isi `*_code`) + backfill kode alamat lama [OWNER:A1].
-    T06.8 [NEW] Caching tarif pengiriman per (asal, tujuan, berat, kurir) + TTL
-           + rate limiting/retry-backoff untuk provider (api.co.id menagih per
-           panggilan) + test. [OWNER:A1]
+    T06.8 [DONE] Caching tarif per (asal, tujuan, berat, kurir, dimensi) + TTL
+           (integrations `shipping.rate_cache_ttl`) + retry/backoff provider + test. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
