@@ -131,6 +131,39 @@ class MidtransWebhookTest extends TestCase
         $this->assertEquals(7, $product->fresh()->stock);
     }
 
+    public function test_webhook_is_idempotent_for_duplicate_settlement(): void
+    {
+        $order = Order::factory()->create([
+            'order_number' => 'INV/20260907/TK/100005',
+            'grand_total' => 200000,
+            'status' => 'pending',
+            'payment_status' => 'pending',
+        ]);
+
+        $signature = $this->generateSignature($order->order_number, '200', '200000.00');
+
+        $payload = [
+            'order_id' => $order->order_number,
+            'status_code' => '200',
+            'gross_amount' => '200000.00',
+            'signature_key' => $signature,
+            'transaction_status' => 'settlement',
+            'transaction_id' => 'midtrans-trx-dupe',
+            'payment_type' => 'bank_transfer',
+        ];
+
+        $this->postJson('/api/webhooks/midtrans', $payload)
+            ->assertOk()
+            ->assertJsonPath('duplicate', false);
+
+        $this->postJson('/api/webhooks/midtrans', $payload)
+            ->assertOk()
+            ->assertJsonPath('duplicate', true);
+
+        $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertSame(1, \App\Models\Payment::where('order_id', $order->id)->count());
+    }
+
     public function test_webhook_rejects_invalid_signature(): void
     {
         $order = Order::factory()->create([

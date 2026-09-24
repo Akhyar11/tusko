@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmManualPaymentRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ManualPaymentController extends Controller
@@ -81,6 +83,18 @@ class ManualPaymentController extends Controller
             'notes' => $request->input('notes') ?: $order->notes,
         ]);
 
+        // D8: catat pembayaran manual di tabel `payments` (otoritatif).
+        Payment::updateOrCreate(
+            ['order_id' => $order->id, 'reference' => $order->order_number],
+            [
+                'method' => 'manual_transfer',
+                'channel' => $order->bank_name,
+                'amount' => (float) $order->grand_total,
+                'status' => 'verifying',
+                'proof' => $filePath,
+            ]
+        );
+
         return response()->json([
             'message' => 'Bukti pembayaran berhasil diunggah. Kami akan segera memverifikasi pembayaran Anda.',
             'data' => new OrderResource($order),
@@ -92,16 +106,41 @@ class ManualPaymentController extends Controller
      */
     public function approve(Request $request, string $idOrOrderNumber): JsonResponse
     {
-        $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
+        $order = Order::where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();
 
-        $order->markAsPaid('manual_transfer');
+        $alreadyPaid = false;
+
+        DB::transaction(function () use ($order, &$alreadyPaid) {
+            $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->payment_status === 'paid') {
+                $alreadyPaid = true;
+
+                return;
+            }
+
+            $locked->markAsPaid('manual_transfer');
+
+            Payment::updateOrCreate(
+                ['order_id' => $locked->id, 'reference' => $locked->order_number],
+                [
+                    'method' => 'manual_transfer',
+                    'channel' => $locked->bank_name,
+                    'amount' => (float) $locked->grand_total,
+                    'status' => 'paid',
+                    'paid_at' => Carbon::now(),
+                ]
+            );
+        });
 
         return response()->json([
-            'message' => 'Pembayaran pesanan berhasil disetujui.',
-            'data' => new OrderResource($order),
+            'message' => $alreadyPaid
+                ? 'Pembayaran pesanan sudah disetujui sebelumnya.'
+                : 'Pembayaran pesanan berhasil disetujui.',
+            'duplicate' => $alreadyPaid,
+            'data' => new OrderResource($order->fresh()),
         ]);
     }
 
@@ -110,8 +149,7 @@ class ManualPaymentController extends Controller
      */
     public function reject(Request $request, string $idOrOrderNumber): JsonResponse
     {
-        $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
+        $order = Order::where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();
 
@@ -121,6 +159,17 @@ class ManualPaymentController extends Controller
             'payment_status' => 'rejected',
             'notes' => ($order->notes ? $order->notes . ' | ' : '') . 'Penolakan: ' . $reason,
         ]);
+
+        Payment::updateOrCreate(
+            ['order_id' => $order->id, 'reference' => $order->order_number],
+            [
+                'method' => 'manual_transfer',
+                'channel' => $order->bank_name,
+                'amount' => (float) $order->grand_total,
+                'status' => 'rejected',
+                'notes' => $reason,
+            ]
+        );
 
         return response()->json([
             'message' => 'Pembayaran ditolak: ' . $reason,

@@ -77,6 +77,31 @@ class ManualPaymentConfirmationTest extends TestCase
         $this->assertNotNull($order->paid_at);
     }
 
+    public function test_approve_manual_payment_is_idempotent_and_records_payment(): void
+    {
+        $order = Order::factory()->create([
+            'order_number' => 'INV/20260907/TK/778899',
+            'grand_total' => 175000,
+            'status' => 'pending',
+            'payment_status' => 'verifying',
+        ]);
+
+        $this->postJson("/api/orders/{$order->order_number}/approve-payment")
+            ->assertOk()
+            ->assertJsonPath('duplicate', false);
+
+        $this->postJson("/api/orders/{$order->order_number}/approve-payment")
+            ->assertOk()
+            ->assertJsonPath('duplicate', true);
+
+        $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertDatabaseHas('payments', [
+            'order_id' => $order->id,
+            'status' => 'paid',
+            'method' => 'manual_transfer',
+        ]);
+    }
+
     public function test_can_reject_manual_payment(): void
     {
         $order = Order::factory()->create([
