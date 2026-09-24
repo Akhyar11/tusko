@@ -846,7 +846,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
     (5) Setiap key punya tipe/validasi/opsi grup konsisten (registry TUNGGAL).
     (6) Perubahan langsung dipakai modul terkait (ongkir/pembayaran/storage) tanpa deploy.
   Minor:
-    T36.1 [NEW] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
+    T36.1 [DONE] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
            default, aturan validasi, `is_secret`, label+deskripsi (id). + test
            (kelengkapan, keunikan key, konsistensi grup).
     T36.2 [NEW] `SettingsService`: baca/tulis per grup via `IntegrationService`,
