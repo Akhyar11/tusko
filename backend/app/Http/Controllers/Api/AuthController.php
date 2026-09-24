@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CartService;
 use App\Services\FileStorageService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
@@ -23,7 +24,7 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function register(Request $request): JsonResponse
+    public function register(Request $request, CartService $cartService): JsonResponse
     {
         // Mendukung penamaan passwordConfirmation dari camelCase React frontend
         if ($request->has('passwordConfirmation') && !$request->has('password_confirmation')) {
@@ -39,6 +40,7 @@ class AuthController extends Controller
             'avatar' => 'nullable|string',
             'gender' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
+            'session_id' => 'nullable|string|max:100',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
@@ -66,6 +68,9 @@ class AuthController extends Controller
         // Kirim tautan verifikasi email ke pengguna baru.
         $user->sendEmailVerificationNotification();
 
+        // Gabungkan keranjang guest (bila ada) ke akun baru.
+        $cartService->mergeGuestCart($user, $request->input('session_id'));
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -82,13 +87,14 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function login(Request $request): JsonResponse
+    public function login(Request $request, CartService $cartService): JsonResponse
     {
         $loginInput = $request->input('email') ?? $request->input('login');
 
         $request->validate([
             'email' => 'required_without:login',
             'password' => 'required|string',
+            'session_id' => 'nullable|string|max:100',
         ], [
             'email.required_without' => 'Alamat email atau nomor handphone wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
@@ -111,6 +117,9 @@ class AuthController extends Controller
                 'message' => 'Akun Anda telah dinonaktifkan. Silakan hubungi admin toko.',
             ], 403);
         }
+
+        // Gabungkan keranjang guest (bila ada) ke keranjang akun.
+        $cartService->mergeGuestCart($user, $request->input('session_id'));
 
         // Generate Sanctum token
         $token = $user->createToken('auth_token')->plainTextToken;
