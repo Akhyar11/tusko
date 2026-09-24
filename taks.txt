@@ -392,7 +392,7 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
   Test: CheckoutApiTest + uji browser.
   Minor:
     T06.1 [DONE] `checkoutService.js` + wiring CheckoutPage -> POST /api/checkout.
-    T06.2 [NEW] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
+    T06.2 [DONE] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
            (config dari T21.1) + test.
     T06.3 [TODO] FE pilih alamat + layanan kurir (tarif API).
     T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
