@@ -662,7 +662,7 @@ T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OW
     T25.4 [NEW] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
            posting jurnal via T34.1 + test.
 
-T26. Auth Pelanggan ................................................ [TODO]  [OWNER:A1]
+T26. Auth Pelanggan ................................................ [DONE]  [OWNER:A1]
   DB: users, password_reset_tokens, carts.session_id, email_logs.
   FE: LoginPage, RegisterPage, [NEW] ForgotPasswordPage, ResetPasswordPage, verify email.
   API: register/login/logout (ada); [NEW] POST /api/auth/forgot-password,
@@ -673,7 +673,7 @@ T26. Auth Pelanggan ................................................ [TODO]  [OW
     T26.2 [DONE] Backend verifikasi email (signed URL) + resend + test.
     T26.3 [DONE] FE Forgot/Reset password pages + wiring (StorefrontAuthLayout, form reusable).
     T26.4 [DONE] FE verifikasi email (banner global + kirim ulang) + halaman /email-verified.
-    T26.5 [NEW] Merge keranjang guest (session_id) -> user saat login + test.
+    T26.5 [DONE] Merge keranjang guest (session_id) -> user saat login + test (CartService).
 
 T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OWNER:A2]
   DB: orders, order_items, order_status_histories, shipments, shipment_trackings.
