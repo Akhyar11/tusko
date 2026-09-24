@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\OrderStatus;
+use App\Models\OrderStatusHistory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -230,7 +232,23 @@ class OrderController extends Controller
         }
 
         $previousStatus = $order->status;
+        $statusRef = OrderStatus::where('code', $newStatus)->first();
+        if ($statusRef) {
+            $updateData['status_id'] = $statusRef->id;
+        }
         $order->update($updateData);
+
+        // T09.2: catat riwayat SETIAP perubahan status.
+        if ($previousStatus !== $newStatus) {
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status_id' => $statusRef?->id,
+                'status_code' => $newStatus,
+                'actor_type' => $request->user() ? 'admin' : 'system',
+                'actor_id' => $request->user()?->id,
+                'notes' => $validated['notes'] ?? $validated['cancellation_reason'] ?? "Status diubah dari {$previousStatus} ke {$newStatus}.",
+            ]);
+        }
 
         // Send status change notification email if status changed
         if ($previousStatus !== $newStatus) {

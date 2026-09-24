@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\Order::observe(\App\Observers\OrderObserver::class);
+        // OrderObserver didaftarkan mandiri oleh Order::booted().
         \App\Models\OrderItem::observe(\App\Observers\OrderItemObserver::class);
         \App\Models\Product::observe(\App\Observers\ProductObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);

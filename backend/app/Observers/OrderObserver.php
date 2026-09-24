@@ -8,6 +8,35 @@ use App\Models\Transaction;
 class OrderObserver
 {
     /**
+     * Handle the Order "creating" event — sinkronkan status_id referensi (D2).
+     */
+    public function creating(Order $order): void
+    {
+        if (!$order->status) {
+            $order->status = 'pending';
+        }
+
+        if (!$order->status_id) {
+            $order->status_id = \App\Models\OrderStatus::where('code', $order->status)->value('id');
+        }
+    }
+
+    /**
+     * Handle the Order "created" event — catat riwayat status awal (T09.2).
+     */
+    public function created(Order $order): void
+    {
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status_id' => $order->status_id,
+            'status_code' => $order->status,
+            'actor_type' => 'system',
+            'actor_id' => null,
+            'notes' => 'Pesanan dibuat.',
+        ]);
+    }
+
+    /**
      * Handle the Order "saved" event.
      */
     public function saved(Order $order): void

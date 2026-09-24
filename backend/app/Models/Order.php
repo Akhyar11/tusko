@@ -61,6 +61,8 @@ class Order extends Model
         'completed_at',
         'cancelled_at',
         'expires_at',
+        'status_id',
+        'payment_status_id',
     ];
 
     protected $casts = [
