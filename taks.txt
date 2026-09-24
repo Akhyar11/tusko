@@ -1,0 +1,905 @@
+==============================================================================
+TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 3)
+E-Commerce Olahraga + Full ERP (Laravel 11 + React 19)
+==============================================================================
+Acuan kanonis : PRD_DAN_DESAIN_SISTEM_TUSKO.md (Roadmap 5 Fase)
+Panduan tim   : PANDUAN_PEMBAGIAN_TUGAS_TIM.md
+Aturan kode   : AGENTS.md + 13 auditor pre-commit (.githooks/audits)
+Sumber schema : dump database nyata (semua kolom).
+Berkas kanonis: `taks.txt` (nama file ini).
+
+CATATAN: 1 MINOR = 1 COMMIT (wajib PASSED 13 auditor sebelum lanjut).
+Status per minor: [TODO]/[PARTIAL]/[DONE]/[OPS]/[KEPUTUSAN DIBUTUHKAN].
+
+==============================================================================
+BUKTI VERIFIKASI (kode & DB DEV — bukan klaim dokumen; TIDAK digeneralisasi ke produksi)
+==============================================================================
+- order_items.unit_cogs != 0 : 0 baris ; orders.total_cogs != 0 : 0 baris ;
+  cogs_histories : 0 baris            -> PIPELINE COGS KOSONG (terbukti).
+- inventory_balances : 0 baris ; stock_reservations : 0 baris -> ORPHAN (terbukti).
+- stock_mutations.type di data : hanya `in`.
+- Tipe uang : sudah `decimal` (mayoritas 14,2; ada 10,2/12,2/16,2) -> D4 hampir terpenuhi.
+- Berat : products.weight / product_variants.weight_grams / orders.total_weight
+  = decimal(8,2); orders.total_weight default 1 -> tidak konsisten (D3).
+- Seeder referensi SUDAH ADA (`MasterReferenceSeeder`): roles(4),
+  order_statuses(7), payment_statuses(5), warehouses, chart_of_accounts(8),
+  financial_accounts, attributes. KOSONG: permissions(0), receipt_templates(0).
+- Storage : FILESYSTEM_DISK=s3 (Cloudflare R2); URL = pub-...r2.dev -> bucket PUBLIK.
+
+==============================================================================
+KEPUTUSAN ARSITEKTUR TERKUNCI (D1–D7)
+==============================================================================
+D1. STOK OTORITATIF = `inventory_balances`. `products.stock` & `product_variants.stock`
+    = agregat turunan (di-sync InventoryService). Semua mutasi menulis
+    inventory_balances + stock_mutations (transaksi DB + lockForUpdate).
+    EKSEKUSI: (a) backfill awal inventory_balances dari stok lama (T12.1a);
+    (b) refaktor penulis stok lama (T03, T14.1) -> [PARTIAL].
+D2. STATUS = kolom string + tabel lookup untuk label/badge (order_statuses,
+    payment_statuses). Tidak migrasi penuh ke FK.
+D3. BERAT BAKU = GRAM. `orders.total_weight` dikonversi + backfill (T12.1b);
+    konsisten dgn products.weight & product_variants.weight_grams.
+D4. UANG = DECIMAL(14,2) + pembulatan 2 desimal (half-up). Mayoritas sudah;
+    standardisasi presisi menyimpang (T12.1c).
+D5. KONSOLIDASI DUPLIKAT: products.min_stock->stock_minimum (T12.1d),
+    orders.phone_number->phone (T12.1d), products.warehouse_bin->warehouse_bins
+    (T12.1d), products.cost_price vs product_variants.current_cogs (T18.3),
+    users.role+user_roles sinkron (T24.5), expeditions.(service,etd,cost) vs
+    expedition_services (T06.5). Semua disertai migrasi + backfill.
+D6. ZERO STATIC ENUM: stock_mutations.type = {in,out,adjust,reserve,release,
+    transfer,opname,return}; status returns/reviews/transfers pakai lookup/label.
+D7. STORAGE = Cloudflare R2 (disk `s3`). Aset publik (gambar produk/avatar) =
+    bucket publik. Dokumen SENSITIF (payment_proof, invoice vendor, proof bayar)
+    = bucket PRIVAT + akses via `Storage::disk(...)->temporaryUrl()` (presigned).
+    DILARANG URL publik permanen untuk file sensitif (T21.3).
+D8. SUMBER KEBENARAN PEMBAYARAN = tabel `payments` (T07.5). Kolom
+    `orders.midtrans_*`/`payment_*` menjadi TURUNAN/legacy yang di-sync dari
+    `payments` (bukan sebaliknya). Semua laporan/agregasi memakai `payments`.
+D9. TANPA TIER MEMBERSHIP: semua pelanggan FLAT (membership_tier = "Member").
+    Kolom `membership_tier` tidak dipakai untuk aturan bisnis. Task tier DIHAPUS.
+
+CATATAN KEPUTUSAN LAIN:
+- D2: kolom `status` (string) OTORITATIF; `status_id` di-sync sebagai referensi label.
+- D1 backfill: seluruh stok lama masuk gudang `is_primary` + catat
+  `stock_mutations` saldo awal agar kartu stok konsisten.
+- D3 konversi berat: nilai `orders.total_weight < 100` dianggap KG -> dikali 1000;
+  sisanya dianggap sudah gram.
+- [KEPUTUSAN DIBUTUHKAN] durasi expiry poin (usulan default 12 bulan, via config G6).
+- [KEPUTUSAN DIBUTUHKAN] aturan refund: usulan Midtrans untuk channel online,
+  manual untuk transfer manual (via config G6).
+
+==============================================================================
+ATURAN GLOBAL
+==============================================================================
+G1. 1 MINOR TASK = 1 COMMIT; lanjut hanya jika 13 auditor pre-commit PASSED.
+G2. Branch fitur/* dari main -> merge ke main -> validasi -> master.
+    Dilarang commit di main/master; dilarang push tanpa izin.
+G3. UJI per minor (dibedakan):
+    - Minor BACKEND-ONLY (migrasi/model/seeder/endpoint tanpa UI):
+      WAJIB `php artisan test` 100% + feature test baru. Uji browser TIDAK wajib.
+    - Minor FRONTEND atau end-to-end: WAJIB `npm run build` + uji browser
+      PLAYWRIGHT DARI PYTHON (uji fitur aktif, verifikasi API, konsol 0 error).
+    - Semua minor WAJIB menyertakan bukti `.agent-test-proofs/` bila menyentuh FE.
+G4. Format commit: feat/fix/refactor/test/style/chore.
+G5. Reusable components, rounded-none, palet neutral/amber/rose/emerald,
+    form kanonis, dropdown portal, file upload via Storage (D7).
+G6. Dilarang hardcode (kredensial/tarif/koordinat/URL) — config/DB.
+G7. Setiap minor menyertakan TEST sesuai G3.
+G8. Perbarui status task di berkas kanonis `taks.txt` setelah commit (auditor PASSED).
+G9. AUDIT LOG WAJIB: setiap perubahan HARGA, STOK, dan ROLE wajib tercatat di
+    `activity_logs` (T33.1). Tidak boleh ada jalur perubahan tanpa log.
+
+LEGENDA STATUS: [DONE] / [PARTIAL] / [TODO] / [OPS] / [KEPUTUSAN DIBUTUHKAN].
+              [NEW] = belum ada di schema.
+
+==============================================================================
+DI LUAR SCOPE (OUT-OF-SCOPE) — EKSPLISIT (diputuskan)
+==============================================================================
+- COD (metode bayar + rekonsiliasi) ............ OUT-OF-SCOPE
+- Pajak/PPN pada order & invoice ................ OUT-OF-SCOPE
+- Wishlist ....................................... OUT-OF-SCOPE
+- SEO storefront (meta/sitemap) ................. OUT-OF-SCOPE
+- Compliance data pribadi (hapus akun/persetujuan) OUT-OF-SCOPE
+Catatan: kolom `orders.tax_amount`/`expeditions.cod_support` boleh tetap ada
+tetapi TIDAK diimplementasikan alurnya.
+
+==============================================================================
+AGENT ASSIGNMENT & KOORDINASI (2 AGENT AI)
+==============================================================================
+Owner per major ditandai [OWNER:A1]/[OWNER:A2]/[OWNER:SHARED] pada judul major.
+
+A1 = "Customer & Commerce" (Developer 1)
+  Branch : feat/auth-* / feat/cart-* / feat/checkout-* / feat/payment-* /
+           feat/commerce-*
+  Majors : T01, T02, T05, T06, T07, T08, T11, T15, T26, T28, T31.
+  File BE: AuthController, ShippingAddressController, CartController,
+           CheckoutController, VoucherController, ManualPaymentController,
+           MidtransWebhookController.
+  File FE: LoginPage, RegisterPage, ProfilePage, AddressFormPage,
+           MapPickerModal, CartPage, CheckoutPage, OrderSuccessPage,
+           UserMenuDropdown, Navbar.
+
+A2 = "ERP & Store Operations" (Developer 2)
+  Branch : feat/catalog-* / feat/product-* / feat/orders-* / feat/stock-* /
+           feat/expedition-* / feat/ops-* / feat/erp-*
+  Majors : T00(SHARED), T03, T04, T09, T10, T12, T13, T14, T16, T17, T18,
+           T19, T20, T21, T22(SHARED), T23, T24, T25, T27, T29, T30, T32,
+           T33, T34, T35.
+  File BE: ProductController, CategoryController, OrderController,
+           TransactionController, InventoryController, ExpeditionController,
+           VendorController, PurchaseOrderController,
+           GoodsReceivingNoteController, VendorBillController + controller
+           baru (StockOpname/Report/Dashboard/Role).
+  File FE: ProductListPage/Create/Edit, OrderListPage, OrderDetailPage,
+           FinancialTransactionsPage, StockManagementPage, StockMutationPage,
+           (baru) StockOpnamePage, ExpeditionSettingsPage,
+           TemplateManagementPage, AdminDashboardPage, AdminSidebar,
+           (baru) MyOrdersPage.
+
+KRITIS — URUTAN & BLOKIR:
+- FASE 0 (A2, MEMBLOKIR): T12.1a-d, T12.2, T33.1/2/3, T30.1, T16.4+T34.1,
+  T21.1/2/3, T15.1a. -> merge ke main DULU.
+- A1 PARALEL FASE 0: T26 Auth (independen, tidak butuh fondasi).
+- FASE 1+ (paralel): A1 = T05/T06/T28/T07 ; A2 = T12/T13/T14/T09/T10.
+- A1 tidak bisa menuntaskan T05.3/T07.3/T28.2 sebelum fondasi A2 merge ke main.
+
+ATURAN KOORDINASI:
+K1. Merge order: fondasi A2 -> main dulu; A1 `git rebase main` sebelum lanjut.
+K2. File bersama (1 editor per waktu): App.jsx, routes/api.php, config/*,
+    AGENTS.md, taks.txt, .githooks/. AdminSidebar -> A2; Navbar -> A1.
+K3. Migrasi DB: prefix tanggal A1 genap, A2 ganjil (hindari tabrakan timestamp).
+K4. Kontrak API dibekukan sebelum coding (key JSON tidak diubah tanpa kabar).
+K5. File lintas-owner (OrderController/OrderObserver, ProductController) ->
+    dimiliki A2; A1 minta perubahan via A2 (bukan edit langsung).
+K6. Tiap minor: 1 commit + 13 auditor PASSED + test (G3) + Playwright Python (FE).
+K7. Dilarang commit di main/master; push hanya dengan izin.
+
+==============================================================================
+MASTER DATABASE SCHEMA (SEMUA KOLOM — SUMBER KEBENARAN)
+==============================================================================
+Infra: cache, cache_locks, jobs, job_batches, failed_jobs, migrations,
+personal_access_tokens, sessions, password_reset_tokens.
+
+## 1. IDENTITAS & AKSES
+users: id, name, email, email_verified_at, password, role(default 'customer'),
+  remember_token, created_at, updated_at, phone, avatar, gender, birth_date,
+  points(default 0), membership_tier(default 'Member'), is_active(default 1)
+roles: id, name, display_name, description, is_system(default 0), created_at, updated_at
+permissions: id, code, name, group(default 'general'), description, created_at, updated_at
+role_permissions: role_id(PK), permission_id(PK), created_at, updated_at
+user_roles: user_id(PK), role_id(PK), created_at, updated_at
+shipping_addresses: id, user_id, label(default 'Rumah'), recipient_name, phone,
+  full_address, district, city, province, postal_code, notes, is_default(default 0),
+  created_at, updated_at, latitude, longitude
+
+## 2. KATALOG PRODUK & VARIAN
+categories: id, name, slug, parent_id, created_at, updated_at, icon, description
+products: id, category_id, name, slug, description, price, stock(default 0),
+  stock_minimum(default 5), image_url, active(default 1), created_at, updated_at,
+  sku, min_stock(default 5)[DEPRECATED D5], cost_price, warehouse_bin[DEPRECATED D5],
+  last_restock_at, weight(default 500 -> gram), original_price,
+  status(default 'active'), specifications
+product_images: id, product_id, image_url, sort_order(default 0), created_at, updated_at, variant_id
+attributes: id, name, code, display_type(default 'button'), sort_order(default 0), created_at, updated_at
+attribute_values: id, attribute_id, value, color_hex, sort_order(default 0), created_at, updated_at
+product_variants: id, product_id, sku, barcode, variant_name, price, original_price,
+  current_cogs(default 0), weight_grams, stock(default 0), is_active(default 1),
+  created_at, updated_at, deleted_at
+variant_attribute_values: variant_id(PK), attribute_value_id(PK), created_at, updated_at
+category_product: product_id(PK), category_id(PK), created_at, updated_at
+
+## 3. TRANSAKSI & LOYALITAS
+carts: id, user_id, session_id, created_at, updated_at
+cart_items: id, cart_id, product_id, quantity(default 1), notes, created_at, updated_at, product_variant_id
+vouchers: id, code, title, description, badge(default 'PROMO'), discount_type(default 'fixed'),
+  discount_value(default 0), min_purchase(default 0), max_discount, expires_at,
+  is_active(default 1), created_at, updated_at
+  [NEW] quota, used_count, per_user_limit, is_free_shipping, stackable
+  [NEW] voucher_targets(id, voucher_id, target_type, target_id)
+  [NEW] voucher_usages(id, voucher_id, user_id, order_id, used_at)
+loyalty_points_ledger: id, user_id, type, points, balance_after, reference_type,
+  reference_id, description, expires_at, created_at, updated_at
+[NEW] product_reviews: id, product_id, user_id, order_id, order_item_id, rating,
+  title, comment, images, status(default 'pending'), created_at, updated_at
+
+## 4. ORDER MANAGEMENT & SHIPPING
+order_statuses: id, code, name, badge_color(default 'neutral'), sort_order(default 0),
+  is_terminal(default 0), allows_cancellation(default 0), created_at, updated_at
+payment_statuses: id, code, name, badge_color(default 'neutral'), sort_order(default 0), created_at, updated_at
+orders: id, order_number, user_id, guest_session_id, status(default 'pending'),
+  payment_status(default 'pending'), payment_method(default 'midtrans'), payment_channel,
+  va_number, midtrans_snap_token, midtrans_transaction_id, midtrans_payment_type,
+  midtrans_pdf_url, payment_proof, payment_transferred_at, bank_account_name, bank_name,
+  shipping_address_id, recipient_name, phone, phone_number[DEPRECATED D5], full_address,
+  province, city, district, postal_code, address_label, expedition_id, expedition_name,
+  expedition_service, expedition_etd, tracking_number, subtotal(default 0),
+  shipping_cost(default 0), insurance_cost(default 0), service_fee(default 0),
+  discount_amount(default 0), grand_total(default 0), total_weight(default 1 -> gram D3),
+  coupon_code, notes, paid_at, shipped_at, completed_at, cancelled_at, expires_at,
+  created_at, updated_at, status_id, payment_status_id, total_cogs(default 0),
+  loyalty_points_earned(default 0), loyalty_points_redeemed(default 0), expedition_service_id,
+  tax_amount(default 0)[OUT-OF-SCOPE], warehouse_id (gudang pemenuh)
+order_items: id, order_id, product_id, product_name, product_slug, product_image,
+  product_price, product_weight(default 0), quantity(default 1), subtotal, notes,
+  created_at, updated_at, product_variant_id, unit_cogs(default 0), points_earned(default 0)
+order_status_histories: id, order_id, status_id, status_code, actor_type(default 'system'),
+  actor_id, notes, created_at, updated_at
+expeditions: id, name, code, service, category(default 'Reguler'), etd, base_cost, cost,
+  is_free(default 0), is_active(default 1), badge, description, tracking_support(default 1),
+  created_at, updated_at, is_default(default 0), rate_type(default 'per_kg'),
+  cod_support(default 0)[OUT-OF-SCOPE], service_grade
+expedition_services: id, expedition_id, service_code, service_name, etd_days(default '1-3 hari'),
+  base_rate(default 0), per_kg_rate(default 0), is_active(default 1), created_at, updated_at
+shipments: id, order_id, expedition_service_id, waybill_number, status(default 'manifested'),
+  thermal_label_url, pickup_time, delivered_time, created_at, updated_at
+shipment_trackings: id, shipment_id, tracking_time, city_location, status_description, created_at, updated_at
+[NEW] returns: id, return_number, order_id, user_id, reason, status(default 'requested'),
+  refund_amount, refund_method, refund_reference, stock_restored(default 0),
+  journal_posted(default 0), requested_at, processed_at, notes, created_at, updated_at
+[NEW] return_items: id, return_id, order_item_id, quantity, condition, notes, created_at, updated_at
+
+## 5. INVENTORI & MULTI-GUDANG
+warehouses: id, code, name, address, city, province, postal_code, latitude, longitude,
+  is_primary(default 0), is_active(default 1), created_at, updated_at, [NEW] priority
+warehouse_bins: id, warehouse_id, bin_code, zone, notes, created_at, updated_at
+inventory_balances: id, warehouse_id, product_id, product_variant_id, bin_id,
+  on_hand_stock(default 0), reserved_stock(default 0), available_stock(default 0),
+  safety_stock(default 5), created_at, updated_at
+stock_mutations: id, product_id, type(default 'in'), quantity, stock_before, stock_after,
+  reference_type, reference_id, notes, created_by, created_at, updated_at, warehouse_id,
+  product_variant_id
+stock_reservations: id, order_id, product_id, product_variant_id, warehouse_id, quantity,
+  status(default 'active'), expires_at, created_at, updated_at
+stock_opnames: id, opname_number, warehouse_id, status(default 'draft'), conducted_by,
+  approved_by, notes, conducted_at, approved_at, created_at, updated_at
+stock_opname_items: id, stock_opname_id, product_id, product_variant_id, system_stock,
+  physical_stock, difference, notes, created_at, updated_at
+[NEW] stock_transfers: id, transfer_number, from_warehouse_id, to_warehouse_id,
+  status(default 'draft'), requested_by, approved_by, notes, created_at, updated_at
+[NEW] stock_transfer_items: id, stock_transfer_id, product_id, product_variant_id,
+  quantity, created_at, updated_at
+
+## 6. PROCUREMENT & VENDOR
+vendors: id, code, company_name, contact_person, email, phone, address,
+  payment_terms_days(default 30), bank_account_info, is_active(default 1), created_at, updated_at
+purchase_orders: id, po_number, vendor_id, warehouse_id, status(default 'draft'),
+  total_amount(default 0), order_date, expected_delivery_date, created_by, approved_by,
+  notes, created_at, updated_at
+purchase_order_items: id, purchase_order_id, product_id, product_variant_id,
+  ordered_quantity, received_quantity(default 0), unit_price, subtotal, created_at, updated_at
+goods_receiving_notes: id, grn_number, purchase_order_id, warehouse_id, received_by,
+  received_date, delivery_order_number, status(default 'verified'), notes, created_at, updated_at
+goods_receiving_items: id, grn_id, product_id, product_variant_id, accepted_quantity,
+  rejected_quantity(default 0), unit_cost, notes, created_at, updated_at, rejection_reason
+vendor_bills: id, bill_number, vendor_id, purchase_order_id, grn_id, amount,
+  paid_amount(default 0), status(default 'unpaid'), bill_date, due_date, created_at,
+  updated_at, invoice_file_path, invoice_file_name, invoice_file_mime
+vendor_bill_payments: id, vendor_bill_id, amount, payment_method, reference_number,
+  paid_at, proof_file_path, proof_file_name, proof_file_mime, notes, created_by, created_at, updated_at
+
+## 7. KEUANGAN & AKUNTANSI
+transactions: id, transaction_number, order_id, type(default 'income'),
+  category(default 'order_payment'), category_label, amount(default 0), description,
+  payment_method, status(default 'settled'), customer_name, notes, created_at, updated_at,
+  financial_account_id, fee_deducted(default 0), net_amount, reference_type, reference_id
+financial_accounts: id, account_name, account_number, bank_name, current_balance(default 0),
+  is_active(default 1), created_at, updated_at
+chart_of_accounts: id, account_code, account_name, account_type, description,
+  is_active(default 1), created_at, updated_at
+financial_ledger_entries: id, transaction_id, chart_of_account_id, debit(default 0),
+  credit(default 0), notes, created_at, updated_at
+cogs_histories: id, product_id, product_variant_id, source_type, source_id,
+  incoming_quantity, incoming_cost_per_unit, previous_average_cogs, new_average_cogs,
+  effective_date, created_at, updated_at
+
+## 8. NOTIFIKASI, TEMPLATE, AUDIT
+email_templates: id, key, name, event, category(default 'Order'), from_name, reply_to,
+  color_theme(default 'emerald'), subject, preheader, headline, body, button_text,
+  button_link, is_active(default 1), created_at, updated_at
+email_logs: id, order_id, email_type, recipient_email, subject, status(default 'sent'),
+  error_message, sent_at, created_at, updated_at
+receipt_templates: id, name, paper_size(default '100x150'), barcode_type(default 'code128'),
+  barcode_height(default 'medium'), address_font_size(default 'normal'),
+  show_items_list(default 1), show_buyer_notes(default 1), show_sorting_code(default 1),
+  show_unboxing_notice(default 1), show_cod_badge(default 1), sender_name,
+  sender_phone, sender_address, footer_note, courier_brand_tag, is_default(default 1),
+  created_at, updated_at
+[NEW] activity_logs: id, user_id, action, subject_type, subject_id, properties,
+  ip_address, created_at, updated_at
+[NEW] integrations: id, key, value, group, is_secret(default 0), created_at, updated_at
+
+==============================================================================
+GAP ANALYSIS (REVISI 3 — berbasis bukti verifikasi)
+==============================================================================
+A. ORPHAN -> task: stock_opnames/items(T25), chart_of_accounts+ledger+accounts
+   (mesin jurnal T16.4 + mapping T34.1), shipments+trackings(T10), stock_reservations+inventory_balances
+   (T13.3), warehouse_bins(T13.4), expedition_services(T06.5), cogs_histories(T18.3),
+   roles/permissions/user_roles/role_permissions(T24), email_logs(T20.3).
+B. PIPELINE HILANG: COGS(T18.3, terbukti 0 baris), status history(T09.2),
+   reservasi(T13.3), harga otoritatif(T28), auto-journal(T34.1), voucher usage(T15.1b).
+C. TABEL BELUM ADA: payments/invoices, voucher_targets/usages/quota, integrations,
+   product_reviews, returns/return_items, stock_transfers, activity_logs.
+D. DEVIASI: status string(D2), berat/uang(D3/D4).
+E. FE BELUM ADA: voucher admin(T15), profit/BI(T18/T19), stock opname(T25),
+   pengaturan integrasi(T21), pesanan pelanggan(T27), ulasan(T32).
+F. INTEGRASI: tarif kurir BELUM(T06.2); Midtrans SUDAH ada.
+G. NON-FUNGSIONAL: rate limit/IDOR/disk privat/concurrency/CI/monitoring/queue(T30/T35).
+
+==============================================================================
+FASE 0 — FONDASI & QUALITY GATE
+==============================================================================
+
+T00. Fondasi, Design System & Auditor Pre-Commit .................... [DONE]  [OWNER:SHARED]
+  Minor: (selesai).
+
+==============================================================================
+FASE 1 — ETALASE & VARIAN
+==============================================================================
+
+T01. Katalog Produk Publik (Grid, Multi-filter, Search, Sorting) .... [PARTIAL]  [OWNER:A1]
+  DB: categories, products, product_images, category_product,
+      [NEW] product_reviews (agregat rating -> T32).
+  FE: ProductGrid/ProductCard, FilterSidebar, CategoryBar, PopularChipsBar.
+  API: GET /api/products, GET /api/categories.
+  Test: ProductListApiTest, ProductApiTest.
+  Minor:
+    T01.1 [DONE] katalog + filter + search (existing).
+    T01.2 [TODO] Filter rating dari agregat product_reviews (depend T32.1).
+
+T02. Detail Produk & Varian Bertingkat (Matrix SKU) ................ [DONE]  [OWNER:A1]
+  Minor: (selesai).
+
+T03. Manajemen Produk Admin (CRUD + Galeri + Matriks Varian) ....... [PARTIAL]  [OWNER:A2]
+  CATATAN: stok saat buat produk masih menulis `products.stock` langsung ->
+  harus direfaktor agar lewat InventoryService (D1).
+  Minor:
+    T03.1 [DONE] CRUD + galeri + matriks varian (existing).
+    T03.2 [TODO] Refaktor penulisan stok produk -> InventoryService (D1) + test.
+
+T04. Master Kategori ............................................... [DONE]  [OWNER:A2]
+  Minor: (selesai).
+
+==============================================================================
+FASE 2 — CHECKOUT & BAYAR
+==============================================================================
+
+T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [PARTIAL]  [OWNER:A1]
+  DB: carts, cart_items. [NEW opsional] carts.voucher_id.
+  FE: CartPage API-backed, badge Navbar, Toast.
+  API: GET /api/cart, POST /api/cart/items, PUT /api/cart/items/{id},
+       DELETE /api/cart/items/{id}, DELETE /api/cart/clear.
+  Test: CartApiTest, CartDatabaseTest + uji browser.
+  Minor:
+    T05.1 [TODO] `cartService.js` (wrapper 5 endpoint).
+    T05.2 [TODO] CartPage -> API (list/add/update/remove/clear) + Toast.
+    T05.3 [TODO] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
+    T05.4 [TODO] Merge keranjang guest (session_id) -> user saat login (T26.5).
+
+T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1]
+  DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
+  FE: CheckoutPage, OrderSuccessPage.
+  API: POST /api/checkout; [NEW] GET /api/shipping/rates.
+  Test: CheckoutApiTest + uji browser.
+  Minor:
+    T06.1 [TODO] `checkoutService.js` + wiring CheckoutPage -> POST /api/checkout.
+    T06.2 [NEW] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
+           (config dari T21.1) + test.
+    T06.3 [TODO] FE pilih alamat + layanan kurir (tarif API).
+    T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
+    T06.5 [NEW] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
+    T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
+
+T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
+  DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
+  FE: OrderSuccessPage, PaymentInstructionModal.
+  API: /orders/{id}/snap-token, /confirm-payment, /approve-payment, /reject-payment,
+       /webhooks/midtrans, GET /payment-methods/manual-banks.
+  Test: MidtransIntegrationTest, MidtransWebhookTest, ManualPaymentConfirmationTest.
+  ACCEPTANCE: (1) webhook idempoten (event sama tidak dobel transaksi/poin);
+  (2) status order & payment_status konsisten; (3) signature invalid ditolak 403;
+  (4) fee Midtrans tercatat (fee_deducted) & masuk jurnal (T34.1).
+  Minor:
+    T07.1 [TODO] FE getSnapToken + Snap popup + polling status.
+    T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
+    T07.3 [TODO] Backend verifikasi signature webhook (idempoten) + approve/reject + test.
+    T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.
+    T07.5 [NEW] Migrasi `payments` (method, channel, amount, status, reference,
+           paid_at, proof) + relasi order; backfill dari orders.
+
+T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  [OWNER:A1]
+  (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
+  DB: vouchers, voucher_usages, loyalty_points_ledger, users.points.
+  FE: daftar/klaim voucher (ProfilePage), input kupon & tukar poin (CheckoutPage).
+  API: GET /api/vouchers (pelanggan), POST /api/vouchers/claim;
+       [NEW] POST /api/vouchers/validate, POST /api/loyalty/redeem.
+  Test: ProductLoyaltyPointMechanismTest + [NEW] VoucherValidationTest.
+  Minor:
+    T08.1 [TODO] FE daftar + klaim voucher (ProfilePage).
+    T08.2 [NEW] POST /api/vouchers/validate (min belanja/kuota/cakupan/per-user/
+           stacking/gratis ongkir) + test. (Dasar; dipakai T28.2)
+    T08.3 [TODO] FE terapkan kupon di CheckoutPage (server-authoritative T28.2).
+    T08.4 [TODO] FE tukar poin di CheckoutPage -> server hitung (T28.2) + ledger (T31).
+
+==============================================================================
+FASE 3 — PESANAN, KIRIM & AKUN
+==============================================================================
+
+T09. Manajemen Pesanan Admin (Antrean, Tab Status, Update Status) ... [PARTIAL]  [OWNER:A2]
+  DB: orders, order_items, order_statuses, order_status_histories.
+  FE: OrderListPage, OrderDetailPage, OrderStatusModal, ConfirmationModal.
+  API: GET /api/orders, GET /api/orders/{id}, PATCH /api/orders/{id}/status.
+  Test: OrderListApiTest, OrderStatusUpdateApiTest, OrderDetailApiTest.
+  Minor:
+    T09.1 [TODO] `orderService.js` + wiring OrderListPage via useOrderTableStore.
+    T09.2 [NEW] Catat `order_status_histories` SETIAP update status (PRASYARAT T09.3).
+    T09.3 [TODO] FE update status (OrderStatusModal) -> PATCH + Toast (tulis history T09.2).
+    T09.4 [TODO] FE batal pesanan (single & bulk) via ConfirmationModal + refresh.
+    T09.5 [TODO] FE OrderDetailPage API-backed (item, alamat, pembayaran, riwayat status).
+
+T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL]  [OWNER:A2]
+  DB: shipments, shipment_trackings, orders.tracking_number, receipt_templates.
+  FE: aksi booking pickup, PrintReceiptModal, halaman tracking.
+  API: POST /orders/{id}/generate-receipt, GET /orders/{id}/receipt;
+       [NEW] POST /orders/{id}/book-pickup, GET /orders/{id}/tracking.
+  Test: GenerateShippingReceiptApiTest + [NEW] ShipmentPickupApiTest.
+  Minor:
+    T10.1 [NEW] Backend booking pickup -> buat `shipments` (waybill, status,
+           pickup_time) + test.
+    T10.2 [TODO] FE aksi booking pickup di OrderDetailPage + Toast resi.
+    T10.3 [TODO] FE PrintReceiptModal (label termal 100x150 + barcode) dari API.
+    T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3).
+
+T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL]  [OWNER:A1]
+  DB: users, shipping_addresses, loyalty_points_ledger.
+  FE: ProfilePage, AddressFormPage, MapPickerModal, UserMenuDropdown.
+  API: /api/auth/me|profile|password|sessions, /api/addresses (CRUD+set-default).
+  Test: ProfileFullIntegrationTest, ShippingAddressApiTest, AuthUpdateProfileTest.
+  Minor:
+    T11.1 [TODO] FE ProfilePage -> API (biodata + password + sesi) via authService.
+    T11.2 [TODO] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS).
+    T11.3 [TODO] FE riwayat poin loyalitas (depend T31).
+
+==============================================================================
+FASE 4 — PRODUK, STOK, PENGADAAN & PROMOSI (ERP)
+==============================================================================
+
+T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  [OWNER:A2]
+  DB: inventory_balances(OTORITATIF D1), stock_mutations, products.stock (agregat),
+      product_variants.stock (agregat), products.stock_minimum.
+  FE: StockManagementPage, StockMutationPage, LowStockAlertWidget.
+  API: GET /api/inventory, POST /api/inventory/{id}/add-stock, /reduce-stock,
+       GET /api/inventory/mutations.
+  Test: AddStockApiTest, ReduceStockApiTest, InventoryListApiTest.
+  Minor:
+    T12.1a [NEW] Backfill awal `inventory_balances` dari products.stock &
+            product_variants.stock (D1) + test.
+    T12.1b [NEW] Konversi `orders.total_weight` ke GRAM + backfill (D3) + test.
+    T12.1c [NEW] Standardisasi presisi kolom uang menyimpang ke DECIMAL(14,2) (D4).
+    T12.1d [NEW] Migrasi deprecate+backfill: products.min_stock->stock_minimum,
+            orders.phone_number->phone, products.warehouse_bin->warehouse_bins (D5).
+    T12.2 [TODO] InventoryService OTORITATIF D1: semua mutasi dalam transaksi DB +
+            lockForUpdate; sync agregat products/variants.stock; tulis
+            stock_mutations + inventory_balances + test.
+    T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
+    T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
+    T12.5 [TODO] FE kartu mutasi stok + filter.
+
+T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL]  [OWNER:A2]
+  DB: stock_reservations, inventory_balances, warehouses(+priority),
+      warehouse_bins, [NEW] stock_transfers, [NEW] stock_transfer_items.
+  FE: LowStockAlertWidget, indikator per gudang, form transfer.
+  API: GET /api/inventory/low-stock; [NEW] reservasi/transfer/alokasi.
+  Test: LowStockAlertApiTest, OrderStockIntegrationTest.
+  ACCEPTANCE (anti-overselling): (1) reservasi dalam transaksi DB + lockForUpdate;
+  (2) `available_stock >= quantity` divalidasi atomik; (3) release saat
+  batal/expired; (4) test konkurensi (2 checkout paralel tidak oversell).
+  Minor:
+    T13.1 [TODO] FE LowStockAlertWidget -> GET /api/inventory/low-stock.
+    T13.2 [TODO] FE saldo stok per gudang.
+    T13.3 [NEW] Reservasi stok (stock_reservations) saat checkout (atomik +
+            lockForUpdate) + release saat batal/expired + pelihara inventory_balances + test.
+    T13.4 [NEW] Kelola `warehouse_bins` + relasi inventory_balances.
+    T13.5 [NEW] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
+            stock_transfers/items + alur transfer antar gudang + test.
+
+T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL]  [OWNER:A2]
+  DB: vendors, purchase_orders(+items), goods_receiving_notes(+items),
+      vendor_bills, vendor_bill_payments.
+  FE: SupplierList/Create/Edit, PurchaseOrder List/Create/Detail,
+      GoodsReceiptList/Detail, VendorBillList/Detail.
+  API: /api/vendors, /api/purchase-orders, /api/goods-receiving-notes,
+       /api/vendor-bills (+payments).
+  Test: VendorApiTest, PurchaseOrderStockIntegrationTest, ProcurementApiIntegrationTest.
+  Minor:
+    T14.1 [DONE] Vendor/PO/GRN/Bills + pembayaran (existing).
+    T14.2 [TODO] Refaktor receive GRN -> InventoryService (D1) agar tidak menulis
+            products.stock langsung (T14.1 -> [PARTIAL]) + test.
+    T14.3 [NEW] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18.3).
+    T14.4 [NEW] Receive GRN -> update `inventory_balances` (D1).
+    T14.5 [NEW] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
+
+T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OWNER:A1]
+  (SUMBER TUNGGAL schema voucher — T08 bergantung pada T15.1a.)
+  DB: vouchers + [NEW] quota, used_count, per_user_limit, is_free_shipping,
+      stackable; [NEW] voucher_targets; [NEW] voucher_usages.
+  FE: VoucherListPage/CreatePage/EditPage (dedicated) + FilterDrawer.
+  API: [NEW] /api/admin/vouchers (CRUD), GET /api/admin/vouchers.
+  Test: [NEW] VoucherApiTest.
+  Minor:
+    T15.1a [NEW] Migrasi quota/used_count/per_user_limit/is_free_shipping/stackable
+             + voucher_targets + voucher_usages.
+    T15.1b [NEW] Siklus pemakaian voucher: increment `used_count` + catat
+             `voucher_usages` saat order dibuat; rollback saat order batal.
+    T15.2 [NEW] Backend CRUD voucher admin + validasi + test.
+    T15.3 [TODO] FE VoucherListPage + FilterDrawer (server-side).
+    T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
+
+==============================================================================
+FASE 5 — KEUANGAN & ANALITIK (BI)
+==============================================================================
+
+T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  [OWNER:A2]
+  DB: transactions, financial_accounts, chart_of_accounts, financial_ledger_entries.
+  FE: FinancialTransactionsPage, FinancialTransactionCreatePage.
+  API: GET /api/transactions, GET /api/transactions/categories, POST /api/transactions,
+       GET /api/transactions/{id}.
+  Test: TransactionApiTest, AutomaticTransactionOnOrderStatusTest.
+  Minor:
+    T16.1 [TODO] `transactionService.js` + FinancialTransactionsPage via
+           useTransactionTableStore.
+    T16.2 [TODO] FE FinancialTransactionCreatePage -> POST + Toast.
+    T16.3 [TODO] FE kategori & ringkasan cashflow.
+    T16.4 [NEW] MESIN JURNAL: `financial_accounts` (saldo rekening) +
+           `chart_of_accounts` + `financial_ledger_entries` + JournalPostingService
+           (helper post debit/credit, idempoten) + endpoint + test.
+           (TIDAK bergantung pada T34.1 — justru T34.1 bergantung pada ini.)
+
+T17. E-Invoice & Cetak (Invoice/Resi/PO/GRN/Bill) .................. [PARTIAL]  [OWNER:A2]
+  DB: receipt_templates, orders, order_items; [NEW] invoices.
+  FE: PrintInvoiceModal, PrintReceiptModal, cetak dokumen procurement.
+  API: GET /orders/{id}/receipt, POST /orders/{id}/generate-receipt, /api/templates/receipt.
+  Test: GenerateShippingReceiptApiTest, ReceiptTemplateApiTest.
+  Minor:
+    T17.1 [TODO] FE PrintInvoiceModal dari data API (bukan mock).
+    T17.2 [TODO] FE cetak dokumen procurement (PO/GRN/Bill) konsisten kanonik.
+    T17.3 [NEW] Migrasi `invoices` + nomor invoice legal berurutan + generate PDF.
+
+T18. Analisis Profit & HPP/COGS .................................... [PARTIAL]  [OWNER:A2]
+  DB: cogs_histories, order_items.unit_cogs, orders.total_cogs,
+      product_variants.current_cogs, products.cost_price.
+  FE: halaman laporan profit (tabel + ringkasan).
+  API: [NEW] GET /api/reports/profit.
+  Test: [NEW] ProfitReportApiTest.
+  Minor:
+    T18.1 [NEW] Pipeline COGS (PRIORITAS AWAL, sebelum checkout live):
+           isi `order_items.unit_cogs` + `orders.total_cogs` saat checkout;
+           catat `cogs_histories` saat GRN/restock; konsolidasi D5
+           (cost_price vs current_cogs) + test.
+    T18.2 [NEW] ReportQueryService bersama (dipakai T18.3 & T19.1).
+    T18.3 [NEW] Backend endpoint laporan laba kotor + test (depend T18.1).
+    T18.4 [TODO] FE halaman laporan profit (filter periode + tabel + ringkasan).
+
+T19. Dashboard BI (Revenue, Tren, Fast/Slow Moving, Liabilitas Poin) [TODO]  [OWNER:A2]
+  DB: agregasi orders/order_items/transactions/loyalty.
+  FE: AdminDashboardPage API-backed (KPI + grafik + tabel).
+  API: [NEW] GET /api/dashboard/summary (cache).
+  Test: [NEW] DashboardBiApiTest.
+  Minor:
+    T19.1 [NEW] Endpoint agregasi BI via ReportQueryService (T18.2) + cache + test
+           (depend T18.1, T31).
+    T19.2 [TODO] FE AdminDashboardPage API-backed (KPI, tren, fast/slow moving).
+
+==============================================================================
+CROSS-CUTTING
+==============================================================================
+
+T20. Template Notifikasi (Email & Resi) API-backed ................. [PARTIAL]  [OWNER:A2]
+  DB: email_templates, email_logs, receipt_templates.
+  FE: TemplateManagementPage API-backed.
+  API: /api/templates/emails (CRUD+reset), /api/templates/receipt.
+  Test: EmailTemplateApiTest, ReceiptTemplateApiTest.
+  Minor:
+    T20.1 [TODO] `emailTemplateService.js` + wiring TemplateManagementPage (email).
+    T20.2 [TODO] FE editor template resi (receipt) + preview.
+    T20.3 [NEW] Catat `email_logs` setiap pengiriman email.
+    T20.4 [NEW] Event/Listener email (order created/paid/shipped/cancelled)
+           via queue (depend T30.1).
+
+T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [OWNER:A2]
+  DB: [NEW] integrations(key, value, group, is_secret).
+  FE: halaman pengaturan integrasi (opsional).
+  API: [NEW opsional] endpoint konfigurasi (admin-only).
+  Test: MidtransIntegrationTest, MidtransWebhookTest.
+  Minor:
+    T21.1 [NEW] Tabel `integrations` + endpoint config (KiriminAja/api.co.id)
+           — dipakai T06.2.
+    T21.2 [NEW] Midtrans config + API refund (dipakai T07.3, T29.3) via integrations.
+    T21.3 [NEW] STORAGE R2 (D7): bucket PRIVAT untuk file sensitif
+           (payment_proof/invoice/proof) + akses `temporaryUrl()`; bucket publik
+           hanya untuk aset publik. (MENYERAP T35.3 lama.)
+
+T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
+  Minor: (berjalan terus tiap minor task).
+
+T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OWNER:A2]
+  DB: migrasi + seeder produksi (seeder referensi SUDAH ADA; sisa permissions/
+      receipt_templates -> T33).
+  FE: feature flag menu per environment (config/env, G6) — TIDAK bergantung RBAC.
+  API: konfigurasi produksi (env, CORS, storage, Sanctum expiry).
+  Test: smoke test produksi.
+  Minor:
+    T23.1 [TODO] Merge seluruh branch fitur ke `main` + stabilisasi (test+build+audit).
+    T23.2 [TODO] Sembunyikan menu operasional lanjutan di `master` via FEATURE FLAG
+           (config/env, G6) — independen dari T24.
+    T23.3 [TODO] Deploy VPS/Nginx + supervisor queue worker + cron scheduler
+           + `php artisan migrate --seed`.
+    T23.4 [TODO] Smoke test produksi (storefront + admin).
+
+==============================================================================
+MAJOR TAMBAHAN (menutup gap audit)
+==============================================================================
+
+T24. RBAC & Keamanan Admin (Roles & Permissions) ................... [TODO]  [OWNER:A2]
+  DB: roles, permissions, role_permissions, user_roles, users.role.
+  FE: guard AdminSidebar; halaman kelola role (opsional).
+  API: [NEW] /api/roles, /api/permissions; middleware 'role:'/'permission:'.
+  Test: [NEW] RbacAuthorizationTest.
+  Minor:
+    T24.1 [NEW] Middleware EnsureRole/EnsurePermission + registrasi.
+    T24.2 [TODO] Terapkan middleware ke endpoint admin.
+    T24.3 [NEW] Endpoint + FE kelola role & permission (opsional).
+    T24.4 [TODO] FE guard menu AdminSidebar berdasarkan role/permission.
+    T24.5 [NEW] Sinkron `users.role` <-> `user_roles` (D5).
+
+T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
+  DB: stock_opnames, stock_opname_items.
+  FE: StockOpnameListPage/CreatePage/DetailPage + FilterDrawer + ConfirmationModal.
+  API: [NEW] GET/POST /api/stock-opnames, POST /api/stock-opnames/{id}/approve.
+  Test: [NEW] StockOpnameApiTest.
+  Minor:
+    T25.1 [NEW] Controller + routes stock opname (create, input fisik, submit).
+    T25.2 [TODO] FE StockOpnameListPage + FilterDrawer (server-side).
+    T25.3 [TODO] FE StockOpnameCreatePage/DetailPage (input fisik + selisih).
+    T25.4 [NEW] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
+           posting jurnal via T34.1 + test.
+
+T26. Auth Pelanggan ................................................ [TODO]  [OWNER:A1]
+  DB: users, password_reset_tokens, carts.session_id, email_logs.
+  FE: LoginPage, RegisterPage, [NEW] ForgotPasswordPage, ResetPasswordPage, verify email.
+  API: register/login/logout (ada); [NEW] POST /api/auth/forgot-password,
+       /reset-password, /email/verify, /email/resend.
+  Test: AuthRegisterTest, AuthLoginLogoutTest + [NEW] PasswordResetTest, EmailVerificationTest.
+  Minor:
+    T26.1 [NEW] Backend forgot/reset password + email (queue, depend T30.1) + test.
+    T26.2 [NEW] Backend verifikasi email (email_verified_at) + test.
+    T26.3 [TODO] FE Forgot/Reset password pages + wiring.
+    T26.4 [TODO] FE verifikasi email (banner + resend).
+    T26.5 [NEW] Merge keranjang guest (session_id) -> user saat login + test.
+
+T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OWNER:A2]
+  DB: orders, order_items, order_status_histories, shipments, shipment_trackings.
+  FE: [NEW] MyOrdersPage, OrderDetailPage pelanggan.
+  API: GET /api/orders (milik user); [NEW] POST /api/orders/{id}/cancel, /complete,
+       GET /api/orders/track/{order_number} (guest).
+  Test: [NEW] CustomerOrderApiTest (termasuk anti-IDOR).
+  Minor:
+    T27.1 [NEW] Otorisasi kepemilikan resource (anti-IDOR) menyeluruh untuk
+           endpoint pelanggan + test. (MENYERAP T35.2 lama.)
+    T27.2 [TODO] FE daftar pesanan pelanggan + filter status.
+    T27.3 [TODO] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
+    T27.4 [NEW] Guest order lookup (order_number + email/phone).
+
+T28. Checkout Server-Authoritative ................................. [TODO]  [OWNER:A1]
+  Fitur: server hitung ulang harga, diskon, ongkir, poin, grand_total (anti-tampering).
+  DB: orders, order_items, vouchers, products/variants, inventory_balances.
+  API: perbaiki POST /api/checkout.
+  Test: [NEW] CheckoutTamperingTest.
+  ACCEPTANCE: (1) seluruh nominal dihitung server dari DB (input client diabaikan);
+  (2) diskon dari T08.2 + gratis ongkir + stacking; (3) poin redeem masuk grand_total;
+  (4) test tampering (harga/diskon/ongkir palsu) ditolak/diabaikan.
+  Minor:
+    T28.1 [NEW] Server hitung ulang product_price/subtotal dari DB + test.
+    T28.2 [NEW] Server hitung discount (T08.2, gratis ongkir, stacking) + ongkir
+           (T06.2) + poin redeem (T31) + grand_total.
+    T28.3 [NEW] Test tampering end-to-end.
+
+T29. Retur & Refund ................................................ [TODO]  [OWNER:A2]
+  DB: [NEW] returns, return_items.
+  FE: ReturnRequestPage (pelanggan), ReturnManagementPage (admin).
+  API: [NEW] /api/returns (CRUD + approve/reject/refund).
+  Test: [NEW] ReturnRefundApiTest.
+  ACCEPTANCE: (1) refund Midtrans via API (config T21.2) ATAU manual; (2) stok
+  kembali ke inventory_balances; (3) poin reversal; (4) jurnal balik via T34.1.
+  Minor:
+    T29.1 [NEW] Migrasi returns + return_items.
+    T29.2 [NEW] Backend alur retur (request, approve, reject) + test.
+    T29.3 [NEW] Refund + stok kembali (inventory_balances) + poin reversal +
+           jurnal balik via T34.1.
+    T29.4 [TODO] FE pelanggan ajukan retur + admin kelola.
+
+T30. Scheduler & Queue ............................................. [TODO]  [OWNER:A2]
+  DB: jobs (infra), orders.expires_at, stock_reservations.expires_at,
+      loyalty_points_ledger.expires_at.
+  API: -.
+  Test: [NEW] SchedulerJobTest.
+  Minor:
+    T30.1 [NEW] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
+    T30.2 [NEW] Scheduled: auto-cancel order expired + release reservasi (T13.3).
+    T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
+
+T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [TODO]  [OWNER:A1]
+  DB: loyalty_points_ledger, users.points, orders.loyalty_points_*,
+      order_items.points_earned. (membership_tier tidak dipakai, D9.)
+  FE: riwayat poin (ProfilePage).
+  API: [NEW] GET /api/loyalty/ledger.
+  Test: [NEW] LoyaltyLifecycleTest.
+  Minor:
+    T31.1 [NEW] Earning poin saat paid (idempoten) + ledger + test.
+    T31.2 [NEW] Expiry poin via scheduler (T30.3) — durasi
+           [KEPUTUSAN DIBUTUHKAN] (usulan 12 bulan, via config G6).
+    T31.3 [REMOVED] Aturan tier DIHAPUS (D9 — semua member flat).
+    T31.4 [NEW] Reversal poin saat refund/cancel.
+
+T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OWNER:A2]
+  DB: [NEW] product_reviews.
+  FE: form ulasan di pesanan pelanggan + tampil di ProductDetail.
+  API: [NEW] GET /api/products/{id}/reviews, POST /api/reviews.
+  Test: [NEW] ProductReviewApiTest.
+  Minor:
+    T32.1 [NEW] Migrasi product_reviews + model.
+    T32.2 [NEW] Endpoint ulasan (list + create hanya pembeli) + moderasi + test.
+    T32.3 [TODO] FE form + tampilan ulasan + agregat rating (dipakai T01.2).
+
+T33. Audit Log & Seeder Referensi (SISA) ........................... [PARTIAL]  [OWNER:A2]
+  CATATAN: seeder referensi SUDAH ADA (MasterReferenceSeeder) untuk roles,
+  order_statuses, payment_statuses, warehouses, chart_of_accounts,
+  financial_accounts, attributes. Sisa: permissions & receipt_templates + log.
+  DB: [NEW] activity_logs; permissions; receipt_templates.
+  Minor:
+    T33.1 [NEW] Migrasi activity_logs + logging aksi admin (HARGA/STOK/ROLE, G9).
+    T33.2 [NEW] Seeder `permissions` (melengkapi roles).
+    T33.3 [NEW] Seeder `receipt_templates` default.
+
+T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
+  DB: transactions, financial_ledger_entries, chart_of_accounts, vendor_bills, returns.
+  API: [NEW] /api/reports/income-statement, /trial-balance, /vendor-aging; export CSV.
+  Test: [NEW] JournalPostingTest, FinancialReportApiTest.
+  Minor:
+    T34.1 [NEW] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
+           GRN, bayar bill, refund, opname) + test.
+           (TIDAK bergantung pada T07/T14/T25/T29 — sebaliknya task tsb memanggil mapping.)
+    T34.2 [NEW] Laporan laba rugi + neraca saldo.
+    T34.3 [NEW] Laporan aging hutang vendor (menyerap T14.5 lama).
+    T34.4 [NEW] Ekspor CSV/Excel/PDF laporan.
+
+T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
+  Minor:
+    T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime/size).
+    T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
+    T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
+    T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
+
+==============================================================================
+ACCEPTANCE CRITERIA (task berisiko uang/stok)
+==============================================================================
+T07 Pembayaran : webhook idempoten; status konsisten; signature invalid ditolak;
+                 fee tercatat + masuk jurnal.
+T13 Smart Inv  : reservasi atomik (lockForUpdate); available_stock tervalidasi;
+                 release saat batal/expired; lolos test konkurensi.
+T28 Checkout   : seluruh nominal dihitung server; diskon/ongkir/poin dari server;
+                 test tampering lolos.
+T29 Retur      : refund (Midtrans/manual) + stok kembali + poin reversal + jurnal balik.
+T16.4/T34.1    : jurnal debit=credit seimbang; idempoten; setiap event keuangan terpetakan.
+T12/T14 (stok) : inventory_balances otoritatif; agregat produk/varian sinkron; G9 log.
+
+==============================================================================
+MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+==============================================================================
+- T01.2 -> T32.1
+- T03.2 -> T12.2 (D1)
+- T05.3 -> T12.2 ; T05.4 -> T26.5
+- T06.2 -> T21.1 ; T06.5 -> T12.2 ; T06.6 -> T13.5
+- T07.3 -> T21.2 ; T07.5 -> (independen)
+- T08.2 -> T15.1a ; T08.3 -> T28.2 ; T08.4 -> T28.2, T31.1
+- T09.3 -> T09.2 (T09.2 prasyarat) ; T09.x -> T09.1
+- T10.1 -> T21.1 ; T10.4 -> T30.3
+- T12.2 -> T12.1a (backfill) ; T13.3 -> T12.2 ; T13.5 -> T12.2
+- T14.2 -> T12.2 ; T14.3 -> T18.1 ; T14.4 -> T12.2 ; T14.5 -> T34.1
+- T15.1b -> T15.1a ; T15.2 -> T15.1a
+- T16.4 -> (independen)
+- T18.1 -> T12.2 ; T18.3 -> T18.1 ; T19.1 -> T18.2, T18.1, T31
+- T20.4 -> T30.1 ; T23.3 -> T33 (seeder)
+- T24.x -> T33.2 (permissions) ; T27.1 -> T26
+- T28.1 -> T05, T06 ; T28.2 -> T06.2, T08.2, T31.1
+- T29.3 -> T13.3, T31.4, T34.1
+- T30.2 -> T13.3 ; T30.3 -> T31.2, T10.4
+- T31.1 -> T07 ; T32.2 -> T27
+- T34.1 -> T16.4 (mesin jurnal) ; T34.3 -> T14 (data bill)
+- T35 -> seluruh fitur (sebelum rilis)
+CATATAN: Tidak ada siklus. T16.4 (mesin) TIDAK bergantung pada T34.1; sebaliknya
+T34.1 dan task event (T07/T14/T25/T29) memakai mesin T16.4 + mapping T34.1.
+
+==============================================================================
+URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+==============================================================================
+1)  FONDASI (independen, semua di awal):
+    D1–D9 terkunci (selesai) + T12.1a–d (backfill stok/berat/uang/kolom)
+    + T12.2 (stok otoritatif D1) + T33.1 (audit log G9) + T33.2/T33.3 (seeder)
+    + T30.1 (queue infra).
+2)  T26 Auth Pelanggan.
+3)  T15.1a + T15.1b (schema + siklus voucher) + T08.2 (validasi voucher)
+    — SEBELUM T28.
+4)  T05 Cart + T06 Checkout/Ongkir (+ T21.1 config).
+5)  T18.1 COGS (sebelum checkout live).
+6)  T16.4 Mesin Jurnal + T34.1 Mapping (event lunas/fee) — SEBELUM T07.
+7)  T28 Checkout Server-Authoritative — TAHAP 1: nominal dasar (harga/ongkir/diskon).
+8)  T13 Reservasi + inventory_balances.
+9)  T07 Pembayaran (+ T21.2 config) — jurnal fee via T34.1 (sudah ada di langkah 6).
+10) T30 Scheduler (T30.2 auto-cancel + release reservasi).
+11) T09 Pesanan Admin + T27 Pesanan Pelanggan (+ T27.1 anti-IDOR).
+12) T10 Fulfillment/Label/Tracking.
+13) T31 Loyalitas (T31.1 earning, T31.2 expiry, T31.4 reversal).
+    -> T28 TAHAP 2: poin redeem (setelah T31).
+14) T24 RBAC.
+15) T34.2/3/4 Laporan (laba rugi, neraca, aging, ekspor).
+16) T08.3/4 + T15.2–4 Voucher FE/Admin.
+17) T12.3–T12.5 Mutasi Stok + T25 Stock Opname.
+18) T17 E-Invoice + T19 BI + T20 Template + T21.3 (R2 privat D7).
+19) T29 Retur/Refund + T32 Ulasan.
+20) T35 Hardening.
+21) T23 Deploy (main -> master).
+
+MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+- FONDASI: T12.1a–d, T12.2, T33.1, T33.2, T33.3, T30.1
+- AUTH & BELANJA: T26, T15.1a, T15.1b, T08.2, T05, T06, T21.1
+- UANG & STOK: T18.1, T16.4, T34.1 (mapping lunas/fee), T28 TAHAP 1, T13,
+  T07, T21.2, T30.2
+- OPERASIONAL: T09, T27, T27.1, T10
+- KEAMANAN: T21.3 (R2 privat), T24, T35.1, T35.2, T35.3
+CATATAN MILESTONE:
+- Kepemilikan test konkurensi + idempotensi webhook = **T35.2** (T13/T07 hanya
+  merujuk acceptance ini, tidak menduplikasi).
+- T31.1 & T18.3 tidak masuk milestone (T28 TAHAP 2 poin menunggu T31; COGS sudah
+  di T18.1).
+- T35.3 di milestone = "CI + backup" (IDOR sudah di T27.1, disk privat di T21.3).
+Deploy dilakukan SETELAH milestone ini (konsisten dengan langkah 21).
+
+==============================================================================
+CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+==============================================================================
+- SIKLUS dihapus: T16.4 = mesin jurnal (independen); T34.1 = mapping (-> T16.4);
+  T14.5/T29.3/T25.4/T07 -> T34.1 (bukan sebaliknya).
+- URUTAN: T33 seeder, T12.1 fondasi, T30.1 queue, T18.1 COGS dinaikkan; T08/T15
+  voucher setelah T28; T31 setelah T07 (poin earning mengikuti pembayaran).
+- MILESTONE: memuat T30, T33, T18.1, T35.1/2/3; deploy setelah milestone.
+- EKSEKUSI D1–D7: T12.1a (backfill stok), T12.1b (gram), T12.1c (uang),
+  T12.1d (kolom duplikat), T12.2/T13.3 (concurrency), T21.3 (R2 privat D7).
+- DEDUP: T35.2->T27.1 ; T35.3->T21.3 ; T14.5->T34.3 ; T23.2 lepas dari T24 ;
+  T19.1/T18.1 pakai ReportQueryService (T18.2).
+- GAP FUNGSIONAL: voucher_usages/used_count (T15.1b), poin redeem server (T28.2),
+  refund Midtrans config (T21.2), status lookup (D6), audit log global (G9).
+- OUT-OF-SCOPE eksplisit: COD, pajak, wishlist, SEO, compliance.
+- G3 dibedakan (backend-only vs FE); G8 nama berkas `taks.txt`; verifikasi
+  dicantumkan dgn bukti (bukan klaim).
+- Status: T03 & T14 -> [PARTIAL] (refaktor D1).
+==============================================================================
+PATCH 3.1 (perbaikan atas review Revisi 3)
+==============================================================================
+- URUTAN: T12.2, T33.1, T33.2/T33.3, T30.1 dinaikkan ke langkah 1 (fondasi);
+  T15.1a/b + T08.2 ke langkah 3 (sebelum T28); T16.4 + T34.1 ke langkah 6
+  (sebelum T07); T28 dipecah 2 tahap (nominal dasar, lalu poin setelah T31).
+- MILESTONE ditulis ulang dgn ID benar: memuat T12.1a-d, T12.2, T33.1/2/3,
+  T30.1, T15.1a/b, T08.2, T21.1, T18.1, T16.4, T34.1, T28 TAHAP 1, T13, T07,
+  T21.2, T30.2, T09, T27, T27.1, T10, T21.3, T24, T35.1/2/3.
+- Kepemilikan test konkurensi + idempotensi webhook = T35.2 (hapus duplikasi
+  dgn acceptance T13/T07).
+- D8 ditambahkan (`payments` otoritatif); D9 (TANPA TIER, semua member flat);
+  aturan backfill stok (is_primary + saldo awal) & konversi berat (<100=kg×1000)
+  ditulis di CATATAN KEPUTUSAN.
+- Keputusan menggantung ditandai [KEPUTUSAN DIBUTUHKAN]: durasi expiry poin &
+  aturan refund (via config G6). Tier DIHAPUS (T31.3 [REMOVED]).
+- Koreksi kecil: "ETALATE"->"ETALASE"; T30.1 "(depend: tidak ada)"->"INDEPENDEN";
+  matriks T09.3->T09.2; gap analysis A konsisten (mesin T16.4 + mapping T34.1);
+  bukti verifikasi dinyatakan berasal dari DB DEV (bukan produksi).
+==============================================================================
+
+

@@ -51,6 +51,11 @@ ATURAN AUDIT PENGETESAN (AGENTS.md ATURAN 12):
      * Jika perubahan menyangkut fitur namun laporannya hanya navigasi pasif atau sekadar halaman terbuka tanpa bukti interaksi penggunaan fitur, kamu WAJIB MENOLAK (REJECTED).
    - Wajib memverifikasi kebersihan konsol browser (0 console errors, 0 runtime exceptions).
    - Wajib memverifikasi kepatuhan visual/desain: sudut siku rounded-none, palet warna, form custom, dan hasil 'npm run build'.
+4. TOOLING BROWSER WAJIB (PLAYWRIGHT DARI PYTHON):
+   - Seluruh pengujian browser WAJIB dijalankan menggunakan Playwright dari Python (`python3` + paket `playwright`, browser Chromium).
+   - Bukti laporan WAJIB menunjukkan penggunaan Playwright Python (mis. skrip Python dengan `from playwright.sync_api import sync_playwright`, perintah `python3 ...`, dan/atau bukti eksekusi browser Chromium).
+   - DILARANG KERAS memakai curl/HTTP-only, tool manual, framework non-Playwright, atau hanya memuat URL (smoke test) sebagai bukti pengujian fitur frontend.
+   - Jika laporan TIDAK membuktikan penggunaan Playwright dari Python, kamu WAJIB MENOLAK (REJECTED) dan instruksikan Agent mengulang pengujian memakai Playwright dari Python.
 
 =====================================================================
 DAFTAR BERKAS KODE YANG DIUBAH:
