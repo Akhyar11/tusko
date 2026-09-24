@@ -11,6 +11,7 @@ import {
   setStoredUser, 
   clearStoredAuth 
 } from './apiClient';
+import { getCartSessionId } from './cartService';
 import { mockDemoUsers } from '../data/mockAuthData';
 
 export const authService = {
@@ -25,6 +26,7 @@ export const authService = {
       const response = await apiClient.post('/api/auth/login', {
         email: cleanIdentifier,
         password: password,
+        session_id: getCartSessionId(),
       });
 
       if (response.token) {
@@ -102,6 +104,7 @@ export const authService = {
         password_confirmation: userData.password_confirmation || userData.passwordConfirmation || userData.password,
         phone: userData.phone || null,
         role: userData.role || 'customer',
+        session_id: getCartSessionId(),
       };
 
       const response = await apiClient.post('/api/auth/register', payload);
