@@ -20,5 +20,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ExpeditionSeeder::class);
         $this->call(VoucherSeeder::class);
         $this->call(MasterReferenceSeeder::class);
+        $this->call(PermissionSeeder::class);
     }
 }

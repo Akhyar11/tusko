@@ -756,7 +756,7 @@ T33. Audit Log & Seeder Referensi (SISA) ........................... [PARTIAL]  
   DB: [NEW] activity_logs; permissions; receipt_templates.
   Minor:
     T33.1 [DONE] Migrasi activity_logs + logging aksi admin (HARGA/STOK/ROLE, G9).
-    T33.2 [NEW] Seeder `permissions` (melengkapi roles).
+    T33.2 [DONE] Seeder `permissions` (melengkapi roles).
     T33.3 [NEW] Seeder `receipt_templates` default.
 
 T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
