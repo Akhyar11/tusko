@@ -524,7 +524,8 @@ T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL] 
     T14.1 [DONE] Vendor/PO/GRN/Bills + pembayaran (existing).
     T14.2 [DONE] Refaktor receive GRN -> InventoryService (D1) agar tidak menulis
             products.stock langsung (T14.1 -> [PARTIAL]) + test.
-    T14.3 [NEW] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18.3).
+    T14.3 [DONE] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18.3).
+            (Terpenuhi via InventoryService + CogsService pada T18.1.)
     T14.4 [NEW] Receive GRN -> update `inventory_balances` (D1).
     T14.5 [NEW] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
 
@@ -581,7 +582,7 @@ T18. Analisis Profit & HPP/COGS .................................... [PARTIAL]  
   API: [NEW] GET /api/reports/profit.
   Test: [NEW] ProfitReportApiTest.
   Minor:
-    T18.1 [NEW] Pipeline COGS (PRIORITAS AWAL, sebelum checkout live):
+    T18.1 [DONE] Pipeline COGS (PRIORITAS AWAL, sebelum checkout live):
            isi `order_items.unit_cogs` + `orders.total_cogs` saat checkout;
            catat `cogs_histories` saat GRN/restock; konsolidasi D5
            (cost_price vs current_cogs) + test.

@@ -22,8 +22,10 @@ use RuntimeException;
  */
 class InventoryService
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly CogsService $cogs
+    ) {
     }
 
     /**
@@ -115,6 +117,19 @@ class InventoryService
 
             if ($type === 'in') {
                 $lockedProduct->forceFill(['last_restock_at' => now()])->save();
+            }
+
+            // T18.1: catat HPP/COGS saat barang masuk (unit_cost disediakan pemanggil).
+            if ($type === 'in' && isset($attributes['unit_cost']) && (float) $attributes['unit_cost'] > 0) {
+                $this->cogs->recordIncoming(
+                    $lockedProduct,
+                    $lockedVariant,
+                    abs($signedQuantity),
+                    (float) $attributes['unit_cost'],
+                    $before,
+                    (string) ($attributes['reference_type'] ?? 'manual_restock'),
+                    isset($attributes['reference_id']) ? (string) $attributes['reference_id'] : null
+                );
             }
 
             // G9: setiap perubahan stok wajib tercatat di audit log.

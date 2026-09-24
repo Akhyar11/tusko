@@ -106,6 +106,21 @@ class Order extends Model
     }
 
     /**
+     * Hitung ulang total HPP/COGS pesanan dari item (T18.1).
+     */
+    public function recalculateTotalCogs(): float
+    {
+        $total = $this->items()
+            ->get()
+            ->sum(fn (OrderItem $item) => (float) $item->unit_cogs * (int) $item->quantity);
+
+        $total = round((float) $total, 2);
+        $this->forceFill(['total_cogs' => $total])->save();
+
+        return $total;
+    }
+
+    /**
      * Shipping address relation.
      */
     public function shippingAddress(): BelongsTo

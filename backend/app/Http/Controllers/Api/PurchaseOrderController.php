@@ -376,14 +376,8 @@ class PurchaseOrderController extends Controller
                             'notes' => "Penerimaan PO #{$po->po_number}" . ($variant ? " (Varian: {$variant->variant_name})" : ' (Single SKU / Unit Utama)'),
                             'created_by' => $request->user()?->name ?? 'Admin Gudang',
                             'warehouse' => $po->warehouse,
+                            'unit_cost' => (float) $item->unit_price,
                         ], $variant);
-
-                        // Harga pokok / HPP terkini (pencatatan cogs_histories menyusul di T14.3).
-                        if ($variant) {
-                            $variant->update(['current_cogs' => $item->unit_price]);
-                        } else {
-                            $product->update(['cost_price' => $item->unit_price]);
-                        }
                     }
                 }
             }
