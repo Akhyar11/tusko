@@ -14,6 +14,7 @@ import FinancialTransactionsPage from './components/FinancialTransactionsPage';
 import StockManagementPage from './components/StockManagementPage';
 import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
+import SystemSettingsHub from './components/SystemSettingsHub';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
@@ -104,6 +105,7 @@ const VALID_VIEWS = [
   'warehouses-admin',
   'warehouse-create',
   'warehouse-edit',
+  'settings',
   'login',
   'register',
   'forgot-password',
@@ -139,6 +141,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/expeditions' || rawPath === '/admin/expedition') return 'expeditions';
     if (rawPath === '/admin/expeditions/create') return 'expedition-create';
     if (rawPath === '/admin/templates' || rawPath === '/admin/template') return 'templates';
+    if (rawPath === '/admin/settings' || rawPath === '/admin/setting') return 'settings';
     if (rawPath === '/admin/products/create' || rawPath === '/admin/product/create') return 'product-create';
     if (rawPath === '/admin/procurement/pos/create') return 'procurement-po-create';
     if (rawPath.startsWith('/admin/procurement/pos/')) return 'procurement-po-detail';
@@ -590,7 +593,8 @@ export default function App() {
       'expedition-create',
       'expedition-edit',
       'transactions',
-      'transaction-create'
+      'transaction-create',
+      'settings'
     ];
     if (adminCoreViews.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
@@ -1635,6 +1639,8 @@ export default function App() {
               setTimeout(() => setToastMessage(null), 3000);
             }}
           />
+        ) : currentView === 'settings' ? (
+          <SystemSettingsHub onShowToast={showToast} onBack={() => setCurrentView('admin-dashboard')} />
         ) : currentView === 'expeditions' ? (
           <ExpeditionSettingsPage
             expeditions={expeditions}
