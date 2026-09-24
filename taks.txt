@@ -373,7 +373,7 @@ T04. Master Kategori ............................................... [DONE]  [OW
 FASE 2 — CHECKOUT & BAYAR
 ==============================================================================
 
-T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [PARTIAL]  [OWNER:A1]
+T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [OWNER:A1]
   DB: carts, cart_items. [NEW opsional] carts.voucher_id.
   FE: CartPage API-backed, badge Navbar, Toast.
   API: GET /api/cart, POST /api/cart/items, PUT /api/cart/items/{id},
@@ -382,7 +382,7 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [PARTIAL] 
   Minor:
     T05.1 [DONE] `cartService.js` (wrapper 5 endpoint + session guest).
     T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed).
-    T05.3 [TODO] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
+    T05.3 [DONE] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
     T05.4 [DONE] Merge keranjang guest (session_id) -> user saat login (FE kirim session_id).
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1]
