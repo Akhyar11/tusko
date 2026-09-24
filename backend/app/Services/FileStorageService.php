@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use DateTimeInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,6 +15,114 @@ class FileStorageService
     public static function disk(): string
     {
         return config('filesystems.default', 'public');
+    }
+
+    /**
+     * Disk untuk dokumen sensitif (D7) — bukti transfer, invoice, bukti bayar.
+     */
+    public static function privateDisk(): string
+    {
+        return config('filesystems.private_disk', 'private');
+    }
+
+    /**
+     * Store a sensitive UploadedFile on the private disk (tanpa URL publik).
+     *
+     * @return array{path: string, disk: string}
+     */
+    public static function storePrivate(UploadedFile $file, string $directory = 'private'): array
+    {
+        $disk = self::privateDisk();
+        $path = Storage::disk($disk)->putFile($directory, $file);
+
+        return [
+            'path' => $path,
+            'disk' => $disk,
+        ];
+    }
+
+    /**
+     * Store a base64 Data URL on the private disk (tanpa URL publik).
+     *
+     * @return array{path: ?string, disk: string}
+     */
+    public static function storeBase64Private(?string $value, string $directory = 'private'): array
+    {
+        $disk = self::privateDisk();
+        $decoded = self::decodeDataUri($value);
+
+        if ($decoded === null) {
+            return ['path' => $value ?: null, 'disk' => $disk];
+        }
+
+        $path = $directory . '/' . Str::uuid() . '.' . $decoded['extension'];
+        Storage::disk($disk)->put($path, $decoded['binary']);
+
+        return ['path' => $path, 'disk' => $disk];
+    }
+
+    /**
+     * Buat URL sementara (presigned) untuk dokumen sensitif (D7).
+     */
+    public static function temporaryUrl(?string $path, ?DateTimeInterface $expiry = null): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        try {
+            return Storage::disk(self::privateDisk())->temporaryUrl(
+                $path,
+                $expiry ?? now()->addMinutes(30)
+            );
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Hapus file sensitif dari private disk.
+     */
+    public static function deletePrivate(?string $path): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+
+        $clean = self::extractStoragePath($path) ?? $path;
+        $disk = self::privateDisk();
+
+        if (Storage::disk($disk)->exists($clean)) {
+            return Storage::disk($disk)->delete($clean);
+        }
+
+        return false;
+    }
+
+    /**
+     * Decode base64 data URI menjadi ekstensi + biner (null bila bukan data URI).
+     *
+     * @return array{extension: string, binary: string}|null
+     */
+    private static function decodeDataUri(?string $value): ?array
+    {
+        if (empty($value) || !preg_match('/^data:([a-zA-Z0-9\+\-\.\/]+);base64,(.+)$/s', $value, $matches)) {
+            return null;
+        }
+
+        $mime = strtolower($matches[1]);
+        $extension = match (true) {
+            str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => 'jpg',
+            str_contains($mime, 'png') => 'png',
+            str_contains($mime, 'svg') => 'svg',
+            str_contains($mime, 'webp') => 'webp',
+            str_contains($mime, 'pdf') => 'pdf',
+            default => 'bin',
+        };
+
+        $binary = base64_decode($matches[2]);
+
+        return $binary === false ? null : ['extension' => $extension, 'binary' => $binary];
     }
 
     /**
@@ -51,28 +160,19 @@ class FileStorageService
         }
 
         // Check if it is a base64 Data URL
-        if (preg_match('/^data:image\/([a-zA-Z0-9\+\-\.]+);base64,(.+)$/s', $value, $matches)) {
-            $extension = strtolower($matches[1]);
-            if ($extension === 'jpeg') {
-                $extension = 'jpg';
-            } elseif ($extension === 'svg+xml') {
-                $extension = 'svg';
-            }
-            $binaryData = base64_decode($matches[2]);
+        $decoded = self::decodeDataUri($value);
+        if ($decoded !== null) {
+            $filename = Str::uuid() . '.' . $decoded['extension'];
+            $path = $directory . '/' . $filename;
+            $disk = self::disk();
 
-            if ($binaryData !== false) {
-                $filename = Str::uuid() . '.' . $extension;
-                $path = $directory . '/' . $filename;
-                $disk = self::disk();
+            Storage::disk($disk)->put($path, $decoded['binary']);
+            $url = Storage::disk($disk)->url($path);
 
-                Storage::disk($disk)->put($path, $binaryData);
-                $url = Storage::disk($disk)->url($path);
-
-                return [
-                    'path' => $path,
-                    'url' => $url,
-                ];
-            }
+            return [
+                'path' => $path,
+                'url' => $url,
+            ];
         }
 
         // If not a data URI and not http, treat as existing storage path

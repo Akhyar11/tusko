@@ -168,6 +168,7 @@ Route::prefix('vendor-bills')->group(function () {
     Route::get('/', [VendorBillController::class, 'index']);
     Route::get('/{id}', [VendorBillController::class, 'show']);
     Route::get('/{id}/payments', [VendorBillController::class, 'payments']);
+    Route::get('/{id}/invoice-url', [VendorBillController::class, 'invoiceUrl']);
     Route::post('/{id}/payments', [VendorBillController::class, 'storePayment']);
     Route::delete('/{id}/payments/{paymentId}', [VendorBillController::class, 'destroyPayment']);
 });

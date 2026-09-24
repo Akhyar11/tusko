@@ -407,7 +407,7 @@ class ProcurementApiIntegrationTest extends TestCase
 
     public function test_receiving_accepts_editable_bill_amount_and_stores_invoice_proof(): void
     {
-        Storage::fake(config('filesystems.default', 'public'));
+        Storage::fake(config('filesystems.private_disk', 'private'));
 
         $po = PurchaseOrder::create([
             'po_number' => 'PO-202609-API-BILLAMT',
@@ -444,7 +444,7 @@ class ProcurementApiIntegrationTest extends TestCase
         $this->assertNotNull($bill->invoice_file_path);
         $this->assertEquals('invoice-full.jpg', $bill->invoice_file_name);
         $this->assertMatchesRegularExpression('/^BILL\/' . now()->format('dmY') . '\/\d{3,}$/', $bill->bill_number);
-        Storage::disk(config('filesystems.default', 'public'))->assertExists($bill->invoice_file_path);
+        Storage::disk(config('filesystems.private_disk', 'private'))->assertExists($bill->invoice_file_path);
 
         // Stok hanya bertambah dari unit diterima.
         $this->product->refresh();

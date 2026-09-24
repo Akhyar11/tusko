@@ -12,7 +12,6 @@ use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class VendorBillController extends Controller
 {
@@ -178,7 +177,7 @@ class VendorBillController extends Controller
         }
 
         $proofFile = $request->file('proof_file');
-        $proofStored = FileStorageService::storeUploadedFile($proofFile, 'bills/payments');
+        $proofStored = FileStorageService::storePrivate($proofFile, 'bills/payments');
 
         $result = DB::transaction(function () use ($bill, $validated, $request, $proofStored, $proofFile) {
             $payment = VendorBillPayment::create([
@@ -236,7 +235,7 @@ class VendorBillController extends Controller
 
         DB::transaction(function () use ($bill, $payment) {
             if ($payment->proof_file_path) {
-                Storage::disk(config('filesystems.default', 'public'))->delete($payment->proof_file_path);
+                FileStorageService::deletePrivate($payment->proof_file_path);
             }
 
             Transaction::where('reference_type', 'vendor_bill_payment')
@@ -254,6 +253,27 @@ class VendorBillController extends Controller
             'status' => 'success',
             'message' => "Pembayaran tagihan {$bill->bill_number} berhasil dibatalkan.",
             'data' => new VendorBillResource($bill),
+        ]);
+    }
+
+    /**
+     * URL sementara (presigned) untuk dokumen sensitif tagihan vendor (D7).
+     */
+    public function invoiceUrl(string $id): JsonResponse
+    {
+        $bill = VendorBill::with('payments')->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'invoice_file_name' => $bill->invoice_file_name,
+                'invoice_url' => FileStorageService::temporaryUrl($bill->invoice_file_path),
+                'payments' => $bill->payments->map(fn ($payment) => [
+                    'id' => $payment->id,
+                    'proof_file_name' => $payment->proof_file_name,
+                    'proof_url' => FileStorageService::temporaryUrl($payment->proof_file_path),
+                ])->values(),
+            ],
         ]);
     }
 

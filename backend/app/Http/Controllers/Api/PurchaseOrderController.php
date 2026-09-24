@@ -295,7 +295,7 @@ class PurchaseOrderController extends Controller
 
         // Simpan bukti invoice vendor ke Storage (foto/PDF) setelah validasi lolos.
         $invoiceFile = $request->file('invoice_file');
-        $invoiceStored = FileStorageService::storeUploadedFile($invoiceFile, 'bills/invoices');
+        $invoiceStored = FileStorageService::storePrivate($invoiceFile, 'bills/invoices');
         $invoiceFileName = $invoiceFile->getClientOriginalName();
         $invoiceFileMime = $invoiceFile->getClientMimeType();
 

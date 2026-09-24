@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Private Disk (Sensitive Documents)
+    |--------------------------------------------------------------------------
+    |
+    | Disk untuk dokumen sensitif (bukti transfer, invoice vendor, bukti bayar).
+    | Aset publik memakai disk `default`; dokumen sensitif WAJIB memakai disk ini
+    | dan diakses via `Storage::disk(...)->temporaryUrl()` (D7).
+    |
+    */
+
+    'private_disk' => env('FILESYSTEM_PRIVATE_DISK', 'private'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -56,6 +69,29 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/') . '/private-storage',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        's3_private' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_PRIVATE_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
         ],
