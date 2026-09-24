@@ -1127,3 +1127,6 @@ ADDENDUM REVISI 5:
 - T12.7 [NEW][A2] perbaikan akses menu: `stock-mutation` dead view (terdaftar di
   adminCoreViews & activeViews sidebar, tanpa cabang render di App.jsx).
 - T36.18 diperjelas: WAJIB patuh G11 saat menambah menu "Pengaturan Sistem".
+- PERBAIKAN AKSES VIEW A1 (G11): rute `/order-success` ditambahkan & `getInitialView`
+  tidak lagi mengarahkan `order-success` ke antrean admin `orders` (dulu dead/ salah
+  view). Diverifikasi via uji browser akses menu/rute (keranjang & profil).
