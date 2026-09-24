@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -57,42 +58,58 @@ return new class extends Migration
 
     /**
      * Ubah presisi kolom uang secara idempoten, mempertahankan nullability/default.
+     *
+     * Pada SQLite, `change()` membangun ulang tabel; foreign key dinonaktifkan
+     * sementara agar baris anak (varian/saldo stok) tidak ter-cascade delete.
      */
     private function alterMoneyColumns(bool $revert): void
     {
-        foreach (self::MONEY_COLUMNS as $table => $columns) {
-            if (!Schema::hasTable($table)) {
-                continue;
-            }
+        // SQLite tidak menegakkan presisi DECIMAL, dan `change()` di sana membangun
+        // ulang tabel sehingga berisiko menghapus baris anak (cascade FK).
+        // Standardisasi cukup dijalankan pada driver yang mendukung (MySQL/PostgreSQL).
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
 
-            $targets = [];
-            foreach ($columns as $column => $config) {
-                if (Schema::hasColumn($table, $column)) {
-                    $targets[$column] = $config;
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            foreach (self::MONEY_COLUMNS as $table => $columns) {
+                if (!Schema::hasTable($table)) {
+                    continue;
                 }
-            }
 
-            if (empty($targets)) {
-                continue;
-            }
-
-            Schema::table($table, function (Blueprint $blueprint) use ($targets, $revert) {
-                foreach ($targets as $column => $config) {
-                    [$width, $scale] = $revert ? $config['previous'] : [14, 2];
-
-                    $definition = $blueprint->decimal($column, $width, $scale);
-
-                    if ($config['nullable']) {
-                        $definition->nullable();
+                $targets = [];
+                foreach ($columns as $column => $config) {
+                    if (Schema::hasColumn($table, $column)) {
+                        $targets[$column] = $config;
                     }
-
-                    if ($config['default'] !== null) {
-                        $definition->default($config['default']);
-                    }
-
-                    $definition->change();
                 }
-            });
+
+                if (empty($targets)) {
+                    continue;
+                }
+
+                Schema::table($table, function (Blueprint $blueprint) use ($targets, $revert) {
+                    foreach ($targets as $column => $config) {
+                        [$width, $scale] = $revert ? $config['previous'] : [14, 2];
+
+                        $definition = $blueprint->decimal($column, $width, $scale);
+
+                        if ($config['nullable']) {
+                            $definition->nullable();
+                        }
+
+                        if ($config['default'] !== null) {
+                            $definition->default($config['default']);
+                        }
+
+                        $definition->change();
+                    }
+                });
+            }
+        } finally {
+            Schema::enableForeignKeyConstraints();
         }
     }
 };
