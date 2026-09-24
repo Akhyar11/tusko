@@ -19,7 +19,8 @@ import {
   Building2,
   PackageCheck,
   Receipt,
-  Warehouse
+  Warehouse,
+  Settings
 } from 'lucide-react';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
@@ -30,7 +31,8 @@ export default function AdminSidebar({
   onLogout = () => {},
   onBackToStore = () => {},
   orderCount = 0,
-  lowStockCount = 0
+  lowStockCount = 0,
+  featureFlags = {}
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const menuSections = [
@@ -156,6 +158,13 @@ export default function AdminSidebar({
           sublabel: 'Format cetak invoice & resi',
           icon: Mail,
           activeViews: ['templates']
+        },
+        {
+          id: 'settings',
+          label: 'Pengaturan Sistem',
+          sublabel: 'Konfigurasi toko & integrasi',
+          icon: Settings,
+          activeViews: ['settings']
         }
       ]
     }
@@ -163,13 +172,15 @@ export default function AdminSidebar({
 
   // Modul operasional yang di-hide sementara pada branch production (master)
   const HIDDEN_MODULE_IDS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
+  // Feature flag (T36.16/T36.18): admin dapat menonaktifkan menu Pengaturan Sistem.
+  const flagHiddenIds = featureFlags?.['feature_flags.settings_menu'] === false ? ['settings'] : [];
 
   const visibleSections = menuSections
     .map(section => ({
       ...section,
-      items: SHOW_OPERATIONAL_MODULES
-        ? section.items
-        : section.items.filter(item => !HIDDEN_MODULE_IDS.includes(item.id))
+      items: section.items
+        .filter(item => !flagHiddenIds.includes(item.id))
+        .filter(item => SHOW_OPERATIONAL_MODULES || !HIDDEN_MODULE_IDS.includes(item.id))
     }))
     .filter(section => section.items.length > 0);
 

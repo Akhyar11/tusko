@@ -903,7 +903,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
            (T23.2) — independen RBAC; simpan + efek langsung.
     T36.17 [NEW] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
            toggle (opsional) + simpan.
-    T36.18 [NEW] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
+    T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
            guard admin (T24) + feature flag; rute `/admin/settings`.
            WAJIB patuh G11: daftarkan `settings` di VALID_VIEWS, getViewFromPathOrHash
            (`/admin/settings`), cabang render App.jsx, dan `adminCoreViews`.
