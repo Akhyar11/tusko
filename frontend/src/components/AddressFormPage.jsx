@@ -17,6 +17,14 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
+import TextInput from './molecules/TextInput';
+import TextArea from './molecules/TextArea';
+import Checkbox from './molecules/Checkbox';
+import ServerSideSelect from './molecules/ServerSideSelect';
+import SearchBar from './molecules/SearchBar';
+import { locationService } from '../services/locationService';
+import IconButton from './atoms/IconButton';
+import FormTipsPanel from './organisms/FormTipsPanel';
 
 // Custom athletic black & gold marker pin
 const createCustomPin = () => {
@@ -54,6 +62,14 @@ export default function AddressFormPage({
   const [fullAddress, setFullAddress] = useState(addressToEdit?.full_address || '');
   const [city, setCity] = useState(addressToEdit?.city || '');
   const [province, setProvince] = useState(addressToEdit?.province || '');
+  const [district, setDistrict] = useState(addressToEdit?.district || '');
+  const [provinceCode, setProvinceCode] = useState(addressToEdit?.province_code || '');
+  const [cityCode, setCityCode] = useState(addressToEdit?.city_code || '');
+  const [districtCode, setDistrictCode] = useState(addressToEdit?.district_code || '');
+  const [subdistrictCode, setSubdistrictCode] = useState(addressToEdit?.subdistrict_code || '');
+  const [formError, setFormError] = useState('');
+  const regionSelectedRef = useRef(false);
+  const formRef = useRef(null);
   const [postalCode, setPostalCode] = useState(addressToEdit?.postal_code || '');
   const [isDefault, setIsDefault] = useState(addressToEdit?.is_default || false);
 
@@ -137,14 +153,20 @@ export default function AddressFormPage({
         // LANGSUNG OTOMATIS TERISI KE FORM
         if (forceUpdate) {
           setFullAddress(autoStreet);
-          if (detectedCity) setCity(detectedCity);
-          if (detectedProvince) setProvince(detectedProvince);
-          if (detectedPostal) setPostalCode(detectedPostal);
+          if (!regionSelectedRef.current) {
+            if (detectedCity) setCity(detectedCity);
+            if (detectedProvince) setProvince(detectedProvince);
+            if (detectedPostal) setPostalCode(detectedPostal);
+          }
+        } else if (regionSelectedRef.current) {
+          setFullAddress((prev) => prev || autoStreet);
         } else {
-          if (!fullAddress) setFullAddress(autoStreet);
-          if (!city && detectedCity) setCity(detectedCity);
-          if (!province && detectedProvince) setProvince(detectedProvince);
-          if (!postalCode && detectedPostal) setPostalCode(detectedPostal);
+          // Gunakan functional update agar hasil geocode (async) TIDAK menimpa
+          // pilihan manual pengguna (mis. dari dropdown wilayah) — T06.7b.
+          setFullAddress((prev) => prev || autoStreet);
+          if (detectedCity) setCity((prev) => prev || detectedCity);
+          if (detectedProvince) setProvince((prev) => prev || detectedProvince);
+          if (detectedPostal) setPostalCode((prev) => prev || detectedPostal);
         }
 
         setHasPinned(true);
@@ -364,26 +386,78 @@ export default function AddressFormPage({
     );
   };
 
+  const loadProvinces = async (search) => {
+    const list = await locationService.getProvinces();
+    const q = (search || '').toLowerCase();
+    return {
+      options: list.filter((p) => !q || (p.name || '').toLowerCase().includes(q)).map((p) => ({ value: String(p.id), label: p.name })),
+      hasMore: false,
+    };
+  };
+
+  const loadCities = async (search) => {
+    if (!provinceCode) return { options: [], hasMore: false };
+    const list = await locationService.getCities(provinceCode);
+    const q = (search || '').toLowerCase();
+    return {
+      options: list.filter((c) => !q || (c.name || '').toLowerCase().includes(q)).map((c) => ({ value: String(c.id), label: c.name })),
+      hasMore: false,
+    };
+  };
+
+  const loadDistricts = async (search) => {
+    if (!cityCode) return { options: [], hasMore: false };
+    const list = await locationService.getDistricts(cityCode);
+    const q = (search || '').toLowerCase();
+    return {
+      options: list.filter((d) => !q || (d.name || '').toLowerCase().includes(q)).map((d) => ({ value: String(d.id), label: d.name })),
+      hasMore: false,
+    };
+  };
+
+  const loadSubdistricts = async (search) => {
+    if (!districtCode) return { options: [], hasMore: false };
+    const list = await locationService.getSubdistricts(districtCode);
+    const q = (search || '').toLowerCase();
+    return {
+      options: list.filter((s) => !q || (s.name || '').toLowerCase().includes(q)).map((s) => ({ value: String(s.id), label: s.name })),
+      hasMore: false,
+    };
+  };
+
+  const handleProvinceChange = (value, option) => {
+    regionSelectedRef.current = true;
+    setProvinceCode(value || '');
+    setProvince(option?.label || '');
+    setCityCode(''); setCity(''); setDistrictCode(''); setDistrict(''); setSubdistrictCode('');
+  };
+
+  const handleCityChange = (value, option) => {
+    regionSelectedRef.current = true;
+    setCityCode(value || '');
+    setCity(option?.label || '');
+    setDistrictCode(''); setDistrict(''); setSubdistrictCode('');
+  };
+
+  const handleDistrictChange = (value, option) => {
+    setDistrictCode(value || '');
+    setDistrict(option?.label || '');
+    setSubdistrictCode('');
+  };
+
+  const handleSubdistrictChange = (value) => {
+    setSubdistrictCode(value || '');
+  };
+
   // Submit Form Alamat
   const handleSubmit = (e) => {
     e.preventDefault();
+    setFormError('');
 
-    if (!recipientName.trim()) {
-      alert('Nama penerima wajib diisi.');
-      return;
-    }
-    if (!phone.trim()) {
-      alert('Nomor telepon penerima wajib diisi.');
-      return;
-    }
-    if (!fullAddress.trim()) {
-      alert('Alamat lengkap wajib diisi.');
-      return;
-    }
-    if (!city.trim()) {
-      alert('Kota / Kabupaten wajib diisi.');
-      return;
-    }
+    if (!recipientName.trim()) { setFormError('Nama penerima wajib diisi.'); return; }
+    if (!phone.trim()) { setFormError('Nomor telepon penerima wajib diisi.'); return; }
+    if (!fullAddress.trim()) { setFormError('Alamat lengkap wajib diisi.'); return; }
+    if (!city.trim()) { setFormError('Kota / Kabupaten wajib diisi.'); return; }
 
     const payload = {
       id: addressToEdit?.id || Date.now(),
@@ -391,8 +465,13 @@ export default function AddressFormPage({
       recipient_name: recipientName.trim(),
       phone: phone.trim(),
       full_address: fullAddress.trim(),
+      district: district.trim(),
       city: city.trim(),
       province: province.trim() || 'DKI Jakarta',
+      province_code: provinceCode || null,
+      city_code: cityCode || null,
+      district_code: districtCode || null,
+      subdistrict_code: subdistrictCode || null,
       postal_code: postalCode.trim() || '12730',
       lat: coords.lat,
       lng: coords.lng,
@@ -410,49 +489,28 @@ export default function AddressFormPage({
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-100 py-6 sm:py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        
-        {/* Top Navigation & Breadcrumb */}
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex items-center gap-2 text-xs font-sport font-black uppercase tracking-wider text-neutral-600 hover:text-black transition-colors cursor-pointer"
-          >
-            <ArrowLeft size={16} />
-            <span>Kembali ke Daftar Alamat</span>
-          </button>
-          
-          <div className="text-xs text-neutral-400 font-mono hidden sm:block">
-            Akun &bull; Buku Alamat &bull; {isEditMode ? 'Ubah Alamat' : 'Tambah Alamat'}
-          </div>
-        </div>
-
-        {/* Header Title Banner */}
-        <div className="bg-black text-white p-6 sm:p-8 border border-neutral-800 mb-6 shadow-xl relative overflow-hidden">
-          <div className="absolute -right-6 -bottom-8 font-sport font-black text-8xl text-neutral-800/40 select-none pointer-events-none italic">
-            MAPS
-          </div>
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-1.5 bg-amber-400 text-black text-[9px] font-sport font-black uppercase px-2.5 py-0.5 tracking-wider mb-2">
-              <MapPin size={11} />
-              <span>Titik Pengiriman Kurir</span>
-            </div>
-            <h1 className="font-sport font-black text-2xl sm:text-3xl uppercase tracking-tight text-white">
-              {isEditMode ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Pengiriman Baru'}
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+        {/* Header form kanonis */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <IconButton icon={ArrowLeft} variant="outline" tooltip="Kembali ke Daftar Alamat" onClick={onCancel} />
+            <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">
+              {isEditMode ? 'Ubah Alamat Pengiriman' : 'Tambah Alamat Pengiriman'}
             </h1>
-            <p className="text-xs text-neutral-400 mt-1 max-w-xl leading-relaxed">
-              Tentukan titik pengiriman pada peta secara akurat agar pesanan sepatu dan perlengkapan olahraga Anda tiba tepat waktu.
-            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <IconButton icon={X} variant="secondary" tooltip="Batal" onClick={onCancel} />
+            <IconButton icon={Save} variant="primary" tooltip="Simpan Alamat" onClick={() => formRef.current?.requestSubmit()} />
           </div>
         </div>
 
-        {/* Main Grid Layout: Interactive Map + Address Form */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Kolom Kiri: PETA INTERAKTIF (5 Kolom di Desktop) */}
-          <div className="lg:col-span-6 space-y-4">
+        {/* Main Grid Layout: form 3/4 + tips 1/4 */}
+        <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+
+          {/* Kolom Kiri: PETA INTERAKTIF */}
+          <div className="space-y-4">
             <div className="bg-white border border-neutral-300 shadow-sm overflow-hidden">
               
               {/* Map Search Bar */}
@@ -479,22 +537,17 @@ export default function AddressFormPage({
                 </div>
 
                 <div className="flex gap-2 relative">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                      placeholder="Ketik nama jalan, gedung, mall (cth: Kemang)..."
-                      className="w-full bg-neutral-800 border border-neutral-700 text-white pl-8 pr-3 py-2 text-xs focus:outline-none focus:border-amber-400"
-                    />
-                    <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                  </div>
+                  <SearchBar
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Ketik nama jalan, gedung, mall (cth: Kemang)..."
+                    className="flex-1"
+                  />
                   <button
                     type="button"
                     onClick={handleSearch}
                     disabled={isSearching}
-                    className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+                    className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-black font-sport font-black text-xs uppercase tracking-wider transition-colors cursor-pointer shrink-0 rounded-none"
                   >
                     {isSearching ? <Loader2 size={13} className="animate-spin" /> : 'Cari'}
                   </button>
@@ -568,7 +621,7 @@ export default function AddressFormPage({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-black">
-                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <CheckCircle2 size={14} className="text-amber-600 shrink-0" />
                   <span className="truncate">{geocodedStreetName || 'Titik peta aktif'}</span>
                 </div>
               </div>
@@ -584,30 +637,26 @@ export default function AddressFormPage({
             </div>
           </div>
 
-          {/* Kolom Kanan: FORMULIR IDENTITAS & ALAMAT (6 Kolom di Desktop) */}
-          <div className="lg:col-span-6 bg-white border border-neutral-300 p-5 sm:p-7 shadow-sm space-y-5">
-            
-            <div className="border-b border-neutral-200 pb-3">
-              <h3 className="font-sport font-black text-base uppercase tracking-tight text-black">
-                Detail Lengkap Alamat
-              </h3>
-              <p className="text-[11px] text-neutral-500 mt-0.5">
-                Silakan periksa dan lengkapi rincian nomor rumah atau patokan.
-              </p>
-            </div>
+          {/* Kolom Kanan: FORMULIR IDENTITAS & ALAMAT */}
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-5">
+
+            <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+              <MapPin size={16} className="text-amber-500" />
+              <span>Detail Lengkap Alamat</span>
+            </h2>
 
             {/* Notifikasi Status Terisi Otomatis dari GPS / Peta */}
             {hasPinned && (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-400 flex items-start gap-2.5">
-                <CheckCircle2 size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="p-3.5 bg-amber-50 border border-amber-400 flex items-start gap-2.5">
+                <CheckCircle2 size={18} className="text-amber-600 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <div className="font-bold text-emerald-950 flex flex-wrap items-center gap-2">
+                  <div className="font-bold text-amber-950 flex flex-wrap items-center gap-2">
                     <span>Alamat Terisi Otomatis dari {isFromGps ? 'GPS Perangkat' : 'Titik Peta'}</span>
-                    <span className="text-[10px] bg-emerald-600 text-white font-mono px-2 py-0.5 font-bold">
+                    <span className="text-[10px] bg-amber-600 text-white font-mono px-2 py-0.5 font-bold">
                       {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
                     </span>
                   </div>
-                  <p className="text-[11px] text-emerald-800 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
                     {isFromGps 
                       ? '✓ Alamat lengkap, kota, provinsi, dan kode pos telah diisi otomatis sesuai koordinat GPS Anda. Anda dapat melengkapi nomor rumah atau patokan di bawah jika diperlukan.'
                       : '✓ Kolom alamat telah disinkronkan otomatis dengan titik lokasi yang dipilih di peta.'}
@@ -618,7 +667,7 @@ export default function AddressFormPage({
 
             {/* 1. Label Alamat (Chip selector) */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-2">
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                 Label Alamat <span className="text-rose-500">*</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -647,29 +696,27 @@ export default function AddressFormPage({
             {/* 2. Nama & Telepon Penerima */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                   Nama Penerima <span className="text-rose-500">*</span>
                 </label>
-                <input
+                <TextInput
                   type="text"
                   value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
+                  onChange={setRecipientName}
                   placeholder="Nama lengkap penerima..."
-                  className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                   Nomor Handphone / WhatsApp <span className="text-rose-500">*</span>
                 </label>
-                <input
+                <TextInput
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={setPhone}
                   placeholder="0812-xxxx-xxxx"
-                  className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white"
                   required
                 />
               </div>
@@ -678,76 +725,109 @@ export default function AddressFormPage({
             {/* 3. Alamat Lengkap & Patokan */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                   Alamat Lengkap (Jalan, No. Rumah, RT/RW, Patokan) <span className="text-rose-500">*</span>
                 </label>
                 {hasPinned && (
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200 flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 border border-amber-200 flex items-center gap-1">
                     <Check size={11} /> Terisi Otomatis dari {isFromGps ? 'GPS' : 'Peta'}
                   </span>
                 )}
               </div>
-              <textarea
+              <TextArea
                 rows={3}
                 value={fullAddress}
-                onChange={(e) => setFullAddress(e.target.value)}
+                onChange={setFullAddress}
                 placeholder="Contoh: Jl. Kemang Raya No. 45, RT 02 / RW 04, Bangka, Mampang Prapatan (Pagar hitam, samping mini market)"
-                className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white leading-relaxed"
                 required
               />
             </div>
 
-            {/* 4. Kota, Provinsi, Kode Pos */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                  Kota / Kabupaten <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Jakarta Selatan"
-                  className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white"
-                  required
-                />
+            {/* 4. Wilayah (kode KiriminAja) & Kode Pos */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Provinsi <span className="text-rose-500">*</span>
+                  </label>
+                  <ServerSideSelect
+                    value={provinceCode}
+                    onChange={handleProvinceChange}
+                    loadOptions={loadProvinces}
+                    placeholder="Pilih provinsi..."
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Kota / Kabupaten <span className="text-rose-500">*</span>
+                  </label>
+                  <ServerSideSelect
+                    value={cityCode}
+                    onChange={handleCityChange}
+                    loadOptions={loadCities}
+                    placeholder="Pilih kota/kabupaten..."
+                    disabled={!provinceCode}
+                    isClearable
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                  Provinsi
-                </label>
-                <input
-                  type="text"
-                  value={province}
-                  onChange={(e) => setProvince(e.target.value)}
-                  placeholder="DKI Jakarta"
-                  className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Kecamatan
+                  </label>
+                  <ServerSideSelect
+                    value={districtCode}
+                    onChange={handleDistrictChange}
+                    loadOptions={loadDistricts}
+                    placeholder="Pilih kecamatan..."
+                    disabled={!cityCode}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Kelurahan
+                  </label>
+                  <ServerSideSelect
+                    value={subdistrictCode}
+                    onChange={handleSubdistrictChange}
+                    loadOptions={loadSubdistricts}
+                    placeholder="Pilih kelurahan..."
+                    disabled={!districtCode}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                    Kode Pos
+                  </label>
+                  <TextInput
+                    type="text"
+                    value={postalCode}
+                    onChange={setPostalCode}
+                    placeholder="12730"
+                    weight="mono"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-                  Kode Pos
-                </label>
-                <input
-                  type="text"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="12730"
-                  className="w-full bg-neutral-50 border border-neutral-300 p-2.5 text-xs font-semibold focus:outline-none focus:border-black focus:bg-white"
-                />
-              </div>
+              {!provinceCode && (
+                <p className="text-[10px] text-neutral-500 font-medium">
+                  Pilih wilayah dari daftar agar ongkir dapat dihitung akurat (kode wilayah KiriminAja).
+                </p>
+              )}
             </div>
 
             {/* 5. Checkbox Alamat Utama */}
             <div className="pt-3 border-t border-neutral-200">
               <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                  className="w-4 h-4 accent-black cursor-pointer"
+                  onChange={setIsDefault}
+                  ariaLabel="Jadikan alamat utama"
                 />
                 <span className="text-xs font-bold text-neutral-800">
                   Jadikan sebagai alamat pengiriman utama
@@ -755,30 +835,59 @@ export default function AddressFormPage({
               </label>
             </div>
 
+            {formError && (
+              <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between animate-in fade-in duration-150">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="text-rose-600" />
+                  <span className="text-xs font-sport font-bold uppercase">{formError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormError('')}
+                  className="text-rose-600 hover:text-rose-800 cursor-pointer shrink-0"
+                  title="Tutup pesan"
+                >
+                  <AlertCircle size={15} />
+                </button>
+              </div>
+            )}
+
             {/* 6. Action Buttons */}
             <div className="pt-4 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={onCancel}
-                className="w-full sm:w-auto px-5 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-sport font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer text-center"
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-sport font-black uppercase tracking-wider transition-colors cursor-pointer rounded-none"
               >
                 Batal
               </button>
-              
+
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs uppercase tracking-widest transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer rounded-none"
               >
-                <Save size={15} className="text-amber-400" />
-                <span>{isEditMode ? 'Perbarui Alamat Pengiriman' : 'Simpan Alamat Pengiriman'}</span>
+                <Save size={15} />
+                <span>{isEditMode ? 'Perbarui Alamat' : 'Simpan Alamat'}</span>
               </button>
             </div>
 
           </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <FormTipsPanel
+              title="Panduan Mengisi Alamat"
+              tips={[
+                { icon: MapPin, heading: 'Tandai Titik Peta', text: 'Geser pin atau pakai GPS agar kurir menemukan lokasi tepat.' },
+                { icon: Navigation, heading: 'Cari Alamat', text: 'Ketik nama jalan/gedung lalu tekan Cari untuk memindah pin.' },
+                { icon: CheckCircle2, heading: 'Pilih Wilayah', text: 'Pilih provinsi, kota, kecamatan, kelurahan agar ongkir akurat.' },
+                { icon: Save, heading: 'Simpan', text: 'Lengkapi nomor rumah/patokan, lalu simpan alamat pengiriman.' },
+              ]}
+            />
+          </div>
 
         </form>
-
-      </div>
     </div>
   );
 }

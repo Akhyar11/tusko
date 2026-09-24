@@ -127,7 +127,11 @@ class LocationApiTest extends TestCase
             'postal_code' => '61475',
         ]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(201)
+            ->assertJsonPath('data.province_code', '11')
+            ->assertJsonPath('data.city_code', '164')
+            ->assertJsonPath('data.district_code', '2275')
+            ->assertJsonPath('data.subdistrict_code', '46310');
 
         $this->assertDatabaseHas('shipping_addresses', [
             'user_id' => $user->id,
