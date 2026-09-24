@@ -3,12 +3,38 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExpeditionService;
 use App\Services\ShippingRateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ShippingRateController extends Controller
 {
+    /**
+     * Daftar layanan kurir LOKAL (expedition_services) aktif — sumber fallback
+     * saat agregator tidak dikonfigurasi/offline (T06.5).
+     */
+    public function localServices(): JsonResponse
+    {
+        $services = ExpeditionService::with('expedition')
+            ->where('is_active', true)
+            ->whereHas('expedition', fn ($query) => $query->where('is_active', true))
+            ->orderBy('expedition_id')
+            ->get()
+            ->map(fn (ExpeditionService $service) => [
+                'expedition_id' => $service->expedition_id,
+                'expedition_service_id' => $service->id,
+                'courier' => strtolower((string) ($service->expedition?->code ?? '')),
+                'service' => $service->service_code,
+                'description' => $service->service_name,
+                'cost' => (float) ($service->base_rate ?? 0),
+                'etd' => $service->etd_days,
+                'provider' => 'local',
+            ]);
+
+        return response()->json(['data' => $services]);
+    }
+
     /**
      * Ambil tarif pengiriman dari agregator yang dikonfigurasi Admin.
      */
@@ -32,6 +58,16 @@ class ShippingRateController extends Controller
             'weight.required' => 'Berat paket wajib diisi.',
             'weight.min' => 'Berat paket minimal 1 gram.',
         ]);
+
+        // Provider belum dikonfigurasi: kembalikan kosong (200) agar FE dapat
+        // memakai fallback `expedition_services` tanpa error konsol.
+        if (! $shippingRate->isConfigured()) {
+            return response()->json([
+                'data' => [],
+                'provider' => $shippingRate->provider(),
+                'configured' => false,
+            ]);
+        }
 
         $hasOrigin = ! empty($validated['origin'])
             || ! empty($validated['origin_district_code'])

@@ -9,6 +9,7 @@ use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Cart;
 use App\Models\Expedition;
+use App\Models\ExpeditionService;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -160,9 +161,24 @@ class CheckoutController extends Controller
                 $addressLabel = $request->input('address_label', 'Alamat Utama');
             }
 
-            // 3. Resolve Expedition
+            // 3. Resolve Expedition / ExpeditionService (multi-layanan, T06.5)
             $expeditionId = $request->input('expedition_id');
-            if ($expeditionId) {
+            $expeditionServiceId = $request->input('expedition_service_id');
+
+            if ($expeditionServiceId) {
+                $service = ExpeditionService::with('expedition')->findOrFail($expeditionServiceId);
+                $expedition = $service->expedition;
+                $expeditionId = $expedition?->id;
+                $expeditionName = $expedition?->name;
+                $expeditionService = $service->service_name ?: $service->service_code;
+                $expeditionEtd = $service->etd_days;
+                $chargedWeight = max(1, (int) ceil($totalWeight));
+                $shippingCost = $request->has('shipping_cost')
+                    ? (float) $request->input('shipping_cost')
+                    : (float) (($service->per_kg_rate ?? 0) > 0
+                        ? ($service->per_kg_rate * $chargedWeight)
+                        : ($service->base_rate ?? 0));
+            } elseif ($expeditionId) {
                 $expedition = Expedition::findOrFail($expeditionId);
                 $expeditionName = $expedition->name;
                 $expeditionService = $expedition->service;
@@ -225,6 +241,11 @@ class CheckoutController extends Controller
                 'notes' => $request->input('notes'),
                 'expires_at' => Carbon::now()->addHours(24),
             ]);
+
+            // `expedition_service_id` dikelola di luar mass-assignment (Order fillable milik A2).
+            if ($expeditionServiceId) {
+                $order->forceFill(['expedition_service_id' => $expeditionServiceId])->save();
+            }
 
             // 7. Create OrderItems & Decrement Stock
             foreach ($checkoutItemsData as $itemData) {

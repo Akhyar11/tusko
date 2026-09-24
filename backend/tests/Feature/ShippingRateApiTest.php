@@ -32,8 +32,13 @@ class ShippingRateApiTest extends TestCase
             ]);
     }
 
-    public function test_requires_origin_when_store_setting_empty(): void
+    public function test_requires_origin_when_configured_but_origin_missing(): void
     {
+        $integrations = app(IntegrationService::class);
+        $integrations->set('shipping.provider', 'apicoid', 'shipping');
+        $integrations->set('shipping.base_url', 'https://shipping.test', 'shipping');
+        $integrations->set('shipping.api_key', 'secret-key', 'shipping', true);
+
         $response = $this->getJson('/api/shipping/rates?destination_district_code=317305&weight=1000');
 
         $response->assertStatus(422)
@@ -127,6 +132,40 @@ class ShippingRateApiTest extends TestCase
                 && (int) $request['destination'] === 5507
                 && (int) $request['weight'] === 2000;
         });
+    }
+
+    public function test_lists_local_expedition_services_as_fallback(): void
+    {
+        $expedition = \App\Models\Expedition::create([
+            'name' => 'JNE Express',
+            'code' => 'jne',
+            'service' => 'Express',
+            'category' => 'Reguler',
+            'etd' => '1-2 hari',
+            'base_cost' => 12000,
+            'cost' => 12000,
+            'is_active' => true,
+        ]);
+
+        $service = \App\Models\ExpeditionService::create([
+            'expedition_id' => $expedition->id,
+            'service_code' => 'REG',
+            'service_name' => 'Reguler',
+            'etd_days' => '2-3',
+            'base_rate' => 12000,
+            'per_kg_rate' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/shipping/services');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.expedition_service_id', $service->id)
+            ->assertJsonPath('data.0.expedition_id', $expedition->id)
+            ->assertJsonPath('data.0.courier', 'jne')
+            ->assertJsonPath('data.0.service', 'REG')
+            ->assertJsonPath('data.0.cost', 12000)
+            ->assertJsonPath('data.0.provider', 'local');
     }
 
     public function test_returns_empty_rates_when_provider_errors(): void

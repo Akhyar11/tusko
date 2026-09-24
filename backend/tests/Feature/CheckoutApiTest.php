@@ -216,6 +216,47 @@ class CheckoutApiTest extends TestCase
         $this->assertEquals(4, $product->fresh()->stock);
     }
 
+    public function test_checkout_persists_expedition_service_id(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 90000, 'stock' => 5]);
+        $expedition = Expedition::factory()->create([
+            'name' => 'JNE Express',
+            'service' => 'Express',
+            'cost' => 10000,
+        ]);
+        $service = \App\Models\ExpeditionService::create([
+            'expedition_id' => $expedition->id,
+            'service_code' => 'REG',
+            'service_name' => 'Reguler',
+            'etd_days' => '2-3',
+            'base_rate' => 11000,
+            'per_kg_rate' => 0,
+            'is_active' => true,
+        ]);
+
+        $payload = [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'recipient_name' => 'Penerima Layanan',
+            'phone' => '081200000002',
+            'full_address' => 'Jl. Layanan No. 1',
+            'expedition_service_id' => $service->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+        ];
+
+        $this->actingAs($user)->postJson('/api/checkout', $payload)->assertCreated();
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'expedition_id' => $expedition->id,
+            'expedition_service_id' => $service->id,
+            'expedition_name' => 'JNE Express',
+        ]);
+    }
+
     public function test_checkout_resolves_user_from_bearer_token(): void
     {
         // Membuktikan checkout mengenali token Bearer Sanctum (bukan hanya sesi web),

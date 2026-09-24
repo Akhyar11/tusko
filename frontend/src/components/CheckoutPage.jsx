@@ -139,14 +139,50 @@ export default function CheckoutPage({
 
   // Tarif kurir live dari ShippingRateService (fallback ke daftar ekspedisi yang ada).
   const [shippingRates, setShippingRates] = useState([]);
+  const [localServices, setLocalServices] = useState([]);
+
+  // Muat layanan kurir lokal (expedition_services) sebagai fallback (T06.5).
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const services = await checkoutService.getLocalShippingServices();
+        if (!active) return;
+
+        setLocalServices((services || []).map((service, idx) => ({
+          id: `local-${service.expedition_service_id || idx}`,
+          expedition_id: service.expedition_id,
+          expedition_service_id: service.expedition_service_id,
+          name: String(service.courier || 'Kurir').toUpperCase(),
+          service: service.service,
+          service_name: service.description || service.service,
+          cost: Number(service.cost) || 0,
+          baseCost: Number(service.cost) || 0,
+          etd: service.etd || null,
+          is_free: false,
+          isActive: true,
+          provider: 'local',
+        })));
+      } catch {
+        // Fallback lanjut ke daftar ekspedisi yang tersedia.
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Active expeditions list with normalized cost and baseCost
   const activeExpeditions = useMemo(() => {
     const rawList = shippingRates.length > 0
       ? shippingRates
-      : ((availableExpeditions && availableExpeditions.length > 0)
-          ? availableExpeditions.filter(e => e.isActive)
-          : mockExpeditions);
+      : (localServices.length > 0
+          ? localServices
+          : ((availableExpeditions && availableExpeditions.length > 0)
+              ? availableExpeditions.filter(e => e.isActive)
+              : mockExpeditions));
 
     return rawList.map(e => {
       const isFree = e.is_free !== undefined ? e.is_free : (e.cost === 0 || e.baseRate === 0);
@@ -159,7 +195,7 @@ export default function CheckoutPage({
         baseCost: baseCostVal,
       };
     });
-  }, [shippingRates, availableExpeditions]);
+  }, [shippingRates, localServices, availableExpeditions]);
 
   const [selectedExpedition, setSelectedExpedition] = useState(() => {
     if (availableExpeditions && availableExpeditions.length > 0) {
@@ -335,6 +371,8 @@ export default function CheckoutPage({
       district: currentAddress.district || null,
       postal_code: currentAddress.postal_code,
       address_label: currentAddress.label,
+      expedition_id: selectedExpedition?.expedition_id || null,
+      expedition_service_id: selectedExpedition?.expedition_service_id || null,
       expedition_name: selectedExpedition?.name || 'Ekspedisi',
       expedition_service: selectedExpedition?.service || selectedExpedition?.service_name || 'Reguler',
       expedition_etd: selectedExpedition?.etd || null,

@@ -31,8 +31,9 @@ class CheckoutRequest extends FormRequest
             'address_label' => ['nullable', 'string', 'max:50'],
 
             'expedition_id' => ['nullable', 'integer', 'exists:expeditions,id'],
-            'expedition_name' => ['required_without:expedition_id', 'nullable', 'string', 'max:100'],
-            'expedition_service' => ['required_without:expedition_id', 'nullable', 'string', 'max:100'],
+            'expedition_service_id' => ['nullable', 'integer', 'exists:expedition_services,id'],
+            'expedition_name' => ['required_without_all:expedition_id,expedition_service_id', 'nullable', 'string', 'max:100'],
+            'expedition_service' => ['required_without_all:expedition_id,expedition_service_id', 'nullable', 'string', 'max:100'],
             'expedition_etd' => ['nullable', 'string', 'max:50'],
             'shipping_cost' => ['nullable', 'numeric', 'min:0'],
 
@@ -54,8 +55,8 @@ class CheckoutRequest extends FormRequest
             'recipient_name.required_without' => 'Nama penerima wajib diisi bila tidak memilih alamat tersimpan.',
             'phone.required_without' => 'Nomor telepon wajib diisi bila tidak memilih alamat tersimpan.',
             'full_address.required_without' => 'Alamat lengkap wajib diisi bila tidak memilih alamat tersimpan.',
-            'expedition_name.required_without' => 'Nama ekspedisi wajib dipilih.',
-            'expedition_service.required_without' => 'Layanan ekspedisi wajib dipilih.',
+            'expedition_name.required_without_all' => 'Nama ekspedisi wajib dipilih.',
+            'expedition_service.required_without_all' => 'Layanan ekspedisi wajib dipilih.',
         ];
     }
 }

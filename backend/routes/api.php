@@ -83,6 +83,7 @@ Route::prefix('expeditions')->group(function () {
 
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware('auth.optional');
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
+Route::get('/shipping/services', [\App\Http\Controllers\Api\ShippingRateController::class, 'localServices'])->middleware('auth.optional');
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
     Route::get('/track/{orderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'trackGuestOrder'])->middleware('auth.optional')->where('orderNumber', '.*');

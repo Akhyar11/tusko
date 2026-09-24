@@ -40,6 +40,14 @@ export const checkoutService = {
   },
 
   /**
+   * Ambil layanan kurir lokal aktif (`expedition_services`) untuk fallback.
+   */
+  async getLocalShippingServices() {
+    const response = await apiClient.get('/api/shipping/services');
+    return response.data || [];
+  },
+
+  /**
    * Ambil detail pesanan berdasarkan ID atau nomor pesanan.
    */
   async getOrder(idOrOrderNumber) {
