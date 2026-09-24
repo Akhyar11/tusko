@@ -21,6 +21,20 @@ export const checkoutService = {
   },
 
   /**
+   * Ambil tarif pengiriman (layanan kurir) dari agregator yang dikonfigurasi admin.
+   */
+  async getShippingRates({ origin, destination, weight, courier } = {}) {
+    const params = new URLSearchParams();
+    if (origin) params.set('origin', origin);
+    if (destination) params.set('destination', destination);
+    if (weight) params.set('weight', String(weight));
+    if (courier) params.set('courier', courier);
+
+    const response = await apiClient.get(`/api/shipping/rates?${params.toString()}`);
+    return { data: response.data || [], provider: response.provider, configured: response.configured };
+  },
+
+  /**
    * Ambil detail pesanan berdasarkan ID atau nomor pesanan.
    */
   async getOrder(idOrOrderNumber) {

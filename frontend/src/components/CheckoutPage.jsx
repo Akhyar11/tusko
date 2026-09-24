@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -24,6 +24,7 @@ import {
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import { checkoutService } from '../services/checkoutService';
+import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
 import IconButton from './atoms/IconButton';
@@ -37,8 +38,8 @@ export default function CheckoutPage({
   onFinishOrder = () => {},
   availableExpeditions = null
 }) {
-  const [addresses, setAddresses] = useState(mockAddresses);
-  const [selectedAddressId, setSelectedAddressId] = useState(1);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
 
@@ -81,6 +82,30 @@ export default function CheckoutPage({
     }
   };
 
+  // Muat alamat tersimpan pengguna dari API (fallback ke contoh bila kosong).
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const list = await authService.getAddresses();
+        const source = Array.isArray(list) && list.length > 0 ? list : mockAddresses;
+        if (!active) return;
+        setAddresses(source);
+        const preferred = source.find((a) => a.is_default) || source[0];
+        setSelectedAddressId(preferred?.id ?? null);
+      } catch {
+        if (!active) return;
+        setAddresses(mockAddresses);
+        setSelectedAddressId(mockAddresses[0]?.id ?? null);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const currentAddress = useMemo(() => {
     return addresses.find(a => a.id === selectedAddressId) || addresses[0] || {
       recipient_name: 'Penerima',
@@ -111,12 +136,16 @@ export default function CheckoutPage({
     return Object.values(groups);
   }, [checkoutItems]);
 
-  // Active expeditions list
+  // Tarif kurir live dari ShippingRateService (fallback ke daftar ekspedisi yang ada).
+  const [shippingRates, setShippingRates] = useState([]);
+
   // Active expeditions list with normalized cost and baseCost
   const activeExpeditions = useMemo(() => {
-    const rawList = (availableExpeditions && availableExpeditions.length > 0)
-      ? availableExpeditions.filter(e => e.isActive)
-      : mockExpeditions;
+    const rawList = shippingRates.length > 0
+      ? shippingRates
+      : ((availableExpeditions && availableExpeditions.length > 0)
+          ? availableExpeditions.filter(e => e.isActive)
+          : mockExpeditions);
 
     return rawList.map(e => {
       const isFree = e.is_free !== undefined ? e.is_free : (e.cost === 0 || e.baseRate === 0);
@@ -129,7 +158,7 @@ export default function CheckoutPage({
         baseCost: baseCostVal,
       };
     });
-  }, [availableExpeditions]);
+  }, [shippingRates, availableExpeditions]);
 
   const [selectedExpedition, setSelectedExpedition] = useState(() => {
     if (availableExpeditions && availableExpeditions.length > 0) {
@@ -154,6 +183,50 @@ export default function CheckoutPage({
   const totalWeight = useMemo(() => {
     return checkoutItems.reduce((acc, item) => acc + (item.weight || 400) * item.quantity, 0);
   }, [checkoutItems]);
+
+  // Muat tarif kurir live dari agregator berdasarkan kota tujuan & berat total.
+  useEffect(() => {
+    let active = true;
+    const destination = currentAddress?.city;
+
+    if (!destination || totalWeight <= 0) {
+      return undefined;
+    }
+
+    (async () => {
+      try {
+        const res = await checkoutService.getShippingRates({ destination, weight: totalWeight });
+        if (!active) return;
+
+        const mapped = (res.data || []).map((rate, idx) => ({
+          id: `rate-${rate.courier || 'kurir'}-${rate.service || idx}`,
+          name: String(rate.courier || 'Kurir').toUpperCase(),
+          service: rate.service || 'REG',
+          service_name: rate.description || rate.service || 'Reguler',
+          cost: Number(rate.cost) || 0,
+          baseCost: Number(rate.cost) || 0,
+          etd: rate.etd || null,
+          is_free: false,
+          isActive: true,
+          provider: rate.provider || null,
+        }));
+
+        setShippingRates(mapped);
+
+        if (mapped.length > 0) {
+          setSelectedExpedition((prev) => (
+            prev && mapped.some((item) => item.id === prev.id) ? prev : mapped[0]
+          ));
+        }
+      } catch {
+        // Fallback: tetap gunakan daftar ekspedisi yang tersedia.
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [currentAddress?.city, totalWeight]);
 
   // Payment Selection State
   const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');
@@ -304,17 +377,11 @@ export default function CheckoutPage({
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header Bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
-        <div className="min-w-0">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-10 h-10 rounded-none bg-neutral-950 text-amber-400 flex items-center justify-center font-black shrink-0">
-              <ShoppingBag size={22} />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-neutral-950 font-sport tracking-tight uppercase leading-tight">
-                Checkout
-              </h1>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <IconButton icon={ArrowLeft} variant="outline" tooltip="Kembali ke Keranjang" onClick={onBackToCart} />
+          <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">
+            Checkout
+          </h1>
         </div>
 
         <div className="flex items-center gap-2">
