@@ -664,7 +664,7 @@ T24. RBAC & Keamanan Admin (Roles & Permissions) ................... [TODO]  [OW
     T24.2 [TODO] Terapkan middleware ke endpoint admin.
     T24.3 [NEW] Endpoint + FE kelola role & permission (opsional).
     T24.4 [TODO] FE guard menu AdminSidebar berdasarkan role/permission.
-    T24.5 [NEW] Sinkron `users.role` <-> `user_roles` (D5).
+    T24.5 [DONE] Sinkron `users.role` <-> `user_roles` (D5).
 
 T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
   DB: stock_opnames, stock_opname_items.
