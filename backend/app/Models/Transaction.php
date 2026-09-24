@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaction extends Model
 {
@@ -15,12 +16,15 @@ class Transaction extends Model
     protected $fillable = [
         'transaction_number',
         'order_id',
+        'financial_account_id',
         'reference_type',
         'reference_id',
         'type',
         'category',
         'category_label',
         'amount',
+        'fee_deducted',
+        'net_amount',
         'description',
         'payment_method',
         'status',
@@ -30,6 +34,8 @@ class Transaction extends Model
 
     protected $casts = [
         'amount' => 'float',
+        'fee_deducted' => 'float',
+        'net_amount' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -40,6 +46,22 @@ class Transaction extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Rekening kas/bank terkait (opsional).
+     */
+    public function financialAccount(): BelongsTo
+    {
+        return $this->belongsTo(FinancialAccount::class);
+    }
+
+    /**
+     * Baris jurnal double-entry transaksi ini.
+     */
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(FinancialLedgerEntry::class);
     }
 
     /**

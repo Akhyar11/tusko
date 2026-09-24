@@ -559,7 +559,7 @@ T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  
            useTransactionTableStore.
     T16.2 [TODO] FE FinancialTransactionCreatePage -> POST + Toast.
     T16.3 [TODO] FE kategori & ringkasan cashflow.
-    T16.4 [NEW] MESIN JURNAL: `financial_accounts` (saldo rekening) +
+    T16.4 [DONE] MESIN JURNAL: `financial_accounts` (saldo rekening) +
            `chart_of_accounts` + `financial_ledger_entries` + JournalPostingService
            (helper post debit/credit, idempoten) + endpoint + test.
            (TIDAK bergantung pada T34.1 — justru T34.1 bergantung pada ini.)

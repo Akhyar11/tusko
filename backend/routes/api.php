@@ -107,6 +107,8 @@ Route::prefix('transactions')->group(function () {
     Route::get('/{idOrTransactionNumber}', [\App\Http\Controllers\Api\TransactionController::class, 'show'])->where('idOrTransactionNumber', '.*');
 });
 
+Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
+
 Route::prefix('inventory')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\InventoryController::class, 'index']);
     Route::get('/low-stock', [\App\Http\Controllers\Api\InventoryController::class, 'lowStockAlerts']);
