@@ -6,12 +6,29 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockMutation;
 use App\Models\Transaction;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AddStockApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Semua mutasi stok otoritatif (D1) memerlukan gudang tujuan.
+        Warehouse::create([
+            'code' => 'GDG-TEST-ADD',
+            'name' => 'Gudang Uji Add Stock',
+            'address' => 'Jl. Pengujian No. 1',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_can_add_stock_to_product_by_id(): void
     {

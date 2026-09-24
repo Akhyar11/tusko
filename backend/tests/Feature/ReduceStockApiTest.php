@@ -5,12 +5,29 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockMutation;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ReduceStockApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Semua mutasi stok otoritatif (D1) memerlukan gudang tujuan.
+        Warehouse::create([
+            'code' => 'GDG-TEST-RED',
+            'name' => 'Gudang Uji Reduce Stock',
+            'address' => 'Jl. Pengujian No. 2',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_can_reduce_stock_with_valid_quantity(): void
     {

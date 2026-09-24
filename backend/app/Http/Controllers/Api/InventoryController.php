@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InventoryProductResource;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class InventoryController extends Controller
 {
+    public function __construct(private readonly InventoryService $inventoryService)
+    {
+    }
     /**
      * Tampilkan daftar produk stok inventaris dengan filter dan KPI ringkasan.
      */
@@ -174,71 +180,66 @@ class InventoryController extends Controller
             'sync_to_cashflow' => 'nullable|boolean',
         ]);
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($product, $validated) {
-            $quantity = (int) $validated['quantity'];
-            $stockBefore = (int) $product->stock;
-            $stockAfter = $stockBefore + $quantity;
+        $quantity = (int) $validated['quantity'];
+        $supplier = $validated['supplier'] ?? null;
+        $poNumber = $validated['po_number'] ?? ('PO/' . date('Ymd') . '/' . mt_rand(1000, 9999));
+        $notes = $validated['notes'] ?? ("Penerimaan barang masuk +{$quantity} unit" . ($supplier ? " dari {$supplier}" : ''));
+        $operator = $validated['operator'] ?? 'Admin Gudang';
 
-            $updateData = [
-                'stock' => $stockAfter,
-                'last_restock_at' => \Carbon\Carbon::now(),
-            ];
-
-            if (isset($validated['cost_price']) && $validated['cost_price'] !== null) {
-                $updateData['cost_price'] = $validated['cost_price'];
-            }
-            if (!empty($validated['warehouse_bin'])) {
-                $updateData['warehouse_bin'] = $validated['warehouse_bin'];
-            }
-
-            $product->update($updateData);
-
-            $poNumber = $validated['po_number'] ?? ('PO/' . date('Ymd') . '/' . mt_rand(1000, 9999));
-            $supplier = $validated['supplier'] ?? null;
-            $notes = $validated['notes'] ?? ("Penerimaan barang masuk +{$quantity} unit" . ($supplier ? " dari {$supplier}" : ''));
-            $operator = $validated['operator'] ?? 'Admin Gudang';
-
-            $mutation = \App\Models\StockMutation::create([
-                'product_id' => $product->id,
-                'type' => 'in',
-                'quantity' => $quantity,
-                'stock_before' => $stockBefore,
-                'stock_after' => $stockAfter,
+        try {
+            $mutation = $this->inventoryService->increase($product, $quantity, [
                 'reference_type' => 'manual_restock',
                 'reference_id' => $poNumber,
                 'notes' => $notes,
                 'created_by' => $operator,
             ]);
-
-            // Sinkronisasi otomatis ke buku kas pengeluaran jika diminta
-            $syncCashflow = filter_var($validated['sync_to_cashflow'] ?? false, FILTER_VALIDATE_BOOLEAN);
-            $cost = (float) ($validated['cost_price'] ?? ($product->cost_price ?? 0));
-            $totalCost = $quantity * $cost;
-
-            if ($syncCashflow && $totalCost > 0) {
-                \App\Models\Transaction::create([
-                    'transaction_number' => \App\Models\Transaction::generateTransactionNumber('expense'),
-                    'type' => 'expense',
-                    'category' => 'restock',
-                    'category_label' => 'Pengadaan Stok Produk',
-                    'amount' => $totalCost,
-                    'description' => "Pengadaan restock {$quantity}x {$product->name} (PO: {$mutation->reference_id})",
-                    'payment_method' => 'Kas Toko / Pengadaan Supplier',
-                    'status' => 'settled',
-                    'customer_name' => $supplier ?: 'Supplier Gudang',
-                    'notes' => $notes,
-                ]);
-            }
-
+        } catch (RuntimeException $e) {
             return response()->json([
-                'status' => 'success',
-                'message' => "Berhasil menambahkan +{$quantity} unit stok untuk {$product->name}.",
-                'data' => [
-                    'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
-                    'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
-                ],
-            ], 200);
-        });
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        // Atribut non-stok (harga pokok & lokasi rak) tetap diperbarui pada produk.
+        $updateData = [];
+        if (array_key_exists('cost_price', $validated) && $validated['cost_price'] !== null) {
+            $updateData['cost_price'] = $validated['cost_price'];
+        }
+        if (!empty($validated['warehouse_bin'])) {
+            $updateData['warehouse_bin'] = $validated['warehouse_bin'];
+        }
+        if (!empty($updateData)) {
+            $product->update($updateData);
+        }
+
+        // Sinkronisasi otomatis ke buku kas pengeluaran jika diminta
+        $syncCashflow = filter_var($validated['sync_to_cashflow'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $cost = (float) ($validated['cost_price'] ?? ($product->cost_price ?? 0));
+        $totalCost = $quantity * $cost;
+
+        if ($syncCashflow && $totalCost > 0) {
+            \App\Models\Transaction::create([
+                'transaction_number' => \App\Models\Transaction::generateTransactionNumber('expense'),
+                'type' => 'expense',
+                'category' => 'restock',
+                'category_label' => 'Pengadaan Stok Produk',
+                'amount' => $totalCost,
+                'description' => "Pengadaan restock {$quantity}x {$product->name} (PO: {$mutation->reference_id})",
+                'payment_method' => 'Kas Toko / Pengadaan Supplier',
+                'status' => 'settled',
+                'customer_name' => $supplier ?: 'Supplier Gudang',
+                'notes' => $notes,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Berhasil menambahkan +{$quantity} unit stok untuk {$product->name}.",
+            'data' => [
+                'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
+                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
+            ],
+        ], 200);
     }
 
     /**
@@ -325,63 +326,52 @@ class InventoryController extends Controller
         ]);
 
         $quantity = (int) $validated['quantity'];
-        $currentStock = (int) $product->stock;
 
-        // Validasi ketersediaan stok
-        if ($quantity > $currentStock) {
-            return response()->json([
-                'status' => 'error',
-                'message' => "Jumlah pengurangan ({$quantity} unit) melebihi stok yang tersedia ({$currentStock} unit).",
-                'errors' => [
-                    'quantity' => ["Jumlah tidak boleh melebihi stok yang tersedia ({$currentStock} unit)."],
-                ],
-            ], 422);
-        }
+        $reasonLabels = [
+            'damage' => 'Barang Rusak / Cacat Produksi',
+            'sample' => 'Sampel Display & Promosi',
+            'expired' => 'Kedaluwarsa / Masa Simpan Habis',
+            'loss' => 'Selisih Fisik / Kehilangan Opname',
+            'manual_sale' => 'Penjualan Offline / Luar Sistem Online',
+            'other' => 'Pengurangan Stok Manual',
+        ];
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($product, $validated, $quantity, $currentStock) {
-            $stockBefore = $currentStock;
-            $stockAfter = $stockBefore - $quantity;
+        $reasonKey = $validated['reason'] ?? 'other';
+        $reasonLabel = $reasonLabels[$reasonKey] ?? 'Pengurangan Stok';
+        $reference = $validated['reference'] ?? ('BA-DED/' . date('Ymd') . '/' . mt_rand(1000, 9999));
+        $operator = $validated['operator'] ?? 'Admin Gudang';
+        $notes = $validated['notes'] ?? "Pengurangan stok -{$quantity} unit ({$reasonLabel})";
 
-            $product->update([
-                'stock' => $stockAfter,
-            ]);
-
-            $reasonLabels = [
-                'damage' => 'Barang Rusak / Cacat Produksi',
-                'sample' => 'Sampel Display & Promosi',
-                'expired' => 'Kedaluwarsa / Masa Simpan Habis',
-                'loss' => 'Selisih Fisik / Kehilangan Opname',
-                'manual_sale' => 'Penjualan Offline / Luar Sistem Online',
-                'other' => 'Pengurangan Stok Manual',
-            ];
-
-            $reasonKey = $validated['reason'] ?? 'other';
-            $reasonLabel = $reasonLabels[$reasonKey] ?? 'Pengurangan Stok';
-            $reference = $validated['reference'] ?? ('BA-DED/' . date('Ymd') . '/' . mt_rand(1000, 9999));
-            $operator = $validated['operator'] ?? 'Admin Gudang';
-            $notes = $validated['notes'] ?? "Pengurangan stok -{$quantity} unit ({$reasonLabel})";
-
-            $mutation = \App\Models\StockMutation::create([
-                'product_id' => $product->id,
-                'type' => 'out',
-                'quantity' => $quantity,
-                'stock_before' => $stockBefore,
-                'stock_after' => $stockAfter,
+        try {
+            $mutation = $this->inventoryService->decrease($product, $quantity, [
                 'reference_type' => 'manual_reduce',
                 'reference_id' => $reference,
                 'notes' => $notes,
                 'created_by' => $operator,
             ]);
-
+        } catch (InsufficientStockException $e) {
             return response()->json([
-                'status' => 'success',
-                'message' => "Berhasil mengurangi -{$quantity} unit dari stok {$product->name}.",
-                'data' => [
-                    'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
-                    'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
+                'status' => 'error',
+                'message' => "Jumlah pengurangan ({$quantity} unit) melebihi stok yang tersedia ({$e->available()} unit).",
+                'errors' => [
+                    'quantity' => ["Jumlah tidak boleh melebihi stok yang tersedia ({$e->available()} unit)."],
                 ],
-            ], 200);
-        });
+            ], 422);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Berhasil mengurangi -{$quantity} unit dari stok {$product->name}.",
+            'data' => [
+                'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
+                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
+            ],
+        ], 200);
     }
 
     /**
