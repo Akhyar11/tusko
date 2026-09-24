@@ -399,7 +399,7 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
     T06.2 [DONE] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
            (config dari T21.1) + test.
     T06.3 [DONE] FE pilih alamat + layanan kurir (tarif API live).
-    T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
+    T06.4 [DONE] FE input berat (gram, D3)/dimensi + validasi (section checkkan + dipakai tarif).
     T06.5 [PARTIAL] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
            [DONE] ExpeditionSyncService + command `expeditions:sync` (kontrak resmi KiriminAja)
                   + upsert idempotent `expeditions`/`expedition_services` [OWNER:A1].

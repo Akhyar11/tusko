@@ -37,7 +37,7 @@
 398|MINOR|T06.1 [DONE] `checkoutService.js` + wiring CheckoutPage -> POST /api/checkout.
 399|MINOR|T06.2 [DONE] ShippingRateService (KiriminAja/api.co.id) + GET /api/shipping/rates
 401|MINOR|T06.3 [DONE] FE pilih alamat + layanan kurir (tarif API live).
-402|MINOR|T06.4 [TODO] FE input berat (gram, D3)/dimensi + validasi.
+402|MINOR|T06.4 [DONE] FE input berat (gram, D3)/dimensi + validasi (section checkkan + dipak
 403|MINOR|T06.5 [PARTIAL] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` 
 409|MINOR|T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
 410|MINOR|T06.7 [NEW] Peta kode wilayah (province/city/district/subdistrict) dari KiriminAja
