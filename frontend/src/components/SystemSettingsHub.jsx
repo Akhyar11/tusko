@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -22,7 +22,7 @@ const TESTABLE_GROUPS = ['shipping', 'payment', 'storage', 'notification'];
  * SystemSettingsHub — Pengaturan Sistem Terpusat (T36.9).
  * Satu entitas, navigasi SECTION vertikal (bukan tab), form kanonis 3/4 + panel tips.
  */
-export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () => {} }) {
+export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () => {}, onOpenExpeditions = () => {} }) {
   const [groups, setGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState(null);
   const [activeLabel, setActiveLabel] = useState('');
@@ -31,6 +31,12 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+
+  // Simpan referensi toast stabil agar efek pemuatan tidak ter-reset saat toast berubah.
+  const toastRef = useRef(onShowToast);
+  useEffect(() => {
+    toastRef.current = onShowToast;
+  }, [onShowToast]);
 
   useEffect(() => {
     let active = true;
@@ -45,13 +51,13 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
           setActiveLabel(list[0].label);
         }
       })
-      .catch((err) => onShowToast(err?.message || 'Gagal memuat pengaturan.', { type: 'error' }))
+      .catch((err) => toastRef.current(err?.message || 'Gagal memuat pengaturan.', { type: 'error' }))
       .finally(() => active && setLoading(false));
 
     return () => {
       active = false;
     };
-  }, [onShowToast]);
+  }, []);
 
   useEffect(() => {
     if (!activeGroup) return undefined;
@@ -67,13 +73,13 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
         setFields(res?.fields || []);
         setValues(res?.values || {});
       })
-      .catch((err) => onShowToast(err?.message || 'Gagal memuat grup pengaturan.', { type: 'error' }))
+      .catch((err) => toastRef.current(err?.message || 'Gagal memuat grup pengaturan.', { type: 'error' }))
       .finally(() => active && setLoading(false));
 
     return () => {
       active = false;
     };
-  }, [activeGroup, groups, onShowToast]);
+  }, [activeGroup, groups]);
 
   const setValue = (key, value) => setValues((prev) => ({ ...prev, [key]: value }));
 
@@ -81,7 +87,15 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
     if (!activeGroup) return;
     setSaving(true);
     try {
-      const res = await settingsService.updateGroup(activeGroup, values);
+      // Jangan kirim ulang secret yang tidak diubah (kosong/bertopeng) agar tidak menghapusnya.
+      const payload = { ...values };
+      fields.forEach((field) => {
+        if (field.is_secret && (payload[field.key] === '' || payload[field.key] === '********' || payload[field.key] === undefined)) {
+          delete payload[field.key];
+        }
+      });
+
+      const res = await settingsService.updateGroup(activeGroup, payload);
       setValues(res?.values || values);
       onShowToast('Pengaturan berhasil disimpan.');
     } catch (err) {
@@ -230,6 +244,21 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
                     <p className="text-[11px] text-neutral-500 mt-1">{field.description}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {activeGroup === 'shipping' && (
+              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-between gap-3">
+                <div className="text-[11px] text-neutral-600">
+                  Sinkronkan daftar kurir &amp; layanan dari KiriminAja ke master ekspedisi.
+                </div>
+                <button
+                  type="button"
+                  onClick={onOpenExpeditions}
+                  className="px-3 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 cursor-pointer shrink-0"
+                >
+                  Buka Sinkron Kurir
+                </button>
               </div>
             )}
 

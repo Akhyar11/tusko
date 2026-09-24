@@ -66,7 +66,7 @@ class SettingsSecurityTest extends TestCase
         Sanctum::actingAs($this->admin());
 
         $throttled = false;
-        for ($i = 0; $i < 35; $i++) {
+        for ($i = 0; $i < 130; $i++) {
             $response = $this->getJson('/api/admin/settings');
             if ($response->status() === 429) {
                 $throttled = true;

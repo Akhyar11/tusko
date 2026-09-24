@@ -844,7 +844,7 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OW
     T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
     T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
 
-T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OWNER:A2]
+T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH
          konfigurasi sistem (tanpa hardcode, G6). Nilai disimpan di tabel
          `integrations` (T21.1) berbasis GRUP + registry tipe/validasi terpusat.
@@ -885,29 +885,29 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
     T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + error handling.
     T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 +
            `FormTipsPanel`, navigasi SECTION (bukan tab), state loading/simpan + Toast.
-    T36.10 [NEW] FE Section Profil Toko: nama toko, email/telepon, alamat,
+    T36.10 [DONE] FE Section Profil Toko: nama toko, email/telepon, alamat,
            origin city/postal + kode wilayah (dipakai ongkir) + simpan.
-    T36.11 [NEW] FE Section Pengiriman: provider, base_url, api_key (secret), origin
+    T36.11 [DONE] FE Section Pengiriman: provider, base_url, api_key (secret), origin
            district/kiriminaja id, `shipping.rate_cache_ttl`, tombol "Uji Koneksi"
            + tautan sinkron kurir (T21.4).
-    T36.12 [NEW] FE Section Pembayaran: Midtrans server/client key (secret),
+    T36.12 [DONE] FE Section Pembayaran: Midtrans server/client key (secret),
            `is_production`, `snap_url`, `refund_url`; kebijakan refund (online/manual)
            + "Uji Koneksi".
-    T36.13 [NEW] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
+    T36.13 [DONE] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
            (file sensitif privat) + "Uji Koneksi".
-    T36.14 [NEW] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan),
+    T36.14 [DONE] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan),
            aturan refund — MENUTUP [KEPUTUSAN DIBUTUHKAN] T31.2 & T29 + simpan.
-    T36.15 [NEW] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial mailer
+    T36.15 [DONE] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial mailer
            (tautan ke T20 template) + "Uji Koneksi".
-    T36.16 [NEW] FE Section Feature Flag: aktif/nonaktif menu operasional per environment
+    T36.16 [DONE] FE Section Feature Flag: aktif/nonaktif menu operasional per environment
            (T23.2) — independen RBAC; simpan + efek langsung.
-    T36.17 [NEW] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
+    T36.17 [DONE] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
            toggle (opsional) + simpan.
     T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
            guard admin (T24) + feature flag; rute `/admin/settings`.
            WAJIB patuh G11: daftarkan `settings` di VALID_VIEWS, getViewFromPathOrHash
            (`/admin/settings`), cabang render App.jsx, dan `adminCoreViews`.
-    T36.19 [NEW] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+    T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
            tersimpan & dipakai modul (`GET /api/shipping/rates`) + secret tetap dimask
            + konsol 0 error.
   Catatan desain:

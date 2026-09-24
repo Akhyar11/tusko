@@ -1663,7 +1663,7 @@ export default function App() {
             }}
           />
         ) : currentView === 'settings' ? (
-          <SystemSettingsHub onShowToast={showToast} onBack={() => setCurrentView('admin-dashboard')} />
+          <SystemSettingsHub onShowToast={showToast} onBack={() => setCurrentView('admin-dashboard')} onOpenExpeditions={() => setCurrentView('expeditions')} />
         ) : currentView === 'expeditions' ? (
           <ExpeditionSettingsPage
             expeditions={expeditions}

@@ -172,8 +172,19 @@ export default function AdminSidebar({
 
   // Modul operasional yang di-hide sementara pada branch production (master)
   const HIDDEN_MODULE_IDS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
-  // Feature flag (T36.16/T36.18): admin dapat menonaktifkan menu Pengaturan Sistem.
-  const flagHiddenIds = featureFlags?.['feature_flags.settings_menu'] === false ? ['settings'] : [];
+  // Feature flag (T36.16/T36.18): admin dapat menonaktifkan menu per modul.
+  const FLAG_TO_ITEM_IDS = {
+    'feature_flags.orders_menu': ['orders'],
+    'feature_flags.stock_menu': ['stock'],
+    'feature_flags.finance_menu': ['transactions'],
+    'feature_flags.procurement_menu': ['procurement-pos', 'procurement-grn', 'procurement-bills', 'suppliers-admin'],
+    'feature_flags.templates_menu': ['templates'],
+    'feature_flags.expeditions_menu': ['expeditions'],
+    'feature_flags.settings_menu': ['settings']
+  };
+  const flagHiddenIds = Object.entries(FLAG_TO_ITEM_IDS)
+    .filter(([flag]) => featureFlags?.[flag] === false)
+    .flatMap(([, itemIds]) => itemIds);
 
   const visibleSections = menuSections
     .map(section => ({
