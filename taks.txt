@@ -443,7 +443,7 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
   (2) status order & payment_status konsisten; (3) signature invalid ditolak 403;
   (4) fee Midtrans tercatat (fee_deducted) & masuk jurnal (T34.1).
   Minor:
-    T07.1 [TODO] FE getSnapToken + Snap popup + polling status.
+    T07.1 [DONE] FE getSnapToken + Snap popup (URL via config) + polling status.
     T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
     T07.3 [DONE] Backend verifikasi signature webhook (idempoten via `payments`) + approve/reject idempoten + test.
     T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.

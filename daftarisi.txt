@@ -43,7 +43,7 @@
 427|MINOR|T06.7 [DONE] Peta kode wilayah (province/city/district/subdistrict) KiriminAja.
 433|MINOR|T06.8 [DONE] Caching tarif per (asal, tujuan, berat, kurir, dimensi) + TTL
 436|MAJOR|T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1
-446|MINOR|T07.1 [TODO] FE getSnapToken + Snap popup + polling status.
+446|MINOR|T07.1 [DONE] FE getSnapToken + Snap popup (URL via config) + polling status.
 447|MINOR|T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
 448|MINOR|T07.3 [DONE] Backend verifikasi signature webhook (idempoten via `payments`) + appr
 449|MINOR|T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.
