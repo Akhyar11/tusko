@@ -116,6 +116,11 @@ export const orderService = {
     return res.data || res;
   },
 
+  async bookPickup(idOrOrderNumber) {
+    const res = await apiClient.post(`/api/orders/${idOrOrderNumber}/book-pickup`);
+    return res.data || res;
+  },
+
   async getReceipt(idOrOrderNumber) {
     const res = await apiClient.get(`/api/orders/${idOrOrderNumber}/receipt`);
     return res.data || res;

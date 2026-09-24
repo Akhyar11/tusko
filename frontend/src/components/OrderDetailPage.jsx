@@ -20,9 +20,11 @@ import {
   AlertCircle, 
   FileText, 
   Package,
-  Send
+  Send,
+  X
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import IconButton from './atoms/IconButton';
 import { orderService } from '../services/orderService';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
@@ -203,78 +205,60 @@ export default function OrderDetailPage({
     } else {
       setIsPrintReceiptModalOpen(true);
     }
-  };  // KiriminAja pickup booking action
-  const handleBookingPickup = () => {
+  };
+
+  // T10.2: booking pickup kurir via API (membuat shipment + nomor resi).
+  const handleBookingPickup = async () => {
+    const idOrNumber = order.order_number || order.id;
+    if (!idOrNumber) return;
+
     setIsBookingPickup(true);
-    setTimeout(() => {
-      const generatedTracking = trackingNumber || `KRA-JNT-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
-      onUpdateStatus(order.id, 'shipped', { tracking_number: generatedTracking });
+    try {
+      const result = await orderService.bookPickup(idOrNumber);
+      const waybill = result?.waybill_number || trackingNumber;
+
+      setOrder((prev) => ({
+        ...prev,
+        tracking_number: waybill,
+        expedition: { ...(prev.expedition || {}), tracking_number: waybill },
+      }));
+
+      onShowToast(`Pickup berhasil di-booking. No. Resi: ${waybill}`);
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal booking pickup kurir.', { type: 'error' });
+    } finally {
       setIsBookingPickup(false);
-      onShowToast(`Pickup berhasil di-booking via KiriminAja! No. Resi: ${generatedTracking}`);
-    }, 1000);
+    }
   };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
-      {/* Top Breadcrumb & Action Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-xs font-sport font-black uppercase tracking-wider text-neutral-700 hover:text-black transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={16} />
-          <span>Kembali ke Daftar Pesanan</span>
-        </button>
+      {/* Kartu header detail kanonis (Aturan 30) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-none border border-neutral-300 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <IconButton icon={ArrowLeft} onClick={onBack} title="Kembali ke Antrean Pesanan" variant="outline" />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black font-sport uppercase tracking-tight text-neutral-950">{invoice}</h1>
+            <span className="inline-block mt-1 px-2.5 py-1 text-[11px] font-sport font-black uppercase tracking-wider border border-neutral-300 bg-neutral-100 text-neutral-800 rounded-none">
+              {statusConfig.title}
+            </span>
+          </div>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Booking Pickup KiriminAja Button */}
+        <div className="flex items-center gap-2">
           {(order.status === 'paid' || order.status === 'processing') && (
-            <button
-              type="button"
+            <IconButton
+              icon={Send}
               onClick={handleBookingPickup}
+              title="Booking Pickup Kurir"
+              variant="primary"
               disabled={isBookingPickup}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-sport font-black text-black bg-amber-400 hover:bg-amber-300 border border-amber-500 rounded-none uppercase tracking-wider transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-              title="Booking Pickup Kurir Otomatis via API KiriminAja"
-            >
-              <Send size={13} />
-              <span>{isBookingPickup ? 'Booking Pickup...' : 'Booking Pickup (KiriminAja)'}</span>
-            </button>
+            />
           )}
-
-          {/* Tombol Cetak Resi Termal 100x150 mm */}
-          <button
-            type="button"
-            onClick={handleOpenPrintReceipt}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-sport font-black text-white bg-neutral-900 hover:bg-neutral-800 border border-black rounded-none uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
-            title="Cetak Label Resi Termal Standar 100x150 mm"
-          >
-            <Printer size={13} className="text-amber-400" />
-            <span>Cetak Label Resi</span>
-          </button>
-
-          {/* Tombol E-Invoice Digital */}
-          <button
-            type="button"
-            onClick={() => setIsPrintInvoiceModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-sport font-black text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-none uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
-            title="Buka Faktur Penjualan Digital (E-Invoice)"
-          >
-            <FileText size={13} />
-            <span>E-Invoice</span>
-          </button>
-
-          {/* Tombol Ubah Status */}
-          <button
-            type="button"
-            onClick={() => setIsStatusModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-sport font-black text-neutral-800 hover:text-black bg-white border border-neutral-300 rounded-none uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
-            title="Ubah status operasional pesanan"
-          >
-            <Package size={13} />
-            <span>Ubah Status</span>
-          </button>
+          <IconButton icon={Printer} onClick={handleOpenPrintReceipt} title="Cetak Label Resi" variant="secondary" />
+          <IconButton icon={FileText} onClick={() => setIsPrintInvoiceModalOpen(true)} title="E-Invoice" variant="secondary" />
+          <IconButton icon={Package} onClick={() => setIsStatusModalOpen(true)} title="Ubah Status Pesanan" variant="secondary" />
         </div>
       </div>
 
@@ -628,8 +612,9 @@ export default function OrderDetailPage({
                 type="button"
                 onClick={() => setIsTrackingModalOpen(false)}
                 className="p-1 rounded-none text-neutral-400 hover:text-black cursor-pointer"
+                title="Tutup Pelacakan"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
