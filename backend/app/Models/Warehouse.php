@@ -21,6 +21,7 @@ class Warehouse extends Model
         'longitude',
         'is_primary',
         'is_active',
+        'priority',
     ];
 
     protected $casts = [
@@ -28,6 +29,7 @@ class Warehouse extends Model
         'longitude' => 'decimal:8',
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
+        'priority' => 'integer',
     ];
 
     public function bins(): HasMany

@@ -509,7 +509,7 @@ T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL] 
     T13.3 [NEW] Reservasi stok (stock_reservations) saat checkout (atomik +
             lockForUpdate) + release saat batal/expired + pelihara inventory_balances + test.
     T13.4 [DONE] Kelola `warehouse_bins` + relasi inventory_balances.
-    T13.5 [NEW] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
+    T13.5 [DONE] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
             stock_transfers/items + alur transfer antar gudang + test.
 
 T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [DONE]  [OWNER:A2]

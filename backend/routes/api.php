@@ -127,6 +127,13 @@ Route::prefix('inventory')->group(function () {
     Route::get('/{idOrSku}', [\App\Http\Controllers\Api\InventoryController::class, 'show']);
 });
 
+Route::prefix('stock-transfers')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\StockTransferController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\StockTransferController::class, 'store']);
+    Route::get('/{idOrNumber}', [\App\Http\Controllers\Api\StockTransferController::class, 'show'])->where('idOrNumber', '.*');
+    Route::post('/{idOrNumber}/approve', [\App\Http\Controllers\Api\StockTransferController::class, 'approve'])->where('idOrNumber', '.*');
+});
+
 Route::prefix('templates/emails')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\EmailTemplateController::class, 'index']);
     Route::post('/reset', [\App\Http\Controllers\Api\EmailTemplateController::class, 'reset']);
