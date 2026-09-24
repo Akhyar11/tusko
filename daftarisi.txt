@@ -47,7 +47,7 @@
 431|MINOR|T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
 432|MINOR|T07.3 [TODO] Backend verifikasi signature webhook (idempoten) + approve/reject + te
 433|MINOR|T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.
-434|MINOR|T07.5 [NEW] Migrasi `payments` (method, channel, amount, status, reference,
+434|MINOR|T07.5 [DONE] Migrasi `payments` (method, channel, amount, status, reference,
 437|MAJOR|T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  [OWNER:A1]
 445|MINOR|T08.1 [TODO] FE daftar + klaim voucher (ProfilePage).
 446|MINOR|T08.2 [NEW] POST /api/vouchers/validate (min belanja/kuota/cakupan/per-user/
