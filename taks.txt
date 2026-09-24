@@ -669,7 +669,7 @@ T26. Auth Pelanggan ................................................ [TODO]  [OW
        /reset-password, /email/verify, /email/resend.
   Test: AuthRegisterTest, AuthLoginLogoutTest + [NEW] PasswordResetTest, EmailVerificationTest.
   Minor:
-    T26.1 [NEW] Backend forgot/reset password + email (queue, depend T30.1) + test.
+    T26.1 [DONE] Backend forgot/reset password + email (notifikasi ShouldQueue, aman di driver sync) + test.
     T26.2 [NEW] Backend verifikasi email (email_verified_at) + test.
     T26.3 [TODO] FE Forgot/Reset password pages + wiring.
     T26.4 [TODO] FE verifikasi email (banner + resend).
