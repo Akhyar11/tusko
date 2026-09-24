@@ -474,7 +474,7 @@ T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  
             product_variants.stock (D1) + test.
     T12.1b [DONE] Konversi `orders.total_weight` ke GRAM + backfill (D3) + test.
     T12.1c [DONE] Standardisasi presisi kolom uang menyimpang ke DECIMAL(14,2) (D4).
-    T12.1d [NEW] Migrasi deprecate+backfill: products.min_stock->stock_minimum,
+    T12.1d [DONE] Migrasi deprecate+backfill: products.min_stock->stock_minimum,
             orders.phone_number->phone, products.warehouse_bin->warehouse_bins (D5).
     T12.2 [TODO] InventoryService OTORITATIF D1: semua mutasi dalam transaksi DB +
             lockForUpdate; sync agregat products/variants.stock; tulis
