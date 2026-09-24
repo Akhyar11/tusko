@@ -453,8 +453,8 @@ T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL] 
        [NEW] POST /orders/{id}/book-pickup, GET /orders/{id}/tracking.
   Test: GenerateShippingReceiptApiTest + [NEW] ShipmentPickupApiTest.
   Minor:
-    T10.1 [NEW] Backend booking pickup -> buat `shipments` (waybill, status,
-           pickup_time) + test.
+    T10.1 [DONE] Backend booking pickup -> buat `shipments` (waybill, status,
+            pickup_time) + test.
     T10.2 [TODO] FE aksi booking pickup di OrderDetailPage + Toast resi.
     T10.3 [TODO] FE PrintReceiptModal (label termal 100x150 + barcode) dari API.
     T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3).

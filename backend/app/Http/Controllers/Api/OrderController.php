@@ -7,10 +7,13 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\OrderStatusHistory;
+use App\Models\Shipment;
+use App\Services\IdentityCodeService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -258,6 +261,61 @@ class OrderController extends Controller
         return response()->json([
             'message' => "Status pesanan {$order->order_number} berhasil diperbarui menjadi {$newStatus}.",
             'data' => new OrderResource($order->fresh(['items', 'shippingAddress', 'expedition', 'transactions'])),
+        ]);
+    }
+
+    /**
+     * Booking pickup kurir → buat `shipments` (waybill, status, pickup_time) (T10.1).
+     */
+    public function bookPickup(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['shipment', 'expedition'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        if (in_array($order->status, ['pending', 'cancelled'], true)) {
+            return response()->json([
+                'message' => 'Booking pickup hanya dapat dilakukan untuk pesanan yang sudah diproses/dibayar.',
+            ], 422);
+        }
+
+        $shipment = DB::transaction(function () use ($order) {
+            $existing = Shipment::where('order_id', $order->id)->lockForUpdate()->first();
+
+            if ($existing) {
+                return $existing;
+            }
+
+            $waybill = IdentityCodeService::generate(Shipment::class, 'RESI', 'waybill_number');
+
+            $shipment = Shipment::create([
+                'order_id' => $order->id,
+                'expedition_service_id' => $order->expedition_service_id,
+                'waybill_number' => $waybill,
+                'status' => 'manifested',
+                'pickup_time' => now(),
+            ]);
+
+            if (empty($order->tracking_number)) {
+                $order->forceFill(['tracking_number' => $waybill])->save();
+            }
+
+            return $shipment;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Booking pickup berhasil. Nomor resi: {$shipment->waybill_number}.",
+            'data' => [
+                'shipment_id' => $shipment->id,
+                'order_number' => $order->order_number,
+                'waybill_number' => $shipment->waybill_number,
+                'status' => $shipment->status,
+                'pickup_time' => $shipment->pickup_time?->toIso8601String(),
+                'expedition_name' => $order->expedition_name,
+                'expedition_service' => $order->expedition_service,
+            ],
         ]);
     }
 
