@@ -623,7 +623,7 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
   Minor:
     T21.1 [DONE] Tabel `integrations` + endpoint config (KiriminAja/api.co.id)
            — dipakai T06.2.
-    T21.2 [NEW] Midtrans config + API refund (dipakai T07.3, T29.3) via integrations.
+    T21.2 [DONE] Midtrans config + API refund (dipakai T07.3, T29.3) via integrations.
     T21.3 [NEW] STORAGE R2 (D7): bucket PRIVAT untuk file sensitif
            (payment_proof/invoice/proof) + akses `temporaryUrl()`; bucket publik
            hanya untuk aset publik. (MENYERAP T35.3 lama.)

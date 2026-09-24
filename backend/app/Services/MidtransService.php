@@ -14,13 +14,23 @@ class MidtransService
     protected string $clientKey;
     protected bool $isProduction;
     protected string $snapUrl;
+    protected string $refundUrl;
 
-    public function __construct()
+    public function __construct(private readonly IntegrationService $integrations)
     {
-        $this->serverKey = config('midtrans.server_key', 'SB-Mid-server-sandbox-test-key-12345');
-        $this->clientKey = config('midtrans.client_key', 'SB-Mid-client-sandbox-test-key-12345');
-        $this->isProduction = (bool) config('midtrans.is_production', false);
-        $this->snapUrl = config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/v1/transactions');
+        $this->serverKey = (string) ($this->integrations->get('midtrans.server_key') ?? config('midtrans.server_key', ''));
+        $this->clientKey = (string) ($this->integrations->get('midtrans.client_key') ?? config('midtrans.client_key', ''));
+        $this->isProduction = (bool) ($this->integrations->get('midtrans.is_production') ?? config('midtrans.is_production', false));
+        $this->snapUrl = (string) ($this->integrations->get('midtrans.snap_url') ?? config('midtrans.snap_url', ''));
+        $this->refundUrl = (string) ($this->integrations->get('midtrans.refund_url') ?? config('midtrans.refund_url', ''));
+    }
+
+    /**
+     * Apakah kredensial Midtrans sudah dikonfigurasi admin.
+     */
+    public function isConfigured(): bool
+    {
+        return $this->serverKey !== '';
     }
 
     /**
@@ -161,5 +171,51 @@ class MidtransService
     {
         $hash = openssl_digest($orderId . $statusCode . $grossAmount . $this->serverKey, 'sha512');
         return hash_equals($hash, $signatureKey);
+    }
+
+    /**
+     * Ajukan refund ke Midtrans (T21.2, dipakai T29.3).
+     *
+     * @return array{success: bool, status: string, refund_key: string, http_status?: int, raw: mixed}
+     */
+    public function refund(Order $order, float $amount, ?string $reason = null): array
+    {
+        $reference = $order->midtrans_transaction_id ?: $order->order_number;
+        $refundKey = 'REFUND-' . $order->order_number . '-' . now()->format('YmdHis');
+
+        $payload = [
+            'refund_key' => $refundKey,
+            'amount' => (int) round($amount),
+            'reason' => $reason ?: "Refund pesanan {$order->order_number}",
+        ];
+
+        $url = rtrim($this->refundUrl, '/') . '/' . rawurlencode((string) $reference) . '/refund';
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->timeout(15)->post($url, $payload);
+
+            $body = $response->json();
+
+            return [
+                'success' => $response->successful(),
+                'status' => $body['transaction_status'] ?? ($response->successful() ? 'refund' : 'failed'),
+                'refund_key' => $refundKey,
+                'http_status' => $response->status(),
+                'raw' => $body,
+            ];
+        } catch (Exception $e) {
+            Log::error('Midtrans refund exception: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'refund_key' => $refundKey,
+                'raw' => ['message' => $e->getMessage()],
+            ];
+        }
     }
 }
