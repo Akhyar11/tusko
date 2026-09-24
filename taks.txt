@@ -400,10 +400,11 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL] 
            (config dari T21.1) + test.
     T06.3 [DONE] FE pilih alamat + layanan kurir (tarif API live).
     T06.4 [DONE] FE input berat (gram, D3)/dimensi + validasi (section checkkan + dipakai tarif).
-    T06.5 [PARTIAL] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
+    T06.5 [DONE] Gunakan `expedition_services` (multi-layanan) + sinkron `expeditions` (D5).
            [DONE] ExpeditionSyncService + command `expeditions:sync` (kontrak resmi KiriminAja)
                   + upsert idempotent `expeditions`/`expedition_services` [OWNER:A1].
-           [TODO] Konsumsi `expedition_services` pada alur ongkir/checkout [OWNER:A1].
+           [DONE] Konsumsi `expedition_services` pada alur ongkir/checkout: endpoint
+                  `GET /api/shipping/services` + fallback FE + simpan `orders.expedition_service_id` [OWNER:A1].
            [TODO-A2] FE "Kurir & Layanan": tombol "Sinkron dari KiriminAja" + refaktor
                   ExpeditionSettingsPage (lihat T21.4, [OWNER:A2]).
     T06.6 [NEW] Tentukan gudang asal/pemenuh (alokasi D1) untuk ongkir & fulfillment.
