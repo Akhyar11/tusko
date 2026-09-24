@@ -22,6 +22,10 @@ use RuntimeException;
  */
 class InventoryService
 {
+    public function __construct(private readonly ActivityLogService $activityLog)
+    {
+    }
+
     /**
      * Tambah stok secara otoritatif.
      *
@@ -93,6 +97,20 @@ class InventoryService
             if ($type === 'in') {
                 $lockedProduct->forceFill(['last_restock_at' => now()])->save();
             }
+
+            // G9: setiap perubahan stok wajib tercatat di audit log.
+            $this->activityLog->log('stock.mutated', $lockedProduct, [
+                'mutation_id' => $mutation->id,
+                'product_id' => $lockedProduct->id,
+                'product_variant_id' => $lockedVariant?->id,
+                'warehouse_id' => $warehouse->id,
+                'type' => $type,
+                'quantity' => abs($signedQuantity),
+                'stock_before' => $before,
+                'stock_after' => $after,
+                'reference_type' => $mutation->reference_type,
+                'reference_id' => $mutation->reference_id,
+            ]);
 
             return $mutation;
         });
