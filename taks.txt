@@ -381,7 +381,7 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [PARTIAL] 
   Test: CartApiTest, CartDatabaseTest + uji browser.
   Minor:
     T05.1 [DONE] `cartService.js` (wrapper 5 endpoint + session guest).
-    T05.2 [TODO] CartPage -> API (list/add/update/remove/clear) + Toast.
+    T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed).
     T05.3 [TODO] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
     T05.4 [TODO] Merge keranjang guest (session_id) -> user saat login (T26.5).
 
