@@ -77,7 +77,7 @@ export default function AdminSidebar({
           label: 'Manajemen Stok Gudang',
           sublabel: 'Stok fisik gudang & restock',
           icon: Boxes,
-          activeViews: ['stock', 'stock-mutation'],
+          activeViews: ['stock'],
           badge: lowStockCount > 0 ? `${lowStockCount} Perlu Restok` : null,
           badgeColor: 'bg-amber-100 text-amber-900 border border-amber-300'
         }

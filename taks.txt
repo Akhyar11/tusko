@@ -528,7 +528,7 @@ T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  
     T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
     T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
     T12.5 [TODO] FE kartu mutasi stok + filter.
-    T12.7 [NEW] PERBAIKAN AKSES MENU: `stock-mutation` terdaftar di `adminCoreViews`
+    T12.7 [DONE] PERBAIKAN AKSES MENU: `stock-mutation` terdaftar di `adminCoreViews`
            (App.jsx) & `activeViews` sidebar TAPI tidak punya cabang render di App.jsx
            (dead view). Render `StockMutationPage` pada `currentView === 'stock-mutation'`
            ATAU hapus dari daftar. Wajib patuh G11. [OWNER:A2]

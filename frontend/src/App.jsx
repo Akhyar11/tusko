@@ -577,7 +577,6 @@ export default function App() {
       'product-create', 
       'product-edit', 
       'stock', 
-      'stock-mutation',
       'procurement', 
       'procurement-pos',
       'procurement-po-create',
