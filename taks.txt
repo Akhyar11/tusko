@@ -671,7 +671,7 @@ T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OW
   API: [NEW] GET/POST /api/stock-opnames, POST /api/stock-opnames/{id}/approve.
   Test: [NEW] StockOpnameApiTest.
   Minor:
-    T25.1 [NEW] Controller + routes stock opname (create, input fisik, submit).
+    T25.1 [DONE] Controller + routes stock opname (create, input fisik, submit).
     T25.2 [TODO] FE StockOpnameListPage + FilterDrawer (server-side).
     T25.3 [TODO] FE StockOpnameCreatePage/DetailPage (input fisik + selisih).
     T25.4 [NEW] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
