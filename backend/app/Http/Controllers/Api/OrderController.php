@@ -326,6 +326,68 @@ class OrderController extends Controller
     }
 
     /**
+     * Pelacakan pesanan tamu (T27.4) — verifikasi via email atau nomor telepon.
+     */
+    public function trackGuestOrder(Request $request, string $orderNumber): JsonResponse
+    {
+        $request->validate([
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string|max:30',
+        ]);
+
+        $email = $request->query('email');
+        $phone = $request->query('phone');
+
+        if (!$email && !$phone) {
+            return response()->json([
+                'message' => 'Email atau nomor telepon wajib disertakan untuk melacak pesanan.',
+            ], 422);
+        }
+
+        $order = Order::with(['items', 'user'])
+            ->where('order_number', $orderNumber)
+            ->first();
+
+        if (!$order) {
+            abort(404, 'Pesanan tidak ditemukan.');
+        }
+
+        $emailMatches = $email && $order->user?->email
+            && strcasecmp((string) $order->user->email, (string) $email) === 0;
+
+        $phoneMatches = $phone
+            && $this->normalizePhone($order->phone ?: $order->phone_number) === $this->normalizePhone($phone)
+            && $this->normalizePhone($phone) !== '';
+
+        if (!$emailMatches && !$phoneMatches) {
+            abort(404, 'Pesanan tidak ditemukan.');
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+                'tracking_number' => $order->tracking_number,
+                'expedition_name' => $order->expedition_name,
+                'expedition_service' => $order->expedition_service,
+                'shipped_at' => $order->shipped_at?->toIso8601String(),
+                'completed_at' => $order->completed_at?->toIso8601String(),
+                'items' => $order->items->map(fn ($item) => [
+                    'product_name' => $item->product_name,
+                    'quantity' => (int) $item->quantity,
+                ])->values(),
+            ],
+        ]);
+    }
+
+    private function normalizePhone(?string $phone): string
+    {
+        return preg_replace('/\D+/', '', (string) $phone) ?? '';
+    }
+
+    /**
      * Send or re-send status update notification email.
      */
     public function sendStatusEmail(Request $request, string $idOrOrderNumber): JsonResponse

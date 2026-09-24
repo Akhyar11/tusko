@@ -85,6 +85,7 @@ Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, '
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
 Route::prefix('orders')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+    Route::get('/track/{orderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'trackGuestOrder'])->middleware('auth.optional')->where('orderNumber', '.*');
     Route::post('/{idOrOrderNumber}/generate-receipt', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/book-pickup', [\App\Http\Controllers\Api\OrderController::class, 'bookPickup'])->where('idOrOrderNumber', '.*');
     Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
