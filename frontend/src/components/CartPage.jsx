@@ -15,6 +15,9 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import Checkbox from './molecules/Checkbox';
+import TextInput from './molecules/TextInput';
+import ConfirmationModal from './organisms/ConfirmationModal';
 
 export default function CartPage({
   cart = [],
@@ -100,17 +103,17 @@ export default function CartPage({
   const estimatedShipping = selectedItems.length > 0 ? (selectedItems.some(i => i.free_shipping) ? 0 : 15000) : 0;
   const grandTotal = Math.max(0, subtotal - promoDiscount + estimatedShipping);
 
-  // Group cart items by seller
+  // Group cart items by seller (identitas toko diambil dinamis dari data API, tanpa hardcode)
   const groupedCart = useMemo(() => {
     const groups = {};
     cart.forEach(item => {
-      const sellerKey = item.seller_name || 'Tusko Warehouse';
+      const sellerKey = item.seller_name || 'tusko-default';
       if (!groups[sellerKey]) {
         groups[sellerKey] = {
-          sellerName: sellerKey,
-          location: item.location || 'Gudang Pusat',
+          sellerName: item.seller_name || null,
+          location: item.location || null,
           isOfficial: item.is_official ?? true,
-          freeShipping: item.free_shipping ?? true,
+          freeShipping: item.free_shipping ?? false,
           items: []
         };
       }
@@ -147,7 +150,7 @@ export default function CartPage({
   const isAllSelected = selectedItemIds.length === cart.length && cart.length > 0;
 
   return (
-    <div className="py-4 space-y-6">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header & Back Button */}
       <div className="flex items-center justify-between border-b-2 border-black pb-4">
         <div className="flex items-center gap-3">
@@ -175,13 +178,12 @@ export default function CartPage({
         <div className="lg:col-span-8 space-y-4">
           
           {/* Select All & Bulk Action Bar */}
-          <div className="bg-white rounded-none border border-neutral-300 p-4 flex items-center justify-between">
+          <div className="bg-white rounded-none border border-neutral-300 shadow-2xs p-5 sm:p-6 flex items-center justify-between">
             <label className="flex items-center gap-2.5 text-xs sm:text-sm font-sport font-bold uppercase text-black cursor-pointer select-none">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isAllSelected}
                 onChange={handleToggleSelectAll}
-                className="w-4 h-4 rounded-none accent-black border-neutral-300 cursor-pointer"
+                ariaLabel="Pilih semua produk di keranjang"
               />
               <span>Pilih Semua ({cart.length} Produk)</span>
             </label>
@@ -210,16 +212,24 @@ export default function CartPage({
               <div className="p-3.5 bg-neutral-100 border-b border-neutral-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Store size={16} className="text-black shrink-0" />
-                  <span className="font-sport font-black text-xs sm:text-sm uppercase text-black tracking-wide">
-                    {group.sellerName}
-                  </span>
+                  {group.sellerName ? (
+                    <span className="font-sport font-black text-xs sm:text-sm uppercase text-black tracking-wide">
+                      {group.sellerName}
+                    </span>
+                  ) : (
+                    <span className="font-sport font-black text-xs sm:text-sm uppercase text-black tracking-wide">
+                      Produk Tusko
+                    </span>
+                  )}
                   {group.isOfficial && (
                     <span className="bg-black text-white text-[9px] font-sport font-black uppercase px-1.5 py-0.5 rounded-none flex items-center gap-0.5">
                       <BadgeCheck size={10} className="text-amber-400" />
                       Official Store
                     </span>
                   )}
-                  <span className="text-[11px] text-neutral-500 font-medium">• {group.location}</span>
+                  {group.location && (
+                    <span className="text-[11px] text-neutral-500 font-medium">• {group.location}</span>
+                  )}
                 </div>
 
                 {group.freeShipping && (
@@ -238,16 +248,16 @@ export default function CartPage({
                   const isOutOfStock = item.stock <= 0;
 
                   return (
-                    <div key={item.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div key={item.id} className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       
                       {/* Checkbox & Product Info */}
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           disabled={isOutOfStock}
                           checked={isSelected && !isOutOfStock}
                           onChange={() => handleToggleItem(item.id)}
-                          className="w-4 h-4 mt-1 rounded-none accent-black border-neutral-300 disabled:opacity-40 cursor-pointer"
+                          ariaLabel={`Pilih ${item.name}`}
+                          className="mt-1"
                         />
 
                         <img
@@ -320,20 +330,9 @@ export default function CartPage({
                             >
                               <Minus size={14} />
                             </button>
-                            <input
-                              type="number"
-                              min={1}
-                              max={item.stock}
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) {
-                                  const clamped = Math.max(1, Math.min(item.stock, val));
-                                  onUpdateQuantity(item.id, clamped);
-                                }
-                              }}
-                              className="w-12 text-center text-xs font-sport font-black text-black bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
+                            <span className="w-12 text-center text-xs font-sport font-black text-black select-none">
+                              {item.quantity}
+                            </span>
                             <button
                               type="button"
                               disabled={item.quantity >= item.stock}
@@ -375,7 +374,7 @@ export default function CartPage({
 
         {/* Right Column: Order Summary (Sticky) */}
         <div className="lg:col-span-4">
-          <div className="sticky top-24 bg-white rounded-none border-2 border-black p-5 sm:p-6 space-y-4">
+          <div className="sticky top-24 bg-white rounded-none border border-neutral-300 shadow-2xs p-5 sm:p-6 space-y-4">
             <h3 className="font-sport font-black uppercase text-black text-base tracking-wider pb-3 border-b-2 border-black flex items-center justify-between">
               <span>Ringkasan Belanja</span>
               <span className="text-amber-500 font-sport font-black text-xs">TUSKO CLUB</span>
@@ -388,13 +387,15 @@ export default function CartPage({
                 <span>Kupon Promo (Coba: "DISKON50")</span>
               </label>
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Kode Kupon..."
-                  className="flex-1 text-xs px-3 py-2 bg-neutral-100 border border-neutral-300 rounded-none focus:outline-none focus:border-black uppercase font-mono"
-                />
+                <div className="flex-1">
+                  <TextInput
+                    value={promoCode}
+                    onChange={setPromoCode}
+                    placeholder="Kode Kupon..."
+                    weight="mono"
+                    className="uppercase"
+                  />
+                </div>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none transition-colors cursor-pointer"
@@ -505,64 +506,35 @@ export default function CartPage({
       </div>
 
       {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white rounded-none border-2 border-black max-w-sm w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-none bg-red-600 text-white flex items-center justify-center shrink-0">
-                <Trash2 size={20} />
-              </div>
-              <div>
-                <h3 className="text-base font-sport font-black uppercase text-black">
-                  {deleteTarget.type === 'single' ? 'Hapus Barang?' : 'Hapus Pilihan Barang?'}
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium">
-                  Tindakan ini akan menghapus barang dari keranjang belanja.
-                </p>
-              </div>
-            </div>
-
-            {/* Preview of item being deleted */}
-            {deleteTarget.type === 'single' && (
-              <div className="my-3 p-3 bg-neutral-100 rounded-none border border-neutral-300 flex items-center gap-3">
-                <img
-                  src={deleteTarget.item.image_url}
-                  alt=""
-                  className="w-12 h-12 rounded-none object-cover border border-neutral-300 shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-sport font-bold uppercase text-black truncate">{deleteTarget.item.name}</p>
-                  <p className="text-xs font-sport font-black text-black mt-0.5">{formatRupiah(deleteTarget.item.price)}</p>
-                </div>
-              </div>
-            )}
-
-            {deleteTarget.type === 'bulk' && (
-              <div className="my-3 p-3 bg-neutral-100 rounded-none border border-neutral-300 text-xs font-sport font-bold uppercase text-black">
-                <span>Kamu akan menghapus <strong>{deleteTarget.count}</strong> barang sekaligus.</span>
-              </div>
-            )}
-
-            {/* Modal Buttons */}
-            <div className="mt-5 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-black font-sport font-bold uppercase text-xs rounded-none border border-neutral-300 transition-colors cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-sport font-black uppercase text-xs rounded-none transition-colors cursor-pointer"
-              >
-                Ya, Hapus
-              </button>
+      <ConfirmationModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        variant="danger"
+        title={deleteTarget?.type === 'single' ? 'Hapus Barang?' : 'Hapus Pilihan Barang?'}
+        subtitle="Tindakan ini akan menghapus barang dari keranjang belanja."
+        message={
+          deleteTarget?.type === 'bulk'
+            ? `Kamu akan menghapus ${deleteTarget?.count} barang sekaligus dari keranjang.`
+            : ''
+        }
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+      >
+        {deleteTarget?.type === 'single' && (
+          <div className="p-3 bg-neutral-100 rounded-none border border-neutral-300 flex items-center gap-3">
+            <img
+              src={deleteTarget.item.image_url}
+              alt=""
+              className="w-12 h-12 rounded-none object-cover border border-neutral-300 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-sport font-bold uppercase text-black truncate">{deleteTarget.item.name}</p>
+              <p className="text-xs font-sport font-black text-black mt-0.5">{formatRupiah(deleteTarget.item.price)}</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ConfirmationModal>
     </div>
   );
 }

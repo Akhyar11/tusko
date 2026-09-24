@@ -19,7 +19,9 @@ class CartController extends Controller
      */
     protected function resolveCart(Request $request): Cart
     {
-        $user = $request->user();
+        // Rute cart bersifat opsional-autentikasi: gunakan guard Sanctum secara
+        // eksplisit agar token Bearer dikenali tanpa menolak tamu (guest).
+        $user = $request->user('sanctum');
 
         if ($user) {
             return Cart::firstOrCreate(['user_id' => $user->id]);

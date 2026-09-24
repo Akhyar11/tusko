@@ -83,6 +83,29 @@ class CartApiTest extends TestCase
         ]);
     }
 
+    public function test_authenticated_user_cart_resolved_from_bearer_token(): void
+    {
+        // Membuktikan resolveCart mengenali token Bearer Sanctum asli
+        // (bukan hanya Sanctum::actingAs) sehingga keranjang user konsisten.
+        $user = User::factory()->create();
+        $token = $user->createToken('cart_test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/cart/items', [
+                'product_id' => $this->product->id,
+                'quantity' => 3,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.user_id', $user->id)
+            ->assertJsonPath('data.total_quantity', 3);
+
+        $this->assertDatabaseHas('carts', [
+            'user_id' => $user->id,
+            'session_id' => null,
+        ]);
+    }
+
     public function test_adding_same_product_increments_existing_quantity(): void
     {
         $sessionId = 'session_increment_test';

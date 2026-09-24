@@ -56,6 +56,7 @@ import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
 import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
+import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
 import { productService } from './services/productService';
 import { useProductTableStore } from './stores/useProductTableStore';
@@ -209,6 +210,26 @@ const getInitialView = () => {
   return 'catalog';
 };
 
+// Normalisasi item keranjang dari API ke bentuk yang dipakai komponen storefront.
+const mapCartItems = (cartData) =>
+  (cartData?.items || []).map((item) => ({
+    id: item.id,
+    product_id: item.product_id ?? item.product?.id,
+    product_variant_id: item.product_variant_id ?? null,
+    name: item.product?.name || 'Produk',
+    price: Number(item.product?.price ?? 0),
+    image_url: item.product?.image_url || '',
+    stock: Number(item.product?.stock ?? 0),
+    quantity: Number(item.quantity ?? 1),
+    notes: item.notes || '',
+    subtotal: Number(item.subtotal ?? 0),
+    weight: Number(item.product?.weight ?? 0),
+    seller_name: item.product?.store_name ?? null,
+    location: item.product?.warehouse_name ?? null,
+    is_official: item.product?.is_official ?? true,
+    free_shipping: item.product?.free_shipping ?? false,
+  }));
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -312,6 +333,20 @@ export default function App() {
     setToastMessage(toastData);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Muat ulang keranjang dari API (akun via token, guest via session_id).
+  const refreshCart = async () => {
+    try {
+      const cartData = await cartService.getCart();
+      setCart(mapCartItems(cartData));
+    } catch (err) {
+      console.warn('Gagal memuat keranjang dari server:', err);
+    }
+  };
+
+  useEffect(() => {
+    refreshCart();
+  }, [currentUser?.id]);
 
   const handleSwitchUser = (demoUser) => {
     handleUpdateUser(demoUser);
@@ -758,8 +793,8 @@ export default function App() {
     setCurrentView('cart');
   };
 
-  // Cart operations
-  const handleAddToCart = (product, quantity = 1, notes = '') => {
+  // Cart operations (API-backed)
+  const handleAddToCart = async (product, quantity = 1, notes = '') => {
     // Jika belum login, simpan aksi pending dan arahkan login terlebih dahulu
     if (!currentUser) {
       handleRequireLogin(
@@ -775,30 +810,20 @@ export default function App() {
       return;
     }
 
-    const itemKey = product.selected_variant?.id 
-      ? `${product.id}-${product.selected_variant.id}` 
-      : product.id;
+    try {
+      await cartService.addItem({
+        productId: product.id,
+        productVariantId: product.selected_variant?.id || null,
+        quantity,
+        notes,
+      });
+      await refreshCart();
 
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === itemKey);
-      const maxStock = Number(product.stock ?? 99);
-
-      if (existing) {
-        const updatedQty = Math.min(maxStock, existing.quantity + quantity);
-        return prev.map((item) =>
-          item.id === itemKey 
-            ? { ...item, quantity: updatedQty, notes: notes || item.notes } 
-            : item
-        );
-      }
-      return [...prev, { ...product, id: itemKey, product_id: product.id, quantity, notes }];
-    });
-
-    const variantLabel = product.variant_name ? ` [${product.variant_name}]` : '';
-    setToastMessage(`"${product.name.slice(0, 18)}..."${variantLabel} (${quantity}x) masuk keranjang!`);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
+      const variantLabel = product.variant_name ? ` [${product.variant_name}]` : '';
+      showToast(`"${product.name.slice(0, 18)}..."${variantLabel} (${quantity}x) masuk keranjang!`, { showCart: true });
+    } catch (err) {
+      showToast(err.message || 'Gagal menambahkan produk ke keranjang.', { type: 'error' });
+    }
   };
 
   const handleBuyNow = (product, quantity = 1, notes = '') => {
@@ -819,28 +844,39 @@ export default function App() {
     setCurrentView('cart');
   };
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
+  const handleUpdateQuantity = async (itemId, newQuantity) => {
     if (newQuantity <= 0) {
-      handleRemoveCartItem(productId);
+      await handleRemoveCartItem(itemId);
       return;
     }
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+
+    try {
+      await cartService.updateItem(itemId, { quantity: newQuantity });
+      await refreshCart();
+    } catch (err) {
+      showToast(err.message || 'Gagal memperbarui jumlah barang.', { type: 'error' });
+      await refreshCart();
+    }
   };
 
-  const handleRemoveCartItem = (productId) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
-    setToastMessage('Item berhasil dihapus dari keranjang.');
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+  const handleRemoveCartItem = async (itemId) => {
+    try {
+      await cartService.removeItem(itemId);
+      await refreshCart();
+      showToast('Item berhasil dihapus dari keranjang.');
+    } catch (err) {
+      showToast(err.message || 'Gagal menghapus item dari keranjang.', { type: 'error' });
+    }
   };
 
-  const handleClearCart = () => {
-    setCart([]);
+  const handleClearCart = async () => {
+    try {
+      await cartService.clearCart();
+      await refreshCart();
+      showToast('Semua item di keranjang berhasil dikosongkan.');
+    } catch (err) {
+      showToast(err.message || 'Gagal mengosongkan keranjang.', { type: 'error' });
+    }
   };
 
   const handleSelectProduct = (product) => {
@@ -912,7 +948,7 @@ export default function App() {
     setToastMessage(`Status pesanan berhasil diubah menjadi: ${newStatus.toUpperCase()}`);
   };
 
-  const handleAuthSuccess = (user, successPrefix = 'Berhasil masuk') => {
+  const handleAuthSuccess = async (user, successPrefix = 'Berhasil masuk') => {
     handleUpdateUser(user);
     showToast(`${successPrefix} sebagai ${user.name} (${user.role === 'admin' ? '🛡️ Super Admin' : 'Member'})`);
 
@@ -924,19 +960,18 @@ export default function App() {
         const prod = action.product;
         const qty = action.quantity || 1;
         const nts = action.notes || '';
-        const itemKey = prod.selected_variant?.id ? `${prod.id}-${prod.selected_variant.id}` : prod.id;
 
-        setCart((prev) => {
-          const existing = prev.find((item) => item.id === itemKey);
-          const maxStock = Number(prod.stock ?? 99);
-          if (existing) {
-            const updatedQty = Math.min(maxStock, existing.quantity + qty);
-            return prev.map((item) =>
-              item.id === itemKey ? { ...item, quantity: updatedQty, notes: nts || item.notes } : item
-            );
-          }
-          return [...prev, { ...prod, id: itemKey, product_id: prod.id, quantity: qty, notes: nts }];
-        });
+        try {
+          await cartService.addItem({
+            productId: prod.id,
+            productVariantId: prod.selected_variant?.id || null,
+            quantity: qty,
+            notes: nts,
+          });
+          await refreshCart();
+        } catch {
+          // abaikan; toast error ditangani pemanggil
+        }
 
         const variantLabel = prod.variant_name ? ` [${prod.variant_name}]` : '';
         setTimeout(() => {
@@ -955,19 +990,18 @@ export default function App() {
         const prod = action.product;
         const qty = action.quantity || 1;
         const nts = action.notes || '';
-        const itemKey = prod.selected_variant?.id ? `${prod.id}-${prod.selected_variant.id}` : prod.id;
 
-        setCart((prev) => {
-          const existing = prev.find((item) => item.id === itemKey);
-          const maxStock = Number(prod.stock ?? 99);
-          if (existing) {
-            const updatedQty = Math.min(maxStock, existing.quantity + qty);
-            return prev.map((item) =>
-              item.id === itemKey ? { ...item, quantity: updatedQty, notes: nts || item.notes } : item
-            );
-          }
-          return [...prev, { ...prod, id: itemKey, product_id: prod.id, quantity: qty, notes: nts }];
-        });
+        try {
+          await cartService.addItem({
+            productId: prod.id,
+            productVariantId: prod.selected_variant?.id || null,
+            quantity: qty,
+            notes: nts,
+          });
+          await refreshCart();
+        } catch {
+          // abaikan
+        }
 
         setCurrentView('cart');
         return;
