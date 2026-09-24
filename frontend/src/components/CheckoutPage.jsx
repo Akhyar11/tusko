@@ -19,7 +19,8 @@ import {
   Sparkles,
   Loader2,
   Shield,
-  ShoppingBag
+  ShoppingBag,
+  Scale
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
@@ -184,18 +185,37 @@ export default function CheckoutPage({
     return checkoutItems.reduce((acc, item) => acc + (item.weight || 400) * item.quantity, 0);
   }, [checkoutItems]);
 
-  // Muat tarif kurir live dari agregator berdasarkan kota tujuan & berat total.
+  // Berat & dimensi paket manual (D3: gram). Kosong = pakai total berat item otomatis.
+  const [packageWeight, setPackageWeight] = useState('');
+  const [packageLength, setPackageLength] = useState('');
+  const [packageWidth, setPackageWidth] = useState('');
+  const [packageHeight, setPackageHeight] = useState('');
+
+  const numericWeight = packageWeight === '' ? totalWeight : Number(packageWeight);
+  const weightValid = Number.isFinite(numericWeight) && numericWeight >= 1;
+  const weightError = weightValid ? '' : 'Berat paket minimal 1 gram.';
+  const dimensionError = [packageLength, packageWidth, packageHeight].some(
+    (value) => value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 1)
+  );
+
+  // Muat tarif kurir live dari agregator berdasarkan kota tujuan & berat/dimensi paket.
   useEffect(() => {
     let active = true;
     const destination = currentAddress?.city;
 
-    if (!destination || totalWeight <= 0) {
+    if (!destination || !weightValid || dimensionError) {
       return undefined;
     }
 
     (async () => {
       try {
-        const res = await checkoutService.getShippingRates({ destination, weight: totalWeight });
+        const res = await checkoutService.getShippingRates({
+          destination,
+          weight: numericWeight,
+          length: packageLength === '' ? undefined : Number(packageLength),
+          width: packageWidth === '' ? undefined : Number(packageWidth),
+          height: packageHeight === '' ? undefined : Number(packageHeight),
+        });
         if (!active) return;
 
         const mapped = (res.data || []).map((rate, idx) => ({
@@ -226,7 +246,7 @@ export default function CheckoutPage({
     return () => {
       active = false;
     };
-  }, [currentAddress?.city, totalWeight]);
+  }, [currentAddress?.city, numericWeight, packageLength, packageWidth, packageHeight, weightValid, dimensionError]);
 
   // Payment Selection State
   const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');
@@ -481,6 +501,56 @@ export default function CheckoutPage({
                     </span>
                   </div>
                 ))}
+              </div>
+
+              {/* Berat & Dimensi Paket */}
+              <div className="bg-white rounded-none border border-neutral-300 shadow-2xs p-5 sm:p-6 space-y-4">
+                <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                  <Scale size={16} className="text-amber-500" />
+                  <span>Berat &amp; Dimensi Paket</span>
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                      Berat Total (gram) <span className="text-rose-500">*</span>
+                    </label>
+                    <TextInput
+                      type="number"
+                      value={packageWeight === '' ? String(totalWeight) : packageWeight}
+                      onChange={setPackageWeight}
+                      placeholder={String(totalWeight)}
+                      weight="mono"
+                    />
+                    <p className="text-[10px] text-neutral-500 mt-1 font-medium">
+                      Otomatis dari item: {totalWeight} gram. Ubah bila perlu.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">P (cm)</label>
+                      <TextInput type="number" value={packageLength} onChange={setPackageLength} placeholder="-" weight="mono" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">L (cm)</label>
+                      <TextInput type="number" value={packageWidth} onChange={setPackageWidth} placeholder="-" weight="mono" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">T (cm)</label>
+                      <TextInput type="number" value={packageHeight} onChange={setPackageHeight} placeholder="-" weight="mono" />
+                    </div>
+                  </div>
+                </div>
+
+                {(weightError || dimensionError) && (
+                  <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center gap-2">
+                    <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                    <span className="text-xs font-sport font-bold uppercase">
+                      {weightError || 'Dimensi minimal 1 cm bila diisi.'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Courier Selection */}
@@ -889,7 +959,7 @@ export default function CheckoutPage({
         onClose={() => setIsExpeditionModalOpen(false)}
         selectedExpedition={selectedExpedition}
         onSelectExpedition={(exp) => setSelectedExpedition(exp)}
-        totalWeight={totalWeight}
+        totalWeight={weightValid ? Math.max(1, Math.round(numericWeight)) : totalWeight}
         expeditions={activeExpeditions}
       />
 
