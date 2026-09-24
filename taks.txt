@@ -452,17 +452,17 @@ T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  
 FASE 3 — PESANAN, KIRIM & AKUN
 ==============================================================================
 
-T09. Manajemen Pesanan Admin (Antrean, Tab Status, Update Status) ... [PARTIAL]  [OWNER:A2]
+T09. Manajemen Pesanan Admin (Antrean, Tab Status, Update Status) ... [DONE]  [OWNER:A2]
   DB: orders, order_items, order_statuses, order_status_histories.
   FE: OrderListPage, OrderDetailPage, OrderStatusModal, ConfirmationModal.
   API: GET /api/orders, GET /api/orders/{id}, PATCH /api/orders/{id}/status.
   Test: OrderListApiTest, OrderStatusUpdateApiTest, OrderDetailApiTest.
   Minor:
-    T09.1 [TODO] `orderService.js` + wiring OrderListPage via useOrderTableStore.
+    T09.1 [DONE] `orderService.js` + wiring OrderListPage via useOrderTableStore.
     T09.2 [DONE] Catat `order_status_histories` SETIAP update status (PRASYARAT T09.3).
     T09.3 [DONE] FE update status (OrderStatusModal) -> PATCH + Toast (tulis history T09.2).
     T09.4 [DONE] FE batal pesanan (single & bulk) via ConfirmationModal + refresh.
-    T09.5 [TODO] FE OrderDetailPage API-backed (item, alamat, pembayaran, riwayat status).
+    T09.5 [DONE] FE OrderDetailPage API-backed (item, alamat, pembayaran, riwayat status).
 
 T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL]  [OWNER:A2]
   DB: shipments, shipment_trackings, orders.tracking_number, receipt_templates.

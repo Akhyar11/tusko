@@ -164,7 +164,7 @@ class OrderController extends Controller
      */
     public function show(Request $request, string $idOrOrderNumber): JsonResponse
     {
-        $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
+        $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions', 'statusHistories'])
             ->where('id', $idOrOrderNumber)
             ->orWhere('order_number', $idOrOrderNumber)
             ->firstOrFail();

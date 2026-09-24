@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Copy, 
@@ -23,12 +23,13 @@ import {
   Send
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import { orderService } from '../services/orderService';
 import OrderStatusModal from './OrderStatusModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
 
 export default function OrderDetailPage({
-  order = null,
+  order: initialOrder = null,
   onBack = () => {},
   onPayOrder = () => {},
   onBuyAgain = () => {},
@@ -38,6 +39,7 @@ export default function OrderDetailPage({
   onPrintReceipt = null,
   onShowToast = () => {}
 }) {
+  const [order, setOrder] = useState(initialOrder);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
@@ -46,6 +48,28 @@ export default function OrderDetailPage({
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
   const [isBookingPickup, setIsBookingPickup] = useState(false);
+
+  // T09.5: selaraskan dari prop + ambil detail terbaru dari API
+  // (item, alamat, pembayaran, riwayat status).
+  useEffect(() => {
+    setOrder(initialOrder);
+  }, [initialOrder]);
+
+  useEffect(() => {
+    const idOrNumber = initialOrder?.order_number || initialOrder?.id;
+    if (!idOrNumber) return undefined;
+
+    let active = true;
+    orderService.getOrder(idOrNumber)
+      .then((res) => {
+        if (active) setOrder(res?.data || res || initialOrder);
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [initialOrder]);
 
   if (!order) {
     return (
@@ -668,6 +692,35 @@ export default function OrderDetailPage({
             >
               Tutup Pelacakan
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* T09.5: Riwayat Status Pesanan */}
+      {Array.isArray(order.status_histories) && order.status_histories.length > 0 && (
+        <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
+          <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+            <Clock size={16} className="text-amber-500" />
+            <span>Riwayat Status Pesanan</span>
+          </h2>
+          <div className="space-y-3">
+            {order.status_histories.map((history, index) => (
+              <div key={index} className="flex gap-3 text-xs">
+                <div className="flex flex-col items-center">
+                  <div className="w-2.5 h-2.5 rounded-none bg-neutral-900" />
+                  {index < order.status_histories.length - 1 && <div className="w-0.5 flex-1 bg-neutral-200" />}
+                </div>
+                <div className="pb-1">
+                  <p className="font-bold text-neutral-900 uppercase font-sport tracking-wide">
+                    {String(history.status_code).replace(/_/g, ' ')}
+                  </p>
+                  {history.notes && <p className="text-neutral-600">{history.notes}</p>}
+                  <span className="text-[10px] text-neutral-400 font-mono">
+                    {history.actor_type} • {history.created_at ? new Date(history.created_at).toLocaleString('id-ID') : '-'}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

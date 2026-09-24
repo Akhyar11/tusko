@@ -63,6 +63,14 @@ class OrderResource extends JsonResource
             'notes' => $this->notes,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'transactions' => TransactionResource::collection($this->whenLoaded('transactions')),
+            'status_histories' => $this->whenLoaded('statusHistories', function () {
+                return $this->statusHistories->map(fn ($history) => [
+                    'status_code' => $history->status_code,
+                    'actor_type' => $history->actor_type,
+                    'notes' => $history->notes,
+                    'created_at' => $history->created_at?->toISOString(),
+                ])->values();
+            }),
             'flags' => [
                 'can_pay' => $this->status === 'pending' && $this->payment_status === 'pending',
                 'can_cancel' => in_array($this->status, ['pending', 'processing']),

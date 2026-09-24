@@ -91,9 +91,9 @@ Route::prefix('locations')->group(function () {
     Route::get('/districts', [\App\Http\Controllers\Api\LocationController::class, 'districts']);
     Route::get('/subdistricts', [\App\Http\Controllers\Api\LocationController::class, 'subdistricts']);
 });
-Route::prefix('orders')->group(function () {
+Route::prefix('orders')->middleware('auth.optional')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
-    Route::get('/track/{orderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'trackGuestOrder'])->middleware('auth.optional')->where('orderNumber', '.*');
+    Route::get('/track/{orderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'trackGuestOrder'])->where('orderNumber', '.*');
     Route::post('/{idOrOrderNumber}/generate-receipt', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/book-pickup', [\App\Http\Controllers\Api\OrderController::class, 'bookPickup'])->where('idOrOrderNumber', '.*');
     Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
