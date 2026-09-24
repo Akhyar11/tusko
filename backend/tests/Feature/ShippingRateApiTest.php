@@ -181,6 +181,48 @@ class ShippingRateApiTest extends TestCase
             ->assertJsonPath('data', []);
     }
 
+    public function test_rates_are_cached_across_identical_requests(): void
+    {
+        \Illuminate\Support\Facades\Cache::flush();
+        $this->configureShipping('apicoid');
+
+        Http::fake([
+            'https://shipping.test/*' => Http::response([
+                'is_success' => true,
+                'data' => ['rates' => [['courier' => 'JNE', 'service' => 'REG', 'price' => 10500]]],
+            ], 200),
+        ]);
+
+        $url = '/api/shipping/rates?origin_district_code=317405&destination_district_code=317305&weight=1000';
+
+        $this->getJson($url)->assertStatus(200)->assertJsonPath('data.0.cost', 10500);
+        $this->getJson($url)->assertStatus(200)->assertJsonPath('data.0.cost', 10500);
+
+        // Hanya 1 panggilan ke provider; panggilan kedua dilayani cache.
+        Http::assertSentCount(1);
+    }
+
+    public function test_provider_retries_on_transient_failure(): void
+    {
+        \Illuminate\Support\Facades\Cache::flush();
+        $this->configureShipping('apicoid');
+
+        Http::fake([
+            'https://shipping.test/*' => Http::sequence()
+                ->push('Server Error', 500)
+                ->push([
+                    'is_success' => true,
+                    'data' => ['rates' => [['courier' => 'JNE', 'service' => 'REG', 'price' => 9000]]],
+                ], 200),
+        ]);
+
+        $this->getJson('/api/shipping/rates?origin_district_code=317405&destination_district_code=317305&weight=1000')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.cost', 9000);
+
+        Http::assertSentCount(2);
+    }
+
     public function test_returns_empty_rates_when_destination_district_missing(): void
     {
         $this->configureShipping('apicoid');

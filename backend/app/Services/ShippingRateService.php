@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -80,8 +81,16 @@ class ShippingRateService
             return [];
         }
 
+        // Caching per (provider, base_url, asal, tujuan, berat, kurir, dimensi) — T06.8.
+        $cacheKey = $this->cacheKey($context);
+        $cached = Cache::get($cacheKey);
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         try {
-            return $this->provider() === 'apicoid'
+            $rates = $this->provider() === 'apicoid'
                 ? $this->fetchApiCoId($context)
                 : $this->fetchKiriminAja($context);
         } catch (Exception $e) {
@@ -89,6 +98,31 @@ class ShippingRateService
 
             return [];
         }
+
+        // Hanya cache hasil sukses (jangan cache kegagalan/kosong).
+        if (! empty($rates)) {
+            Cache::put($cacheKey, $rates, now()->addSeconds($this->cacheTtl()));
+        }
+
+        return $rates;
+    }
+
+    private function cacheTtl(): int
+    {
+        return max(0, (int) ($this->integrations->get('shipping.rate_cache_ttl') ?: 600));
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function cacheKey(array $context): string
+    {
+        $normalized = $context;
+        ksort($normalized);
+
+        return 'shipping_rate:' . md5(
+            $this->provider() . '|' . (string) $this->integrations->get('shipping.base_url') . '|' . json_encode($normalized)
+        );
     }
 
     /**
@@ -125,6 +159,7 @@ class ShippingRateService
         $response = Http::withHeaders(['x-api-co-id' => $apiKey])
             ->acceptJson()
             ->timeout(10)
+            ->retry(2, 200, null, false)
             ->get($baseUrl . '/courier/v2/rates', $query);
 
         return $this->normalizeApiCoId($response->json() ?? []);
@@ -166,6 +201,7 @@ class ShippingRateService
         $response = Http::withToken($apiKey)
             ->acceptJson()
             ->timeout(10)
+            ->retry(2, 200, null, false)
             ->post($baseUrl . '/api/mitra/v6.1/shipping_price', $payload);
 
         return $this->normalizeKiriminAja($response->json() ?? []);
