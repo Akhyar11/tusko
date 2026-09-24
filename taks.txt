@@ -512,7 +512,7 @@ T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL] 
     T13.5 [NEW] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
             stock_transfers/items + alur transfer antar gudang + test.
 
-T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL]  [OWNER:A2]
+T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [DONE]  [OWNER:A2]
   DB: vendors, purchase_orders(+items), goods_receiving_notes(+items),
       vendor_bills, vendor_bill_payments.
   FE: SupplierList/Create/Edit, PurchaseOrder List/Create/Detail,
@@ -526,8 +526,9 @@ T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [PARTIAL] 
             products.stock langsung (T14.1 -> [PARTIAL]) + test.
     T14.3 [DONE] Receive GRN -> tulis `cogs_histories` + update current_cogs (lihat T18.3).
             (Terpenuhi via InventoryService + CogsService pada T18.1.)
-    T14.4 [NEW] Receive GRN -> update `inventory_balances` (D1).
-    T14.5 [NEW] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
+    T14.4 [DONE] Receive GRN -> update `inventory_balances` (D1).
+            (Terpenuhi via InventoryService pada T14.2.)
+    T14.5 [DONE] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
 
 T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OWNER:A1]
   (SUMBER TUNGGAL schema voucher — T08 bergantung pada T15.1a.)

@@ -9,12 +9,16 @@ use App\Models\Transaction;
 use App\Models\VendorBill;
 use App\Models\VendorBillPayment;
 use App\Services\FileStorageService;
+use App\Services\JournalMappingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class VendorBillController extends Controller
 {
+    public function __construct(private readonly JournalMappingService $journalMapping)
+    {
+    }
     /**
      * Tampilkan daftar Tagihan Vendor (Bills) dengan filter server-side.
      */
@@ -209,6 +213,9 @@ class VendorBillController extends Controller
                 'reference_id' => $payment->id,
                 'notes' => $validated['notes'] ?? null,
             ]);
+
+            // T14.5: posting jurnal otomatis (Debit Utang Usaha, Kredit Kas/Bank).
+            $this->journalMapping->postVendorBillPayment($payment);
 
             return $payment;
         });

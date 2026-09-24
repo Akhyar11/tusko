@@ -27,6 +27,9 @@ class ProcurementApiIntegrationTest extends TestCase
     {
         parent::setUp();
 
+        // Chart of accounts diperlukan untuk posting jurnal pembayaran vendor (T14.5).
+        $this->seed(\Database\Seeders\MasterReferenceSeeder::class);
+
         $this->admin = User::factory()->create(['role' => 'admin']);
 
         $category = Category::create([
