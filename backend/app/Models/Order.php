@@ -147,6 +147,22 @@ class Order extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /**
+     * Semua pembayaran order (D8 — sumber kebenaran pembayaran).
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Pembayaran terbaru order.
+     */
+    public function latestPayment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
     public function orderStatus(): BelongsTo
     {
         return $this->belongsTo(OrderStatus::class, 'status_id');
