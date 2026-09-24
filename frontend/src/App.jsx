@@ -18,6 +18,8 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import EmailVerifiedPage from './components/EmailVerifiedPage';
+import EmailVerificationBanner from './components/organisms/EmailVerificationBanner';
 import ProfilePage from './components/ProfilePage';
 import ProductListPage from './components/ProductListPage';
 import ProductCreateForm from './components/ProductCreateForm';
@@ -102,6 +104,7 @@ const VALID_VIEWS = [
   'register',
   'forgot-password',
   'reset-password',
+  'email-verified',
   'profile',
 ];
 
@@ -139,6 +142,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/register') return 'register';
     if (rawPath === '/forgot-password') return 'forgot-password';
     if (rawPath === '/reset-password') return 'reset-password';
+    if (rawPath === '/email-verified') return 'email-verified';
     if (rawPath === '/profile') return 'profile';
     if (rawPath === '/cart') return 'cart';
     if (rawPath === '/checkout') return 'checkout';
@@ -463,6 +467,10 @@ export default function App() {
     } else if (currentView === 'reset-password') {
       if (window.location.pathname !== '/reset-password') {
         window.history.pushState(null, '', '/reset-password' + window.location.search);
+      }
+    } else if (currentView === 'email-verified') {
+      if (window.location.pathname !== '/email-verified') {
+        window.history.pushState(null, '', '/email-verified' + window.location.search);
       }
     } else if (currentView === 'catalog') {
       if (window.location.pathname !== '/' || window.location.hash) {
@@ -1037,6 +1045,15 @@ export default function App() {
     );
   }
 
+  if (currentView === 'email-verified') {
+    return (
+      <EmailVerifiedPage
+        onNavigateLogin={() => setCurrentView('login')}
+        onBackToHome={() => setCurrentView('catalog')}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col ${currentView === 'catalog' || currentView === 'detail' ? 'bg-white' : 'bg-[#f5f6f8]'}`}>
       {/* Toast Notification */}
@@ -1100,6 +1117,13 @@ export default function App() {
           onLogout={handleLogout}
           onSwitchUser={handleSwitchUser}
         />
+      )}
+
+      {/* Banner verifikasi email: hanya storefront untuk akun yang belum terverifikasi */}
+      {!isAdminView && currentUser && !currentUser.email_verified_at && (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <EmailVerificationBanner user={currentUser} onShowToast={showToast} />
+        </div>
       )}
 
       {/* Main Layout Area: Di Admin Panel, tata letak flex-row dengan navigasi di sebelah KIRI */}

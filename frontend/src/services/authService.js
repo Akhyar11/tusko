@@ -218,6 +218,27 @@ export const authService = {
   },
 
   /**
+   * Kirim ulang email verifikasi akun.
+   */
+  async resendVerificationEmail() {
+    try {
+      const response = await apiClient.post('/api/auth/email/resend');
+      return {
+        success: true,
+        message: response.message || 'Tautan verifikasi telah dikirim ulang ke email Anda.',
+        isLiveApi: true,
+      };
+    } catch (error) {
+      if (error.isNetworkError) {
+        const networkError = new Error('Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.');
+        networkError.isNetworkError = true;
+        throw networkError;
+      }
+      throw error;
+    }
+  },
+
+  /**
    * Ambil data profil user yang sedang aktif.
    */
   async getProfile() {
