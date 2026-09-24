@@ -507,8 +507,9 @@ T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL] 
   Minor:
     T13.1 [TODO] FE LowStockAlertWidget -> GET /api/inventory/low-stock.
     T13.2 [TODO] FE saldo stok per gudang.
-    T13.3 [NEW] Reservasi stok (stock_reservations) saat checkout (atomik +
+    T13.3 [PARTIAL] Reservasi stok (stock_reservations) saat checkout (atomik +
             lockForUpdate) + release saat batal/expired + pelihara inventory_balances + test.
+            (Layanan selesai; integrasi pemanggilan di CheckoutController -> A1.)
     T13.4 [DONE] Kelola `warehouse_bins` + relasi inventory_balances.
     T13.5 [DONE] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
             stock_transfers/items + alur transfer antar gudang + test.

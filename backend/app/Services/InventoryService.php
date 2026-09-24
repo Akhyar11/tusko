@@ -198,6 +198,14 @@ class InventoryService
     }
 
     /**
+     * Sinkronkan agregat turunan (publik) — dipakai layanan lain (mis. reservasi).
+     */
+    public function syncAggregatesFor(Product $product, ?ProductVariant $variant = null): void
+    {
+        $this->syncAggregates($product, $variant);
+    }
+
+    /**
      * Sinkronkan agregat turunan: `product_variants.stock` & `products.stock`.
      *
      * - `product_variants.stock` = total saldo gudang varian tersebut.
