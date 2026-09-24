@@ -849,7 +849,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OW
     T36.1 [DONE] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
            default, aturan validasi, `is_secret`, label+deskripsi (id). + test
            (kelengkapan, keunikan key, konsistensi grup).
-    T36.2 [NEW] `SettingsService`: baca/tulis per grup via `IntegrationService`,
+    T36.2 [DONE] `SettingsService`: baca/tulis per grup via `IntegrationService`,
            cast tipe, MASK secret, deteksi perubahan, resolusi default; + test.
     T36.3 [NEW] Migrasi/seeder default settings semua grup + command
            `settings:sync-defaults` (idempotent, TIDAK menimpa nilai yang sudah diubah
