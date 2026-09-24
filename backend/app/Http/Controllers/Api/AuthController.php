@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\FileStorageService;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -114,6 +117,91 @@ class AuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
+    }
+
+    /**
+     * Kirim tautan reset kata sandi ke email pengguna.
+     *
+     * Selalu membalas pesan generik agar tidak membocorkan keberadaan akun
+     * (mencegah user enumeration).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|string|email|max:255',
+        ], [
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+        ]);
+
+        $status = Password::sendResetLink([
+            'email' => strtolower(trim((string) $request->input('email'))),
+        ]);
+
+        if ($status === Password::RESET_THROTTLED) {
+            return response()->json([
+                'message' => 'Permintaan reset kata sandi terlalu sering. Silakan coba lagi beberapa saat lagi.',
+            ], 429);
+        }
+
+        return response()->json([
+            'message' => 'Jika email tersebut terdaftar, kami telah mengirimkan tautan reset kata sandi.',
+        ]);
+    }
+
+    /**
+     * Reset kata sandi pengguna menggunakan token yang dikirim via email.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        if ($request->has('passwordConfirmation') && !$request->has('password_confirmation')) {
+            $request->merge(['password_confirmation' => $request->input('passwordConfirmation')]);
+        }
+
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'token.required' => 'Token reset kata sandi tidak ditemukan.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.min' => 'Kata sandi minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => $password,
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+
+                // Cabut seluruh token API lama agar sesi lama tidak dapat dipakai.
+                $user->tokens()->delete();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => 'Kata sandi berhasil direset. Silakan masuk dengan kata sandi baru Anda.',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.',
+        ], 422);
     }
 
     /**
