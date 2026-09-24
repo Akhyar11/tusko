@@ -383,7 +383,7 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [PARTIAL] 
     T05.1 [DONE] `cartService.js` (wrapper 5 endpoint + session guest).
     T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed).
     T05.3 [TODO] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
-    T05.4 [TODO] Merge keranjang guest (session_id) -> user saat login (T26.5).
+    T05.4 [DONE] Merge keranjang guest (session_id) -> user saat login (FE kirim session_id).
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
