@@ -63,6 +63,7 @@ class Order extends Model
         'expires_at',
         'status_id',
         'payment_status_id',
+        'total_cogs',
     ];
 
     protected $casts = [

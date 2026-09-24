@@ -587,7 +587,7 @@ T18. Analisis Profit & HPP/COGS .................................... [PARTIAL]  
            isi `order_items.unit_cogs` + `orders.total_cogs` saat checkout;
            catat `cogs_histories` saat GRN/restock; konsolidasi D5
            (cost_price vs current_cogs) + test.
-    T18.2 [NEW] ReportQueryService bersama (dipakai T18.3 & T19.1).
+    T18.2 [DONE] ReportQueryService bersama (dipakai T18.3 & T19.1).
     T18.3 [NEW] Backend endpoint laporan laba kotor + test (depend T18.1).
     T18.4 [TODO] FE halaman laporan profit (filter periode + tabel + ringkasan).
 
