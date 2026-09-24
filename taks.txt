@@ -444,7 +444,12 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
   (4) fee Midtrans tercatat (fee_deducted) & masuk jurnal (T34.1).
   Minor:
     T07.1 [DONE] FE getSnapToken + Snap popup (URL via config) + polling status.
-    T07.2 [TODO] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
+    T07.2 [PARTIAL] FE PaymentInstructionModal (transfer manual) + konfirmasi bayar.
+           [DONE] Backend: rekening bank manual dinamis dari `integrations.payment.manual_banks`
+                  (hapus hardcode) + test [OWNER:A1].
+           [TODO] FE: PaymentInstructionModal -> rekening dari API + `FileInput` bukti +
+                  konfirmasi nyata ke `POST /confirm-payment` + E2E browser (perlu debug
+                  tampilan modal; draf sudah dibuat lalu dikembalikan) [OWNER:A1].
     T07.3 [DONE] Backend verifikasi signature webhook (idempoten via `payments`) + approve/reject idempoten + test.
     T07.4 [TODO] FE admin approve/reject pembayaran manual di OrderDetailPage.
     T07.5 [DONE] Migrasi `payments` (method, channel, amount, status, reference,
