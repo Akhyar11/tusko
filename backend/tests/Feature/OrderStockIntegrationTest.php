@@ -7,12 +7,28 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMutation;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class OrderStockIntegrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Warehouse::create([
+            'code' => 'GDG-CHK-STK',
+            'name' => 'Gudang Checkout Stok',
+            'address' => 'Jl. Checkout',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_checkout_automatically_decrements_product_stock_and_records_mutation(): void
     {

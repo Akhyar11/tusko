@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
@@ -11,6 +12,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ShippingAddress;
+use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +22,9 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
+    public function __construct(private readonly InventoryService $inventoryService)
+    {
+    }
     /**
      * Process checkout and save order to database.
      */
@@ -234,22 +239,24 @@ class CheckoutController extends Controller
                     'notes' => $itemData['notes'],
                 ]);
 
-                // Stock decrement and mutation record
-                $stockBefore = (int) $itemData['product']->stock;
-                $itemData['product']->decrement('stock', $itemData['quantity']);
-                $stockAfter = (int) $itemData['product']->fresh()->stock;
+                // D1 (T12.6): pengurangan stok otoritatif via InventoryService
+                // (inventory_balances + stock_mutations + sinkron agregat).
+                $product = $itemData['product'] ?? Product::find($itemData['product_id']);
 
-                \App\Models\StockMutation::create([
-                    'product_id' => $itemData['product_id'],
-                    'type' => 'out',
-                    'quantity' => $itemData['quantity'],
-                    'stock_before' => $stockBefore,
-                    'stock_after' => $stockAfter,
-                    'reference_type' => 'order',
-                    'reference_id' => $order->order_number,
-                    'notes' => "Pengurangan stok otomatis untuk pesanan {$order->order_number}",
-                    'created_by' => 'Checkout System',
-                ]);
+                if ($product) {
+                    try {
+                        $this->inventoryService->decrease($product, (int) $itemData['quantity'], [
+                            'reference_type' => 'order',
+                            'reference_id' => $order->order_number,
+                            'notes' => "Pengurangan stok otomatis untuk pesanan {$order->order_number}",
+                            'created_by' => 'Checkout System',
+                        ]);
+                    } catch (InsufficientStockException $exception) {
+                        throw ValidationException::withMessages([
+                            'items' => ["Stok produk '{$itemData['product_name']}' tidak mencukupi (tersedia: {$exception->available()})."],
+                        ]);
+                    }
+                }
             }
 
             // 8. If checked out from cart, clear cart items

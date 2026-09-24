@@ -510,7 +510,7 @@ T12. Manajemen Stok & Mutasi + FONDASI D1/D3/D4/D5 ................. [PARTIAL]  
     T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
     T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
     T12.5 [TODO] FE kartu mutasi stok + filter.
-    T12.6 [NEW] Refaktor penulisan stok saat CHECKOUT -> InventoryService (D1):
+    T12.6 [DONE] Refaktor penulisan stok saat CHECKOUT -> InventoryService (D1):
            `CheckoutController` saat ini masih `decrement products.stock` langsung;
            pindahkan ke InventoryService agar otoritatif + tulis stock_mutations
            + test. [OWNER:A2] (menyentuh CheckoutController -> koordinasi dgn A1).

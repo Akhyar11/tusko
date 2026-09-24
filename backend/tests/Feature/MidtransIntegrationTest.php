@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\MidtransService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -13,6 +14,21 @@ use Tests\TestCase;
 class MidtransIntegrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Warehouse::create([
+            'code' => 'GDG-CHK-MID',
+            'name' => 'Gudang Checkout Midtrans',
+            'address' => 'Jl. Checkout',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_checkout_with_midtrans_generates_snap_token(): void
     {

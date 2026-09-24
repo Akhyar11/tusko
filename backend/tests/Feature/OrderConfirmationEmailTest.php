@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -14,6 +15,21 @@ use Tests\TestCase;
 class OrderConfirmationEmailTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Warehouse::create([
+            'code' => 'GDG-CHK-MAIL',
+            'name' => 'Gudang Checkout Email',
+            'address' => 'Jl. Checkout',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_checkout_automatically_sends_order_confirmation_email(): void
     {

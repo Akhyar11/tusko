@@ -9,12 +9,29 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingAddress;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CheckoutApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Checkout menulis stok via InventoryService (D1) sehingga butuh gudang.
+        Warehouse::create([
+            'code' => 'GDG-CHK-01',
+            'name' => 'Gudang Checkout',
+            'address' => 'Jl. Checkout',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
+        ]);
+    }
 
     public function test_can_checkout_with_explicit_items_and_decrements_stock(): void
     {
@@ -71,6 +88,56 @@ class CheckoutApiTest extends TestCase
             'user_id' => $user->id,
             'recipient_name' => 'Budi Santoso',
             'grand_total' => 326000,
+        ]);
+    }
+
+    public function test_checkout_writes_authoritative_inventory_balance_and_mutation(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create([
+            'name' => 'Kaos Tusko Authoritative',
+            'price' => 100000,
+            'stock' => 10,
+        ]);
+        $expedition = Expedition::factory()->create([
+            'name' => 'JNE',
+            'service' => 'Reguler',
+            'cost' => 10000,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 3],
+            ],
+            'recipient_name' => 'Test Authoritative',
+            'phone' => '08123456789',
+            'full_address' => 'Jl. Authoritative No. 1',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+        ]);
+
+        $response->assertCreated();
+        $orderNumber = $response->json('data.order_number');
+
+        $warehouseId = Warehouse::where('is_primary', true)->value('id');
+
+        // D1 (T12.6): saldo otoritatif inventory_balances + mutasi + agregat sinkron.
+        $this->assertDatabaseHas('inventory_balances', [
+            'warehouse_id' => $warehouseId,
+            'product_id' => $product->id,
+            'product_variant_id' => null,
+            'on_hand_stock' => 7,
+            'available_stock' => 7,
+        ]);
+
+        $this->assertSame(7, (int) $product->fresh()->stock);
+
+        $this->assertDatabaseHas('stock_mutations', [
+            'product_id' => $product->id,
+            'type' => 'out',
+            'quantity' => 3,
+            'reference_type' => 'order',
+            'reference_id' => $orderNumber,
         ]);
     }
 

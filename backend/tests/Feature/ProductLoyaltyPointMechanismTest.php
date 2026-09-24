@@ -10,6 +10,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ShippingAddress;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -39,6 +40,16 @@ class ProductLoyaltyPointMechanismTest extends TestCase
         $this->category = Category::create([
             'name' => 'Running Gear',
             'slug' => 'running-gear',
+        ]);
+
+        Warehouse::create([
+            'code' => 'GDG-CHK-LOY',
+            'name' => 'Gudang Checkout Loyalty',
+            'address' => 'Jl. Checkout',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'is_primary' => true,
+            'is_active' => true,
         ]);
     }
 
