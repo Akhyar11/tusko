@@ -193,10 +193,30 @@
 823|MINOR|T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
 824|MINOR|T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
 825|MINOR|T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
-828|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-841|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-871|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-902|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-918|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-936|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-955|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+827|MAJOR|T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OWNER:A2]
+849|MINOR|T36.1 [NEW] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
+852|MINOR|T36.2 [NEW] `SettingsService`: baca/tulis per grup via `IntegrationService`,
+854|MINOR|T36.3 [NEW] Migrasi/seeder default settings semua grup + command
+857|MINOR|T36.4 [NEW] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
+858|MINOR|T36.5 [NEW] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
+860|MINOR|T36.6 [NEW] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
+863|MINOR|T36.7 [NEW] Guard keamanan: route admin-only (role/permission T24), rate limit,
+865|MINOR|T36.8 [NEW] FE `settingsService.js` (get/update per grup + test-connection) + erro
+866|MINOR|T36.9 [NEW] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 
+868|MINOR|T36.10 [NEW] FE Section Profil Toko: nama toko, email/telepon, alamat,
+870|MINOR|T36.11 [NEW] FE Section Pengiriman: provider, base_url, api_key (secret), origin
+873|MINOR|T36.12 [NEW] FE Section Pembayaran: Midtrans server/client key (secret),
+876|MINOR|T36.13 [NEW] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
+878|MINOR|T36.14 [NEW] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan)
+880|MINOR|T36.15 [NEW] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial maile
+882|MINOR|T36.16 [NEW] FE Section Feature Flag: aktif/nonaktif menu operasional per environme
+884|MINOR|T36.17 [NEW] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
+886|MINOR|T36.18 [NEW] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
+888|MINOR|T36.19 [NEW] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+899|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+912|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+944|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+977|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+994|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1012|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1031|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru

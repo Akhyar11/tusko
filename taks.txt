@@ -1,5 +1,5 @@
 ==============================================================================
-TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 4)
+TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 5)
 E-Commerce Olahraga + Full ERP (Laravel 11 + React 19)
 ==============================================================================
 Acuan kanonis : PRD_DAN_DESAIN_SISTEM_TUSKO.md (Roadmap 5 Fase)
@@ -643,7 +643,7 @@ T20. Template Notifikasi (Email & Resi) API-backed ................. [PARTIAL]  
 
 T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [OWNER:A2]
   DB: [NEW] integrations(key, value, group, is_secret).
-  FE: halaman pengaturan integrasi (opsional).
+  FE: halaman pengaturan integrasi (opsional) -> DIGANTIKAN oleh T36 (Settings Hub).
   API: [NEW opsional] endpoint konfigurasi (admin-only).
   Test: MidtransIntegrationTest, MidtransWebhookTest.
   Minor:
@@ -824,6 +824,77 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OW
     T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
     T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
 
+T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OWNER:A2]
+  Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH
+         konfigurasi sistem (tanpa hardcode, G6). Nilai disimpan di tabel
+         `integrations` (T21.1) berbasis GRUP + registry tipe/validasi terpusat.
+  DB: integrations (existing) + [NEW] registry key + seeder default settings.
+  FE: SystemSettingsPage (form kanonis 3/4 + FormTipsPanel; memakai SECTION,
+      BUKAN tab horizontal multi-modul — patuh aturan 14) + settingsService.
+      Section: Profil Toko, Pengiriman, Pembayaran, Storage, Loyalitas & Kebijakan,
+      Notifikasi/Email, Feature Flag, Keamanan.
+  API: [NEW] GET /api/admin/settings, GET /api/admin/settings/{group},
+       PUT /api/admin/settings/{group}, POST /api/admin/settings/{group}/test-connection.
+       Admin-only (middleware role/permission T24). Secret di-MASK saat dibaca.
+  Test: SettingsRegistryTest, SettingsServiceTest, SettingsApiTest,
+        SettingsConnectionTest + uji browser end-to-end.
+  ACCEPTANCE:
+    (1) TIDAK ada key pengaturan di-hardcode di kode (semua via registry/DB, G6).
+    (2) Secret TIDAK pernah dikembalikan penuh (mask) & TIDAK masuk activity_logs.
+    (3) Perubahan setting tercatat di `activity_logs` (G9) TANPA nilai secret.
+    (4) Endpoint admin-only (401/403 untuk non-admin).
+    (5) Setiap key punya tipe/validasi/opsi grup konsisten (registry TUNGGAL).
+    (6) Perubahan langsung dipakai modul terkait (ongkir/pembayaran/storage) tanpa deploy.
+  Minor:
+    T36.1 [NEW] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
+           default, aturan validasi, `is_secret`, label+deskripsi (id). + test
+           (kelengkapan, keunikan key, konsistensi grup).
+    T36.2 [NEW] `SettingsService`: baca/tulis per grup via `IntegrationService`,
+           cast tipe, MASK secret, deteksi perubahan, resolusi default; + test.
+    T36.3 [NEW] Migrasi/seeder default settings semua grup + command
+           `settings:sync-defaults` (idempotent, TIDAK menimpa nilai yang sudah diubah
+           admin) + test.
+    T36.4 [NEW] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
+    T36.5 [NEW] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
+           transaksi, catat activity_logs G9 tanpa secret) + test.
+    T36.6 [NEW] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
+           payment (kredensial Midtrans), storage (put/head objek R2) + test
+           (Http::fake / Storage::fake).
+    T36.7 [NEW] Guard keamanan: route admin-only (role/permission T24), rate limit,
+           larangan secret di respons/log, masking parsial; + test 401/403 & anti-kebocoran.
+    T36.8 [NEW] FE `settingsService.js` (get/update per grup + test-connection) + error handling.
+    T36.9 [NEW] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 +
+           `FormTipsPanel`, navigasi SECTION (bukan tab), state loading/simpan + Toast.
+    T36.10 [NEW] FE Section Profil Toko: nama toko, email/telepon, alamat,
+           origin city/postal + kode wilayah (dipakai ongkir) + simpan.
+    T36.11 [NEW] FE Section Pengiriman: provider, base_url, api_key (secret), origin
+           district/kiriminaja id, `shipping.rate_cache_ttl`, tombol "Uji Koneksi"
+           + tautan sinkron kurir (T21.4).
+    T36.12 [NEW] FE Section Pembayaran: Midtrans server/client key (secret),
+           `is_production`, `snap_url`, `refund_url`; kebijakan refund (online/manual)
+           + "Uji Koneksi".
+    T36.13 [NEW] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
+           (file sensitif privat) + "Uji Koneksi".
+    T36.14 [NEW] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan),
+           aturan refund — MENUTUP [KEPUTUSAN DIBUTUHKAN] T31.2 & T29 + simpan.
+    T36.15 [NEW] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial mailer
+           (tautan ke T20 template) + "Uji Koneksi".
+    T36.16 [NEW] FE Section Feature Flag: aktif/nonaktif menu operasional per environment
+           (T23.2) — independen RBAC; simpan + efek langsung.
+    T36.17 [NEW] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
+           toggle (opsional) + simpan.
+    T36.18 [NEW] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
+           guard admin (T24) + feature flag; rute `/admin/settings`.
+    T36.19 [NEW] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+           tersimpan & dipakai modul (`GET /api/shipping/rates`) + secret tetap dimask
+           + konsol 0 error.
+  Catatan desain:
+  - Patuh aturan 14 (1 halaman 1 entitas: "Pengaturan Sistem" sebagai satu entitas,
+    SECTION bukan tab multi-modul), 22 (ikon modul di header), 24/25 (form kanonis
+    3/4 + FormTipsPanel), 28 (komponen reusable), 15 (Toast), 20 (ConfirmationModal).
+  - Menyentuh file admin A2 (`AdminSidebar`, halaman baru) -> [OWNER:A2].
+  - OUT-OF-SCOPE tetap: COD, pajak/PPN, SEO, compliance data pribadi.
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================
@@ -864,6 +935,8 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T31.1 -> T07 ; T32.2 -> T27
 - T34.1 -> T16.4 (mesin jurnal) ; T34.3 -> T14 (data bill)
 - T35 -> seluruh fitur (sebelum rilis)
+- T36 -> T21.1 (integrations) ; T36.7 -> T24 (RBAC) ; T36.16 -> T23.2 (feature flag)
+- T36.11 -> T06.2/T06.7 ; T36.12 -> T07/T21.2 ; T36.13 -> T21.3 ; T36.14 -> T31.2/T29 ; T36.15 -> T20
 CATATAN: Tidak ada siklus. T16.4 (mesin) TIDAK bergantung pada T34.1; sebaliknya
 T34.1 dan task event (T07/T14/T25/T29) memakai mesin T16.4 + mapping T34.1.
 
@@ -897,6 +970,8 @@ URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
 18) T17 E-Invoice + T19 BI + T20 Template + T21.3 (R2 privat D7).
 19) T29 Retur/Refund + T32 Ulasan.
 20) T35 Hardening.
+20b) T36 Pengaturan Sistem Terpusat (setelah T21.1 + T24 + T23.2) — konfigurasi
+     tanpa deploy; menutup keputusan menggantung (expiry poin/refund) via T36.14.
 21) T23 Deploy (main -> master).
 
 MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
@@ -906,6 +981,7 @@ MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
   T07, T21.2, T30.2
 - OPERASIONAL: T09, T27, T27.1, T27.5, T10
 - KEAMANAN: T21.3 (R2 privat), T24, T35.1, T35.2, T35.3
+- CONFIG: T36 (Pengaturan Sistem Terpusat) — seluruh konfigurasi tanpa deploy
 CATATAN MILESTONE:
 - Kepemilikan test konkurensi + idempotensi webhook = **T35.2** (T13/T07 hanya
   merujuk acceptance ini, tidak menduplikasi).
@@ -994,6 +1070,28 @@ CATATAN PENYELARASAN AUDITOR (perlu keputusan user, belum diubah di AGENTS.md):
 KEPUTUSAN MASIH MENGGANTUNG (menghambat T31.2 & T29):
 - Durasi expiry poin (usulan default 12 bulan, via config G6).
 - Aturan refund (usulan: Midtrans untuk channel online, manual untuk transfer manual).
+==============================================================================
+REVISI 5 — MAJOR BARU: T36 Pengaturan Sistem Terpusat (Admin Settings Hub)
+==============================================================================
+Latar: sebelumnya TIDAK ada halaman admin terpusat untuk SEMUA pengaturan sistem;
+konfigurasi tersebar (T21 integrations, ExpeditionSettingsPage, T20 template,
+feature flag T23.2). Ditambahkan MAJOR T36 [OWNER:A2] dengan 19 minor detail
+(T36.1–T36.19) mencakup: registry setting tunggal, service, seeder/command,
+endpoint admin (get/put per grup + uji koneksi), guard keamanan (mask secret,
+audit G9 tanpa secret, admin-only), halaman FE ber-section (bukan tab), dan uji E2E.
+
+Prinsip yang ditegakkan:
+- G6 tanpa hardcode (semua via registry/DB `integrations`).
+- G9 audit log untuk setiap perubahan setting (nilai secret tidak dicatat).
+- D7 storage (file sensitif privat) tetap ditegakkan pada section Storage.
+- Aturan 14 (1 halaman 1 entitas; SECTION bukan tab), 22 (ikon modul header),
+  24/25 (form kanonis 3/4 + FormTipsPanel), 28 (komponen reusable), 15/20.
+- T36.14 MENUTUP [KEPUTUSAN DIBUTUHKAN]: durasi expiry poin & aturan refund
+  (usulan default 12 bulan; refund online via Midtrans, manual untuk transfer manual).
+
+Kepemilikan: T36 menyentuh sisi ADMIN (AdminSidebar, halaman baru) -> [OWNER:A2].
+Backend A1 yang sudah siap dipakai: `IntegrationService` (T21.1),
+`ShippingRateService`/`ExpeditionSyncService` (T06), `MidtransService` (T21.2).
 ==============================================================================
 
 
