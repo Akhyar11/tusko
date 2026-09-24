@@ -536,7 +536,7 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
   API: [NEW] /api/admin/vouchers (CRUD), GET /api/admin/vouchers.
   Test: [NEW] VoucherApiTest.
   Minor:
-    T15.1a [NEW] Migrasi quota/used_count/per_user_limit/is_free_shipping/stackable
+    T15.1a [DONE] Migrasi quota/used_count/per_user_limit/is_free_shipping/stackable
              + voucher_targets + voucher_usages.
     T15.1b [NEW] Siklus pemakaian voucher: increment `used_count` + catat
              `voucher_usages` saat order dibuat; rollback saat order batal.
