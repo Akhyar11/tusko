@@ -1023,11 +1023,12 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            menu yang dimiliki role user; tolak 403 + test (termasuk contoh
            `/admin/product/create` lolos via prefix `/admin/product`). [commit c6324c6]
            (tanpa bypass admin; seeder assign menu ke admin di T37.3).
-    T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test.
+    T37.6 [DONE] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test.
            DIPECAH (preseden T21.4a-d) agar tiap commit fokus:
            - T37.6a [DONE] BE: CRUD `admin/menus` + assign role + test. [commit d5ed4f9]
-           - T37.6b [TODO] FE: halaman kelola menu (List/Create/Edit + FilterDrawer +
+           - T37.6b [DONE] FE: halaman kelola menu (List/Create/Edit + FilterDrawer +
              Zustand store) + registrasi rute/menu + uji browser Playwright.
+             [commit f00b8fd]
     T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
            `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
     T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
