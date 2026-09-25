@@ -42,6 +42,9 @@ import UserListPage from './components/UserListPage';
 import UserCreatePage from './components/UserCreatePage';
 import UserEditPage from './components/UserEditPage';
 import UserRoleAssignPage from './components/UserRoleAssignPage';
+import RoleListPage from './components/RoleListPage';
+import RoleCreatePage from './components/RoleCreatePage';
+import RoleEditPage from './components/RoleEditPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -127,6 +130,9 @@ const VALID_VIEWS = [
   'user-create',
   'user-edit',
   'user-roles',
+  'roles-admin',
+  'role-create',
+  'role-edit',
   'settings',
   'login',
   'register',
@@ -153,6 +159,9 @@ const ADMIN_CORE_VIEWS = [
   'user-create',
   'user-edit',
   'user-roles',
+  'roles-admin',
+  'role-create',
+  'role-edit',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -197,6 +206,9 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/users/create' || rawPath === '/admin/user/create') return 'user-create';
     if (rawPath === '/admin/users/roles' || rawPath === '/admin/user/roles') return 'user-roles';
     if (rawPath.startsWith('/admin/users/') || rawPath.startsWith('/admin/user/')) return 'users-admin';
+    if (rawPath === '/admin/roles' || rawPath === '/admin/role') return 'roles-admin';
+    if (rawPath === '/admin/roles/create' || rawPath === '/admin/role/create') return 'role-create';
+    if (rawPath.startsWith('/admin/roles/') || rawPath.startsWith('/admin/role/')) return 'roles-admin';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -281,6 +293,9 @@ const getInitialView = () => {
     }
     if (rawView === 'user-edit' || rawView === 'user-roles') {
       return 'users-admin';
+    }
+    if (rawView === 'role-edit') {
+      return 'roles-admin';
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
@@ -394,6 +409,7 @@ export default function App() {
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [editingMenu, setEditingMenu] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [editingRole, setEditingRole] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -1700,6 +1716,26 @@ export default function App() {
           <UserRoleAssignPage
             user={editingUser}
             onNavigateBack={() => setCurrentView('users-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'roles-admin' ? (
+          <RoleListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('role-create')}
+            onNavigateToEdit={(role) => {
+              setEditingRole(role);
+              setCurrentView('role-edit');
+            }}
+          />
+        ) : currentView === 'role-create' ? (
+          <RoleCreatePage
+            onNavigateBack={() => setCurrentView('roles-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'role-edit' ? (
+          <RoleEditPage
+            role={editingRole}
+            onNavigateBack={() => setCurrentView('roles-admin')}
             onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (

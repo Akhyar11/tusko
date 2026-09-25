@@ -20,6 +20,7 @@ import {
   KeyRound,
   Ticket,
   Users,
+  ShieldCheck,
   Circle
 } from 'lucide-react';
 
@@ -49,7 +50,8 @@ export const MENU_ICONS = {
   UserRound,
   KeyRound,
   Ticket,
-  Users
+  Users,
+  ShieldCheck
 };
 
 export function resolveMenuIcon(name) {

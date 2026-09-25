@@ -27,6 +27,8 @@ export const CHILD_VIEW_TO_MENU = {
   'user-create': 'users-admin',
   'user-edit': 'users-admin',
   'user-roles': 'users-admin',
+  'role-create': 'roles-admin',
+  'role-edit': 'roles-admin',
   'voucher-create': 'vouchers-admin',
   'voucher-edit': 'vouchers-admin'
 };

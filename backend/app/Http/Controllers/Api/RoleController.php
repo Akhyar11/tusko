@@ -43,6 +43,19 @@ class RoleController extends Controller
             $query->where('is_system', filter_var($request->input('is_system'), FILTER_VALIDATE_BOOLEAN));
         }
 
+        if ($request->filled('users_min')) {
+            $query->has('users', '>=', (int) $request->input('users_min'));
+        }
+        if ($request->filled('users_max')) {
+            $query->has('users', '<=', (int) $request->input('users_max'));
+        }
+        if ($request->filled('menus_min')) {
+            $query->has('menus', '>=', (int) $request->input('menus_min'));
+        }
+        if ($request->filled('menus_max')) {
+            $query->has('menus', '<=', (int) $request->input('menus_max'));
+        }
+
         $sortBy = $request->input('sort_by', 'name');
         $sortDir = strtolower((string) $request->input('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
         $allowedSorts = ['name', 'display_name', 'is_system', 'users_count', 'menus_count', 'created_at', 'id'];

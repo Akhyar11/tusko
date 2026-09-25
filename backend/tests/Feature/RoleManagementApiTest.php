@@ -58,6 +58,16 @@ class RoleManagementApiTest extends TestCase
 
         $search = $this->getJson('/api/admin/roles?search=finance')->assertStatus(200);
         $this->assertSame(1, $search->json('total'));
+
+        $withMenus = $this->getJson('/api/admin/roles?menus_min=1&per_page=100')->assertStatus(200);
+        foreach ($withMenus->json('data') as $row) {
+            $this->assertGreaterThanOrEqual(1, $row['menus_count']);
+        }
+
+        $withoutUsers = $this->getJson('/api/admin/roles?users_max=0&per_page=100')->assertStatus(200);
+        foreach ($withoutUsers->json('data') as $row) {
+            $this->assertSame(0, $row['users_count']);
+        }
     }
 
     public function test_admin_can_create_role(): void
