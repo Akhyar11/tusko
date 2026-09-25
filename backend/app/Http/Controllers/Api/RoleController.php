@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Menu;
 use App\Models\Role;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
@@ -168,6 +170,62 @@ class RoleController extends Controller
 
         return response()->json([
             'message' => "Role '{$displayName}' berhasil dihapus.",
+        ]);
+    }
+
+    /**
+     * Menu efektif + daftar seluruh menu untuk matriks Role → Menu (T24.6).
+     */
+    public function menus(Role $role): JsonResponse
+    {
+        $menus = Menu::query()
+            ->orderBy('sort_order')
+            ->get(['id', 'environment', 'section', 'label', 'sublabel', 'path_prefix', 'view_key', 'is_active']);
+
+        return response()->json([
+            'data' => [
+                'role' => $this->formatRole($role->loadCount(['users', 'menus'])),
+                'menu_ids' => $role->menus()->pluck('menus.id')->map(fn ($id) => (int) $id)->values()->all(),
+                'menus' => $menus,
+            ],
+        ]);
+    }
+
+    /**
+     * Sinkronkan akses menu sebuah role (pivot `role_menus`) — T24.6.
+     */
+    public function syncMenus(Request $request, Role $role): JsonResponse
+    {
+        $validated = $request->validate([
+            'menu_ids' => ['present', 'array'],
+            'menu_ids.*' => ['integer', Rule::exists('menus', 'id')],
+        ], [
+            'menu_ids.present' => 'Daftar menu wajib dikirim.',
+        ]);
+
+        $menuIds = array_values(array_unique(array_map('intval', $validated['menu_ids'])));
+
+        // Anti-lockout: menu inti RBAC tidak boleh dicabut dari role admin.
+        if ($role->name === 'admin') {
+            $coreIds = Menu::query()
+                ->whereIn('view_key', ['users-admin', 'roles-admin', 'menus-admin', 'role-menu'])
+                ->pluck('id')
+                ->all();
+
+            if (array_diff($coreIds, $menuIds)) {
+                return response()->json([
+                    'message' => 'Menu inti RBAC tidak dapat dicabut dari role admin.',
+                ], 422);
+            }
+        }
+
+        DB::transaction(fn () => $role->menus()->sync($menuIds));
+
+        $this->activityLog->log('role.menus_synced', $role, ['menu_ids' => $menuIds]);
+
+        return response()->json([
+            'message' => "Akses menu role '{$role->display_name}' berhasil diperbarui.",
+            'data' => $this->formatRole($role->fresh()->loadCount(['users', 'menus'])),
         ]);
     }
 

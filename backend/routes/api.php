@@ -173,6 +173,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/{role}', [RoleController::class, 'show']);
         Route::match(['put', 'patch'], '/{role}', [RoleController::class, 'update']);
         Route::delete('/{role}', [RoleController::class, 'destroy']);
+        Route::get('/{role}/menus', [RoleController::class, 'menus']);
+        Route::put('/{role}/menus', [RoleController::class, 'syncMenus']);
     });
 });
 
