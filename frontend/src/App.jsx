@@ -52,6 +52,7 @@ import GoodsReceivingDetailPage from './components/GoodsReceivingDetailPage';
 import VendorBillListPage from './components/VendorBillListPage';
 import VendorBillDetailPage from './components/VendorBillDetailPage';
 import SupplierListPage from './components/SupplierListPage';
+import VoucherListPage from './components/VoucherListPage';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
@@ -94,6 +95,7 @@ const VALID_VIEWS = [
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
+  'vouchers-admin',
   'product-create',
   'product-edit',
   'transactions',
@@ -128,6 +130,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/warehouses/create' || rawPath === '/admin/inventory/warehouses/create') return 'warehouse-create';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
+    if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
     if (rawPath === '/admin/stock' || rawPath === '/admin/stocks' || rawPath === '/admin/inventory') return 'stock';
     if (rawPath === '/admin/orders' || rawPath === '/admin/order') return 'orders';
     if (rawPath === '/admin/procurement') return 'procurement-pos';
@@ -456,6 +459,10 @@ export default function App() {
       if (window.location.pathname !== '/admin/suppliers/create') {
         window.history.pushState(null, '', '/admin/suppliers/create');
       }
+    } else if (currentView === 'vouchers-admin') {
+      if (window.location.pathname !== '/admin/vouchers') {
+        window.history.pushState(null, '', '/admin/vouchers');
+      }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
         window.history.pushState(null, '', '/admin/stock');
@@ -599,6 +606,7 @@ export default function App() {
       'suppliers-admin',
       'supplier-create',
       'supplier-edit',
+      'vouchers-admin',
       'product-create', 
       'product-edit', 
       'stock', 
@@ -1532,6 +1540,12 @@ export default function App() {
             vendor={editingVendor}
             onNavigateBack={() => setCurrentView('suppliers-admin')}
             onShowToast={showToast}
+          />
+        ) : currentView === 'vouchers-admin' ? (
+          <VoucherListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => showToast('Halaman tambah voucher sedang disiapkan (T15.4).')}
+            onNavigateToEdit={() => showToast('Halaman edit voucher sedang disiapkan (T15.4).')}
           />
         ) : currentView === 'warehouses-admin' ? (
           <WarehouseListPage

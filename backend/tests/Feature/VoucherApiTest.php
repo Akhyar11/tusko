@@ -179,6 +179,32 @@ class VoucherApiTest extends TestCase
         $this->assertDatabaseMissing('vouchers', ['id' => $voucher->id]);
     }
 
+    public function test_admin_can_filter_vouchers_by_range_and_date(): void
+    {
+        Sanctum::actingAs($this->admin());
+
+        $this->makeVoucher(['code' => 'AAA', 'discount_value' => 5000, 'min_purchase' => 0, 'quota' => 10, 'expires_at' => '2026-01-01']);
+        $this->makeVoucher(['code' => 'BBB', 'discount_value' => 50000, 'min_purchase' => 100000, 'quota' => 100, 'expires_at' => '2026-12-31']);
+
+        $this->getJson('/api/admin/vouchers?discount_value_min=10000')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', 'BBB');
+
+        $this->getJson('/api/admin/vouchers?min_purchase_max=50000')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', 'AAA');
+
+        $this->getJson('/api/admin/vouchers?quota_min=50')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', 'BBB');
+
+        $this->getJson('/api/admin/vouchers?expires_from=2026-06-01')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', 'BBB');
+
+        $this->getJson('/api/admin/vouchers?code=BBB')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', 'BBB');
+
+        $this->getJson('/api/admin/vouchers?title=Voucher')
+            ->assertOk()->assertJsonPath('total', 2);
+    }
+
     public function test_non_admin_is_forbidden(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'customer']));

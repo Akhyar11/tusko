@@ -74,6 +74,36 @@ class VoucherController extends Controller
             $query->where('discount_type', $request->input('discount_type'));
         }
 
+        if ($request->filled('code')) {
+            $query->where('code', 'like', '%' . $request->input('code') . '%');
+        }
+
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%' . $request->input('title') . '%');
+        }
+
+        // Rentang nilai (aturan 27: kolom nominal/kuota wajib punya padanan filter).
+        foreach ([
+            ['discount_value_min', 'discount_value', '>='],
+            ['discount_value_max', 'discount_value', '<='],
+            ['min_purchase_min', 'min_purchase', '>='],
+            ['min_purchase_max', 'min_purchase', '<='],
+            ['quota_min', 'quota', '>='],
+            ['quota_max', 'quota', '<='],
+        ] as [$param, $column, $operator]) {
+            if ($request->filled($param)) {
+                $query->where($column, $operator, $request->input($param));
+            }
+        }
+
+        if ($request->filled('expires_from')) {
+            $query->whereDate('expires_at', '>=', $request->input('expires_from'));
+        }
+
+        if ($request->filled('expires_to')) {
+            $query->whereDate('expires_at', '<=', $request->input('expires_to'));
+        }
+
         $sortBy = $request->input('sort_by', 'id');
         $allowedSorts = ['id', 'code', 'title', 'discount_value', 'min_purchase', 'used_count', 'quota', 'expires_at', 'created_at'];
         $sortDir = strtolower((string) $request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
