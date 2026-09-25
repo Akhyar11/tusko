@@ -1039,12 +1039,10 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
            [commit 648591f] `useMenuStore` + `menuIcons`; `menuSections` statis &
            `featureFlags` client dihapus (filter flag server-side).
-    T37.8 [TODO — BUTUH KOORDINASI A1] FE storefront nav dari menu
-           `environment='storefront'` (publik) via `Navbar`/`UserMenuDropdown`
-           (file milik Developer 1/A1) + uji browser. Endpoint & data storefront
-           (`GET /api/auth/menus` → `data.storefront`, `useMenuStore.storefrontMenus`)
-           SUDAH tersedia (T37.4/T37.7); sisa hanya mengonsumsi di komponen A1
-           sehingga tidak dikerjakan tanpa izin/koordinasi A1.
+    T37.8 [DONE] FE storefront nav dari menu `environment='storefront'` (publik) via
+           `Navbar` (bar sekunder desktop + drawer mobile) & `UserMenuDropdown`,
+           bersumber dari `useMenuStore.storefrontMenus` (`GET /api/auth/menus`).
+           + uji browser Playwright Python (tamu desktop/mobile & admin). [OWNER:A1]
     T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
            redirect ke katalog + Toast; + uji browser. [commit 0e0b281]
            Helper `utils/menuAccess.js` (CHILD_VIEW_TO_MENU + isViewAllowedByMenus).
