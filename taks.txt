@@ -523,6 +523,10 @@ T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL] 
   API: /api/auth/me|profile|password|sessions, /api/addresses (CRUD+set-default).
   Test: ProfileFullIntegrationTest, ShippingAddressApiTest, AuthUpdateProfileTest.
   Minor:
+    T11.0 [DONE] Kanonikalisasi `ProfilePage`: 8 native `<input>` -> `TextInput`/`FileInput`,
+             padding kartu kanonik, toast inline -> Toast global (`onShowToast`).
+             (Prasyarat T08.1/T11.x; memicu AGENTS.md RULE[storefront_design_exception].)
+             [OWNER:A1]
     T11.1 [TODO] FE ProfilePage -> API (biodata + password + sesi) via authService.
     T11.2 [TODO] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS).
     T11.3 [TODO] FE riwayat poin loyalitas (depend T31).
