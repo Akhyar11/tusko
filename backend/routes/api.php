@@ -154,6 +154,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::delete('/{menu}', [MenuController::class, 'destroy']);
         Route::post('/{menu}/toggle-status', [MenuController::class, 'toggleStatus']);
     });
+
+    // Kelola akun pengguna (T38.1) — superuser `admin`.
+    Route::prefix('admin/users')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\UserController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\UserController::class, 'store']);
+        Route::get('/{user}', [\App\Http\Controllers\Api\UserController::class, 'show']);
+        Route::match(['put', 'patch'], '/{user}', [\App\Http\Controllers\Api\UserController::class, 'update']);
+        Route::delete('/{user}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
+    });
 });
 
 Route::prefix('inventory')->group(function () {
