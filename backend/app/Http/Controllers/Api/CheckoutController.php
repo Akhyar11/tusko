@@ -13,6 +13,7 @@ use App\Models\ExpeditionService;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\ShippingAddress;
 use App\Services\InventoryService;
 use Carbon\Carbon;
@@ -41,47 +42,20 @@ class CheckoutController extends Controller
             ?: ($user ? null : (string) Str::uuid());
 
         $order = DB::transaction(function () use ($request, $user, $sessionId) {
-            // 1. Resolve items to checkout
-            $checkoutItemsData = [];
-            $totalWeight = 0.0;
-            $subtotal = 0.0;
-            $totalLoyaltyPointsEarned = 0;
+            // 1. Normalisasi item yang akan di-checkout (dari request atau keranjang aktif).
+            //    Hanya identitas + kuantitas yang diambil dari input client; seluruh
+            //    nilai harga/berat/poin TIDAK pernah dipercaya dari client (T28.1).
+            $rawItems = [];
             $cartToClear = null;
 
             if ($request->has('items') && is_array($request->input('items')) && count($request->input('items')) > 0) {
                 foreach ($request->input('items') as $item) {
-                    $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-
-                    if ($product->stock < $item['quantity']) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Stok produk '{$product->name}' tidak mencukupi (sisa: {$product->stock})."],
-                        ]);
-                    }
-
-                    $qty = (int) $item['quantity'];
-                    $itemPrice = (float) $product->price;
-                    $itemSubtotal = $itemPrice * $qty;
-                    $rawWeight = (float) ($product->weight ?? 1000);
-                    $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
-                    $earnedPoints = $product->calculatePointsEarned($itemPrice) * $qty;
-
-                    $checkoutItemsData[] = [
-                        'product' => $product,
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'product_slug' => $product->slug,
-                        'product_image' => $product->image_url,
-                        'product_price' => $itemPrice,
-                        'product_weight' => $weightPerUnit,
-                        'quantity' => $qty,
-                        'subtotal' => $itemSubtotal,
-                        'points_earned' => $earnedPoints,
+                    $rawItems[] = [
+                        'product_id' => $item['product_id'],
+                        'product_variant_id' => $item['product_variant_id'] ?? null,
+                        'quantity' => (int) $item['quantity'],
                         'notes' => $item['notes'] ?? null,
                     ];
-
-                    $subtotal += $itemSubtotal;
-                    $totalWeight += ($weightPerUnit * $qty);
-                    $totalLoyaltyPointsEarned += $earnedPoints;
                 }
             } else {
                 // Checkout from active cart
@@ -103,39 +77,72 @@ class CheckoutController extends Controller
                 $cartToClear = $cart;
 
                 foreach ($cart->items as $cartItem) {
-                    $product = Product::lockForUpdate()->findOrFail($cartItem->product_id);
-
-                    if ($product->stock < $cartItem->quantity) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Stok produk '{$product->name}' tidak mencukupi (sisa: {$product->stock})."],
-                        ]);
-                    }
-
-                    $qty = (int) $cartItem->quantity;
-                    $itemPrice = (float) $product->price;
-                    $itemSubtotal = $itemPrice * $qty;
-                    $rawWeight = (float) ($product->weight ?? 1000);
-                    $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
-                    $earnedPoints = $product->calculatePointsEarned($itemPrice) * $qty;
-
-                    $checkoutItemsData[] = [
-                        'product' => $product,
-                        'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'product_slug' => $product->slug,
-                        'product_image' => $product->image_url,
-                        'product_price' => $itemPrice,
-                        'product_weight' => $weightPerUnit,
-                        'quantity' => $qty,
-                        'subtotal' => $itemSubtotal,
-                        'points_earned' => $earnedPoints,
+                    $rawItems[] = [
+                        'product_id' => $cartItem->product_id,
+                        'product_variant_id' => $cartItem->product_variant_id,
+                        'quantity' => (int) $cartItem->quantity,
                         'notes' => $cartItem->notes,
                     ];
-
-                    $subtotal += $itemSubtotal;
-                    $totalWeight += ($weightPerUnit * $qty);
-                    $totalLoyaltyPointsEarned += $earnedPoints;
                 }
+            }
+
+            // 1b. Server menghitung ULANG harga & subtotal dari DB (produk/varian).
+            $checkoutItemsData = [];
+            $totalWeight = 0.0;
+            $subtotal = 0.0;
+            $totalLoyaltyPointsEarned = 0;
+
+            foreach ($rawItems as $rawItem) {
+                $product = Product::lockForUpdate()->findOrFail($rawItem['product_id']);
+
+                $variant = null;
+                if (! empty($rawItem['product_variant_id'])) {
+                    $variant = ProductVariant::lockForUpdate()->findOrFail($rawItem['product_variant_id']);
+
+                    if ((int) $variant->product_id !== (int) $product->id) {
+                        throw ValidationException::withMessages([
+                            'items' => ["Varian tidak sesuai dengan produk '{$product->name}'."],
+                        ]);
+                    }
+                }
+
+                $qty = max(1, (int) $rawItem['quantity']);
+
+                // Harga otoritatif: harga varian bila ada, selain itu harga produk (dari DB).
+                $itemPrice = (float) ($variant && $variant->price !== null ? $variant->price : $product->price);
+
+                // Stok otoritatif (D1) dari inventory_balances.
+                $availableStock = $this->inventoryService->availableStock($product, $variant);
+                if ($availableStock < $qty) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Stok produk '{$product->name}' tidak mencukupi (sisa: {$availableStock})."],
+                    ]);
+                }
+
+                $itemSubtotal = round($itemPrice * $qty, 2);
+                $rawWeight = (float) ($variant?->weight_grams ?: ($product->weight ?? 1000));
+                $weightPerUnit = $rawWeight >= 10 ? ($rawWeight / 1000) : $rawWeight;
+                $earnedPoints = $product->calculatePointsEarned($itemPrice) * $qty;
+
+                $checkoutItemsData[] = [
+                    'product' => $product,
+                    'variant' => $variant,
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
+                    'product_name' => $product->name,
+                    'product_slug' => $product->slug,
+                    'product_image' => $product->image_url,
+                    'product_price' => $itemPrice,
+                    'product_weight' => $weightPerUnit,
+                    'quantity' => $qty,
+                    'subtotal' => $itemSubtotal,
+                    'points_earned' => $earnedPoints,
+                    'notes' => $rawItem['notes'],
+                ];
+
+                $subtotal += $itemSubtotal;
+                $totalWeight += ($weightPerUnit * $qty);
+                $totalLoyaltyPointsEarned += $earnedPoints;
             }
 
             // 2. Resolve Shipping Address
@@ -252,6 +259,7 @@ class CheckoutController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $itemData['product_id'],
+                    'product_variant_id' => $itemData['product_variant_id'],
                     'product_name' => $itemData['product_name'],
                     'product_slug' => $itemData['product_slug'],
                     'product_image' => $itemData['product_image'],
@@ -265,21 +273,22 @@ class CheckoutController extends Controller
 
                 // D1 (T12.6): pengurangan stok otoritatif via InventoryService
                 // (inventory_balances + stock_mutations + sinkron agregat).
-                $product = $itemData['product'] ?? Product::find($itemData['product_id']);
-
-                if ($product) {
-                    try {
-                        $this->inventoryService->decrease($product, (int) $itemData['quantity'], [
+                try {
+                    $this->inventoryService->decrease(
+                        $itemData['product'],
+                        (int) $itemData['quantity'],
+                        [
                             'reference_type' => 'order',
                             'reference_id' => $order->order_number,
                             'notes' => "Pengurangan stok otomatis untuk pesanan {$order->order_number}",
                             'created_by' => 'Checkout System',
-                        ]);
-                    } catch (InsufficientStockException $exception) {
-                        throw ValidationException::withMessages([
-                            'items' => ["Stok produk '{$itemData['product_name']}' tidak mencukupi (tersedia: {$exception->available()})."],
-                        ]);
-                    }
+                        ],
+                        $itemData['variant']
+                    );
+                } catch (InsufficientStockException $exception) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Stok produk '{$itemData['product_name']}' tidak mencukupi (tersedia: {$exception->available()})."],
+                    ]);
                 }
             }
 
