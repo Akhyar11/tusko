@@ -219,10 +219,10 @@ FORMAT JAWABAN (WAJIB verdict per file — DILARANG PASSED global tanpa memeriks
 EOF
 
 AUDITOR_RESULT=""
-if command -v opencode &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 90s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
-elif command -v agy &> /dev/null; then
+if command -v agy &> /dev/null; then
     AUDITOR_RESULT=$(timeout 60s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
+elif command -v opencode &> /dev/null; then
+    AUDITOR_RESULT=$(timeout 90s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
 fi
 rm -f "$PROMPT_FILE"
 
