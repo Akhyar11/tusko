@@ -1033,13 +1033,21 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
            [commit 648591f] `useMenuStore` + `menuIcons`; `menuSections` statis &
            `featureFlags` client dihapus (filter flag server-side).
-    T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
-           `Navbar`/`UserMenuDropdown` (A1) + uji browser [koordinasi A1].
+    T37.8 [TODO — BUTUH KOORDINASI A1] FE storefront nav dari menu
+           `environment='storefront'` (publik) via `Navbar`/`UserMenuDropdown`
+           (file milik Developer 1/A1) + uji browser. Endpoint & data storefront
+           (`GET /api/auth/menus` → `data.storefront`, `useMenuStore.storefrontMenus`)
+           SUDAH tersedia (T37.4/T37.7); sisa hanya mengonsumsi di komponen A1
+           sehingga tidak dikerjakan tanpa izin/koordinasi A1.
     T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
            redirect ke katalog + Toast; + uji browser. [commit 0e0b281]
            Helper `utils/menuAccess.js` (CHILD_VIEW_TO_MENU + isViewAllowedByMenus).
-    T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+    T37.10 [DONE] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
            terbatas -> menu tersembunyi & URL ditolak; storefront publik tetap akses.
+           [bukti Playwright Python: A) admin sidebar 16 tombol dari API + halaman
+           `/admin/menus` terbuka; B) customer URL `/admin/product` ditolak + Toast;
+           C) guest `GET /api/auth/menus` admin=0/storefront=3 & katalog bebas;
+           js_errors=0, page_errors=0].
   Catatan desain:
   - Sederhana & mudah dikustom: hanya `menus` + `role_menus` (tanpa permissions).
   - `menu` = navigasi + guard halaman; aksi spesifik API cukup middleware `role:` (T24).
