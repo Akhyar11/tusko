@@ -24,7 +24,7 @@ class MenuSeederTest extends TestCase
     {
         $this->seed(MenuSeeder::class);
 
-        $this->assertSame(18, Menu::where('environment', 'admin')->count());
+        $this->assertSame(19, Menu::where('environment', 'admin')->count());
         $this->assertSame(3, Menu::where('environment', 'storefront')->count());
 
         $product = Menu::where('path_prefix', '/admin/product')->firstOrFail();

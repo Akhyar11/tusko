@@ -62,7 +62,7 @@ class AdminMenuApiTest extends TestCase
         $response = $this->getJson('/api/admin/menus?per_page=100');
 
         $response->assertStatus(200);
-        $this->assertSame(21, $response->json('total'));
+        $this->assertSame(22, $response->json('total'));
 
         $product = collect($response->json('data'))->firstWhere('path_prefix', '/admin/product');
         $this->assertNotNull($product);
@@ -87,7 +87,7 @@ class AdminMenuApiTest extends TestCase
         $this->actingAsAdmin();
 
         $byRole = $this->getJson('/api/admin/menus?role_id=' . $this->adminRoleId() . '&per_page=100')->assertStatus(200);
-        $this->assertSame(18, $byRole->json('total'));
+        $this->assertSame(19, $byRole->json('total'));
 
         $bySort = $this->getJson('/api/admin/menus?sort_order_min=50&per_page=100')->assertStatus(200);
         foreach ($bySort->json('data') as $row) {

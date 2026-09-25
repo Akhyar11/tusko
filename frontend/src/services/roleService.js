@@ -72,5 +72,15 @@ export const roleService = {
 
   async deleteRole(id) {
     return await apiClient.delete(`/api/admin/roles/${id}`);
+  },
+
+  async getRoleMenus(id) {
+    const res = await apiClient.get(`/api/admin/roles/${id}/menus`);
+    return res?.data || null;
+  },
+
+  async syncRoleMenus(id, menuIds) {
+    const res = await apiClient.put(`/api/admin/roles/${id}/menus`, { menu_ids: menuIds });
+    return res?.data || null;
   }
 };

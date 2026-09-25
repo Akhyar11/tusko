@@ -48,6 +48,7 @@ class MenuSeeder extends Seeder
         // ==== ADMIN: Pengguna & Akses ====
         ['environment' => 'admin', 'section' => 'Pengguna & Akses', 'label' => 'Master Users', 'sublabel' => 'Akun pengguna & akses role', 'path_prefix' => '/admin/users', 'view_key' => 'users-admin', 'icon' => 'Users', 'feature_flag' => null, 'sort_order' => 54],
         ['environment' => 'admin', 'section' => 'Pengguna & Akses', 'label' => 'Master Role', 'sublabel' => 'Peran RBAC & deskripsi akses', 'path_prefix' => '/admin/role', 'view_key' => 'roles-admin', 'icon' => 'ShieldCheck', 'feature_flag' => null, 'sort_order' => 55],
+        ['environment' => 'admin', 'section' => 'Pengguna & Akses', 'label' => 'Role → Menu Mapping', 'sublabel' => 'Matriks centang akses menu per role', 'path_prefix' => '/admin/role-menu', 'view_key' => 'role-menu', 'icon' => 'LayoutGrid', 'feature_flag' => null, 'sort_order' => 56],
 
         // ==== STOREFRONT (PUBLIK, tanpa role) ====
         ['environment' => 'storefront', 'section' => 'Storefront', 'label' => 'Katalog Produk', 'sublabel' => 'Jelajahi katalog olahraga', 'path_prefix' => '/', 'view_key' => 'catalog', 'icon' => 'Store', 'feature_flag' => null, 'sort_order' => 10],

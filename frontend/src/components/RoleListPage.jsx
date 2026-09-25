@@ -20,7 +20,8 @@ import { useRoleTableStore } from '../stores/useRoleTableStore';
 export default function RoleListPage({
   onShowToast = () => {},
   onNavigateToCreate = () => {},
-  onNavigateToEdit = () => {}
+  onNavigateToEdit = () => {},
+  onNavigateToMenu = () => {}
 }) {
   const {
     page,
@@ -216,6 +217,15 @@ export default function RoleListPage({
                 >
                   <Edit3 size={13} className="text-neutral-500" />
                   <span>Ubah Role</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { close(); onNavigateToMenu(row); }}
+                  className="w-full px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <LayoutGrid size={13} className="text-neutral-500" />
+                  <span>Atur Akses Menu</span>
                 </button>
 
                 <button

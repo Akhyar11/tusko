@@ -45,6 +45,7 @@ import UserRoleAssignPage from './components/UserRoleAssignPage';
 import RoleListPage from './components/RoleListPage';
 import RoleCreatePage from './components/RoleCreatePage';
 import RoleEditPage from './components/RoleEditPage';
+import RoleMenuMappingPage from './components/RoleMenuMappingPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -133,6 +134,7 @@ const VALID_VIEWS = [
   'roles-admin',
   'role-create',
   'role-edit',
+  'role-menu',
   'settings',
   'login',
   'register',
@@ -162,6 +164,7 @@ const ADMIN_CORE_VIEWS = [
   'roles-admin',
   'role-create',
   'role-edit',
+  'role-menu',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -207,6 +210,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/users/roles' || rawPath === '/admin/user/roles') return 'user-roles';
     if (rawPath.startsWith('/admin/users/') || rawPath.startsWith('/admin/user/')) return 'users-admin';
     if (rawPath === '/admin/roles' || rawPath === '/admin/role') return 'roles-admin';
+    if (rawPath === '/admin/role-menu' || rawPath === '/admin/roles/mapping') return 'role-menu';
     if (rawPath === '/admin/roles/create' || rawPath === '/admin/role/create') return 'role-create';
     if (rawPath.startsWith('/admin/roles/') || rawPath.startsWith('/admin/role/')) return 'roles-admin';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
@@ -1726,6 +1730,10 @@ export default function App() {
               setEditingRole(role);
               setCurrentView('role-edit');
             }}
+            onNavigateToMenu={(role) => {
+              setEditingRole(role);
+              setCurrentView('role-menu');
+            }}
           />
         ) : currentView === 'role-create' ? (
           <RoleCreatePage
@@ -1735,6 +1743,12 @@ export default function App() {
         ) : currentView === 'role-edit' ? (
           <RoleEditPage
             role={editingRole}
+            onNavigateBack={() => setCurrentView('roles-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'role-menu' ? (
+          <RoleMenuMappingPage
+            initialRole={editingRole}
             onNavigateBack={() => setCurrentView('roles-admin')}
             onShowToast={showToast}
           />
