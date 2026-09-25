@@ -1016,8 +1016,9 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
     T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
            section, icon, feature_flag) + assign seluruh menu admin ke role `admin`
            (idempoten) + test. [commit e77299d]
-    T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
-           + test.
+    T37.4 [DONE] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
+           + test. [commit 0f9c326] Response `data.admin` (per-role) + `data.storefront`
+           (publik, `auth.optional`); resolusi menu terpusat di `MenuService`.
     T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
            menu yang dimiliki role user; tolak 403 + test (termasuk contoh
            `/admin/product/create` lolos via prefix `/admin/product`). [commit c6324c6]

@@ -216,17 +216,17 @@
 982|MINOR|T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
 986|MINOR|T37.2 [DONE] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
 1000|MINOR|T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
-1003|MINOR|T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
-1005|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
-1009|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
-1010|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
-1012|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
-1014|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
-1016|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
-1024|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-1037|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-1070|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-1103|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-1120|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-1138|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-1157|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+1003|MINOR|T37.4 [DONE] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
+1006|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
+1010|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
+1011|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+1013|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
+1015|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+1017|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+1025|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+1038|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+1071|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+1104|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+1121|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1139|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1158|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
