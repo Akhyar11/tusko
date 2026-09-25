@@ -23,7 +23,12 @@ export const CHILD_VIEW_TO_MENU = {
   'procurement-bill-detail': 'procurement-bills',
   'order-detail': 'orders',
   'menu-create': 'menus-admin',
-  'menu-edit': 'menus-admin'
+  'menu-edit': 'menus-admin',
+  'user-create': 'users-admin',
+  'user-edit': 'users-admin',
+  'user-roles': 'users-admin',
+  'voucher-create': 'vouchers-admin',
+  'voucher-edit': 'vouchers-admin'
 };
 
 /**

@@ -64,7 +64,7 @@ class AuthMenuEndpointTest extends TestCase
         $this->assertTrue($paths->contains('/admin/settings'));
         // finance_menu default false -> Buku Kas tidak tampil.
         $this->assertFalse($paths->contains('/admin/transaction'));
-        $this->assertCount(15, $response->json('data.admin'));
+        $this->assertCount(16, $response->json('data.admin'));
         $this->assertCount(3, $response->json('data.storefront'));
     }
 
@@ -78,7 +78,7 @@ class AuthMenuEndpointTest extends TestCase
 
         $paths = collect($response->json('data.admin'))->pluck('path_prefix');
         $this->assertTrue($paths->contains('/admin/transaction'));
-        $this->assertCount(16, $response->json('data.admin'));
+        $this->assertCount(17, $response->json('data.admin'));
     }
 
     public function test_limited_role_only_sees_assigned_menus(): void

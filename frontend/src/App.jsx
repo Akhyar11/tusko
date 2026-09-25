@@ -38,6 +38,10 @@ import WarehouseEditPage from './components/WarehouseEditPage';
 import MenuListPage from './components/MenuListPage';
 import MenuCreatePage from './components/MenuCreatePage';
 import MenuEditPage from './components/MenuEditPage';
+import UserListPage from './components/UserListPage';
+import UserCreatePage from './components/UserCreatePage';
+import UserEditPage from './components/UserEditPage';
+import UserRoleAssignPage from './components/UserRoleAssignPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -119,6 +123,10 @@ const VALID_VIEWS = [
   'menus-admin',
   'menu-create',
   'menu-edit',
+  'users-admin',
+  'user-create',
+  'user-edit',
+  'user-roles',
   'settings',
   'login',
   'register',
@@ -141,6 +149,10 @@ const ADMIN_CORE_VIEWS = [
   'menus-admin',
   'menu-create',
   'menu-edit',
+  'users-admin',
+  'user-create',
+  'user-edit',
+  'user-roles',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -181,6 +193,10 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/menus' || rawPath === '/admin/menu') return 'menus-admin';
     if (rawPath === '/admin/menus/create' || rawPath === '/admin/menu/create') return 'menu-create';
     if (rawPath.startsWith('/admin/menus/') || rawPath.startsWith('/admin/menu/')) return 'menus-admin';
+    if (rawPath === '/admin/users' || rawPath === '/admin/user') return 'users-admin';
+    if (rawPath === '/admin/users/create' || rawPath === '/admin/user/create') return 'user-create';
+    if (rawPath === '/admin/users/roles' || rawPath === '/admin/user/roles') return 'user-roles';
+    if (rawPath.startsWith('/admin/users/') || rawPath.startsWith('/admin/user/')) return 'users-admin';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -262,6 +278,9 @@ const getInitialView = () => {
     }
     if (rawView === 'menu-edit') {
       return 'menus-admin';
+    }
+    if (rawView === 'user-edit' || rawView === 'user-roles') {
+      return 'users-admin';
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
@@ -374,6 +393,7 @@ export default function App() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [editingMenu, setEditingMenu] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -1650,6 +1670,36 @@ export default function App() {
           <MenuEditPage
             menu={editingMenu}
             onNavigateBack={() => setCurrentView('menus-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'users-admin' ? (
+          <UserListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('user-create')}
+            onNavigateToEdit={(user) => {
+              setEditingUser(user);
+              setCurrentView('user-edit');
+            }}
+            onNavigateToRoles={(user) => {
+              setEditingUser(user);
+              setCurrentView('user-roles');
+            }}
+          />
+        ) : currentView === 'user-create' ? (
+          <UserCreatePage
+            onNavigateBack={() => setCurrentView('users-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'user-edit' ? (
+          <UserEditPage
+            user={editingUser}
+            onNavigateBack={() => setCurrentView('users-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'user-roles' ? (
+          <UserRoleAssignPage
+            user={editingUser}
+            onNavigateBack={() => setCurrentView('users-admin')}
             onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (
