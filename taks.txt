@@ -1,5 +1,5 @@
 ==============================================================================
-TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 5)
+TASKS.TXT — PETA & BREAKDOWN PENGERJAAN PROYEK TUSKO  (REVISI 6)
 E-Commerce Olahraga + Full ERP (Laravel 11 + React 19)
 ==============================================================================
 Acuan kanonis : PRD_DAN_DESAIN_SISTEM_TUSKO.md (Roadmap 5 Fase)
@@ -23,7 +23,8 @@ BUKTI VERIFIKASI (kode & DB DEV — bukan klaim dokumen; TIDAK digeneralisasi ke
   = decimal(8,2); orders.total_weight default 1 -> tidak konsisten (D3).
 - Seeder referensi SUDAH ADA (`MasterReferenceSeeder`): roles(4),
   order_statuses(7), payment_statuses(5), warehouses, chart_of_accounts(8),
-  financial_accounts, attributes. KOSONG: permissions(0), receipt_templates(0).
+  financial_accounts, attributes. KOSONG: permissions(0) [DIBUANG REVISI 6 -> T37],
+  receipt_templates(0).
 - Storage : FILESYSTEM_DISK=s3 (Cloudflare R2); URL = pub-...r2.dev -> bucket PUBLIK.
 
 ==============================================================================
@@ -192,7 +193,12 @@ users: id, name, email, email_verified_at, password, role(default 'customer'),
   points(default 0), membership_tier(default 'Member'), is_active(default 1)
 roles: id, name, display_name, description, is_system(default 0), created_at, updated_at
 permissions: id, code, name, group(default 'general'), description, created_at, updated_at
+  [DROPPED — REVISI 6; lihat T37]
 role_permissions: role_id(PK), permission_id(PK), created_at, updated_at
+  [DROPPED — REVISI 6; lihat T37]
+[NEW] menus: id, parent_id, code, label, sublabel, icon, path_prefix, view_key,
+  environment(admin|storefront), sort_order, is_active, feature_flag, created_at, updated_at
+[NEW] role_menus: role_id(PK), menu_id(PK), created_at, updated_at
 user_roles: user_id(PK), role_id(PK), created_at, updated_at
 shipping_addresses: id, user_id, label(default 'Rumah'), recipient_name, phone,
   full_address, district, city, province, postal_code, notes, is_default(default 0),
@@ -703,7 +709,7 @@ T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWN
   Minor: (berjalan terus tiap minor task).
 
 T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OWNER:A2]
-  DB: migrasi + seeder produksi (seeder referensi SUDAH ADA; sisa permissions/
+  DB: migrasi + seeder produksi (seeder referensi SUDAH ADA; sisa menus (T37.3)/
       receipt_templates -> T33).
   FE: feature flag menu per environment (config/env, G6) — TIDAK bergantung RBAC.
   API: konfigurasi produksi (env, CORS, storage, Sanctum expiry).
@@ -720,16 +726,18 @@ T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OW
 MAJOR TAMBAHAN (menutup gap audit)
 ==============================================================================
 
-T24. RBAC & Keamanan Admin (Roles & Permissions) ................... [TODO]  [OWNER:A2]
-  DB: roles, permissions, role_permissions, user_roles, users.role.
-  FE: guard AdminSidebar; halaman kelola role (opsional).
-  API: [NEW] /api/roles, /api/permissions; middleware 'role:'/'permission:'.
+T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [TODO]  [OWNER:A2]
+  REVISI 6 (keputusan user): lapisan `permissions`/`role_permissions` DIBUANG
+  (terlalu rumit). Otorisasi memakai model sederhana: user -> role -> menu.
+  DB: roles, user_roles, menus, role_menus, users.role. (permissions dibuang)
+  FE: guard AdminSidebar dari menu per-role (lihat T37); kelola role.
+  API: [NEW] /api/roles (+assign role ke user); middleware 'role:'.
   Test: [NEW] RbacAuthorizationTest.
   Minor:
-    T24.1 [DONE] Middleware EnsureRole/EnsurePermission + registrasi.
-    T24.2 [TODO] Terapkan middleware ke endpoint admin.
-    T24.3 [NEW] Endpoint + FE kelola role & permission (opsional).
-    T24.4 [TODO] FE guard menu AdminSidebar berdasarkan role/permission.
+    T24.1 [DONE] Middleware EnsureRole (+ EnsurePermission -> DIBUANG di T37).
+    T24.2 [TODO] Terapkan middleware 'role:' ke endpoint admin.
+    T24.3 [TODO] Endpoint + FE kelola role (CRUD role + assign role ke user).
+    T24.4 [TODO] FE guard akses halaman Admin berbasis menu per-role (via T37).
     T24.5 [DONE] Sinkron `users.role` <-> `user_roles` (D5).
 
 T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
@@ -838,11 +846,12 @@ T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OW
 T33. Audit Log & Seeder Referensi (SISA) ........................... [PARTIAL]  [OWNER:A2]
   CATATAN: seeder referensi SUDAH ADA (MasterReferenceSeeder) untuk roles,
   order_statuses, payment_statuses, warehouses, chart_of_accounts,
-  financial_accounts, attributes. Sisa: permissions & receipt_templates + log.
-  DB: [NEW] activity_logs; permissions; receipt_templates.
+  financial_accounts, attributes. Sisa: receipt_templates + log.
+  DB: [NEW] activity_logs; receipt_templates. (`permissions` DIBUANG -> T37)
   Minor:
     T33.1 [DONE] Migrasi activity_logs + logging aksi admin (HARGA/STOK/ROLE, G9).
-    T33.2 [DONE] Seeder `permissions` (melengkapi roles).
+    T33.2 [REPLACED -> T37] Seeder `permissions` DIBATALKAN; diganti seeder
+           `menus` + `role_menus` (T37.3).
     T33.3 [DONE] Seeder `receipt_templates` default.
 
 T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
@@ -937,6 +946,50 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OW
   - Menyentuh file admin A2 (`AdminSidebar`, halaman baru) -> [OWNER:A2].
   - OUT-OF-SCOPE tetap: COD, pajak/PPN, SEO, compliance data pribadi.
 
+T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [TODO]  [OWNER:A2]
+  Fitur: menu admin/storefront dikelola dari DB (master `menus`) dan akses
+         ditentukan oleh role -> menu (pivot `role_menus`). User -> role -> menu.
+         Menggantikan lapisan `permissions`/`role_permissions` (dibuang).
+  DB: [NEW] menus, role_menus (+ migrasi DROP permissions & role_permissions);
+      roles/user_roles/users.role (existing).
+  FE: sidebar/nav DINAMIS dari API menu per-role; guard halaman berbasis PREFIX.
+  API: [NEW] GET /api/auth/menus (menu untuk role user); [NEW] /api/admin/menus
+       (CRUD menu) + assign menu ke role; middleware `menu.access` (admin).
+  Test: [NEW] MenuAccessApiTest, RoleMenuGuardTest + uji browser.
+  ATURAN AKSES (sesuai keputusan user):
+    - User boleh buka halaman bila salah satu role-nya punya menu dengan
+      `path_prefix` yang cocok (mis. menu `/admin/product` -> `/admin/product/create`
+      & `/admin/product/edit` ikut boleh).
+    - `environment='storefront'` = PUBLIK (tanpa role) -> beranda/katalog/cart/
+      profil tetap bebas. Guard hanya menegakkan `environment='admin'`.
+    - Menu difilter `is_active` + `feature_flag` (integrasi T36.16/T23.2).
+  Minor:
+    T37.1 [NEW] Migrasi `menus` + `role_menus` (+ DROP `permissions` &
+           `role_permissions`) + model `Menu` (relasi roles/menus).
+    T37.2 [NEW] Hapus/buang kode permissions: model `Permission`, `PermissionSeeder`,
+           middleware `EnsurePermission` + pemakaiannya; pastikan boot tetap hijau.
+    T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
+           parent/section, icon, feature_flag) + assign seluruh menu ke role `admin`
+           (idempoten) + test.
+    T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
+           + test.
+    T37.5 [NEW] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
+           menu yang dimiliki role user; tolak 403 + test (termasuk contoh
+           `/admin/product/create` lolos via prefix `/admin/product`).
+    T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test.
+    T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+           `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
+    T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
+           `Navbar`/`UserMenuDropdown` (A1) + uji browser [koordinasi A1].
+    T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+           halaman 403/redirect + Toast; + uji browser.
+    T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+           terbatas -> menu tersembunyi & URL ditolak; storefront publik tetap akses.
+  Catatan desain:
+  - Sederhana & mudah dikustom: hanya `menus` + `role_menus` (tanpa permissions).
+  - `menu` = navigasi + guard halaman; aksi spesifik API cukup middleware `role:` (T24).
+  - Menyentuh `AdminSidebar`/RBAC (A2) + `Navbar`/`UserMenuDropdown` (A1) -> koordinasi.
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================
@@ -970,7 +1023,7 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T16.4 -> (independen)
 - T18.1 -> T12.2 ; T18.3 -> T18.1 ; T19.1 -> T18.2, T18.1, T31
 - T20.4 -> T30.1 ; T23.3 -> T33 (seeder)
-- T24.x -> T33.2 (permissions) ; T27.1 -> T26
+- T24.x -> (menus via T37) ; T27.1 -> T26 (T33.2 permissions DIBATALKAN -> T37.3)
 - T28.1 -> T05, T06 ; T28.2 -> T06.2, T08.2, T31.1
 - T29.3 -> T13.3, T31.4, T34.1
 - T30.2 -> T13.3 ; T30.3 -> T31.2, T10.4
@@ -979,6 +1032,7 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T35 -> seluruh fitur (sebelum rilis)
 - T36 -> T21.1 (integrations) ; T36.7 -> T24 (RBAC) ; T36.16 -> T23.2 (feature flag)
 - T36.11 -> T06.2/T06.7 ; T36.12 -> T07/T21.2 ; T36.13 -> T21.3 ; T36.14 -> T31.2/T29 ; T36.15 -> T20
+- T37 -> T24 (roles/user_roles) ; T37.5 -> T24.2 ; T37.7 -> T36.16 (feature flag) ; T37.8 -> Navbar (A1)
 CATATAN: Tidak ada siklus. T16.4 (mesin) TIDAK bergantung pada T34.1; sebaliknya
 T34.1 dan task event (T07/T14/T25/T29) memakai mesin T16.4 + mapping T34.1.
 
@@ -1005,7 +1059,7 @@ URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
 12) T10 Fulfillment/Label/Tracking.
 13) T31 Loyalitas (T31.1 earning, T31.2 expiry, T31.4 reversal).
     -> T28 TAHAP 2: poin redeem (setelah T31).
-14) T24 RBAC.
+14) T24 RBAC (roles) + T37 Dynamic Menu & Role-Menu Access (tanpa permissions).
 15) T34.2/3/4 Laporan (laba rugi, neraca, aging, ekspor).
 16) T08.3/4 + T15.2–4 Voucher FE/Admin.
 17) T12.3–T12.5 Mutasi Stok + T25 Stock Opname.
@@ -1022,7 +1076,7 @@ MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
 - UANG & STOK: T18.1, T16.4, T34.1 (mapping lunas/fee), T28 TAHAP 1, T13, T12.6,
   T07, T21.2, T30.2
 - OPERASIONAL: T09, T27, T27.1, T27.5, T10
-- KEAMANAN: T21.3 (R2 privat), T24, T35.1, T35.2, T35.3
+- KEAMANAN: T21.3 (R2 privat), T24 (roles), T37 (menu per-role), T35.1, T35.2, T35.3
 - CONFIG: T36 (Pengaturan Sistem Terpusat) — seluruh konfigurasi tanpa deploy
 CATATAN MILESTONE:
 - Kepemilikan test konkurensi + idempotensi webhook = **T35.2** (T13/T07 hanya
@@ -1155,3 +1209,32 @@ ADDENDUM REVISI 5:
   belum ada endpoint HTTP (hanya command `expeditions:sync`). T21.4 dipastikan
   [PARTIAL] dan dipecah menjadi T21.4a–d (endpoint admin, tombol FE, refaktor
   halaman, penjadwalan). [OWNER:A2] (memakai `ExpeditionSyncService` milik A1).
+
+==============================================================================
+REVISI 6 — Sederhanakan RBAC: BUANG permissions, TAMBAH Master Menu (T37)
+==============================================================================
+Keputusan user: lapisan `permissions`/`role_permissions` terlalu rumit -> DIBUANG.
+Model otorisasi final (sederhana): user -> role -> menu.
+- Master: users, roles, menus.
+- Pivot: user_roles, role_menus.
+- Aturan: user boleh buka halaman bila salah satu role-nya punya menu dengan
+  `path_prefix` cocok (contoh menu `/admin/product` -> `/admin/product/create`
+  & `/admin/product/edit` ikut boleh).
+- Storefront (`environment='storefront'`) = PUBLIK (tanpa role): beranda, katalog,
+  cart, profil tetap bebas. Guard hanya untuk `environment='admin'`.
+
+Perubahan task:
+- MAJOR BARU T37 (Dynamic Menu & Role-Menu Access) [OWNER:A2], minor T37.1–T37.10.
+- T24 disederhanakan: judul "RBAC Admin (Roles + Menu Access) — TANPA permissions";
+  T24.1 EnsurePermission akan dibuang (T37.2); T24.3 kelola role (tanpa permission);
+  T24.4 guard halaman via menu (T37).
+- T33.2 (seeder permissions) -> [REPLACED -> T37.3] seeder menus + role_menus.
+- Skema: `permissions` & `role_permissions` ditandai [DROPPED]; ditambah `menus`
+  & `role_menus` (T37.1).
+- Dependensi T37 & milestone KEAMANAN diperbarui (T24 roles + T37 menu).
+
+Dampak implementasi (A2): migrasi drop permissions/role_permissions; hapus model
+`Permission`, `PermissionSeeder`, middleware `EnsurePermission` + pemakaiannya;
+ganti `AdminSidebar` statis menjadi dinamis dari `GET /api/auth/menus`.
+Koordinasi A1 untuk `Navbar`/`UserMenuDropdown` (menu storefront publik, T37.8).
+==============================================================================
