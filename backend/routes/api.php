@@ -126,6 +126,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'index']);
     Route::put('/integrations', [\App\Http\Controllers\Api\IntegrationController::class, 'update']);
 
+    Route::prefix('admin/vouchers')->group(function () {
+        Route::get('/', [VoucherController::class, 'adminIndex']);
+        Route::post('/', [VoucherController::class, 'store']);
+        Route::get('/{id}', [VoucherController::class, 'show'])->whereNumber('id');
+        Route::match(['put', 'patch'], '/{id}', [VoucherController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [VoucherController::class, 'destroy'])->whereNumber('id');
+    });
+
     Route::middleware(['permission:settings.manage', 'throttle:120,1'])->group(function () {
         Route::get('/admin/settings', [\App\Http\Controllers\Api\SettingsController::class, 'index']);
         Route::get('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'show']);
