@@ -100,21 +100,34 @@ G10. KAPAN MERGE (ringkas — detail di AGENTS.md RULE[merge_policy]):
     - Setelah merge: branch dihapus/rebased dari `main`; agent lain
       `git fetch origin && git rebase origin/main`.
 G11. AKSES MENU & RUTE WAJIB (Menu & Route Registration) — WAJIB DIPERIKSA AGENT
-     SETIAP MINOR YANG MEMBUAT/MENGUBAH HALAMAN:
+     SETIAP MINOR YANG MEMBUAT/MENGUBAH HALAMAN.
      Setiap halaman/modul baru atau yang diubah wajib terdaftar/konsisten pada:
-     (a) `AdminSidebar.jsx` `menuSections` (admin) ATAU `Navbar`/`UserMenuDropdown`
-         (storefront);
      (b) `VALID_VIEWS` (App.jsx);
      (c) `getViewFromPathOrHash` (pemetaan path/hash -> view);
      (d) cabang render `currentView === '<view>'` di App.jsx (WAJIB ada, bukan dead view);
      (e) `adminCoreViews` (App.jsx) untuk halaman admin;
      (f) feature flag `SHOW_OPERATIONAL_MODULES` (config/features.js) untuk modul
          operasional (agar bisa disembunyikan di `master`).
+     Pendaftaran MENU (per REVISI 6 — Role-Menu, tanpa permissions):
+     (a) **Halaman ADMIN**: WAJIB menambah entri di **master `menus`** (seeder
+         `MenuSeeder`, T37.3) + **assign ke role** via `role_menus` (mis. role
+         `admin`), dengan `environment='admin'`, `path_prefix` (cocok prefix, mis.
+         `/admin/product` mencakup `/admin/product/create`), `view_key`, section,
+         icon, `feature_flag`. `AdminSidebar` dirender **DINAMIS** dari
+         `GET /api/auth/menus` (T37.7) — DILARANG menambah menu dengan mengedit
+         `menuSections` statis.
+     (b) **Halaman STOREFRONT**: daftar menu `environment='storefront'` bersifat
+         PUBLIK (tanpa role) dan tetap didaftarkan pada `Navbar`/
+         `UserMenuDropdown` (A1). Tautan storefront tidak tunduk pada role.
      DILARANG: (1) membuat halaman tanpa akses menu/rute (dead page);
-     (2) mendaftarkan `activeViews` di sidebar tanpa cabang render di App.jsx;
-     (3) menambah halaman admin tanpa entri menu di AdminSidebar.
-     Bukti uji FE WAJIB menyertakan verifikasi akses menu/rute (klik menu -> halaman
-     terbuka). Ditegakkan lewat auditor frontend yang ada (07) + review agent.
+     (2) mendaftarkan menu tanpa cabang render di App.jsx;
+     (3) menambah halaman admin tanpa entri di master `menus` + `role_menus`
+         (selama T37 belum selesai, sementara gunakan `AdminSidebar` statis lalu
+         WAJIB migrasikan ke seeder `menus` saat T37 dikerjakan);
+     (4) mengandalkan tabel `permissions`/`role_permissions` (SUDAH DIBUANG, REVISI 6).
+     Bukti uji FE WAJIB menyertakan verifikasi akses menu/rute: klik menu -> halaman
+     terbuka, dan (untuk admin) role tanpa menu -> menu tersembunyi & URL ditolak.
+     Ditegakkan lewat auditor frontend yang ada (07) + review agent.
 
 LEGENDA STATUS: [DONE] / [PARTIAL] / [TODO] / [OPS] / [KEPUTUSAN DIBUTUHKAN].
               [NEW] = belum ada di schema.

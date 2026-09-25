@@ -258,18 +258,22 @@ Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang waj
 <RULE[menu_access_rule]>
 # Kebijakan Akses Menu & Rute Wajib (Mandatory Menu & Route Registration)
 
-1. **Setiap halaman/modul BARU atau yang diubah WAJIB terdaftar/konsisten pada seluruh titik berikut:**
-   - `frontend/src/components/AdminSidebar.jsx` (`menuSections`) untuk halaman **admin**, ATAU `Navbar.jsx`/`UserMenuDropdown.jsx` untuk **storefront**.
+1. **Setiap halaman/modul BARU atau yang diubah WAJIB terdaftar/konsisten pada titik RUTE (berlaku untuk admin & storefront):**
    - `VALID_VIEWS` di `frontend/src/App.jsx`.
    - `getViewFromPathOrHash()` di `App.jsx` (pemetaan path/hash -> view, mis. `/admin/settings` -> `settings`).
    - Cabang render `currentView === '<view>'` di `App.jsx` (WAJIB ada; dilarang *dead view*).
    - `adminCoreViews` di `App.jsx` (untuk halaman admin, agar layout/padding kanonis).
    - Feature flag `SHOW_OPERATIONAL_MODULES` (`frontend/src/config/features.js`) untuk modul operasional, agar dapat disembunyikan di `master`.
-2. **DILARANG KERAS:**
+2. **Pendaftaran MENU (REVISI 6 — Role-Menu, TANPA `permissions`):**
+   - **Halaman ADMIN:** WAJIB menambah entri di **master `menus`** (seeder `MenuSeeder`, T37.3) via `role_menus` untuk role terkait (mis. `admin`), dengan `environment='admin'`, `path_prefix` (cocok **prefix**: `/admin/product` mencakup `/admin/product/create`), `view_key`, section, icon, `feature_flag`. `AdminSidebar` dirender **DINAMIS** dari `GET /api/auth/menus` (T37.7) — DILARANG menambah menu dengan mengedit `menuSections` statis.
+   - **Halaman STOREFRONT:** menu `environment='storefront'` bersifat **PUBLIK** (tanpa role) dan tetap didaftarkan pada `Navbar.jsx`/`UserMenuDropdown.jsx` (A1).
+   - **Transisi:** selama T37 belum selesai, entri admin boleh masih di `AdminSidebar` statis, NAMUN WAJIB dimigrasikan ke seeder `menus` saat T37 dikerjakan.
+3. **DILARANG KERAS:**
    - Membuat halaman tanpa akses menu/rute (halaman *dead* / tidak dapat dijangkau pengguna).
-   - Mendaftarkan `activeViews` pada item sidebar tanpa cabang render di `App.jsx`.
-   - Menambah halaman admin tanpa entri menu di `AdminSidebar`.
-3. **Bukti uji FE WAJIB** menyertakan verifikasi akses menu/rute (klik entri menu -> halaman terbuka, konsol 0 error), bukan hanya memuat URL langsung.
-4. **Kewajiban Agent:** Pada SETIAP minor yang membuat/mengubah halaman, Agent WAJIB memeriksa keenam titik di atas dan melaporkannya di `.agent-test-proofs/`. Bila menemukan halaman *dead* atau menu tak sinkron, Agent WAJIB memperbaikinya atau mencatatnya sebagai task di `taks.txt`.
-5. **Penegakan:** Ditegakkan melalui auditor frontend yang sudah ada (`07-frontend-consistency-auditor.sh`) + review agent; tidak membuat auditor baru.
+   - Mendaftarkan menu tanpa cabang render di `App.jsx`.
+   - Menambah halaman admin tanpa entri di master `menus` + `role_menus` (setelah T37).
+   - Mengandalkan tabel `permissions`/`role_permissions` (SUDAH DIBUANG, REVISI 6).
+4. **Bukti uji FE WAJIB** menyertakan verifikasi akses menu/rute (klik entri menu -> halaman terbuka, konsol 0 error), bukan hanya memuat URL langsung; untuk admin, verifikasi role tanpa menu -> menu tersembunyi & URL ditolak.
+5. **Kewajiban Agent:** Pada SETIAP minor yang membuat/mengubah halaman, Agent WAJIB memeriksa seluruh titik di atas dan melaporkannya di `.agent-test-proofs/`. Bila menemukan halaman *dead* atau menu tak sinkron, Agent WAJIB memperbaikinya atau mencatatnya sebagai task di `taks.txt`.
+6. **Penegakan:** Ditegakkan melalui auditor frontend yang sudah ada (`07-frontend-consistency-auditor.sh`) + review agent; tidak membuat auditor baru.
 </RULE[menu_access_rule]>
