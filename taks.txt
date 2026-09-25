@@ -482,7 +482,8 @@ T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  
        [NEW] POST /api/vouchers/validate, POST /api/loyalty/redeem.
   Test: ProductLoyaltyPointMechanismTest + [NEW] VoucherValidationTest.
   Minor:
-    T08.1 [TODO] FE daftar + klaim voucher (ProfilePage).
+    T08.1 [DONE] FE daftar + klaim voucher (ProfilePage) via `authService.claimVoucher`
+           -> `POST /api/vouchers/claim` + Toast + uji browser Playwright. [OWNER:A1]
     T08.2 [DONE] POST /api/vouchers/validate (min belanja/kuota/cakupan/per-user/
            stacking/gratis ongkir) + VoucherValidationTest. (Dasar; dipakai T28.2) [OWNER:A1]
     T08.3 [TODO] FE terapkan kupon di CheckoutPage (server-authoritative T28.2).
