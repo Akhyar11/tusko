@@ -975,7 +975,7 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OW
   - Menyentuh file admin A2 (`AdminSidebar`, halaman baru) -> [OWNER:A2].
   - OUT-OF-SCOPE tetap: COD, pajak/PPN, SEO, compliance data pribadi.
 
-T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [TODO]  [OWNER:A2]
+T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  [OWNER:A2]
   Fitur: menu admin/storefront dikelola dari DB (master `menus`) dan akses
          ditentukan oleh role -> menu (pivot `role_menus`). User -> role -> menu.
          Menggantikan lapisan `permissions`/`role_permissions` (dibuang).
@@ -993,8 +993,10 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [TODO]  [OW
       profil tetap bebas. Guard hanya menegakkan `environment='admin'`.
     - Menu difilter `is_active` + `feature_flag` (integrasi T36.16/T23.2).
   Minor:
-    T37.1 [NEW] Migrasi `menus` + `role_menus` (+ DROP `permissions` &
-           `role_permissions`) + model `Menu` (relasi roles/menus).
+    T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
+           roles/parent/children + scope active/forEnvironment). [commit c60c0ea]
+           (DROP `permissions` & `role_permissions` DIPISAH ke T37.2 sesuai
+           keputusan user: baru dijalankan setelah middleware T37.5 siap).
     T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
            - `backend/app/Models/Permission.php` + relasi `Role::permissions()`.
            - `backend/app/Http/Middleware/EnsurePermission.php` + alias di bootstrap.
