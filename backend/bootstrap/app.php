@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'role' => \App\Http\Middleware\EnsureUserRole::class,
             'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'menu.access' => \App\Http\Middleware\EnsureMenuAccess::class,
             'auth.optional' => \App\Http\Middleware\AuthenticateOptional::class,
         ]);
     })
