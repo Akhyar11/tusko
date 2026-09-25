@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
 use App\Models\VoucherTarget;
+use App\Services\VoucherService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -260,5 +261,32 @@ class VoucherController extends Controller
                 'target_id' => $target['target_type'] === 'all' ? null : (int) $target['target_id'],
             ]);
         }
+    }
+
+    /**
+     * Validasi kupon + hitung diskon/gratis ongkir (T08.2) — server-authoritative.
+     */
+    public function validateVoucher(Request $request, VoucherService $voucherService): JsonResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:50'],
+            'subtotal' => ['nullable', 'numeric', 'min:0'],
+            'items' => ['nullable', 'array'],
+            'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
+            'items.*.product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
+            'applied_codes' => ['nullable', 'array'],
+            'applied_codes.*' => ['string', 'max:50'],
+        ]);
+
+        $result = $voucherService->validate(
+            $data['code'],
+            $data['items'] ?? [],
+            isset($data['subtotal']) ? (float) $data['subtotal'] : null,
+            $request->user(),
+            $data['applied_codes'] ?? []
+        );
+
+        return response()->json(['data' => $result]);
     }
 }

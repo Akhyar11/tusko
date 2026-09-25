@@ -40,6 +40,7 @@ Route::prefix('auth')->group(function () {
 
 Route::prefix('vouchers')->group(function () {
     Route::get('/', [VoucherController::class, 'index']);
+    Route::post('/validate', [VoucherController::class, 'validateVoucher'])->middleware('auth.optional');
     Route::post('/claim', [VoucherController::class, 'claim'])->middleware('auth:sanctum');
 });
 
