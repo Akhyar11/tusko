@@ -1068,10 +1068,12 @@ T38. Master Users & Role Access (Admin) ............................ [TODO]  [OW
        Admin-only (middleware role/menu).
   Test: [NEW] UserManagementApiTest (CRUD + assign role + otorisasi admin + anti-IDOR).
   Minor:
-    T38.1 [NEW] Backend CRUD user admin (list server-side + filter + create/update/
+    T38.1 [DONE] Backend CRUD user admin (list server-side + filter + create/update/
             delete) + validasi email unik + sinkron `users.role` <-> `user_roles`
-            (T24.5) + audit log (G9) + test.
-    T38.2 [NEW] Endpoint assign role ke user + test (tolak non-admin, 401/403).
+            (T24.5) + audit log (G9) + test. [commit 52d0499]
+    T38.2 [DONE] Endpoint assign role ke user + test (tolak non-admin, 401/403).
+            [commit b9feaef] `POST /api/admin/users/{user}/roles` multi-role via pivot;
+            primary `users.role` = admin bila ada role admin, anti-lockout akun sendiri.
     T38.3 [TODO] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
     T38.4 [TODO] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel).
     T38.5 [TODO] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
