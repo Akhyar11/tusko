@@ -1029,8 +1029,10 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            - T37.6b [DONE] FE: halaman kelola menu (List/Create/Edit + FilterDrawer +
              Zustand store) + registrasi rute/menu + uji browser Playwright.
              [commit f00b8fd]
-    T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+    T37.7 [DONE] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
            `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
+           [commit 648591f] `useMenuStore` + `menuIcons`; `menuSections` statis &
+           `featureFlags` client dihapus (filter flag server-side).
     T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
            `Navbar`/`UserMenuDropdown` (A1) + uji browser [koordinasi A1].
     T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
