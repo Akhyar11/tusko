@@ -9,7 +9,6 @@ import {
   Camera, 
   ArrowLeft, 
   CheckCircle2, 
-  AlertCircle, 
   Loader2, 
   Star, 
   Calendar, 
@@ -39,11 +38,14 @@ import { mockDemoUsers } from '../data/mockAuthData';
 import { authService } from '../services/authService';
 import { formatRupiah } from '../utils/formatters';
 import AddressFormPage from './AddressFormPage';
+import TextInput from './molecules/TextInput';
+import FileInput from './molecules/FileInput';
 
 export default function ProfilePage({
   currentUser = null,
   onUpdateProfile = () => {},
-  onBack = () => {}
+  onBack = () => {},
+  onShowToast = () => {}
 }) {
   // Gunakan user yang sedang login atau fallback ke demo user
   const [userProfile, setUserProfile] = useState(currentUser || mockDemoUsers[0]);
@@ -119,18 +121,12 @@ export default function ProfilePage({
 
   // State Feedback & Toast
   const [isLoading, setIsLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success'); // 'success' | 'error'
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedVoucher, setCopiedVoucher] = useState(null);
 
-  // Fungsi trigger toast melayang
+  // Toast global (Aturan 17): delegasikan ke App via onShowToast.
   const showToast = (msg, type = 'success') => {
-    setToastMessage(msg);
-    setToastType(type);
-    setTimeout(() => {
-      setToastMessage('');
-    }, 3500);
+    onShowToast(msg, { type });
   };
 
   // Ambil data profil, alamat, voucher, dan sesi aktif dari backend saat komponen dimuat
@@ -417,8 +413,8 @@ export default function ProfilePage({
   };
 
   // Simulasi ganti avatar
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleAvatarChange = (input) => {
+    const file = input?.target?.files?.[0] ?? (input instanceof File ? input : null);
     if (file) {
       const reader = new FileReader();
       reader.onload = (evt) => {
@@ -461,24 +457,6 @@ export default function ProfilePage({
   return (
     <div className="min-h-screen bg-neutral-50 text-black antialiased selection:bg-black selection:text-white pb-16">
       
-      {/* Floating Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 animate-bounce">
-          <div className={`px-4 py-3 shadow-2xl flex items-center gap-2.5 text-xs font-bold border ${
-            toastType === 'error'
-              ? 'bg-rose-900 text-white border-rose-700'
-              : 'bg-black text-white border-neutral-700'
-          }`}>
-            {toastType === 'error' ? (
-              <AlertCircle size={16} className="text-rose-400 shrink-0" />
-            ) : (
-              <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-            )}
-            <span>{toastMessage}</span>
-          </div>
-        </div>
-      )}
-
       {/* 1. MAIN CONTAINER */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         
@@ -505,7 +483,7 @@ export default function ProfilePage({
         </div>
 
         {/* 2. ATHLETIC MEMBER BANNER & SUMMARY CARD */}
-        <div className="bg-black text-white p-4 sm:p-8 border border-neutral-800 mb-6 sm:mb-8 relative overflow-hidden shadow-xl">
+        <div className="bg-black text-white p-5 sm:p-6 border border-neutral-300 rounded-none mb-6 sm:mb-8 relative overflow-hidden shadow-2xs">
           {/* Background Graphic Accents */}
           <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-amber-500/10 to-transparent pointer-events-none"></div>
           <div className="absolute -right-8 -bottom-10 text-neutral-800 font-sport font-black text-9xl italic select-none pointer-events-none opacity-20">
@@ -522,20 +500,14 @@ export default function ProfilePage({
                   alt={name}
                   className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 object-cover border-2 border-amber-400 shadow-xl"
                 />
-                <label 
-                  htmlFor="avatar-upload"
-                  className="absolute bottom-0 right-0 bg-black/90 hover:bg-amber-500 hover:text-black text-white p-1 sm:p-1.5 border border-neutral-700 cursor-pointer transition-colors shadow-md" 
-                  title="Ganti Foto Profil"
-                >
-                  <Camera size={12} className="sm:w-3.5 sm:h-3.5" />
-                </label>
-                <input 
-                  type="file" 
-                  id="avatar-upload" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleAvatarChange} 
-                />
+                <FileInput accept="image/*" onChange={handleAvatarChange}>
+                  <span
+                    className="absolute bottom-0 right-0 bg-black/90 hover:bg-amber-500 hover:text-black text-white p-1 sm:p-1.5 border border-neutral-700 cursor-pointer transition-colors shadow-md"
+                    title="Ganti Foto Profil"
+                  >
+                    <Camera size={12} className="sm:w-3.5 sm:h-3.5" />
+                  </span>
+                </FileInput>
               </div>
 
               <div className="min-w-0 flex-1">
@@ -669,7 +641,7 @@ export default function ProfilePage({
 
         {/* TAB 1: BIODATA PRIBADI */}
         {activeTab === 'biodata' && (
-          <div className="bg-white border border-neutral-200 p-4 sm:p-8 shadow-xs">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
             <div className="max-w-3xl">
               <div className="border-b border-neutral-200 pb-4 mb-6">
                 <h2 className="font-sport font-black text-lg sm:text-xl uppercase tracking-tight text-black">
@@ -688,15 +660,14 @@ export default function ProfilePage({
                     Nama Lengkap <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <input 
-                      type="text" 
+                    <TextInput
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-neutral-50 border border-neutral-300 px-4 py-3 pl-10 text-sm focus:outline-none focus:border-black font-semibold"
+                      onChange={setName}
+                      className="pl-10 font-semibold"
                       placeholder="Masukkan nama lengkap..."
                       required
                     />
-                    <User size={16} className="absolute left-3.5 top-3.5 text-neutral-400" />
+                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                   </div>
                 </div>
 
@@ -712,14 +683,14 @@ export default function ProfilePage({
                       </span>
                     </div>
                     <div className="relative">
-                      <input 
-                        type="email" 
+                      <TextInput
+                        type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-neutral-50 border border-neutral-300 px-4 py-3 pl-10 text-sm focus:outline-none focus:border-black font-semibold"
+                        onChange={setEmail}
+                        className="pl-10 font-semibold"
                         required
                       />
-                      <Mail size={16} className="absolute left-3.5 top-3.5 text-neutral-400" />
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                     </div>
                   </div>
 
@@ -733,14 +704,14 @@ export default function ProfilePage({
                       </span>
                     </div>
                     <div className="relative">
-                      <input 
-                        type="tel" 
+                      <TextInput
+                        type="tel"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-neutral-50 border border-neutral-300 px-4 py-3 pl-10 text-sm focus:outline-none focus:border-black font-semibold"
+                        onChange={setPhone}
+                        className="pl-10 font-semibold"
                         placeholder="0812-xxxx-xxxx"
                       />
-                      <Phone size={16} className="absolute left-3.5 top-3.5 text-neutral-400" />
+                      <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -782,13 +753,13 @@ export default function ProfilePage({
                       Tanggal Lahir
                     </label>
                     <div className="relative">
-                      <input 
-                        type="date" 
+                      <TextInput
+                        type="date"
                         value={birthDate}
-                        onChange={(e) => setBirthDate(e.target.value)}
-                        className="w-full bg-neutral-50 border border-neutral-300 px-4 py-3 pl-10 text-sm focus:outline-none focus:border-black font-semibold"
+                        onChange={setBirthDate}
+                        className="pl-10 font-semibold"
                       />
-                      <Calendar size={16} className="absolute left-3.5 top-3.5 text-neutral-400" />
+                      <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -820,7 +791,7 @@ export default function ProfilePage({
         {/* TAB 2: BUKU ALAMAT PENGIRIMAN */}
         {activeTab === 'address' && (
           <div className="space-y-6">
-            <div className="bg-white border border-neutral-200 p-4 sm:p-8 shadow-xs">
+            <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4 mb-6">
                 <div>
                   <h2 className="font-sport font-black text-lg sm:text-xl uppercase tracking-tight text-black">
@@ -922,7 +893,7 @@ export default function ProfilePage({
 
         {/* TAB 3: KEAMANAN & KATA SANDI */}
         {activeTab === 'security' && (
-          <div className="bg-white border border-neutral-200 p-4 sm:p-8 shadow-xs">
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
             <div className="max-w-3xl">
               <div className="border-b border-neutral-200 pb-4 mb-6">
                 <h2 className="font-sport font-black text-lg sm:text-xl uppercase tracking-tight text-black">
@@ -941,12 +912,12 @@ export default function ProfilePage({
                     Kata Sandi Saat Ini <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <input 
+                    <TextInput
                       type={showOldPassword ? "text" : "password"}
                       value={oldPassword}
-                      onChange={(e) => setOldPassword(e.target.value)}
+                      onChange={setOldPassword}
                       placeholder="Kata sandi saat ini..."
-                      className="w-full bg-neutral-50 border border-neutral-300 pl-9 pr-9 py-2.5 sm:py-3 text-xs sm:text-sm focus:outline-none focus:border-black font-semibold"
+                      className="pl-9 pr-9 font-semibold"
                       required
                     />
                     <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
@@ -966,14 +937,14 @@ export default function ProfilePage({
                     Kata Sandi Baru <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <input 
+                    <TextInput
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={setNewPassword}
                       placeholder="Minimal 6 karakter..."
-                      className="w-full bg-neutral-50 border border-neutral-300 pl-9 pr-9 py-2.5 sm:py-3 text-xs sm:text-sm focus:outline-none focus:border-black font-semibold"
+                      className="pl-9 pr-9 font-semibold"
                       required
-                      minLength={6}
+                      min={6}
                     />
                     <KeyRound size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
                     <button
@@ -993,12 +964,12 @@ export default function ProfilePage({
                     Ulangi Kata Sandi Baru <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <input 
+                    <TextInput
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={setConfirmPassword}
                       placeholder="Ulangi kata sandi..."
-                      className="w-full bg-neutral-50 border border-neutral-300 pl-9 pr-9 py-2.5 sm:py-3 text-xs sm:text-sm focus:outline-none focus:border-black font-semibold"
+                      className="pl-9 pr-9 font-semibold"
                       required
                     />
                     <KeyRound size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
@@ -1133,7 +1104,7 @@ export default function ProfilePage({
         {/* TAB 4: KUPON DISKON & VOUCHER MEMBER */}
         {activeTab === 'vouchers' && (
           <div className="space-y-6">
-            <div className="bg-white border border-neutral-200 p-4 sm:p-8 shadow-xs">
+            <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
               <div className="border-b border-neutral-200 pb-4 mb-6">
                 <h2 className="font-sport font-black text-lg sm:text-xl uppercase tracking-tight text-black">
                   Kupon Diskon &amp; Voucher Eksklusif
@@ -1176,7 +1147,7 @@ export default function ProfilePage({
                   return (
                     <div 
                       key={vch.id || vch.code}
-                      className={`border p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group shadow-md transition-transform hover:-translate-y-1 ${
+                      className={`border p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden group shadow-2xs transition-transform hover:-translate-y-1 rounded-none ${
                         isBlackTheme 
                           ? 'border-neutral-800 bg-neutral-950 text-white' 
                           : isAmberTheme 

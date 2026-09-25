@@ -1485,6 +1485,7 @@ export default function App() {
               showToast('Profil akun berhasil diperbarui!');
             }}
             onBack={() => setCurrentView('catalog')}
+            onShowToast={showToast}
           />
         ) : currentView === 'order-detail' ? (
           <OrderDetailPage
