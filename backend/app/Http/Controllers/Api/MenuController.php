@@ -65,6 +65,14 @@ class MenuController extends Controller
             $query->where('path_prefix', 'like', '%' . $request->input('pathSearch') . '%');
         }
 
+        if ($request->filled('viewSearch')) {
+            $query->where('view_key', 'like', '%' . $request->input('viewSearch') . '%');
+        }
+
+        if ($request->filled('sectionSearch')) {
+            $query->where('section', 'like', '%' . $request->input('sectionSearch') . '%');
+        }
+
         if ($request->filled('environment') && $request->input('environment') !== 'all') {
             $query->where('environment', $request->input('environment'));
         }
@@ -73,8 +81,21 @@ class MenuController extends Controller
             $query->where('section', $request->input('section'));
         }
 
+        if ($request->filled('role_id') && $request->input('role_id') !== 'all') {
+            $roleId = (int) $request->input('role_id');
+            $query->whereHas('roles', fn ($q) => $q->where('roles.id', $roleId));
+        }
+
         if ($request->has('is_active') && $request->input('is_active') !== 'all') {
             $query->where('is_active', filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->filled('sort_order_min')) {
+            $query->where('sort_order', '>=', (int) $request->input('sort_order_min'));
+        }
+
+        if ($request->filled('sort_order_max')) {
+            $query->where('sort_order', '<=', (int) $request->input('sort_order_max'));
         }
 
         if ($request->has('feature_flag') && $request->input('feature_flag') !== 'all') {

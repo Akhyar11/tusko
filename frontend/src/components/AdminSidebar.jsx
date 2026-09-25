@@ -20,7 +20,8 @@ import {
   PackageCheck,
   Receipt,
   Warehouse,
-  Settings
+  Settings,
+  KeyRound
 } from 'lucide-react';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
@@ -165,6 +166,13 @@ export default function AdminSidebar({
           sublabel: 'Konfigurasi toko & integrasi',
           icon: Settings,
           activeViews: ['settings']
+        },
+        {
+          id: 'menus-admin',
+          label: 'Kelola Menu & Akses',
+          sublabel: 'Navigasi DB & akses per-role',
+          icon: KeyRound,
+          activeViews: ['menus-admin', 'menu-create', 'menu-edit']
         }
       ]
     }

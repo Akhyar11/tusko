@@ -36,6 +36,9 @@ import ExpeditionEditPage from './components/ExpeditionEditPage';
 import WarehouseListPage from './components/WarehouseListPage';
 import WarehouseCreatePage from './components/WarehouseCreatePage';
 import WarehouseEditPage from './components/WarehouseEditPage';
+import MenuListPage from './components/MenuListPage';
+import MenuCreatePage from './components/MenuCreatePage';
+import MenuEditPage from './components/MenuEditPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -112,6 +115,9 @@ const VALID_VIEWS = [
   'warehouses-admin',
   'warehouse-create',
   'warehouse-edit',
+  'menus-admin',
+  'menu-create',
+  'menu-edit',
   'settings',
   'login',
   'register',
@@ -132,6 +138,9 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/categories/create') return 'category-create';
     if (rawPath === '/admin/warehouses' || rawPath === '/admin/warehouse' || rawPath === '/admin/inventory/warehouses') return 'warehouses-admin';
     if (rawPath === '/admin/warehouses/create' || rawPath === '/admin/inventory/warehouses/create') return 'warehouse-create';
+    if (rawPath === '/admin/menus' || rawPath === '/admin/menu') return 'menus-admin';
+    if (rawPath === '/admin/menus/create' || rawPath === '/admin/menu/create') return 'menu-create';
+    if (rawPath.startsWith('/admin/menus/') || rawPath.startsWith('/admin/menu/')) return 'menus-admin';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -210,6 +219,9 @@ const getInitialView = () => {
     }
     if (rawView === 'warehouse-edit') {
       return 'warehouses-admin';
+    }
+    if (rawView === 'menu-edit') {
+      return 'menus-admin';
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
@@ -322,6 +334,7 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
+  const [editingMenu, setEditingMenu] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -616,6 +629,9 @@ export default function App() {
       'warehouses-admin',
       'warehouse-create',
       'warehouse-edit',
+      'menus-admin',
+      'menu-create',
+      'menu-edit',
       'suppliers-admin',
       'supplier-create',
       'supplier-edit',
@@ -1595,6 +1611,26 @@ export default function App() {
           <WarehouseEditPage
             warehouse={editingWarehouse}
             onNavigateBack={() => setCurrentView('warehouses-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'menus-admin' ? (
+          <MenuListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('menu-create')}
+            onNavigateToEdit={(menu) => {
+              setEditingMenu(menu);
+              setCurrentView('menu-edit');
+            }}
+          />
+        ) : currentView === 'menu-create' ? (
+          <MenuCreatePage
+            onNavigateBack={() => setCurrentView('menus-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'menu-edit' ? (
+          <MenuEditPage
+            menu={editingMenu}
+            onNavigateBack={() => setCurrentView('menus-admin')}
             onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (

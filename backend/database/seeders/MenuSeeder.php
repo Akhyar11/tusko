@@ -40,6 +40,7 @@ class MenuSeeder extends Seeder
         ['environment' => 'admin', 'section' => 'Keuangan & Sistem', 'label' => 'Buku Kas & Transaksi', 'sublabel' => 'Arus kas masuk & beban toko', 'path_prefix' => '/admin/transaction', 'view_key' => 'transactions', 'icon' => 'Wallet', 'feature_flag' => 'feature_flags.finance_menu', 'sort_order' => 50],
         ['environment' => 'admin', 'section' => 'Keuangan & Sistem', 'label' => 'Template Dokumen & Resi', 'sublabel' => 'Format cetak invoice & resi', 'path_prefix' => '/admin/template', 'view_key' => 'templates', 'icon' => 'Mail', 'feature_flag' => 'feature_flags.templates_menu', 'sort_order' => 51],
         ['environment' => 'admin', 'section' => 'Keuangan & Sistem', 'label' => 'Pengaturan Sistem', 'sublabel' => 'Konfigurasi toko & integrasi', 'path_prefix' => '/admin/settings', 'view_key' => 'settings', 'icon' => 'Settings', 'feature_flag' => 'feature_flags.settings_menu', 'sort_order' => 52],
+        ['environment' => 'admin', 'section' => 'Keuangan & Sistem', 'label' => 'Kelola Menu & Akses', 'sublabel' => 'Navigasi DB & akses per-role', 'path_prefix' => '/admin/menus', 'view_key' => 'menus-admin', 'icon' => 'Menu', 'feature_flag' => null, 'sort_order' => 53],
 
         // ==== STOREFRONT (PUBLIK, tanpa role) ====
         ['environment' => 'storefront', 'section' => 'Storefront', 'label' => 'Katalog Produk', 'sublabel' => 'Jelajahi katalog olahraga', 'path_prefix' => '/', 'view_key' => 'catalog', 'icon' => 'Store', 'feature_flag' => null, 'sort_order' => 10],

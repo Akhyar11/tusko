@@ -62,7 +62,7 @@ class AdminMenuApiTest extends TestCase
         $response = $this->getJson('/api/admin/menus?per_page=100');
 
         $response->assertStatus(200);
-        $this->assertSame(17, $response->json('total'));
+        $this->assertSame(18, $response->json('total'));
 
         $product = collect($response->json('data'))->firstWhere('path_prefix', '/admin/product');
         $this->assertNotNull($product);
@@ -80,6 +80,27 @@ class AdminMenuApiTest extends TestCase
         $search = $this->getJson('/api/admin/menus?search=settings&per_page=100')->assertStatus(200);
         $paths = collect($search->json('data'))->pluck('path_prefix');
         $this->assertTrue($paths->contains('/admin/settings'));
+    }
+
+    public function test_admin_can_filter_by_role_sort_order_and_feature_flag(): void
+    {
+        $this->actingAsAdmin();
+
+        $byRole = $this->getJson('/api/admin/menus?role_id=' . $this->adminRoleId() . '&per_page=100')->assertStatus(200);
+        $this->assertSame(15, $byRole->json('total'));
+
+        $bySort = $this->getJson('/api/admin/menus?sort_order_min=50&per_page=100')->assertStatus(200);
+        foreach ($bySort->json('data') as $row) {
+            $this->assertGreaterThanOrEqual(50, $row['sort_order']);
+        }
+
+        $noFlag = $this->getJson('/api/admin/menus?feature_flag=0&per_page=100')->assertStatus(200);
+        foreach ($noFlag->json('data') as $row) {
+            $this->assertNull($row['feature_flag']);
+        }
+
+        $view = $this->getJson('/api/admin/menus?viewSearch=settings&per_page=100')->assertStatus(200);
+        $this->assertTrue(collect($view->json('data'))->pluck('view_key')->contains('settings'));
     }
 
     public function test_admin_can_create_menu_and_assign_roles(): void
