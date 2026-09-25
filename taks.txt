@@ -804,7 +804,8 @@ T28. Checkout Server-Authoritative ................................. [TODO]  [OW
   (2) diskon dari T08.2 + gratis ongkir + stacking; (3) poin redeem masuk grand_total;
   (4) test tampering (harga/diskon/ongkir palsu) ditolak/diabaikan.
   Minor:
-    T28.1 [NEW] Server hitung ulang product_price/subtotal dari DB + test.
+    T28.1 [DONE] Server hitung ulang product_price/subtotal dari DB (harga produk/varian,
+           input client diabaikan) + CheckoutTamperingTest. [OWNER:A1]
     T28.2 [NEW] Server hitung discount (T08.2, gratis ongkir, stacking) + ongkir
            (T06.2) + poin redeem (T31) + grand_total.
     T28.3 [NEW] Test tampering end-to-end.
