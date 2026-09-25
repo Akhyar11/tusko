@@ -756,7 +756,7 @@ T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OW
 MAJOR TAMBAHAN (menutup gap audit)
 ==============================================================================
 
-T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [TODO]  [OWNER:A2]
+T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [DONE]  [OWNER:A2]
   REVISI 6 (keputusan user): lapisan `permissions`/`role_permissions` DIBUANG
   (terlalu rumit). Otorisasi memakai model sederhana: user -> role -> menu.
   DB: roles, user_roles, menus, role_menus, users.role. (permissions dibuang)
@@ -766,15 +766,18 @@ T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [TODO]  [
   Minor:
     T24.1 [DONE -> KADALUARSA T37.2] Middleware EnsureRole (+ EnsurePermission
            DIBUANG di T37.2; guard halaman via `menu.access` T37.5).
-    T24.2 [TODO] Terapkan middleware 'role:' ke endpoint admin.
+    T24.2 [DONE] Terapkan middleware 'role:' ke endpoint admin. (Direalisasikan via
+           guard `admin` + `menu.access` pada endpoint/halaman admin; alias `role:`
+           tetap tersedia untuk kebutuhan spesifik mendatang.)
     T24.3 [DONE] Endpoint + FE Master Role: CRUD `roles` (name, display_name,
            description, is_system) + halaman kanonis + FilterDrawer. [OWNER:A2]
            DIPECAH: T24.3a BE [commit ceae15d] + T24.3b FE/menu/E2E [commit dd23d62].
            (assign role ke user SUDAH selesai di T38.2.)
     T24.4 [DONE] FE guard akses halaman Admin berbasis menu per-role (via T37.9).
     T24.5 [DONE] Sinkron `users.role` <-> `user_roles` (D5).
-    T24.6 [TODO] FE halaman Role → Menu Mapping (matriks centang menu per role,
-           memakai endpoint T37.6 `role_ids`/`role_menus`; role-centric). [OWNER:A2]
+    T24.6 [DONE] FE halaman Role → Menu Mapping (matriks centang menu per role,
+           memakai pivot `role_menus`). [OWNER:A2] DIPECAH: T24.6a BE [commit 93320e8]
+           + T24.6b FE/menu/E2E [commit 53fbd84].
 
 T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
   DB: stock_opnames, stock_opname_items.
