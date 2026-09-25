@@ -762,7 +762,8 @@ T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [TODO]  [
   API: [NEW] /api/roles (+assign role ke user); middleware 'role:'.
   Test: [NEW] RbacAuthorizationTest.
   Minor:
-    T24.1 [DONE] Middleware EnsureRole (+ EnsurePermission -> DIBUANG di T37).
+    T24.1 [DONE -> KADALUARSA T37.2] Middleware EnsureRole (+ EnsurePermission
+           DIBUANG di T37.2; guard halaman via `menu.access` T37.5).
     T24.2 [TODO] Terapkan middleware 'role:' ke endpoint admin.
     T24.3 [TODO] Endpoint + FE kelola role (CRUD role + assign role ke user).
     T24.4 [TODO] FE guard akses halaman Admin berbasis menu per-role (via T37).
@@ -938,8 +939,9 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OW
     T36.6 [DONE] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
            payment (kredensial Midtrans), storage (put/head objek R2) + test
            (Http::fake / Storage::fake).
-    T36.7 [DONE] Guard keamanan: route admin-only (role/permission T24), rate limit,
-           larangan secret di respons/log, masking parsial; + test 401/403 & anti-kebocoran.
+    T36.7 [DONE] Guard keamanan: route admin-only (`admin` + `menu.access:/admin/settings`,
+           T37.2), rate limit, larangan secret di respons/log, masking parsial;
+           + test 401/403 & anti-kebocoran.
     T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + error handling.
     T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 +
            `FormTipsPanel`, navigasi SECTION (bukan tab), state loading/simpan + Toast.
@@ -997,7 +999,7 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            roles/parent/children + scope active/forEnvironment). [commit c60c0ea]
            (DROP `permissions` & `role_permissions` DIPISAH ke T37.2 sesuai
            keputusan user: baru dijalankan setelah middleware T37.5 siap).
-    T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
+    T37.2 [DONE] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
            - `backend/app/Models/Permission.php` + relasi `Role::permissions()`.
            - `backend/app/Http/Middleware/EnsurePermission.php` + alias di bootstrap.
            - `backend/database/seeders/PermissionSeeder.php`.
@@ -1008,6 +1010,9 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
              pada 4 route `/admin/settings` -> GANTI ke guard menu/role (T37.5) agar
              `/admin/settings` tetap terlindungi tanpa tabel permissions.
            Pastikan `php artisan test` & boot tetap hijau setelah penghapusan.
+           [SELESAI, commit c320e91] Migrasi DROP `permissions`+`role_permissions`
+           (`2026_09_25_000002`), guard 4 route settings → `menu.access:/admin/settings`,
+           test settings di-seed `MenuSeeder`, + `SettingsMenuGuardTest`. 502 tests PASSED.
     T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
            section, icon, feature_flag) + assign seluruh menu admin ke role `admin`
            (idempoten) + test. [commit e77299d]
@@ -1281,12 +1286,13 @@ Koordinasi A1 untuk `Navbar`/`UserMenuDropdown` (menu storefront publik, T37.8).
 ==============================================================================
 
 DAMPAK KE TASK YANG SUDAH [DONE] (REVISI 6) — wajib dirapikan:
-- T24.1 [DONE]  : middleware `EnsurePermission` -> DIBUANG (T37.2).
+- T24.1 [DONE]  : middleware `EnsurePermission` -> DIBUANG (T37.2). [SELESAI]
 - T33.2 [DONE]  : `PermissionSeeder` (+ PermissionSeederTest) -> DIGANTI seeder menus
-                  (T37.3); `PermissionMiddlewareTest` dihapus.
+                  (T37.3); `PermissionMiddlewareTest` dihapus. [SELESAI]
 - T36.7 [DONE]  : guard `permission:settings.manage` pada 4 route `/admin/settings`
-                  -> DIGANTI ke guard menu/role (T37.5). [OWNER:A2]
+                  -> DIGANTI ke `menu.access:/admin/settings` (T37.5/T37.2). [SELESAI]
 - Artefak lain : `Permission` model + `Role::permissions()` relation; migrasi
-                  `2026_09_08_000020` (buat permissions/role_permissions) -> tambah
-                  migrasi DROP di T37.1; bersihkan data role_permissions di DB dev.
+                  `2026_09_08_000020` (buat permissions/role_permissions) -> migrasi
+                  DROP `2026_09_25_000002` di T37.2; data role_permissions DB dev
+                  terhapus saat `php artisan migrate`. [SELESAI]
 - TIDAK terdampak: T24.5 (sinkron users.role), T24.1 bagian `EnsureRole`.
