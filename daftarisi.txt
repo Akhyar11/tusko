@@ -79,7 +79,7 @@
 533|MINOR|T12.3 [TODO] FE StockMutationPage -> inventoryService.addStock/reduceStock + Toast.
 534|MINOR|T12.4 [TODO] FE StockManagementPage API-backed via useInventoryTableStore.
 535|MINOR|T12.5 [TODO] FE kartu mutasi stok + filter.
-536|MINOR|T12.7 [NEW] PERBAIKAN AKSES MENU: `stock-mutation` terdaftar di `adminCoreViews`
+536|MINOR|T12.7 [DONE] PERBAIKAN AKSES MENU: `stock-mutation` terdaftar di `adminCoreViews`
 540|MINOR|T12.6 [DONE] Refaktor penulisan stok saat CHECKOUT -> InventoryService (D1):
 545|MAJOR|T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL]  [OWNER:A2
 555|MINOR|T13.1 [TODO] FE LowStockAlertWidget -> GET /api/inventory/low-stock.
@@ -194,26 +194,26 @@
 848|MINOR|T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
 849|MINOR|T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
 850|MINOR|T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
-852|MAJOR|T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [TODO]  [OWNER:A2]
+852|MAJOR|T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
 874|MINOR|T36.1 [DONE] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
 877|MINOR|T36.2 [DONE] `SettingsService`: baca/tulis per grup via `IntegrationService`,
 879|MINOR|T36.3 [DONE] Migrasi/seeder default settings semua grup + command
 882|MINOR|T36.4 [DONE] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
 883|MINOR|T36.5 [DONE] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
 885|MINOR|T36.6 [DONE] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
-888|MINOR|T36.7 [NEW] Guard keamanan: route admin-only (role/permission T24), rate limit,
-890|MINOR|T36.8 [NEW] FE `settingsService.js` (get/update per grup + test-connection) + erro
-891|MINOR|T36.9 [NEW] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 
-893|MINOR|T36.10 [NEW] FE Section Profil Toko: nama toko, email/telepon, alamat,
-895|MINOR|T36.11 [NEW] FE Section Pengiriman: provider, base_url, api_key (secret), origin
-898|MINOR|T36.12 [NEW] FE Section Pembayaran: Midtrans server/client key (secret),
-901|MINOR|T36.13 [NEW] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
-903|MINOR|T36.14 [NEW] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan)
-905|MINOR|T36.15 [NEW] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial maile
-907|MINOR|T36.16 [NEW] FE Section Feature Flag: aktif/nonaktif menu operasional per environme
-909|MINOR|T36.17 [NEW] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
-911|MINOR|T36.18 [NEW] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
-915|MINOR|T36.19 [NEW] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+888|MINOR|T36.7 [DONE] Guard keamanan: route admin-only (role/permission T24), rate limit,
+890|MINOR|T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + erro
+891|MINOR|T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 
+893|MINOR|T36.10 [DONE] FE Section Profil Toko: nama toko, email/telepon, alamat,
+895|MINOR|T36.11 [DONE] FE Section Pengiriman: provider, base_url, api_key (secret), origin
+898|MINOR|T36.12 [DONE] FE Section Pembayaran: Midtrans server/client key (secret),
+901|MINOR|T36.13 [DONE] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
+903|MINOR|T36.14 [DONE] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan)
+905|MINOR|T36.15 [DONE] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial maile
+907|MINOR|T36.16 [DONE] FE Section Feature Flag: aktif/nonaktif menu operasional per environme
+909|MINOR|T36.17 [DONE] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
+911|MINOR|T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
+915|MINOR|T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
 926|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
 939|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 971|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
