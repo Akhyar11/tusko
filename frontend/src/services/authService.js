@@ -457,6 +457,13 @@ export const authService = {
   },
 
   /**
+   * Klaim voucher pelanggan dengan kode tertentu (T08.1).
+   */
+  async claimVoucher(code) {
+    return await apiClient.post('/api/vouchers/claim', { code });
+  },
+
+  /**
    * Ambil daftar sesi login aktif akun pengguna dari backend API.
    */
   async getActiveSessions() {

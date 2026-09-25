@@ -123,6 +123,8 @@ export default function ProfilePage({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedVoucher, setCopiedVoucher] = useState(null);
+  const [claimedVouchers, setClaimedVouchers] = useState([]);
+  const [claimingVoucher, setClaimingVoucher] = useState(null);
 
   // Toast global (Aturan 17): delegasikan ke App via onShowToast.
   const showToast = (msg, type = 'success') => {
@@ -409,6 +411,21 @@ export default function ProfilePage({
       setTimeout(() => setCopiedVoucher(null), 3000);
     } catch {
       showToast(`Kode kupon: ${code}`);
+    }
+  };
+
+  // Handle Klaim Voucher (T08.1)
+  const handleClaimVoucher = async (code) => {
+    if (claimingVoucher) return;
+    setClaimingVoucher(code);
+    try {
+      const res = await authService.claimVoucher(code);
+      setClaimedVouchers((prev) => (prev.includes(code) ? prev : [...prev, code]));
+      showToast(res?.message || `✓ Voucher "${code}" berhasil diklaim!`);
+    } catch (err) {
+      showToast(err?.message || 'Gagal mengklaim voucher.', 'error');
+    } finally {
+      setClaimingVoucher(null);
     }
   };
 
@@ -1198,20 +1215,44 @@ export default function ProfilePage({
                             {vch.code}
                           </span>
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => handleCopyVoucher(vch.code)}
-                          className={`shrink-0 px-3 py-1.5 font-sport font-black text-[11px] uppercase tracking-wider transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                            copiedVoucher === vch.code
-                              ? 'bg-emerald-500 text-black'
-                              : isBlackTheme
-                              ? 'bg-white text-black hover:bg-neutral-200'
-                              : 'bg-black text-white hover:bg-neutral-800'
-                          }`}
-                        >
-                          {copiedVoucher === vch.code ? <Check size={13} /> : <Copy size={13} />}
-                          <span>{copiedVoucher === vch.code ? 'Tersalin' : 'Salin'}</span>
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button 
+                            type="button"
+                            onClick={() => handleCopyVoucher(vch.code)}
+                            className={`px-3 py-1.5 font-sport font-black text-[11px] uppercase tracking-wider transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                              copiedVoucher === vch.code
+                                ? 'bg-emerald-500 text-black'
+                                : isBlackTheme
+                                ? 'bg-white text-black hover:bg-neutral-200'
+                                : 'bg-black text-white hover:bg-neutral-800'
+                            }`}
+                          >
+                            {copiedVoucher === vch.code ? <Check size={13} /> : <Copy size={13} />}
+                            <span>{copiedVoucher === vch.code ? 'Tersalin' : 'Salin'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleClaimVoucher(vch.code)}
+                            disabled={claimedVouchers.includes(vch.code) || claimingVoucher === vch.code}
+                            className={`px-3 py-1.5 font-sport font-black text-[11px] uppercase tracking-wider transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer disabled:cursor-not-allowed ${
+                              claimedVouchers.includes(vch.code)
+                                ? 'bg-emerald-500 text-black'
+                                : isBlackTheme
+                                ? 'bg-amber-400 text-black hover:bg-amber-300'
+                                : 'bg-amber-500 text-black hover:bg-amber-400'
+                            }`}
+                          >
+                            {claimedVouchers.includes(vch.code) ? <Check size={13} /> : <Ticket size={13} />}
+                            <span>
+                              {claimedVouchers.includes(vch.code)
+                                ? 'Terkalaim'
+                                : claimingVoucher === vch.code
+                                ? 'Memproses...'
+                                : 'Klaim'}
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
