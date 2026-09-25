@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingAddress;
 use App\Services\InventoryService;
+use App\Services\VoucherService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,8 +28,10 @@ class CheckoutController extends Controller
 {
     use AuthorizesOrderAccess;
 
-    public function __construct(private readonly InventoryService $inventoryService)
-    {
+    public function __construct(
+        private readonly InventoryService $inventoryService,
+        private readonly VoucherService $voucherService
+    ) {
     }
     /**
      * Process checkout and save order to database.
@@ -211,6 +214,7 @@ class CheckoutController extends Controller
             $paymentMethod = $request->input('payment_method', 'midtrans');
             $paymentChannel = $request->input('payment_channel', 'bca_va');
             $vaNumber = '8808' . mt_rand(1000000000, 9999999999);
+            $couponCode = $request->input('coupon_code');
 
             // 6. Create Order
             $order = Order::create([
@@ -244,7 +248,7 @@ class CheckoutController extends Controller
                 'grand_total' => $grandTotal,
                 'total_weight' => $totalWeight,
                 'loyalty_points_earned' => $totalLoyaltyPointsEarned,
-                'coupon_code' => $request->input('coupon_code'),
+                'coupon_code' => $couponCode,
                 'notes' => $request->input('notes'),
                 'expires_at' => Carbon::now()->addHours(24),
             ]);
@@ -252,6 +256,11 @@ class CheckoutController extends Controller
             // `expedition_service_id` dikelola di luar mass-assignment (Order fillable milik A2).
             if ($expeditionServiceId) {
                 $order->forceFill(['expedition_service_id' => $expeditionServiceId])->save();
+            }
+
+            // 6b. T15.1b: catat pemakaian voucher (kuota + voucher_usages) saat order dibuat.
+            if ($couponCode) {
+                $this->voucherService->redeemForOrder($order, $couponCode, $user);
             }
 
             // 7. Create OrderItems & Decrement Stock
