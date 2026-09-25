@@ -181,6 +181,11 @@ STANDAR KONSISTENSI FRONTEND TUSKO (ringkas — detail penuh di AGENTS.md):
 
 PENGECUALIAN: tab filter STATUS dalam satu entitas (mis. status pesanan) bukan pelanggaran aturan 16.
 
+PENGECUALIAN STOREFRONT (WAJIB DIPATUHI — AGENTS.md RULE[storefront_design_exception]):
+- Halaman STOREFRONT (mis. ProfilePage, AddressFormPage, CartPage, CheckoutPage, OrderSuccessPage, LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, EmailVerifiedPage, ProductDetail, ProductGrid) TIDAK tunduk pada spesimen form/list/header ADMIN (aturan 24, 26, 27, 28).
+- JANGAN menolak halaman storefront hanya karena label/tombol/header/root tidak identik spesimen admin.
+- Yang TETAP wajib pada halaman storefront: aturan 1–8 (ikon lucide, prefix `tusko_`, `formatRupiah`, `rounded-none`, Atomic Design, komponen reusable, dropdown portal), aturan 17 (Toast global bila tersedia), aturan 22 (larang window.confirm/alert/prompt), aturan 29 (dropdown portal).
+
 Berkas yang berubah (staged + unstaged + untracked):
 EOF
 

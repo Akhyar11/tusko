@@ -119,6 +119,11 @@ STANDAR KESERAGAMAN MARGIN & PADDING (ATURAN 29):
 6. Input satu baris (TextInput, SearchBar, ServerSideSelect trigger): Tinggi identik 'h-[42px]' dan padding 'py-2.5 px-3.5' (atau 'pl-10 pr-12' untuk SearchBar).
 7. Layout Utama Admin (<main>): 'px-4 sm:px-8 lg:px-10 py-6'.
 
+PENGECUALIAN STOREFRONT (WAJIB DIPATUHI — AGENTS.md RULE[storefront_design_exception]):
+- Halaman STOREFRONT (mis. ProfilePage, AddressFormPage, CartPage, CheckoutPage, OrderSuccessPage, LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, EmailVerifiedPage, dan halaman pelanggan storefront lain) TIDAK tunduk pada spesimen form/header/kartu ADMIN (butir 1–4 dan 7 di atas).
+- JANGAN menolak halaman storefront hanya karena padding/header/kartu tidak sesuai spesimen admin.
+- Yang TETAP wajib pada halaman storefront: sudut siku `rounded-none` dan komponen reusable (bukan native input/select/textarea).
+
 DAFTAR BERKAS FRONTEND YANG DIUBAH:
 EOF
 

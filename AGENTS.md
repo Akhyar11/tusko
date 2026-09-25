@@ -277,3 +277,19 @@ Jika salah satu audit gagal, commit akan **OTOMATIS DITOLAK** dan pengembang waj
 5. **Kewajiban Agent:** Pada SETIAP minor yang membuat/mengubah halaman, Agent WAJIB memeriksa seluruh titik di atas dan melaporkannya di `.agent-test-proofs/`. Bila menemukan halaman *dead* atau menu tak sinkron, Agent WAJIB memperbaikinya atau mencatatnya sebagai task di `taks.txt`.
 6. **Penegakan:** Ditegakkan melalui auditor frontend yang sudah ada (`07-frontend-consistency-auditor.sh`) + review agent; tidak membuat auditor baru.
 </RULE[menu_access_rule]>
+
+<RULE[storefront_design_exception]>
+# Pengecualian Spesimen Desain Halaman STOREFRONT (vs Admin ERP)
+
+1. **Ruang lingkup pengecualian**: Halaman **STOREFRONT** — `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `EmailVerifiedPage`, `ProfilePage`, `AddressFormPage`, `MapPickerModal`, `CartPage`, `CheckoutPage`, `OrderSuccessPage`, `ProductDetail`, `ProductGrid`, `Navbar`, `UserMenuDropdown`, `Footer`, dan halaman pelanggan storefront lain — **TIDAK tunduk** pada spesimen FORM/HEADER/KARTU/LIST ADMIN (aturan 24, 25, 26, 27, 28, 29 tusko_design_system). Konteksnya storefront, bukan ERP admin.
+2. **Yang TETAP WAJIB pada halaman storefront**:
+   - Sudut siku tegas `rounded-none` (aturan 1).
+   - Palet `neutral-*`/`amber-*`/`rose-*`/`emerald-*`; DILARANG `gray-*`.
+   - Elemen form WAJIB memakai komponen reusable (`TextInput`, `TextArea`, `Checkbox`, `FileInput`, `ServerSideSelect`, `SearchBar`) — DILARANG native `<input>/<select>/<textarea>` di luar `atoms/*`/`molecules/*` (aturan 28).
+   - Toast global via `onShowToast`/`showToast` bila tersedia (aturan 15); DILARANG `window.confirm/alert/prompt` (aturan 20).
+   - Dropdown/popover keluar container via portal (aturan 31).
+   - Ikon `lucide-react`; prefix localStorage `tusko_`; `formatRupiah` untuk rupiah.
+3. **Larangan auditor**: Auditor `07-frontend-consistency-auditor.sh`, `10-dedicated-create-edit-page.sh`, `11-table-filter-coverage-and-custom-inputs.sh`, dan `13-uniform-margin-padding.sh` **DILARANG menolak halaman storefront** hanya karena padding/label/tombol/header/kartu tidak identik spesimen admin (aturan 24–29). Auditor hanya memeriksa pilar yang tetap wajib (butir 2).
+4. **Pengecualian**: Halaman create/edit ADMIN tetap tunduk penuh pada spesimen kanonis (aturan 23/24/25).
+5. **Penegakan**: Ditegakkan melalui penyesuaian prompt auditor yang ada (07/13) + review agent; tidak membuat auditor baru.
+</RULE[storefront_design_exception]>
