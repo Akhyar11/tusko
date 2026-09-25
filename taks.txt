@@ -617,7 +617,7 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
              `VoucherService::releaseForOrder($order)` di `OrderObserver` saat
              status pesanan menjadi 'cancelled' + test E2E pembatalan.
              (A1 tidak boleh edit `OrderObserver` — koordinasi K5.)
-    T15.2 [NEW] Backend CRUD voucher admin + validasi + test.
+    T15.2 [DONE] Backend CRUD voucher admin + validasi + VoucherApiTest. [OWNER:A1]
     T15.3 [TODO] FE VoucherListPage + FilterDrawer (server-side).
     T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
 
