@@ -785,17 +785,19 @@ T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [DONE]  [
            memakai pivot `role_menus`). [OWNER:A2] DIPECAH: T24.6a BE [commit 93320e8]
            + T24.6b FE/menu/E2E [commit 53fbd84].
 
-T25. Stock Opname (Sesi Opname Fisik) .............................. [TODO]  [OWNER:A2]
+T25. Stock Opname (Sesi Opname Fisik) .............................. [DONE]  [OWNER:A2]
   DB: stock_opnames, stock_opname_items.
   FE: StockOpnameListPage/CreatePage/DetailPage + FilterDrawer + ConfirmationModal.
   API: [NEW] GET/POST /api/stock-opnames, POST /api/stock-opnames/{id}/approve.
   Test: [NEW] StockOpnameApiTest.
   Minor:
     T25.1 [DONE] Controller + routes stock opname (create, input fisik, submit).
-    T25.2 [TODO] FE StockOpnameListPage + FilterDrawer (server-side).
-    T25.3 [TODO] FE StockOpnameCreatePage/DetailPage (input fisik + selisih).
-    T25.4 [NEW] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
-           posting jurnal via T34.1 + test.
+    T25.2 [DONE] FE StockOpnameListPage + FilterDrawer (server-side). [commit 77bb3be]
+    T25.3 [DONE] FE StockOpnameCreatePage/DetailPage (input fisik + selisih).
+           [commit 77bb3be]
+    T25.4 [DONE] Approve -> stock_mutations(adjust) + inventory_balances (D1) +
+           posting jurnal via T34.1 + test. [commit 5fe9ead; fix konsistensi
+           snapshot D1 di commit 77bb3be]
 
 T26. Auth Pelanggan ................................................ [DONE]  [OWNER:A1]
   DB: users, password_reset_tokens, carts.session_id, email_logs.
