@@ -892,7 +892,7 @@ T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OW
     T32.2 [NEW] Endpoint ulasan (list + create hanya pembeli) + moderasi + test.
     T32.3 [TODO] FE form + tampilan ulasan + agregat rating (dipakai T01.2).
 
-T33. Audit Log & Seeder Referensi (SISA) ........................... [PARTIAL]  [OWNER:A2]
+T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OWNER:A2]
   CATATAN: seeder referensi SUDAH ADA (MasterReferenceSeeder) untuk roles,
   order_statuses, payment_statuses, warehouses, chart_of_accounts,
   financial_accounts, attributes. Sisa: receipt_templates + log.
@@ -911,7 +911,8 @@ T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OW
     T34.1 [DONE] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
            GRN, bayar bill, refund, opname) + test.
            (TIDAK bergantung pada T07/T14/T25/T29 — sebaliknya task tsb memanggil mapping.)
-    T34.2 [NEW] Laporan laba rugi + neraca saldo.
+    T34.2 [DONE] Laporan laba rugi + neraca saldo. [commit ea43ff6]
+           `GET /api/reports/income-statement` + `/trial-balance` (dari ledger T34.1).
     T34.3 [NEW] Laporan aging hutang vendor (menyerap T14.5 lama).
     T34.4 [NEW] Ekspor CSV/Excel/PDF laporan.
 
