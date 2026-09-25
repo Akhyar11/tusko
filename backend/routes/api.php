@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GoodsReceivingNoteController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\VendorBillController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
@@ -163,6 +164,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::match(['put', 'patch'], '/{user}', [\App\Http\Controllers\Api\UserController::class, 'update']);
         Route::delete('/{user}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
         Route::post('/{user}/roles', [\App\Http\Controllers\Api\UserController::class, 'syncRoles']);
+    });
+
+    // Master Role (T24.3) — superuser `admin`.
+    Route::prefix('admin/roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index']);
+        Route::post('/', [RoleController::class, 'store']);
+        Route::get('/{role}', [RoleController::class, 'show']);
+        Route::match(['put', 'patch'], '/{role}', [RoleController::class, 'update']);
+        Route::delete('/{role}', [RoleController::class, 'destroy']);
     });
 });
 
