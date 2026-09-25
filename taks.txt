@@ -622,7 +622,9 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
              [DONE][A1] halaman kanonis (ServerSideTable + KPI + RowActionMenu portal),
              FilterDrawer 100% kolom, voucherService, useVoucherTableStore, rute App.jsx,
              perluasan filter backend + uji Playwright Python. [OWNER:A1]
-    T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
+    T15.4 [DONE] FE VoucherCreatePage/EditPage (form kanonis 3/4 + FormTipsPanel)
+             + cakupan/kuota/stacking, form bersama `VoucherFormFields`; uji Playwright
+             Python E2E (create + edit). [OWNER:A1]
     T15.5 [TODO-A2] Daftarkan menu "Voucher & Promo" di `AdminSidebar`
              (path_prefix `/admin/vouchers`, feature_flag) agar halaman dapat diakses
              dari menu (G11). Koordinasi A1 -> A2 (A1 dilarang edit AdminSidebar).
