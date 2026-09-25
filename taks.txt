@@ -608,8 +608,15 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
   Minor:
     T15.1a [DONE] Migrasi quota/used_count/per_user_limit/is_free_shipping/stackable
              + voucher_targets + voucher_usages.
-    T15.1b [NEW] Siklus pemakaian voucher: increment `used_count` + catat
+    T15.1b [PARTIAL] Siklus pemakaian voucher: increment `used_count` + catat
              `voucher_usages` saat order dibuat; rollback saat order batal.
+             [DONE][A1] `VoucherService::redeemForOrder` (idempoten, validasi
+             aktif/kuota/per-user) + wire di `CheckoutController` + `VoucherUsageCycleTest`.
+             [DONE][A1] `VoucherService::releaseForOrder` (idempoten) tersedia untuk rollback.
+    T15.1c [TODO-A2] Hook rollback voucher: panggil
+             `VoucherService::releaseForOrder($order)` di `OrderObserver` saat
+             status pesanan menjadi 'cancelled' + test E2E pembatalan.
+             (A1 tidak boleh edit `OrderObserver` — koordinasi K5.)
     T15.2 [NEW] Backend CRUD voucher admin + validasi + test.
     T15.3 [TODO] FE VoucherListPage + FilterDrawer (server-side).
     T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
