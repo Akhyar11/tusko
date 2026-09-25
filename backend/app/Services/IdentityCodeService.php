@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Increment direset per tanggal (per hari) dan dijamin unik terhadap kolom `code`.
  * Model yang kodenya bersifat semantik/referensi (Voucher, Expedition, Attribute,
- * OrderStatus, PaymentStatus, Permission) TIDAK memakai generator ini.
+ * OrderStatus, PaymentStatus) TIDAK memakai generator ini.
  */
 class IdentityCodeService
 {

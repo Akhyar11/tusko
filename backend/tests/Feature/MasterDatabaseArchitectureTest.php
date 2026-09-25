@@ -38,12 +38,15 @@ class MasterDatabaseArchitectureTest extends TestCase
         $this->seed();
     }
 
-    public function test_dynamic_roles_and_permissions_are_seeded(): void
+    public function test_dynamic_roles_and_menus_are_seeded(): void
     {
         $this->assertDatabaseHas('roles', ['name' => 'admin']);
         $this->assertDatabaseHas('roles', ['name' => 'customer']);
         $this->assertDatabaseHas('roles', ['name' => 'warehouse_staff']);
         $this->assertDatabaseHas('roles', ['name' => 'finance_officer']);
+
+        $this->assertDatabaseHas('menus', ['environment' => 'admin', 'path_prefix' => '/admin/settings']);
+        $this->assertDatabaseHas('menus', ['environment' => 'storefront', 'view_key' => 'catalog']);
     }
 
     public function test_dynamic_order_and_payment_statuses_are_seeded_without_hardcoded_enums(): void

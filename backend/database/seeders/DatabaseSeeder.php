@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call(VoucherSeeder::class);
         $this->call(MasterReferenceSeeder::class);
         $this->call(MenuSeeder::class);
-        $this->call(PermissionSeeder::class);
         $this->call(ReceiptTemplateSeeder::class);
         $this->call(SettingsSeeder::class);
     }

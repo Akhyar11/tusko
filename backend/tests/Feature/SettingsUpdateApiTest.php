@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
+use Database\Seeders\MasterReferenceSeeder;
+use Database\Seeders\MenuSeeder;
 use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,8 @@ class SettingsUpdateApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(MasterReferenceSeeder::class);
+        $this->seed(MenuSeeder::class);
         $this->seed(SettingsSeeder::class);
         Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));
     }

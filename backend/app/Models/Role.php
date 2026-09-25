@@ -21,11 +21,6 @@ class Role extends Model
         'is_system' => 'boolean',
     ];
 
-    public function permissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Permission::class, 'role_permissions');
-    }
-
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_roles');
