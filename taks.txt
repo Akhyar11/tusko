@@ -618,8 +618,14 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
              status pesanan menjadi 'cancelled' + test E2E pembatalan.
              (A1 tidak boleh edit `OrderObserver` — koordinasi K5.)
     T15.2 [DONE] Backend CRUD voucher admin + validasi + VoucherApiTest. [OWNER:A1]
-    T15.3 [TODO] FE VoucherListPage + FilterDrawer (server-side).
+    T15.3 [PARTIAL] FE VoucherListPage + FilterDrawer (server-side).
+             [DONE][A1] halaman kanonis (ServerSideTable + KPI + RowActionMenu portal),
+             FilterDrawer 100% kolom, voucherService, useVoucherTableStore, rute App.jsx,
+             perluasan filter backend + uji Playwright Python. [OWNER:A1]
     T15.4 [TODO] FE VoucherCreatePage/EditPage (form kanonis) + cakupan/kuota/stacking.
+    T15.5 [TODO-A2] Daftarkan menu "Voucher & Promo" di `AdminSidebar`
+             (path_prefix `/admin/vouchers`, feature_flag) agar halaman dapat diakses
+             dari menu (G11). Koordinasi A1 -> A2 (A1 dilarang edit AdminSidebar).
 
 ==============================================================================
 FASE 5 — KEUANGAN & ANALITIK (BI)
