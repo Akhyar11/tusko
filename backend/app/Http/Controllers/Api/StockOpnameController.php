@@ -8,13 +8,23 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockOpname;
 use App\Models\StockOpnameItem;
+use App\Services\ActivityLogService;
 use App\Services\IdentityCodeService;
+use App\Services\InventoryService;
+use App\Services\JournalMappingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StockOpnameController extends Controller
 {
+    public function __construct(
+        private readonly InventoryService $inventory,
+        private readonly JournalMappingService $journalMapping,
+        private readonly ActivityLogService $activityLog
+    ) {
+    }
+
     /**
      * Daftar sesi stok opname (filter + pagination server-side).
      */
@@ -33,6 +43,22 @@ class StockOpnameController extends Controller
         if ($request->filled('search')) {
             $search = trim((string) $request->query('search'));
             $query->where('opname_number', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('conducted_from')) {
+            $query->whereDate('conducted_at', '>=', $request->query('conducted_from'));
+        }
+
+        if ($request->filled('conducted_to')) {
+            $query->whereDate('conducted_at', '<=', $request->query('conducted_to'));
+        }
+
+        if ($request->filled('items_min')) {
+            $query->has('items', '>=', (int) $request->query('items_min'));
+        }
+
+        if ($request->filled('items_max')) {
+            $query->has('items', '<=', (int) $request->query('items_max'));
         }
 
         match ($request->query('sort', 'latest')) {
@@ -147,6 +173,60 @@ class StockOpnameController extends Controller
             'status' => 'success',
             'message' => "Sesi opname {$opname->opname_number} diajukan untuk persetujuan.",
             'data' => $opname->fresh(['warehouse', 'items']),
+        ]);
+    }
+
+    /**
+     * Setujui sesi opname: sesuaikan stok (inventory_balances + stock_mutations)
+     * + posting jurnal selisih (T34.1) + audit log (G9) — T25.4.
+     */
+    public function approve(Request $request, string $idOrNumber): JsonResponse
+    {
+        $opname = StockOpname::with(['warehouse', 'items.product', 'items.variant'])
+            ->where('id', $idOrNumber)
+            ->orWhere('opname_number', $idOrNumber)
+            ->firstOrFail();
+
+        if ($opname->status !== 'in_progress') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya sesi opname berstatus in_progress yang dapat disetujui.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($opname, $request) {
+            foreach ($opname->items as $item) {
+                $difference = (int) $item->difference;
+                if ($difference === 0 || !$item->product) {
+                    continue;
+                }
+
+                $this->inventory->adjust($item->product, $difference, [
+                    'warehouse' => $opname->warehouse,
+                    'reference_type' => 'stock_opname',
+                    'reference_id' => $opname->opname_number,
+                    'notes' => "Penyesuaian opname {$opname->opname_number}",
+                    'created_by' => $request->user()?->id,
+                ], $item->variant);
+            }
+
+            $opname->update([
+                'status' => 'approved',
+                'approved_by' => $request->user()?->id,
+                'approved_at' => now(),
+            ]);
+
+            $this->journalMapping->postStockOpname($opname->fresh('items'));
+
+            $this->activityLog->log('stock_opname.approved', $opname, [
+                'opname_number' => $opname->opname_number,
+            ]);
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Sesi opname {$opname->opname_number} berhasil disetujui dan stok disesuaikan.",
+            'data' => $opname->fresh(['warehouse', 'items.product', 'items.variant', 'approver']),
         ]);
     }
 

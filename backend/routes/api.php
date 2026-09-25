@@ -197,11 +197,12 @@ Route::prefix('stock-transfers')->group(function () {
     Route::post('/{idOrNumber}/approve', [\App\Http\Controllers\Api\StockTransferController::class, 'approve'])->where('idOrNumber', '.*');
 });
 
-Route::prefix('stock-opnames')->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->prefix('stock-opnames')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\StockOpnameController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\StockOpnameController::class, 'store']);
     Route::get('/{idOrNumber}', [\App\Http\Controllers\Api\StockOpnameController::class, 'show'])->where('idOrNumber', '.*');
     Route::post('/{idOrNumber}/submit', [\App\Http\Controllers\Api\StockOpnameController::class, 'submit'])->where('idOrNumber', '.*');
+    Route::post('/{idOrNumber}/approve', [\App\Http\Controllers\Api\StockOpnameController::class, 'approve'])->where('idOrNumber', '.*');
 });
 
 Route::prefix('templates/emails')->group(function () {

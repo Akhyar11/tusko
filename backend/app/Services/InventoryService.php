@@ -49,6 +49,16 @@ class InventoryService
     }
 
     /**
+     * Sesuaikan stok secara otoritatif (bisa + / -) untuk koreksi/opname.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function adjust(Product $product, int $signedQuantity, array $attributes = [], ?ProductVariant $variant = null): StockMutation
+    {
+        return $this->mutate($product, $variant, $signedQuantity, 'adjust', $attributes);
+    }
+
+    /**
      * Stok tersedia otoritatif (D1) dihitung dari `inventory_balances`
      * (total `available_stock` seluruh gudang). Bila belum ada baris saldo,
      * jatuh kembali ke stok agregat legacy agar tetap aman sebelum backfill.
