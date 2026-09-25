@@ -143,6 +143,17 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'update']);
         Route::post('/admin/settings/{group}/test-connection', [\App\Http\Controllers\Api\SettingsController::class, 'testConnection']);
     });
+
+    // Kelola master menu & akses role (T37.6) — superuser `admin`.
+    Route::prefix('admin/menus')->group(function () {
+        Route::get('/role-options', [MenuController::class, 'roleOptions']);
+        Route::get('/', [MenuController::class, 'index']);
+        Route::post('/', [MenuController::class, 'store']);
+        Route::get('/{menu}', [MenuController::class, 'show']);
+        Route::match(['put', 'patch'], '/{menu}', [MenuController::class, 'update']);
+        Route::delete('/{menu}', [MenuController::class, 'destroy']);
+        Route::post('/{menu}/toggle-status', [MenuController::class, 'toggleStatus']);
+    });
 });
 
 Route::prefix('inventory')->group(function () {
