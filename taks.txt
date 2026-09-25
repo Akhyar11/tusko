@@ -679,10 +679,25 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
            (payment_proof/invoice/proof) + akses `temporaryUrl()`; bucket publik
            hanya untuk aset publik. (MENYERAP T35.3 lama.)
            SISA: payment_proof di ManualPaymentController (milik A1) -> storePrivate.
-    T21.4 [NEW] [OWNER:A2] FE "Kurir & Layanan" sync-based: tombol "Sinkron dari
-           KiriminAja" di ExpeditionSettingsPage + refaktor CRUD -> master tersinkron
-           + override admin (fee/priority/aktif); penjadwalan `expeditions:sync` via T30.
-           Backend siap [OWNER:A1]: ExpeditionSyncService + `php artisan expeditions:sync`.
+    T21.4 [PARTIAL] [OWNER:A2] FE "Kurir & Layanan" sync-based dari KiriminAja.
+           STATUS (temuan 2026-09-24): SystemSettingsHub hanya menyediakan tautan
+           "Buka Sinkron Kurir" yang SEKADAR NAVIGASI ke `/admin/expeditions`
+           (onOpenExpeditions); `ExpeditionSettingsPage` masih CRUD manual dan
+           BELUM punya tombol sync; BELUM ada endpoint HTTP (sync hanya via
+           `php artisan expeditions:sync` milik A1). => alur buntu, data kurir
+           belum tersinkron dari API.
+           Backend tersedia [OWNER:A1]: `ExpeditionSyncService` + command `expeditions:sync`.
+           Sub-minor:
+           - T21.4a [TODO][A2] Endpoint admin `POST /api/admin/expeditions/sync`
+             (admin-only, tolak bila integrasi belum dikonfigurasi) memanggil
+             `ExpeditionSyncService::sync()` -> balikan `{couriers, services}` + test.
+           - T21.4b [TODO][A2] Tombol icon-only "Sinkron dari KiriminAja" (+tooltip)
+             di `ExpeditionSettingsPage`: panggil endpoint, Toast, reload tabel,
+             disabled bila `shipping.base_url`/`api_key` kosong; + uji browser.
+           - T21.4c [TODO][A2] Refaktor halaman: master kurir hasil sync (identitas
+             read-only) + override lokal (fee/free/priority/aktif); tombol di
+             Settings Hub memicu sync langsung (bukan hanya navigasi).
+           - T21.4d [TODO][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
 
 T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
   Minor: (berjalan terus tiap minor task).
@@ -1135,3 +1150,8 @@ ADDENDUM REVISI 5:
 - PERBAIKAN AKSES VIEW A1 (G11): rute `/order-success` ditambahkan & `getInitialView`
   tidak lagi mengarahkan `order-success` ke antrean admin `orders` (dulu dead/ salah
   view). Diverifikasi via uji browser akses menu/rute (keranjang & profil).
+- TEMUAN AKSES SINYAL KURIR (2026-09-24): `/admin/expeditions` masih CRUD manual &
+  BELUM mengambil data dari KiriminAja; belum ada tombol sync di halaman tsb dan
+  belum ada endpoint HTTP (hanya command `expeditions:sync`). T21.4 dipastikan
+  [PARTIAL] dan dipecah menjadi T21.4a–d (endpoint admin, tombol FE, refaktor
+  halaman, penjadwalan). [OWNER:A2] (memakai `ExpeditionSyncService` milik A1).
