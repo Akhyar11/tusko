@@ -162,6 +162,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/{user}', [\App\Http\Controllers\Api\UserController::class, 'show']);
         Route::match(['put', 'patch'], '/{user}', [\App\Http\Controllers\Api\UserController::class, 'update']);
         Route::delete('/{user}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
+        Route::post('/{user}/roles', [\App\Http\Controllers\Api\UserController::class, 'syncRoles']);
     });
 });
 

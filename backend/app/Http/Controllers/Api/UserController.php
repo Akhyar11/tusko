@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -190,6 +192,48 @@ class UserController extends Controller
 
         return response()->json([
             'message' => "Akun '{$name}' berhasil dihapus.",
+        ]);
+    }
+
+    /**
+     * Assign role ke user (multi-role via pivot `user_roles`) — T38.2.
+     *
+     * `users.role` (primary enum) diset `admin` bila salah satu role terpilih
+     * adalah admin, selain itu `customer`; pivot tetap menyimpan seluruh role.
+     */
+    public function syncRoles(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate([
+            'role_ids' => ['required', 'array', 'min:1'],
+            'role_ids.*' => ['integer', Rule::exists('roles', 'id')],
+        ], [
+            'role_ids.required' => 'Minimal satu role wajib dipilih.',
+            'role_ids.min' => 'Minimal satu role wajib dipilih.',
+        ]);
+
+        $roleIds = array_values(array_unique(array_map('intval', $validated['role_ids'])));
+        $roles = Role::whereIn('id', $roleIds)->get();
+        $hasAdmin = $roles->contains(fn (Role $role) => $role->name === 'admin');
+
+        if ($user->id === $request->user()->id && !$hasAdmin) {
+            return response()->json([
+                'message' => 'Anda tidak dapat mencabut akses admin dari akun Anda sendiri.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($user, $roleIds, $hasAdmin) {
+            $user->role = $hasAdmin ? 'admin' : 'customer';
+            $user->save();
+            $user->roles()->sync($roleIds);
+        });
+
+        $this->activityLog->log('user.roles_assigned', $user, [
+            'role_ids' => $roleIds,
+        ]);
+
+        return response()->json([
+            'message' => "Akses role akun '{$user->name}' berhasil diperbarui.",
+            'data' => $this->formatUser($user->fresh('roles:id,name,display_name')),
         ]);
     }
 
