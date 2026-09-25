@@ -37,4 +37,40 @@ class ReportController extends Controller
             'data' => $reports->profitByProduct($from, $to)->sortByDesc('gross_profit')->values(),
         ]);
     }
+
+    /**
+     * Laporan laba rugi (income statement) — T34.2.
+     */
+    public function incomeStatement(Request $request, ReportQueryService $reports): JsonResponse
+    {
+        $from = $request->query('start_date');
+        $to = $request->query('end_date');
+
+        return response()->json([
+            'status' => 'success',
+            'period' => ['start_date' => $from, 'end_date' => $to],
+            'data' => $reports->incomeStatement($from, $to),
+        ]);
+    }
+
+    /**
+     * Neraca saldo (trial balance) — T34.2.
+     */
+    public function trialBalance(Request $request, ReportQueryService $reports): JsonResponse
+    {
+        $from = $request->query('start_date');
+        $to = $request->query('end_date');
+
+        $lines = $reports->trialBalance($from, $to);
+
+        return response()->json([
+            'status' => 'success',
+            'period' => ['start_date' => $from, 'end_date' => $to],
+            'summary' => [
+                'total_debit' => round($lines->sum('debit'), 2),
+                'total_credit' => round($lines->sum('credit'), 2),
+            ],
+            'data' => $lines,
+        ]);
+    }
 }

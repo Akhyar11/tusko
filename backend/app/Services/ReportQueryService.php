@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FinancialLedgerEntry;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Transaction;
@@ -127,6 +128,55 @@ class ReportQueryService
                     'gross_profit' => round($revenue - $cogs, 2),
                 ];
             });
+    }
+
+    /**
+     * Neraca saldo (trial balance) per akun dari `financial_ledger_entries` (T34.2).
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function trialBalance(?string $from = null, ?string $to = null): Collection
+    {
+        return FinancialLedgerEntry::query()
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'financial_ledger_entries.chart_of_account_id')
+            ->when($from, fn (Builder $q) => $q->whereDate('financial_ledger_entries.created_at', '>=', $from))
+            ->when($to, fn (Builder $q) => $q->whereDate('financial_ledger_entries.created_at', '<=', $to))
+            ->groupBy('chart_of_accounts.id', 'chart_of_accounts.account_code', 'chart_of_accounts.account_name', 'chart_of_accounts.account_type')
+            ->selectRaw('chart_of_accounts.account_code as account_code, chart_of_accounts.account_name as account_name, chart_of_accounts.account_type as account_type, COALESCE(SUM(financial_ledger_entries.debit), 0) as debit, COALESCE(SUM(financial_ledger_entries.credit), 0) as credit')
+            ->orderBy('chart_of_accounts.account_code')
+            ->get()
+            ->map(fn ($row) => [
+                'account_code' => $row->account_code,
+                'account_name' => $row->account_name,
+                'account_type' => $row->account_type,
+                'debit' => round((float) $row->debit, 2),
+                'credit' => round((float) $row->credit, 2),
+                'balance' => round((float) $row->debit - (float) $row->credit, 2),
+            ]);
+    }
+
+    /**
+     * Laporan laba rugi (income statement) dari akun revenue & expense (T34.2).
+     *
+     * @return array<string, mixed>
+     */
+    public function incomeStatement(?string $from = null, ?string $to = null): array
+    {
+        $trial = $this->trialBalance($from, $to);
+
+        $revenueLines = $trial->where('account_type', 'revenue')->values();
+        $expenseLines = $trial->where('account_type', 'expense')->values();
+
+        $totalRevenue = round($revenueLines->sum(fn ($line) => $line['credit'] - $line['debit']), 2);
+        $totalExpense = round($expenseLines->sum(fn ($line) => $line['debit'] - $line['credit']), 2);
+
+        return [
+            'revenue_lines' => $revenueLines,
+            'expense_lines' => $expenseLines,
+            'total_revenue' => $totalRevenue,
+            'total_expense' => $totalExpense,
+            'net_income' => round($totalRevenue - $totalExpense, 2),
+        ];
     }
 
     private function productSalesQuery(?string $from, ?string $to): Builder
