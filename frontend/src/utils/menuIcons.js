@@ -22,6 +22,7 @@ import {
   Users,
   ShieldCheck,
   LayoutGrid,
+  ClipboardCheck,
   Circle
 } from 'lucide-react';
 
@@ -53,7 +54,8 @@ export const MENU_ICONS = {
   Ticket,
   Users,
   ShieldCheck,
-  LayoutGrid
+  LayoutGrid,
+  ClipboardCheck
 };
 
 export function resolveMenuIcon(name) {

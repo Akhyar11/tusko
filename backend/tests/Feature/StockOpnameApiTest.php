@@ -142,6 +142,34 @@ class StockOpnameApiTest extends TestCase
         $this->assertSame(1, count($byNumber->json('data')));
     }
 
+    public function test_snapshot_uses_balance_even_when_zero_over_legacy_stock(): void
+    {
+        $this->actingAsAdmin();
+        $warehouse = Warehouse::firstOrFail();
+        // Produk punya legacy stock tinggi, tetapi baris saldo otoritatif = 0.
+        $product = Product::factory()->create(['stock' => 48, 'cost_price' => 10000]);
+        InventoryBalance::create([
+            'warehouse_id' => $warehouse->id,
+            'product_id' => $product->id,
+            'product_variant_id' => null,
+            'on_hand_stock' => 0,
+            'reserved_stock' => 0,
+            'available_stock' => 0,
+            'safety_stock' => 0,
+        ]);
+
+        $opname = $this->createOpname($warehouse, $product, 5);
+        // Snapshot harus 0 (bukan 48 legacy) agar konsisten dengan penyesuaian.
+        $this->assertSame(0, (int) $opname->items()->first()->system_stock);
+        $this->assertSame(5, (int) $opname->items()->first()->difference);
+
+        $this->postJson("/api/stock-opnames/{$opname->id}/submit")->assertStatus(200);
+        $this->postJson("/api/stock-opnames/{$opname->id}/approve")->assertStatus(200);
+
+        $balance = InventoryBalance::where('product_id', $product->id)->firstOrFail();
+        $this->assertSame(5, (int) $balance->on_hand_stock);
+    }
+
     public function test_non_admin_is_forbidden(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'customer', 'is_active' => true]));

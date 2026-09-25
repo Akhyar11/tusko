@@ -231,25 +231,34 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * Snapshot stok sistem pada gudang (fallback ke stok agregat legacy).
+     * Snapshot stok sistem yang KONSISTEN dengan InventoryService (D1):
+     * - bila baris saldo gudang sudah ada → pakai `on_hand_stock` apa adanya (termasuk 0);
+     * - bila belum ada → pakai stok legacy yang belum ter-account (`legacy - Σ accounted`),
+     *   sama persis dengan nilai awal yang akan dibuat InventoryService saat penyesuaian.
      */
     private function systemStock(int $warehouseId, int $productId, ?int $variantId): int
     {
         $balance = InventoryBalance::query()
             ->where('warehouse_id', $warehouseId)
             ->where('product_id', $productId)
-            ->when($variantId, fn ($query) => $query->where('product_variant_id', $variantId))
-            ->when(!$variantId, fn ($query) => $query->whereNull('product_variant_id'))
+            ->when($variantId, fn ($q) => $q->where('product_variant_id', $variantId))
+            ->when(!$variantId, fn ($q) => $q->whereNull('product_variant_id'))
+            ->first();
+
+        if ($balance) {
+            return (int) $balance->on_hand_stock;
+        }
+
+        $accounted = (int) InventoryBalance::query()
+            ->where('product_id', $productId)
+            ->when($variantId, fn ($q) => $q->where('product_variant_id', $variantId))
+            ->when(!$variantId, fn ($q) => $q->whereNull('product_variant_id'))
             ->sum('on_hand_stock');
 
-        if ((int) $balance > 0) {
-            return (int) $balance;
-        }
+        $legacy = $variantId
+            ? (int) (ProductVariant::find($variantId)?->stock ?? 0)
+            : (int) (Product::find($productId)?->stock ?? 0);
 
-        if ($variantId) {
-            return (int) (ProductVariant::find($variantId)?->stock ?? 0);
-        }
-
-        return (int) (Product::find($productId)?->stock ?? 0);
+        return max(0, $legacy - $accounted);
     }
 }

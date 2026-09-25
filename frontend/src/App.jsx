@@ -46,6 +46,9 @@ import RoleListPage from './components/RoleListPage';
 import RoleCreatePage from './components/RoleCreatePage';
 import RoleEditPage from './components/RoleEditPage';
 import RoleMenuMappingPage from './components/RoleMenuMappingPage';
+import StockOpnameListPage from './components/StockOpnameListPage';
+import StockOpnameCreatePage from './components/StockOpnameCreatePage';
+import StockOpnameDetailPage from './components/StockOpnameDetailPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -135,6 +138,9 @@ const VALID_VIEWS = [
   'role-create',
   'role-edit',
   'role-menu',
+  'stock-opname',
+  'stock-opname-create',
+  'stock-opname-detail',
   'settings',
   'login',
   'register',
@@ -165,6 +171,9 @@ const ADMIN_CORE_VIEWS = [
   'role-create',
   'role-edit',
   'role-menu',
+  'stock-opname',
+  'stock-opname-create',
+  'stock-opname-detail',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -213,6 +222,9 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/role-menu' || rawPath === '/admin/roles/mapping') return 'role-menu';
     if (rawPath === '/admin/roles/create' || rawPath === '/admin/role/create') return 'role-create';
     if (rawPath.startsWith('/admin/roles/') || rawPath.startsWith('/admin/role/')) return 'roles-admin';
+    if (rawPath === '/admin/stock-opname' || rawPath === '/admin/stock-opnames') return 'stock-opname';
+    if (rawPath === '/admin/stock-opname/create') return 'stock-opname-create';
+    if (rawPath.startsWith('/admin/stock-opname/')) return 'stock-opname-detail';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -300,6 +312,9 @@ const getInitialView = () => {
     }
     if (rawView === 'role-edit') {
       return 'roles-admin';
+    }
+    if (rawView === 'stock-opname-create' || rawView === 'stock-opname-detail') {
+      return 'stock-opname';
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
@@ -414,6 +429,7 @@ export default function App() {
   const [editingMenu, setEditingMenu] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [editingRole, setEditingRole] = useState(null);
+  const [editingOpname, setEditingOpname] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -1751,6 +1767,26 @@ export default function App() {
           <RoleMenuMappingPage
             initialRole={editingRole}
             onNavigateBack={() => setCurrentView('roles-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'stock-opname' ? (
+          <StockOpnameListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('stock-opname-create')}
+            onNavigateToDetail={(opname) => {
+              setEditingOpname(opname);
+              setCurrentView('stock-opname-detail');
+            }}
+          />
+        ) : currentView === 'stock-opname-create' ? (
+          <StockOpnameCreatePage
+            onNavigateBack={() => setCurrentView('stock-opname')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'stock-opname-detail' ? (
+          <StockOpnameDetailPage
+            opname={editingOpname}
+            onNavigateBack={() => setCurrentView('stock-opname')}
             onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (
