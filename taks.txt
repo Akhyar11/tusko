@@ -1057,7 +1057,7 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
   - `menu` = navigasi + guard halaman; aksi spesifik API cukup middleware `role:` (T24).
    - Menyentuh `AdminSidebar`/RBAC (A2) + `Navbar`/`UserMenuDropdown` (A1) -> koordinasi.
 
-T38. Master Users & Role Access (Admin) ............................ [TODO]  [OWNER:A2]
+T38. Master Users & Role Access (Admin) ............................ [DONE]  [OWNER:A2]
   Fitur: halaman admin mengelola akun pengguna (CRUD user) + assign role
          (user -> role -> menu). Melengkapi RBAC T24 (tanpa permissions, REVISI 6).
   DB: users (name, email, phone, password, role, is_active), user_roles, roles.
@@ -1074,10 +1074,12 @@ T38. Master Users & Role Access (Admin) ............................ [TODO]  [OW
     T38.2 [DONE] Endpoint assign role ke user + test (tolak non-admin, 401/403).
             [commit b9feaef] `POST /api/admin/users/{user}/roles` multi-role via pivot;
             primary `users.role` = admin bila ada role admin, anti-lockout akun sendiri.
-    T38.3 [TODO] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
-    T38.4 [TODO] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel).
-    T38.5 [TODO] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
-            + akses role admin (G11) + uji browser E2E.
+    T38.3 [DONE] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
+            [commit feb664c]
+    T38.4 [DONE] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel) +
+            UserRoleAssignPage (assign role multi via pivot). [commit feb664c]
+    T38.5 [DONE] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
+            + akses role admin (G11) + uji browser E2E. [commit feb664c]
   Catatan desain:
   - Patuh aturan 22 (ikon modul header), 23/24/25 (halaman create/edit terpisah),
     26/27 (list kanonis + filter 100% kolom), 28 (komponen reusable), 15/20

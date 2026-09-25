@@ -225,16 +225,16 @@
 1042|MINOR|T37.8 [DONE] FE storefront nav dari menu `environment='storefront'` (publik) via
 1046|MINOR|T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
 1049|MINOR|T37.10 [DONE] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
-1060|MAJOR|T38. Master Users & Role Access (Admin) ............................ [TODO]  [OWNER:A2]
+1060|MAJOR|T38. Master Users & Role Access (Admin) ............................ [DONE]  [OWNER:A2]
 1071|MINOR|T38.1 [DONE] Backend CRUD user admin (list server-side + filter + create/update/
 1074|MINOR|T38.2 [DONE] Endpoint assign role ke user + test (tolak non-admin, 401/403).
-1077|MINOR|T38.3 [TODO] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
-1078|MINOR|T38.4 [TODO] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel).
-1079|MINOR|T38.5 [TODO] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
-1089|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-1102|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-1135|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-1168|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-1185|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-1203|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-1222|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+1077|MINOR|T38.3 [DONE] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
+1079|MINOR|T38.4 [DONE] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel) +
+1081|MINOR|T38.5 [DONE] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
+1091|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+1104|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+1137|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+1170|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+1187|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1205|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1224|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
