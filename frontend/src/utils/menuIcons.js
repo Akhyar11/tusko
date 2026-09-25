@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   UserRound,
   KeyRound,
+  Ticket,
   Circle
 } from 'lucide-react';
 
@@ -45,7 +46,8 @@ export const MENU_ICONS = {
   Store,
   ShoppingCart,
   UserRound,
-  KeyRound
+  KeyRound,
+  Ticket
 };
 
 export function resolveMenuIcon(name) {
