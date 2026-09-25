@@ -966,8 +966,17 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [TODO]  [OW
   Minor:
     T37.1 [NEW] Migrasi `menus` + `role_menus` (+ DROP `permissions` &
            `role_permissions`) + model `Menu` (relasi roles/menus).
-    T37.2 [NEW] Hapus/buang kode permissions: model `Permission`, `PermissionSeeder`,
-           middleware `EnsurePermission` + pemakaiannya; pastikan boot tetap hijau.
+    T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
+           - `backend/app/Models/Permission.php` + relasi `Role::permissions()`.
+           - `backend/app/Http/Middleware/EnsurePermission.php` + alias di bootstrap.
+           - `backend/database/seeders/PermissionSeeder.php`.
+           - Test `PermissionMiddlewareTest`, `PermissionSeederTest`.
+           - **T24.1 [DONE]** (EnsurePermission) & **T33.2 [DONE]** (Seeder permissions)
+             ditandai KADALUARSA (diganti T37.1/T37.3).
+           - **[DAMPAK T36.7 [DONE]]** `routes/api.php` memakai `permission:settings.manage`
+             pada 4 route `/admin/settings` -> GANTI ke guard menu/role (T37.5) agar
+             `/admin/settings` tetap terlindungi tanpa tabel permissions.
+           Pastikan `php artisan test` & boot tetap hijau setelah penghapusan.
     T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
            parent/section, icon, feature_flag) + assign seluruh menu ke role `admin`
            (idempoten) + test.
@@ -1238,3 +1247,14 @@ Dampak implementasi (A2): migrasi drop permissions/role_permissions; hapus model
 ganti `AdminSidebar` statis menjadi dinamis dari `GET /api/auth/menus`.
 Koordinasi A1 untuk `Navbar`/`UserMenuDropdown` (menu storefront publik, T37.8).
 ==============================================================================
+
+DAMPAK KE TASK YANG SUDAH [DONE] (REVISI 6) — wajib dirapikan:
+- T24.1 [DONE]  : middleware `EnsurePermission` -> DIBUANG (T37.2).
+- T33.2 [DONE]  : `PermissionSeeder` (+ PermissionSeederTest) -> DIGANTI seeder menus
+                  (T37.3); `PermissionMiddlewareTest` dihapus.
+- T36.7 [DONE]  : guard `permission:settings.manage` pada 4 route `/admin/settings`
+                  -> DIGANTI ke guard menu/role (T37.5). [OWNER:A2]
+- Artefak lain : `Permission` model + `Role::permissions()` relation; migrasi
+                  `2026_09_08_000020` (buat permissions/role_permissions) -> tambah
+                  migrasi DROP di T37.1; bersihkan data role_permissions di DB dev.
+- TIDAK terdampak: T24.5 (sinkron users.role), T24.1 bagian `EnsureRole`.
