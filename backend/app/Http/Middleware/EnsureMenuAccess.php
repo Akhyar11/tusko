@@ -3,11 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
-use App\Models\Role;
-use App\Services\Settings\SettingsService;
+use App\Services\MenuService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -21,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureMenuAccess
 {
-    public function __construct(private readonly SettingsService $settings)
+    public function __construct(private readonly MenuService $menus)
     {
     }
 
@@ -47,11 +45,7 @@ class EnsureMenuAccess
 
         $targets = $required !== [] ? array_values($required) : [$this->pathFromRequest($request)];
 
-        foreach ($this->adminMenusFor($user) as $menu) {
-            if ($menu->feature_flag && $this->settings->get($menu->feature_flag) === false) {
-                continue;
-            }
-
+        foreach ($this->menus->adminMenusFor($user) as $menu) {
             foreach ($targets as $target) {
                 if ($this->menuCovers($menu, (string) $target)) {
                     return $next($request);
@@ -62,31 +56,6 @@ class EnsureMenuAccess
         return response()->json([
             'message' => 'Akses ditolak. Halaman ini tidak tersedia untuk peran Anda.',
         ], 403);
-    }
-
-    /**
-     * Menu admin yang dimiliki seluruh role user (users.role + pivot user_roles).
-     *
-     * @return Collection<int, Menu>
-     */
-    private function adminMenusFor($user): Collection
-    {
-        $roleIds = Role::query()
-            ->where('name', $user->role)
-            ->pluck('id')
-            ->merge($user->roles()->pluck('roles.id'))
-            ->unique()
-            ->values();
-
-        if ($roleIds->isEmpty()) {
-            return collect();
-        }
-
-        return Menu::query()
-            ->forEnvironment('admin')
-            ->active()
-            ->whereHas('roles', fn ($query) => $query->whereIn('roles.id', $roleIds))
-            ->get(['id', 'path_prefix', 'view_key', 'feature_flag']);
     }
 
     /**

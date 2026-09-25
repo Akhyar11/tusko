@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GoodsReceivingNoteController;
+use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VendorBillController;
 use App\Http\Controllers\Api\VoucherController;
@@ -26,6 +27,7 @@ Route::prefix('auth')->group(function () {
     Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
         ->middleware('signed')
         ->name('verification.verify');
+    Route::get('/menus', [MenuController::class, 'forUser'])->middleware('auth.optional');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/email/resend', [AuthController::class, 'resendVerificationEmail']);
         Route::post('/logout', [AuthController::class, 'logout']);
