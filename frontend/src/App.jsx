@@ -70,6 +70,7 @@ import { orderService } from './services/orderService';
 import { useProductTableStore } from './stores/useProductTableStore';
 import { useOrderTableStore } from './stores/useOrderTableStore';
 import { useMenuStore } from './stores/useMenuStore';
+import { isViewAllowedByMenus } from './utils/menuAccess';
 import { formatRupiah } from './utils/formatters';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
@@ -125,6 +126,45 @@ const VALID_VIEWS = [
   'reset-password',
   'email-verified',
   'profile',
+];
+
+// View inti area admin (dipakai untuk layout & guard akses menu T37.9).
+const ADMIN_CORE_VIEWS = [
+  'admin-dashboard',
+  'products-admin',
+  'categories-admin',
+  'category-create',
+  'category-edit',
+  'warehouses-admin',
+  'warehouse-create',
+  'warehouse-edit',
+  'menus-admin',
+  'menu-create',
+  'menu-edit',
+  'suppliers-admin',
+  'supplier-create',
+  'supplier-edit',
+  'vouchers-admin',
+  'voucher-create',
+  'voucher-edit',
+  'product-create',
+  'product-edit',
+  'stock',
+  'procurement',
+  'procurement-pos',
+  'procurement-po-create',
+  'procurement-po-detail',
+  'procurement-grn',
+  'procurement-grn-detail',
+  'procurement-bills',
+  'procurement-bill-detail',
+  'templates',
+  'expeditions',
+  'expedition-create',
+  'expedition-edit',
+  'transactions',
+  'transaction-create',
+  'settings'
 ];
 
 const getViewFromPathOrHash = () => {
@@ -317,6 +357,8 @@ export default function App() {
   // Menu navigasi dari DB (T37.7): dimuat saat login, direset saat logout.
   const fetchAuthMenus = useMenuStore((state) => state.fetchMenus);
   const resetAuthMenus = useMenuStore((state) => state.resetMenus);
+  const authAdminMenus = useMenuStore((state) => state.adminMenus);
+  const authMenusLoaded = useMenuStore((state) => state.isLoaded);
 
   useEffect(() => {
     if (currentUser) {
@@ -379,6 +421,17 @@ export default function App() {
     setToastMessage(toastData);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Guard akses halaman admin berbasis menu per-role (T37.9): bila view tidak
+  // diizinkan menu user, alihkan ke katalog + Toast (bukan halaman dead).
+  useEffect(() => {
+    if (!currentUser || !authMenusLoaded) return;
+    if (!ADMIN_CORE_VIEWS.includes(currentView)) return;
+    if (isViewAllowedByMenus(currentView, authAdminMenus)) return;
+
+    showToast('Akses ditolak. Halaman ini tidak tersedia untuk peran Anda.', { type: 'error' });
+    setCurrentView('catalog');
+  }, [currentView, currentUser, authMenusLoaded, authAdminMenus]);
 
   // Muat ulang keranjang dari API (akun via token, guest via session_id).
   const refreshCart = async () => {
@@ -615,44 +668,7 @@ export default function App() {
 
   // Cek apakah halaman saat ini adalah bagian dari Admin Panel
   const isAdminView = useMemo(() => {
-    const adminCoreViews = [
-      'admin-dashboard', 
-      'products-admin', 
-      'categories-admin', 
-      'category-create',
-      'category-edit',
-      'warehouses-admin',
-      'warehouse-create',
-      'warehouse-edit',
-      'menus-admin',
-      'menu-create',
-      'menu-edit',
-      'suppliers-admin',
-      'supplier-create',
-      'supplier-edit',
-  'vouchers-admin',
-  'voucher-create',
-  'voucher-edit',
-      'product-create', 
-      'product-edit', 
-      'stock', 
-      'procurement', 
-      'procurement-pos',
-      'procurement-po-create',
-      'procurement-po-detail',
-      'procurement-grn',
-      'procurement-grn-detail',
-      'procurement-bills',
-      'procurement-bill-detail',
-      'templates', 
-      'expeditions', 
-      'expedition-create',
-      'expedition-edit',
-      'transactions',
-      'transaction-create',
-      'settings'
-    ];
-    if (adminCoreViews.includes(currentView)) return true;
+    if (ADMIN_CORE_VIEWS.includes(currentView)) return true;
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
   }, [currentView, currentUser]);

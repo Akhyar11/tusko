@@ -12,32 +12,10 @@ import {
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 import { useMenuStore } from '../stores/useMenuStore';
 import { resolveMenuIcon } from '../utils/menuIcons';
+import { CHILD_VIEW_TO_MENU } from '../utils/menuAccess';
 
 // Modul operasional yang di-hide sementara pada branch production (master).
 const HIDDEN_VIEW_KEYS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
-
-// Pemetaan view turunan (create/edit/detail) ke view menu induknya agar
-// penyorotan menu aktif tetap tepat tanpa duplikasi daftar statis.
-const CHILD_VIEW_TO_MENU = {
-  'product-create': 'products-admin',
-  'product-edit': 'products-admin',
-  'category-create': 'categories-admin',
-  'category-edit': 'categories-admin',
-  'warehouse-create': 'warehouses-admin',
-  'warehouse-edit': 'warehouses-admin',
-  'supplier-create': 'suppliers-admin',
-  'supplier-edit': 'suppliers-admin',
-  'expedition-create': 'expeditions',
-  'expedition-edit': 'expeditions',
-  'transaction-create': 'transactions',
-  'procurement-po-create': 'procurement-pos',
-  'procurement-po-detail': 'procurement-pos',
-  'procurement-grn-detail': 'procurement-grn',
-  'procurement-bill-detail': 'procurement-bills',
-  'order-detail': 'orders',
-  'menu-create': 'menus-admin',
-  'menu-edit': 'menus-admin'
-};
 
 export default function AdminSidebar({
   currentView = 'admin-dashboard',
