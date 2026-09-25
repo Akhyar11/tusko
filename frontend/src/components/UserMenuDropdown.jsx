@@ -16,6 +16,7 @@ import {
   Package
 } from 'lucide-react';
 import { mockDemoUsers } from '../data/mockAuthData';
+import { resolveMenuIcon } from '../utils/menuIcons';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
 export default function UserMenuDropdown({
@@ -30,7 +31,9 @@ export default function UserMenuDropdown({
   onOpenTemplates = () => {},
   onOpenExpeditions = () => {},
   onLogout = () => {},
-  onSwitchUser = () => {}
+  onSwitchUser = () => {},
+  storefrontMenus = [],
+  onNavigateStorefrontMenu = () => {}
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -177,14 +180,32 @@ export default function UserMenuDropdown({
 
               {/* Navigation Items */}
               <div className="p-1 space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleAction(onOpenProfile)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                >
-                  <User size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
-                  <span>Profil &amp; Informasi Akun</span>
-                </button>
+                {storefrontMenus.length > 0 ? (
+                  storefrontMenus.map((menu) => {
+                    const Icon = resolveMenuIcon(menu.icon);
+                    return (
+                      <button
+                        key={menu.id}
+                        type="button"
+                        onClick={() => handleAction(() => onNavigateStorefrontMenu(menu))}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                        title={menu.sublabel || menu.label}
+                      >
+                        <Icon size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
+                        <span>{menu.label}</span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(onOpenProfile)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                  >
+                    <User size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
+                    <span>Profil &amp; Informasi Akun</span>
+                  </button>
+                )}
 
                 <button
                   type="button"

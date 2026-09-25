@@ -8,24 +8,34 @@ export default function SearchBar({
   value = '',
   onChange = () => {},
   onReset = () => {},
+  onFocus,
+  autoFocus = false,
   placeholder = 'Cari produk olahraga, SKU, atau spesifikasi...',
-  className = ''
+  className = '',
+  inputClassName = '',
+  iconSize = 16,
+  iconClassName = 'left-3.5',
+  resetClassName = 'right-3'
 }) {
+  const defaultInputClass = 'w-full h-[42px] pl-10 pr-12 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 rounded-none focus:outline-none focus:border-amber-500 transition-all text-neutral-950 font-medium placeholder:text-neutral-400';
+
   return (
     <div className={`relative flex-1 ${className}`}>
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" size={16} />
+      <Search className={`absolute ${iconClassName} top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none`} size={iconSize} />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        autoFocus={autoFocus}
         placeholder={placeholder}
-        className="w-full h-[42px] pl-10 pr-12 py-2.5 text-xs sm:text-sm bg-neutral-50 focus:bg-white border border-neutral-300 rounded-none focus:outline-none focus:border-amber-500 transition-all text-neutral-950 font-medium placeholder:text-neutral-400"
+        className={inputClassName || defaultInputClass}
       />
       {value && (
         <button
           type="button"
           onClick={onReset}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-sport font-bold uppercase text-neutral-400 hover:text-black cursor-pointer"
+          className={`absolute ${resetClassName} top-1/2 -translate-y-1/2 text-xs font-sport font-bold uppercase text-neutral-400 hover:text-black cursor-pointer`}
           title="Reset Pencarian"
         >
           ✕

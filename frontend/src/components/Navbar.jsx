@@ -21,6 +21,8 @@ import {
   UserPlus
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import { resolveMenuIcon } from '../utils/menuIcons';
+import SearchBar from './molecules/SearchBar';
 import UserMenuDropdown from './UserMenuDropdown';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
@@ -45,7 +47,9 @@ export default function Navbar({
   onOpenRegister = () => {},
   onOpenProfile = () => {},
   onLogout = () => {},
-  onSwitchUser = () => {}
+  onSwitchUser = () => {},
+  storefrontMenus = [],
+  onNavigateStorefrontMenu = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -66,7 +70,7 @@ export default function Navbar({
   const liveSuggestions = searchQuery.trim()
     ? products
         .filter((p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
           (p.location && p.location.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .slice(0, 4)
@@ -336,24 +340,16 @@ export default function Navbar({
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Search Input (Desktop) */}
             <div ref={desktopSearchRef} className="relative hidden lg:block w-56 xl:w-72">
-              <input 
-                type="text" 
+              <SearchBar
                 value={searchQuery}
+                onChange={onSearchChange}
+                onReset={() => onSearchChange('')}
                 onFocus={() => setIsFocused(true)}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Cari produk..." 
-                className="w-full bg-neutral-100 border border-neutral-200 px-4 py-2 pl-10 pr-8 text-sm focus:outline-none focus:border-black font-medium"
+                placeholder="Cari produk..."
+                inputClassName="w-full bg-neutral-100 border border-neutral-200 px-4 py-2 pl-10 pr-8 text-sm focus:outline-none focus:border-black font-medium"
+                iconClassName="left-3"
+                resetClassName="right-2.5"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black cursor-pointer"
-                >
-                  <X size={15} />
-                </button>
-              )}
               {renderSuggestionsDropdown()}
             </div>
 
@@ -382,6 +378,8 @@ export default function Navbar({
                 onOpenExpeditions={onOpenExpeditions}
                 onLogout={onLogout}
                 onSwitchUser={onSwitchUser}
+                storefrontMenus={storefrontMenus}
+                onNavigateStorefrontMenu={onNavigateStorefrontMenu}
               />
             </div>
 
@@ -416,30 +414,44 @@ export default function Navbar({
 
         </div>
 
+        {/* Secondary Navigation: Storefront menu dari DB (T37.8, publik) */}
+        {storefrontMenus.length > 0 && (
+          <div className="hidden lg:block border-t border-neutral-100 bg-white">
+            <nav className="w-full px-4 sm:px-8 lg:px-12 h-10 flex items-center gap-7 font-sport font-black text-xs uppercase tracking-wider text-neutral-600">
+              {storefrontMenus.map((menu) => {
+                const Icon = resolveMenuIcon(menu.icon);
+                return (
+                  <button
+                    key={menu.id}
+                    type="button"
+                    onClick={() => onNavigateStorefrontMenu(menu)}
+                    className="flex items-center gap-1.5 hover:text-black transition-colors cursor-pointer"
+                    title={menu.sublabel || menu.label}
+                  >
+                    <Icon size={13} className="text-neutral-400" />
+                    <span>{menu.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
+
         {/* Mobile Search Dropdown Bar */}
         {isMobileSearchOpen && (
           <div ref={mobileSearchRef} className="lg:hidden p-3 bg-white border-t border-neutral-200 relative">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onFocus={() => setIsFocused(true)}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Cari sepatu, jersey..."
-                className="w-full bg-neutral-100 border border-neutral-300 py-2 pl-9 pr-8 text-xs focus:outline-none focus:border-black font-medium"
-                autoFocus
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={15} />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
+            <SearchBar
+              value={searchQuery}
+              onChange={onSearchChange}
+              onReset={() => onSearchChange('')}
+              onFocus={() => setIsFocused(true)}
+              placeholder="Cari sepatu, jersey..."
+              inputClassName="w-full bg-neutral-100 border border-neutral-300 py-2 pl-9 pr-8 text-xs focus:outline-none focus:border-black font-medium"
+              iconClassName="left-3"
+              iconSize={15}
+              resetClassName="right-2.5"
+              autoFocus
+            />
             {renderSuggestionsDropdown()}
           </div>
         )}
@@ -599,6 +611,38 @@ export default function Navbar({
                   </div>
                 )}
               </div>
+
+              {/* Navigasi Storefront dari DB (T37.8, publik) */}
+              {storefrontMenus.length > 0 && (
+                <div className="p-4 border-b border-neutral-200">
+                  <span className="text-[10px] font-black text-neutral-400 tracking-wider uppercase block mb-2">
+                    NAVIGASI STOREFRONT
+                  </span>
+                  <div className="space-y-1">
+                    {storefrontMenus.map((menu) => {
+                      const Icon = resolveMenuIcon(menu.icon);
+                      return (
+                        <button
+                          key={menu.id}
+                          type="button"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            onNavigateStorefrontMenu(menu);
+                          }}
+                          className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 hover:bg-neutral-100 border border-transparent hover:border-neutral-200 transition-colors cursor-pointer"
+                          title={menu.sublabel || menu.label}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Icon size={16} className="text-neutral-600 shrink-0" />
+                            <span>{menu.label}</span>
+                          </div>
+                          <ChevronRight size={15} className="text-neutral-400 shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Navigation Categories */}
               <div className="p-4 space-y-4">

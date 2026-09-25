@@ -358,14 +358,15 @@ export default function App() {
   const fetchAuthMenus = useMenuStore((state) => state.fetchMenus);
   const resetAuthMenus = useMenuStore((state) => state.resetMenus);
   const authAdminMenus = useMenuStore((state) => state.adminMenus);
+  const authStorefrontMenus = useMenuStore((state) => state.storefrontMenus);
   const authMenusLoaded = useMenuStore((state) => state.isLoaded);
 
   useEffect(() => {
-    if (currentUser) {
-      fetchAuthMenus();
-    } else {
+    // Storefront menu bersifat PUBLIK (T37.4/T37.8): muat juga untuk tamu.
+    if (!currentUser) {
       resetAuthMenus();
     }
+    fetchAuthMenus();
   }, [currentUser?.id, fetchAuthMenus, resetAuthMenus]);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -784,9 +785,9 @@ export default function App() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.location.toLowerCase().includes(query) ||
+          (p.name || '').toLowerCase().includes(query) ||
+          (p.description || '').toLowerCase().includes(query) ||
+          (p.location || '').toLowerCase().includes(query) ||
           (p.seller_name && p.seller_name.toLowerCase().includes(query))
       );
     }
@@ -1274,6 +1275,14 @@ export default function App() {
           onOpenProfile={() => setCurrentView('profile')}
           onLogout={handleLogout}
           onSwitchUser={handleSwitchUser}
+          storefrontMenus={authStorefrontMenus}
+          onNavigateStorefrontMenu={(menu) => {
+            const view = menu?.view_key;
+            if (!view) return;
+            if (view === 'catalog') handleResetHome();
+            else if (view === 'cart') handleOpenCart();
+            else setCurrentView(view);
+          }}
         />
       )}
 
