@@ -15,7 +15,6 @@ import StockManagementPage from './components/StockManagementPage';
 import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import SystemSettingsHub from './components/SystemSettingsHub';
-import { settingsService } from './services/settingsService';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
@@ -70,6 +69,7 @@ import { productService } from './services/productService';
 import { orderService } from './services/orderService';
 import { useProductTableStore } from './stores/useProductTableStore';
 import { useOrderTableStore } from './stores/useOrderTableStore';
+import { useMenuStore } from './stores/useMenuStore';
 import { formatRupiah } from './utils/formatters';
 import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
 
@@ -314,21 +314,17 @@ export default function App() {
       .catch(err => console.warn('productService initial load:', err));
   }, []);
 
-  // Feature flags (T36.18): guard menu Pengaturan Sistem.
+  // Menu navigasi dari DB (T37.7): dimuat saat login, direset saat logout.
+  const fetchAuthMenus = useMenuStore((state) => state.fetchMenus);
+  const resetAuthMenus = useMenuStore((state) => state.resetMenus);
+
   useEffect(() => {
-    if (currentUser?.role !== 'admin') return undefined;
-
-    let active = true;
-    settingsService.getGroup('feature_flags')
-      .then((res) => {
-        if (active) setFeatureFlags(res?.values || {});
-      })
-      .catch(() => {});
-
-    return () => {
-      active = false;
-    };
-  }, [currentUser?.role]);
+    if (currentUser) {
+      fetchAuthMenus();
+    } else {
+      resetAuthMenus();
+    }
+  }, [currentUser?.id, fetchAuthMenus, resetAuthMenus]);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -339,7 +335,6 @@ export default function App() {
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
-  const [featureFlags, setFeatureFlags] = useState({});
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
@@ -1285,7 +1280,6 @@ export default function App() {
             onBackToStore={() => setCurrentView('catalog')}
             orderCount={orders.length}
             lowStockCount={products.filter(p => p.stock <= (p.stock_minimum || 5)).length}
-            featureFlags={featureFlags}
           />
         )}
 

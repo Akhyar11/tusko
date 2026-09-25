@@ -1,29 +1,43 @@
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard,
-  Package, 
-  Boxes, 
-  ShoppingBag, 
-  Wallet, 
-  Truck, 
-  Mail, 
-  Store, 
-  LogOut, 
-  ShieldCheck, 
-  Menu, 
-  X, 
+import React, { useMemo, useState } from 'react';
+import {
+  Store,
+  LogOut,
+  ShieldCheck,
+  Menu,
+  X,
   ChevronRight,
   Sparkles,
-  ClipboardList,
-  FolderKanban,
-  Building2,
-  PackageCheck,
-  Receipt,
-  Warehouse,
-  Settings,
-  KeyRound
+  Loader2
 } from 'lucide-react';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
+import { useMenuStore } from '../stores/useMenuStore';
+import { resolveMenuIcon } from '../utils/menuIcons';
+
+// Modul operasional yang di-hide sementara pada branch production (master).
+const HIDDEN_VIEW_KEYS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
+
+// Pemetaan view turunan (create/edit/detail) ke view menu induknya agar
+// penyorotan menu aktif tetap tepat tanpa duplikasi daftar statis.
+const CHILD_VIEW_TO_MENU = {
+  'product-create': 'products-admin',
+  'product-edit': 'products-admin',
+  'category-create': 'categories-admin',
+  'category-edit': 'categories-admin',
+  'warehouse-create': 'warehouses-admin',
+  'warehouse-edit': 'warehouses-admin',
+  'supplier-create': 'suppliers-admin',
+  'supplier-edit': 'suppliers-admin',
+  'expedition-create': 'expeditions',
+  'expedition-edit': 'expeditions',
+  'transaction-create': 'transactions',
+  'procurement-po-create': 'procurement-pos',
+  'procurement-po-detail': 'procurement-pos',
+  'procurement-grn-detail': 'procurement-grn',
+  'procurement-bill-detail': 'procurement-bills',
+  'order-detail': 'orders',
+  'menu-create': 'menus-admin',
+  'menu-edit': 'menus-admin'
+};
 
 export default function AdminSidebar({
   currentView = 'admin-dashboard',
@@ -32,176 +46,39 @@ export default function AdminSidebar({
   onLogout = () => {},
   onBackToStore = () => {},
   orderCount = 0,
-  lowStockCount = 0,
-  featureFlags = {}
+  lowStockCount = 0
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const menuSections = [
-    {
-      id: 'section-overview',
-      title: 'Ikhtisar & Analitik',
-      items: [
-        {
-          id: 'admin-dashboard',
-          label: 'Ringkasan Dashboard',
-          sublabel: 'KPI revenue & performa toko',
-          icon: LayoutDashboard,
-          activeViews: ['admin-dashboard']
-        }
-      ]
-    },
-    {
-      id: 'section-catalog',
-      title: 'Katalog & Inventaris',
-      items: [
-        {
-          id: 'products-admin',
-          label: 'Produk & Varian SKU',
-          sublabel: 'Katalog produk, harga & SKU',
-          icon: Package,
-          activeViews: ['products-admin', 'product-create', 'product-edit']
-        },
-        {
-          id: 'categories-admin',
-          label: 'Master Kategori',
-          sublabel: 'Taksonomi & kategori olahraga',
-          icon: FolderKanban,
-          activeViews: ['categories-admin', 'category-create', 'category-edit']
-        },
-        {
-          id: 'warehouses-admin',
-          label: 'Master Gudang & Lokasi',
-          sublabel: 'Fasilitas gudang & titik simpan',
-          icon: Warehouse,
-          activeViews: ['warehouses-admin', 'warehouse-create', 'warehouse-edit']
-        },
-        {
-          id: 'stock',
-          label: 'Manajemen Stok Gudang',
-          sublabel: 'Stok fisik gudang & restock',
-          icon: Boxes,
-          activeViews: ['stock'],
-          badge: lowStockCount > 0 ? `${lowStockCount} Perlu Restok` : null,
-          badgeColor: 'bg-amber-100 text-amber-900 border border-amber-300'
-        }
-      ]
-    },
-    {
-      id: 'section-sales',
-      title: 'Penjualan & Pengiriman',
-      items: [
-        {
-          id: 'orders',
-          label: 'Antrean Pesanan',
-          sublabel: 'Pesanan pembeli & status order',
-          icon: ShoppingBag,
-          activeViews: ['orders', 'order-detail'],
-          badge: orderCount > 0 ? `${orderCount}` : null,
-          badgeColor: 'bg-neutral-200 text-neutral-900'
-        },
-        {
-          id: 'expeditions',
-          label: 'Jasa Ekspedisi & Ongkir',
-          sublabel: 'Kurir aktif & tarif pengiriman',
-          icon: Truck,
-          activeViews: ['expeditions', 'expedition-create', 'expedition-edit']
-        }
-      ]
-    },
-    {
-      id: 'section-procurement',
-      title: 'Pengadaan & Rantai Pasok',
-      items: [
-        {
-          id: 'procurement-pos',
-          label: 'Purchase Order (PO)',
-          sublabel: 'Pemesanan stok ke supplier',
-          icon: ClipboardList,
-          activeViews: ['procurement-pos', 'procurement', 'procurement-po-create', 'procurement-po-detail']
-        },
-        {
-          id: 'procurement-grn',
-          label: 'Penerimaan Barang (GRN)',
-          sublabel: 'Cek fisik barang masuk & QC',
-          icon: PackageCheck,
-          activeViews: ['procurement-grn']
-        },
-        {
-          id: 'procurement-bills',
-          label: 'Tagihan Vendor (Bills)',
-          sublabel: 'Invoice hutang & pelunasan',
-          icon: Receipt,
-          activeViews: ['procurement-bills']
-        },
-        {
-          id: 'suppliers-admin',
-          label: 'Master Supplier & Vendor',
-          sublabel: 'Direktori mitra & syarat dagang',
-          icon: Building2,
-          activeViews: ['suppliers-admin', 'supplier-create', 'supplier-edit']
-        }
-      ]
-    },
-    {
-      id: 'section-finance',
-      title: 'Keuangan & Sistem',
-      items: [
-        {
-          id: 'transactions',
-          label: 'Buku Kas & Transaksi',
-          sublabel: 'Arus kas masuk & beban toko',
-          icon: Wallet,
-          activeViews: ['transactions', 'transaction-create']
-        },
-        {
-          id: 'templates',
-          label: 'Template Dokumen & Resi',
-          sublabel: 'Format cetak invoice & resi',
-          icon: Mail,
-          activeViews: ['templates']
-        },
-        {
-          id: 'settings',
-          label: 'Pengaturan Sistem',
-          sublabel: 'Konfigurasi toko & integrasi',
-          icon: Settings,
-          activeViews: ['settings']
-        },
-        {
-          id: 'menus-admin',
-          label: 'Kelola Menu & Akses',
-          sublabel: 'Navigasi DB & akses per-role',
-          icon: KeyRound,
-          activeViews: ['menus-admin', 'menu-create', 'menu-edit']
-        }
-      ]
+  const { adminMenus, isLoading } = useMenuStore();
+
+  // Kelompokkan menu dari DB per `section` (urutan mengikuti sort_order server).
+  const sections = useMemo(() => {
+    const visible = adminMenus.filter(
+      (menu) => SHOW_OPERATIONAL_MODULES || !HIDDEN_VIEW_KEYS.includes(menu.view_key)
+    );
+
+    const grouped = new Map();
+    visible.forEach((menu) => {
+      const key = menu.section || 'Lainnya';
+      if (!grouped.has(key)) grouped.set(key, { id: `section-${key}`, title: key, items: [] });
+      grouped.get(key).items.push(menu);
+    });
+
+    return Array.from(grouped.values());
+  }, [adminMenus]);
+
+  const badgeFor = (menu) => {
+    if (menu.view_key === 'orders' && orderCount > 0) {
+      return { text: `${orderCount}`, color: 'bg-neutral-200 text-neutral-900' };
     }
-  ];
-
-  // Modul operasional yang di-hide sementara pada branch production (master)
-  const HIDDEN_MODULE_IDS = ['stock', 'orders', 'transactions', 'expeditions', 'templates'];
-  // Feature flag (T36.16/T36.18): admin dapat menonaktifkan menu per modul.
-  const FLAG_TO_ITEM_IDS = {
-    'feature_flags.orders_menu': ['orders'],
-    'feature_flags.stock_menu': ['stock'],
-    'feature_flags.finance_menu': ['transactions'],
-    'feature_flags.procurement_menu': ['procurement-pos', 'procurement-grn', 'procurement-bills', 'suppliers-admin'],
-    'feature_flags.templates_menu': ['templates'],
-    'feature_flags.expeditions_menu': ['expeditions'],
-    'feature_flags.settings_menu': ['settings']
+    if (menu.view_key === 'stock' && lowStockCount > 0) {
+      return { text: `${lowStockCount} Perlu Restok`, color: 'bg-amber-100 text-amber-900 border border-amber-300' };
+    }
+    return null;
   };
-  const flagHiddenIds = Object.entries(FLAG_TO_ITEM_IDS)
-    .filter(([flag]) => featureFlags?.[flag] === false)
-    .flatMap(([, itemIds]) => itemIds);
 
-  const visibleSections = menuSections
-    .map(section => ({
-      ...section,
-      items: section.items
-        .filter(item => !flagHiddenIds.includes(item.id))
-        .filter(item => SHOW_OPERATIONAL_MODULES || !HIDDEN_MODULE_IDS.includes(item.id))
-    }))
-    .filter(section => section.items.length > 0);
+  const isMenuActive = (menu) =>
+    menu.view_key === currentView || CHILD_VIEW_TO_MENU[currentView] === menu.view_key;
 
   const handleItemClick = (viewId) => {
     setIsMobileOpen(false);
@@ -235,10 +112,10 @@ export default function AdminSidebar({
         {/* Profile Card */}
         <div className="bg-white border border-neutral-300 p-3 rounded-none flex items-center gap-3">
           {currentUser?.avatar ? (
-            <img 
-              src={currentUser.avatar} 
-              alt={currentUser.name} 
-              className="w-10 h-10 object-cover border border-neutral-300 rounded-none shrink-0" 
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-10 h-10 object-cover border border-neutral-300 rounded-none shrink-0"
             />
           ) : (
             <div className="w-10 h-10 bg-black text-white font-black text-sm flex items-center justify-center rounded-none shrink-0">
@@ -251,15 +128,28 @@ export default function AdminSidebar({
             </div>
             <div className="text-[10px] font-bold text-amber-700 flex items-center gap-1 mt-0.5 uppercase tracking-wider">
               <ShieldCheck size={11} className="shrink-0" />
-              <span>Administrator</span>
+              <span>{currentUser?.role === 'admin' ? 'Administrator' : 'Member'}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Middle Section: Navigation Menu Links by Business Domain */}
+      {/* 2. Middle Section: Navigation Menu Links (100% dari store menu DB) */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {visibleSections.map((section, sectionIdx) => (
+        {isLoading && adminMenus.length === 0 && (
+          <div className="flex items-center justify-center gap-2 py-8 text-neutral-400 text-xs font-sport font-black uppercase tracking-wider">
+            <Loader2 size={15} className="animate-spin text-amber-500" />
+            <span>Memuat navigasi...</span>
+          </div>
+        )}
+
+        {!isLoading && sections.length === 0 && (
+          <div className="px-3 py-8 text-center text-xs text-neutral-500">
+            Tidak ada menu yang tersedia untuk peran Anda.
+          </div>
+        )}
+
+        {sections.map((section, sectionIdx) => (
           <div key={section.id} className="space-y-1">
             <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-400 font-sport ${
               sectionIdx > 0 ? 'border-t border-neutral-100 pt-3' : ''
@@ -269,15 +159,17 @@ export default function AdminSidebar({
 
             <div className="space-y-1">
               {section.items.map((item) => {
-                const isActive = item.activeViews.includes(currentView);
-                const IconComponent = item.icon;
+                const isActive = isMenuActive(item);
+                const IconComponent = resolveMenuIcon(item.icon);
+                const badge = badgeFor(item);
 
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 transition-all rounded-none text-left cursor-pointer border ${
+                    onClick={() => handleItemClick(item.view_key)}
+                    disabled={!item.view_key}
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 transition-all rounded-none text-left cursor-pointer border disabled:opacity-50 disabled:cursor-not-allowed ${
                       isActive
                         ? 'bg-neutral-950 border-neutral-950 text-white shadow-xs'
                         : 'bg-white hover:bg-neutral-100 border-transparent hover:border-neutral-300 text-neutral-800'
@@ -285,8 +177,8 @@ export default function AdminSidebar({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-8 h-8 flex items-center justify-center rounded-none shrink-0 border ${
-                        isActive 
-                          ? 'bg-neutral-900 border-neutral-700 text-amber-400' 
+                        isActive
+                          ? 'bg-neutral-900 border-neutral-700 text-amber-400'
                           : 'bg-neutral-100 border-neutral-200 text-neutral-700'
                       }`}>
                         <IconComponent size={16} />
@@ -297,25 +189,27 @@ export default function AdminSidebar({
                         }`}>
                           {item.label}
                         </div>
-                        <div className={`text-[10px] truncate ${
-                          isActive ? 'text-neutral-400' : 'text-neutral-500'
-                        }`}>
-                          {item.sublabel}
-                        </div>
+                        {item.sublabel && (
+                          <div className={`text-[10px] truncate ${
+                            isActive ? 'text-neutral-400' : 'text-neutral-500'
+                          }`}>
+                            {item.sublabel}
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                      {item.badge && (
+                      {badge && (
                         <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-none tracking-wider ${
-                          isActive ? 'bg-amber-400 text-neutral-950' : item.badgeColor
+                          isActive ? 'bg-amber-400 text-neutral-950' : badge.color
                         }`}>
-                          {item.badge}
+                          {badge.text}
                         </span>
                       )}
-                      <ChevronRight 
-                        size={14} 
-                        className={isActive ? 'text-amber-400' : 'text-neutral-400'} 
+                      <ChevronRight
+                        size={14}
+                        className={isActive ? 'text-amber-400' : 'text-neutral-400'}
                       />
                     </div>
                   </button>
@@ -361,7 +255,7 @@ export default function AdminSidebar({
       <div className="hidden lg:block w-72 xl:w-80 shrink-0" aria-hidden="true" />
 
       {/* ================= DESKTOP FIXED LEFT SIDEBAR ================= */}
-      <aside 
+      <aside
         className="hidden lg:flex flex-col w-72 xl:w-80 h-screen fixed top-0 left-0 border-r border-neutral-300 z-30 shadow-xs bg-white"
         aria-label="Navigasi Panel Admin"
       >
@@ -386,7 +280,7 @@ export default function AdminSidebar({
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex justify-start animate-in fade-in duration-150">
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileOpen(false)}
           />

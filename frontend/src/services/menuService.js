@@ -61,6 +61,17 @@ function buildQuery(params = {}) {
 }
 
 export const menuService = {
+  /**
+   * Menu efektif user yang sedang login (admin per-role + storefront publik) — T37.4/T37.7.
+   */
+  async fetchUserMenus() {
+    const res = await apiClient.get('/api/auth/menus');
+    return {
+      admin: Array.isArray(res?.data?.admin) ? res.data.admin : [],
+      storefront: Array.isArray(res?.data?.storefront) ? res.data.storefront : []
+    };
+  },
+
   async fetchMenus(params = {}) {
     const res = await apiClient.get(`/api/admin/menus?${buildQuery(params)}`);
     const list = Array.isArray(res.data) ? res.data : [];
