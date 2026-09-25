@@ -53,6 +53,8 @@ import VendorBillListPage from './components/VendorBillListPage';
 import VendorBillDetailPage from './components/VendorBillDetailPage';
 import SupplierListPage from './components/SupplierListPage';
 import VoucherListPage from './components/VoucherListPage';
+import VoucherCreatePage from './components/VoucherCreatePage';
+import VoucherEditPage from './components/VoucherEditPage';
 import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
@@ -95,8 +97,10 @@ const VALID_VIEWS = [
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
-  'vouchers-admin',
-  'product-create',
+      'vouchers-admin',
+      'voucher-create',
+      'voucher-edit',
+      'product-create', 
   'product-edit',
   'transactions',
   'transaction-create',
@@ -131,6 +135,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
+    if (rawPath === '/admin/vouchers/create' || rawPath === '/admin/voucher/create') return 'voucher-create';
     if (rawPath === '/admin/stock' || rawPath === '/admin/stocks' || rawPath === '/admin/inventory') return 'stock';
     if (rawPath === '/admin/orders' || rawPath === '/admin/order') return 'orders';
     if (rawPath === '/admin/procurement') return 'procurement-pos';
@@ -208,6 +213,9 @@ const getInitialView = () => {
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
+    }
+    if (rawView === 'voucher-edit') {
+      return 'vouchers-admin';
     }
     if (rawView === 'expedition-edit') {
       return 'expeditions';
@@ -315,6 +323,7 @@ export default function App() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
+  const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [featureFlags, setFeatureFlags] = useState({});
@@ -463,6 +472,10 @@ export default function App() {
       if (window.location.pathname !== '/admin/vouchers') {
         window.history.pushState(null, '', '/admin/vouchers');
       }
+    } else if (currentView === 'voucher-create') {
+      if (window.location.pathname !== '/admin/vouchers/create') {
+        window.history.pushState(null, '', '/admin/vouchers/create');
+      }
     } else if (currentView === 'stock') {
       if (window.location.pathname !== '/admin/stock') {
         window.history.pushState(null, '', '/admin/stock');
@@ -606,7 +619,9 @@ export default function App() {
       'suppliers-admin',
       'supplier-create',
       'supplier-edit',
-      'vouchers-admin',
+  'vouchers-admin',
+  'voucher-create',
+  'voucher-edit',
       'product-create', 
       'product-edit', 
       'stock', 
@@ -1544,8 +1559,22 @@ export default function App() {
         ) : currentView === 'vouchers-admin' ? (
           <VoucherListPage
             onShowToast={showToast}
-            onNavigateToCreate={() => showToast('Halaman tambah voucher sedang disiapkan (T15.4).')}
-            onNavigateToEdit={() => showToast('Halaman edit voucher sedang disiapkan (T15.4).')}
+            onNavigateToCreate={() => setCurrentView('voucher-create')}
+            onNavigateToEdit={(voucher) => {
+              setEditingVoucher(voucher);
+              setCurrentView('voucher-edit');
+            }}
+          />
+        ) : currentView === 'voucher-create' ? (
+          <VoucherCreatePage
+            onNavigateBack={() => setCurrentView('vouchers-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'voucher-edit' ? (
+          <VoucherEditPage
+            voucher={editingVoucher}
+            onNavigateBack={() => setCurrentView('vouchers-admin')}
+            onShowToast={showToast}
           />
         ) : currentView === 'warehouses-admin' ? (
           <WarehouseListPage
