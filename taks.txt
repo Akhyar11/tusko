@@ -1008,9 +1008,9 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
              pada 4 route `/admin/settings` -> GANTI ke guard menu/role (T37.5) agar
              `/admin/settings` tetap terlindungi tanpa tabel permissions.
            Pastikan `php artisan test` & boot tetap hijau setelah penghapusan.
-    T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
-           parent/section, icon, feature_flag) + assign seluruh menu ke role `admin`
-           (idempoten) + test.
+    T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key,
+           section, icon, feature_flag) + assign seluruh menu admin ke role `admin`
+           (idempoten) + test. [commit e77299d]
     T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
            + test.
     T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan

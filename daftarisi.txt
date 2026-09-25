@@ -216,7 +216,7 @@
 962|MAJOR|T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  [OWNER:A2]
 980|MINOR|T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
 984|MINOR|T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
-995|MINOR|T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
+995|MINOR|T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
 998|MINOR|T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
 1000|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
 1004|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
