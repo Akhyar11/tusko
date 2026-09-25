@@ -767,10 +767,11 @@ T24. RBAC Admin (Roles + Menu Access) — TANPA permissions .......... [TODO]  [
     T24.1 [DONE -> KADALUARSA T37.2] Middleware EnsureRole (+ EnsurePermission
            DIBUANG di T37.2; guard halaman via `menu.access` T37.5).
     T24.2 [TODO] Terapkan middleware 'role:' ke endpoint admin.
-    T24.3 [TODO] Endpoint + FE Master Role: CRUD `roles` (name, display_name,
-           description, is_system) + assign role ke user (`user_roles`, sinkron
-           `users.role` per T24.5) + halaman kanonis + FilterDrawer. [OWNER:A2]
-    T24.4 [TODO] FE guard akses halaman Admin berbasis menu per-role (via T37).
+    T24.3 [DONE] Endpoint + FE Master Role: CRUD `roles` (name, display_name,
+           description, is_system) + halaman kanonis + FilterDrawer. [OWNER:A2]
+           DIPECAH: T24.3a BE [commit ceae15d] + T24.3b FE/menu/E2E [commit dd23d62].
+           (assign role ke user SUDAH selesai di T38.2.)
+    T24.4 [DONE] FE guard akses halaman Admin berbasis menu per-role (via T37.9).
     T24.5 [DONE] Sinkron `users.role` <-> `user_roles` (D5).
     T24.6 [TODO] FE halaman Role → Menu Mapping (matriks centang menu per role,
            memakai endpoint T37.6 `role_ids`/`role_menus`; role-centric). [OWNER:A2]
