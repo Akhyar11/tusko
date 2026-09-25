@@ -213,21 +213,21 @@
 946|MINOR|T36.17 [DONE] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
 948|MINOR|T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
 952|MINOR|T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
-962|MAJOR|T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [TODO]  [OWNER:A2]
-980|MINOR|T37.1 [NEW] Migrasi `menus` + `role_menus` (+ DROP `permissions` &
-982|MINOR|T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
-993|MINOR|T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
-996|MINOR|T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
-998|MINOR|T37.5 [NEW] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
-1001|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
-1002|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
-1004|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
-1006|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
-1008|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
-1016|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-1029|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-1062|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-1095|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-1112|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-1130|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-1149|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+962|MAJOR|T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  [OWNER:A2]
+980|MINOR|T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
+984|MINOR|T37.2 [NEW] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
+995|MINOR|T37.3 [NEW] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
+998|MINOR|T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
+1000|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
+1004|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
+1005|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+1007|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
+1009|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+1011|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+1019|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+1032|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+1065|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+1098|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+1115|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1133|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1152|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru

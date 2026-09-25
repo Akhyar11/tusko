@@ -1013,9 +1013,10 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            (idempoten) + test.
     T37.4 [NEW] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
            + test.
-    T37.5 [NEW] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
+    T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
            menu yang dimiliki role user; tolak 403 + test (termasuk contoh
-           `/admin/product/create` lolos via prefix `/admin/product`).
+           `/admin/product/create` lolos via prefix `/admin/product`). [commit c6324c6]
+           (tanpa bypass admin; seeder assign menu ke admin di T37.3).
     T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test.
     T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
            `AdminSidebar` (A2) render dari store (bukan statis) + uji browser.
