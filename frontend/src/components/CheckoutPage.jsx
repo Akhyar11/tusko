@@ -37,7 +37,8 @@ export default function CheckoutPage({
   checkoutItems = [],
   onBackToCart = () => {},
   onFinishOrder = () => {},
-  availableExpeditions = null
+  availableExpeditions = null,
+  onShowToast = () => {}
 }) {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -433,6 +434,7 @@ export default function CheckoutPage({
         expedition: selectedExpedition,
         paymentMethod: selectedPayment,
         totalAmount: Number(order.grand_total ?? grandTotal),
+        serviceFee: Number(order.service_fee ?? 0),
         totalSavings,
         createdAt: order.created_at || new Date().toISOString(),
       };
@@ -1064,6 +1066,7 @@ export default function CheckoutPage({
         onClose={() => setOrderSuccessData(null)}
         orderData={orderSuccessData}
         onPaymentConfirmed={() => setOrderSuccessData(null)}
+        onShowToast={onShowToast}
       />
     </div>
   );

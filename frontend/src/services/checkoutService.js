@@ -21,6 +21,21 @@ export const checkoutService = {
   },
 
   /**
+   * Ambil daftar rekening bank tujuan transfer manual (dinamis dari Admin, T07.2).
+   */
+  async getManualBanks() {
+    const response = await apiClient.get('/api/payment-methods/manual-banks');
+    return { data: response.data || [], configured: Boolean(response.configured) };
+  },
+
+  /**
+   * Kirim konfirmasi transfer manual + bukti (multipart) — T07.2.
+   */
+  async confirmManualPayment(orderRef, formData) {
+    return await apiClient.post(`/api/orders/${encodeURIComponent(orderRef)}/confirm-payment`, formData);
+  },
+
+  /**
    * Ambil tarif pengiriman (layanan kurir) dari agregator yang dikonfigurasi admin.
    */
   async getShippingRates({ origin, destination, weight, courier, length, width, height, itemValue, insurance } = {}) {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PaymentInstructionModal from './PaymentInstructionModal';
 import { 
   CheckCircle2, 
   Copy, 
@@ -24,20 +25,22 @@ export default function OrderSuccessPage({
   orderData = null,
   onContinueShopping = () => {},
   onViewInstruction = () => {},
-  onViewOrdersList = () => {}
+  onViewOrdersList = () => {},
+  onShowToast = () => {}
 }) {
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [copiedVa, setCopiedVa] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   if (!orderData) {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-        <div className="bg-white rounded-none p-8 border border-gray-200 shadow-xs space-y-4">
-          <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-none flex items-center justify-center mx-auto">
+        <div className="bg-white rounded-none p-8 border border-neutral-200 shadow-xs space-y-4">
+          <div className="w-16 h-16 bg-neutral-100 text-neutral-400 rounded-none flex items-center justify-center mx-auto">
             <ShoppingBag size={32} />
           </div>
-          <h2 className="text-xl font-black text-gray-800">Tidak ada riwayat transaksi aktif</h2>
-          <p className="text-xs text-gray-500">Mulai belanja sekarang dan temukan jutaan produk impianmu!</p>
+          <h2 className="text-xl font-black text-neutral-800">Tidak ada riwayat transaksi aktif</h2>
+          <p className="text-xs text-neutral-500">Mulai belanja sekarang dan temukan jutaan produk impianmu!</p>
           <button
             type="button"
             onClick={onContinueShopping}
@@ -60,7 +63,8 @@ export default function OrderSuccessPage({
     expedition = {},
     items = [],
     createdAt,
-    appliedCoupon
+    appliedCoupon,
+    serviceFee = 0
   } = orderData;
 
   const handleCopy = (text, type) => {
@@ -89,7 +93,7 @@ export default function OrderSuccessPage({
     <div className="max-w-4xl mx-auto py-6 px-4 space-y-6">
       
       {/* Top Banner: Success Header */}
-      <div className="bg-white rounded-none border border-gray-200 p-6 sm:p-8 text-center shadow-xs relative overflow-hidden">
+      <div className="bg-white rounded-none border border-neutral-200 p-6 sm:p-8 text-center shadow-xs relative overflow-hidden">
         <div className="absolute -top-16 -right-16 w-40 h-40 bg-emerald-50 rounded-none blur-2xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-emerald-50 rounded-none blur-2xl pointer-events-none" />
 
@@ -97,17 +101,17 @@ export default function OrderSuccessPage({
           <CheckCircle2 size={36} strokeWidth={2.5} />
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight">
           Pesanan Berhasil Dibuat!
         </h1>
-        <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md mx-auto">
+        <p className="text-xs sm:text-sm text-neutral-500 mt-1 max-w-md mx-auto">
           Terima kasih telah berbelanja di TokoOnline. Pesananmu telah masuk ke sistem kami.
         </p>
 
         {/* Invoice Bar */}
-        <div className="mt-5 inline-flex items-center gap-2 px-3.5 py-1.5 bg-gray-50 border border-gray-200 rounded-none text-xs">
-          <span className="text-gray-400">No. Invoice:</span>
-          <strong className="font-mono text-gray-900">{invoiceNumber}</strong>
+        <div className="mt-5 inline-flex items-center gap-2 px-3.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded-none text-xs">
+          <span className="text-neutral-400">No. Invoice:</span>
+          <strong className="font-mono text-neutral-900">{invoiceNumber}</strong>
           <button
             type="button"
             onClick={() => handleCopy(invoiceNumber, 'invoice')}
@@ -118,7 +122,7 @@ export default function OrderSuccessPage({
           </button>
         </div>
 
-        <div className="mt-2 text-[11px] text-gray-400">
+        <div className="mt-2 text-[11px] text-neutral-400">
           Dibuat pada: {formattedDate} WIB
         </div>
       </div>
@@ -130,9 +134,9 @@ export default function OrderSuccessPage({
         <div className="md:col-span-7 space-y-4">
           
           {/* Tracking & Shipment Status Box */}
-          <div className="bg-white rounded-none border border-gray-200 p-5 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between pb-2.5 border-b border-gray-100">
-              <h3 className="font-bold text-xs sm:text-sm text-gray-900 flex items-center gap-2">
+          <div className="bg-white rounded-none border border-neutral-200 p-5 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between pb-2.5 border-b border-neutral-100">
+              <h3 className="font-bold text-xs sm:text-sm text-neutral-900 flex items-center gap-2">
                 <Truck size={16} className="text-emerald-600" />
                 <span>Informasi Pengiriman</span>
               </h3>
@@ -143,34 +147,34 @@ export default function OrderSuccessPage({
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-gray-400 block text-[11px]">Kurir & Layanan</span>
-                <span className="font-bold text-gray-800">{expedition.name} - {expedition.service}</span>
-                <span className="text-[10px] text-gray-500 block mt-0.5">Estimasi {expedition.etd}</span>
+                <span className="text-neutral-400 block text-[11px]">Kurir & Layanan</span>
+                <span className="font-bold text-neutral-800">{expedition.name} - {expedition.service}</span>
+                <span className="text-[10px] text-neutral-500 block mt-0.5">Estimasi {expedition.etd}</span>
               </div>
 
               <div>
-                <span className="text-gray-400 block text-[11px]">No. Resi (Dummy)</span>
+                <span className="text-neutral-400 block text-[11px]">No. Resi (Dummy)</span>
                 <span className="font-mono font-bold text-emerald-700">{mockResiNumber}</span>
                 <span className="text-[10px] text-emerald-600 block mt-0.5">Dapat dilacak otomatis</span>
               </div>
             </div>
 
             {/* Destination Address Card */}
-            <div className="p-3 bg-gray-50/80 rounded-none border border-gray-200 text-xs text-gray-700 space-y-1">
+            <div className="p-3 bg-neutral-50/80 rounded-none border border-neutral-200 text-xs text-neutral-700 space-y-1">
               <div className="flex items-center gap-2">
                 <MapPin size={13} className="text-emerald-600 shrink-0" />
-                <span className="font-bold text-gray-900">{address.recipient_name}</span>
-                <span className="text-gray-400">|</span>
-                <span className="text-gray-500">{address.phone}</span>
-                <span className="text-[10px] bg-white px-1.5 py-0.2 rounded border border-gray-200 text-gray-600">
+                <span className="font-bold text-neutral-900">{address.recipient_name}</span>
+                <span className="text-neutral-400">|</span>
+                <span className="text-neutral-500">{address.phone}</span>
+                <span className="text-[10px] bg-white px-1.5 py-0.2 rounded-none border border-neutral-200 text-neutral-600">
                   {address.label}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-600 pl-5 leading-relaxed">
+              <p className="text-[11px] text-neutral-600 pl-5 leading-relaxed">
                 {address.full_address}, {address.city}, {address.province}, {address.postal_code}
               </p>
               {address.notes && (
-                <p className="text-[10px] text-gray-400 italic pl-5">
+                <p className="text-[10px] text-neutral-400 italic pl-5">
                   Patokan: {address.notes}
                 </p>
               )}
@@ -178,24 +182,24 @@ export default function OrderSuccessPage({
           </div>
 
           {/* Purchased Items List */}
-          <div className="bg-white rounded-none border border-gray-200 p-5 shadow-2xs space-y-3">
-            <h3 className="font-bold text-xs sm:text-sm text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-100">
+          <div className="bg-white rounded-none border border-neutral-200 p-5 shadow-2xs space-y-3">
+            <h3 className="font-bold text-xs sm:text-sm text-neutral-900 flex items-center gap-2 pb-2 border-b border-neutral-100">
               <PackageCheck size={16} className="text-emerald-600" />
               <span>Daftar Produk ({items.reduce((acc, i) => acc + i.quantity, 0)} barang)</span>
             </h3>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-neutral-100">
               {items.map((item) => (
                 <div key={item.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={item.image_url}
                       alt=""
-                      className="w-12 h-12 rounded-none object-cover border border-gray-200 shrink-0"
+                      className="w-12 h-12 rounded-none object-cover border border-neutral-200 shrink-0"
                     />
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.name}</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
+                      <p className="text-xs font-semibold text-neutral-800 line-clamp-1">{item.name}</p>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
                         {item.quantity} x {formatRupiah(item.price)}
                       </p>
                       {item.notes && (
@@ -203,7 +207,7 @@ export default function OrderSuccessPage({
                       )}
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-gray-900 shrink-0">
+                  <span className="text-xs font-bold text-neutral-900 shrink-0">
                     {formatRupiah(item.price * item.quantity)}
                   </span>
                 </div>
@@ -217,10 +221,10 @@ export default function OrderSuccessPage({
         <div className="md:col-span-5 space-y-4">
           
           {/* Payment Status & Details Box */}
-          <div className="bg-white rounded-none border border-gray-200 p-5 shadow-2xs space-y-4">
-            <h3 className="font-bold text-xs sm:text-sm text-gray-900 pb-2 border-b border-gray-100 flex items-center justify-between">
+          <div className="bg-white rounded-none border border-neutral-200 p-5 shadow-2xs space-y-4">
+            <h3 className="font-bold text-xs sm:text-sm text-neutral-900 pb-2 border-b border-neutral-100 flex items-center justify-between">
               <span>Rincian Pembayaran</span>
-              <span className="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+              <span className="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded-none border border-amber-200">
                 Menunggu Pembayaran
               </span>
             </h3>
@@ -228,14 +232,14 @@ export default function OrderSuccessPage({
             {/* Payment Method Card */}
             <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-none space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Metode Pembayaran</span>
-                <span className="font-bold text-gray-900">{paymentMethod.name}</span>
+                <span className="text-neutral-600">Metode Pembayaran</span>
+                <span className="font-bold text-neutral-900">{paymentMethod.name}</span>
               </div>
 
               {/* Number display */}
               <div className="p-2.5 bg-white rounded-none border border-emerald-300 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-gray-400 block font-medium">Nomor Pembayaran (VA)</span>
+                  <span className="text-[10px] text-neutral-400 block font-medium">Nomor Pembayaran (VA)</span>
                   <span className="font-mono text-sm font-extrabold text-emerald-700 tracking-wider">
                     {vaNumber}
                   </span>
@@ -257,10 +261,10 @@ export default function OrderSuccessPage({
             </div>
 
             {/* Cost Breakdown */}
-            <div className="space-y-2 text-xs text-gray-600 border-t border-gray-100 pt-3">
+            <div className="space-y-2 text-xs text-neutral-600 border-t border-neutral-100 pt-3">
               <div className="flex justify-between">
                 <span>Total Harga Barang</span>
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-neutral-800">
                   {formatRupiah(items.reduce((acc, i) => acc + (i.price * i.quantity), 0))}
                 </span>
               </div>
@@ -274,20 +278,20 @@ export default function OrderSuccessPage({
 
               <div className="flex justify-between">
                 <span>Total Ongkos Kirim</span>
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-neutral-800">
                   {expedition.is_free ? 'Gratis' : formatRupiah(expedition.cost)}
                 </span>
               </div>
 
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-neutral-500">
                 <span>Biaya Jasa Aplikasi</span>
-                <span className="font-medium text-gray-800">Rp 1.000</span>
+                <span className="font-medium text-neutral-800">{formatRupiah(Number(serviceFee) || 0)}</span>
               </div>
 
               {paymentMethod.fee > 0 && (
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-neutral-500">
                   <span>Biaya Transaksi</span>
-                  <span className="font-medium text-gray-800">{formatRupiah(paymentMethod.fee)}</span>
+                  <span className="font-medium text-neutral-800">{formatRupiah(paymentMethod.fee)}</span>
                 </div>
               )}
 
@@ -300,21 +304,24 @@ export default function OrderSuccessPage({
             </div>
 
             {/* Grand Total */}
-            <div className="border-t border-gray-200 pt-3 flex items-baseline justify-between">
+            <div className="border-t border-neutral-200 pt-3 flex items-baseline justify-between">
               <div>
-                <span className="text-[11px] text-gray-500 block">Total Pembayaran</span>
+                <span className="text-[11px] text-neutral-500 block">Total Pembayaran</span>
                 <span className="text-xl font-black text-emerald-700">
                   {formatRupiah(totalAmount)}
                 </span>
               </div>
-              <span className="text-[10px] text-gray-400">Lunas / Bergaransi</span>
+              <span className="text-[10px] text-neutral-400">Lunas / Bergaransi</span>
             </div>
 
             {/* Action Buttons */}
             <div className="space-y-2 pt-2">
               <button
                 type="button"
-                onClick={onViewInstruction}
+                onClick={() => {
+                  onViewInstruction();
+                  setIsPaymentModalOpen(true);
+                }}
                 className="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-none cursor-pointer transition-colors flex items-center justify-center gap-1.5"
               >
                 <span>Lihat Instruksi Pembayaran</span>
@@ -342,14 +349,14 @@ export default function OrderSuccessPage({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold text-xs rounded-none cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 font-semibold text-xs rounded-none cursor-pointer transition-colors flex items-center justify-center gap-1.5"
               >
                 <Printer size={13} />
                 <span>Cetak Bukti Tagihan</span>
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 text-center pt-1">
+            <div className="flex items-center justify-center gap-1.5 text-[10px] text-neutral-400 text-center pt-1">
               <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
               <span>Garansi 100% uang kembali bila pesanan tidak sesuai</span>
             </div>
@@ -359,6 +366,14 @@ export default function OrderSuccessPage({
         </div>
 
       </div>
+
+      <PaymentInstructionModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        orderData={orderData}
+        onPaymentConfirmed={() => {}}
+        onShowToast={onShowToast}
+      />
 
     </div>
   );

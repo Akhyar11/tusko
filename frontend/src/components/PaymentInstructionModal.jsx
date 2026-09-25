@@ -16,12 +16,15 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import FileInput from './molecules/FileInput';
+import { checkoutService } from '../services/checkoutService';
 
 export default function PaymentInstructionModal({
   isOpen = false,
   onClose = () => {},
   orderData = null,
-  onPaymentConfirmed = () => {}
+  onPaymentConfirmed = () => {},
+  onShowToast = () => {}
 }) {
   const [copiedVa, setCopiedVa] = useState(false);
   const [copiedAmount, setCopiedAmount] = useState(false);
@@ -30,6 +33,8 @@ export default function PaymentInstructionModal({
   const [proofPreview, setProofPreview] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [banks, setBanks] = useState([]);
+  const [selectedBank, setSelectedBank] = useState(null);
 
   // 24 hours countdown timer
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
@@ -40,6 +45,22 @@ export default function PaymentInstructionModal({
       setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
+  }, [isOpen]);
+
+  // Rekening bank manual dari API (T07.2) — dinamis dari Admin, tanpa hardcode.
+  useEffect(() => {
+    if (!isOpen) return;
+    let mounted = true;
+    checkoutService.getManualBanks()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setBanks(data || []);
+        setSelectedBank(data && data.length > 0 ? data[0] : null);
+      })
+      .catch(() => {
+        if (mounted) setBanks([]);
+      });
+    return () => { mounted = false; };
   }, [isOpen]);
 
   if (!isOpen || !orderData) return null;
@@ -62,8 +83,8 @@ export default function PaymentInstructionModal({
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (input) => {
+    const file = input?.target?.files?.[0] ?? (input instanceof File ? input : null);
     if (file) {
       setProofFile(file);
       const reader = new FileReader();
@@ -72,17 +93,32 @@ export default function PaymentInstructionModal({
     }
   };
 
-  const handleConfirmPaid = () => {
+  const handleConfirmPaid = async () => {
+    if (!proofFile) {
+      onShowToast('Silakan unggah bukti transfer terlebih dahulu.', { type: 'error' });
+      return;
+    }
+
     setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
+    try {
+      const formData = new FormData();
+      formData.append('payment_proof', proofFile);
+      const bankName = selectedBank?.bank_name || selectedBank?.name || paymentMethod.bankName || paymentMethod.name;
+      const accountName = selectedBank?.account_holder || selectedBank?.account_name || paymentMethod.accountHolder;
+      if (bankName) formData.append('bank_name', bankName);
+      if (accountName) formData.append('bank_account_name', accountName);
+      formData.append('transferred_at', new Date().toISOString());
+
+      await checkoutService.confirmManualPayment(invoiceNumber, formData);
       setPaymentSuccess(true);
-      onPaymentConfirmed({
-        ...orderData,
-        paymentStatus: 'paid',
-        status: 'processing'
-      });
-    }, 800);
+      onShowToast('✓ Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.');
+      onPaymentConfirmed({ ...orderData, paymentStatus: 'verifying' });
+    } catch (err) {
+      const msg = err?.errors ? Object.values(err.errors).flat()[0] : err?.message;
+      onShowToast(msg || 'Gagal mengunggah bukti pembayaran.', { type: 'error' });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // Format time
@@ -233,7 +269,7 @@ export default function PaymentInstructionModal({
               {paymentMethod.type === 'manual' && (
                 <div className="p-4 bg-white rounded-none border-2 border-black space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-sport font-black uppercase text-black">{paymentMethod.bankName || paymentMethod.name}</span>
+                    <span className="text-xs font-sport font-black uppercase text-black">{selectedBank?.bank_name || selectedBank?.name || paymentMethod.bankName || paymentMethod.name}</span>
                     <span className="text-[10px] font-sport font-black uppercase text-black bg-amber-400 px-2 py-0.5 rounded-none">
                       Verifikasi 1x24 Jam
                     </span>
@@ -243,15 +279,15 @@ export default function PaymentInstructionModal({
                     <div>
                       <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block">Nomor Rekening Resmi</span>
                       <span className="font-mono text-sm sm:text-base font-black text-black">
-                        {paymentMethod.accountNumber || '873-019-2819'}
+                        {selectedBank?.account_number || paymentMethod.accountNumber || '-'}
                       </span>
                       <span className="text-[10px] text-neutral-500 font-medium block">
-                        a.n {paymentMethod.accountHolder || 'PT Tusko Performa Indonesia'}
+                        a.n {selectedBank?.account_holder || selectedBank?.account_name || paymentMethod.accountHolder || '-'}
                       </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleCopy(paymentMethod.accountNumber || '873-019-2819', 'va')}
+                      onClick={() => handleCopy(selectedBank?.account_number || paymentMethod.accountNumber || '', 'va')}
                       className="px-3.5 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Copy size={12} />
@@ -264,35 +300,31 @@ export default function PaymentInstructionModal({
                     <label className="text-xs font-sport font-black uppercase text-black block mb-1.5">
                       Unggah Bukti Transfer <span className="text-red-500">*</span>
                     </label>
-                    <div className="border-2 border-dashed border-neutral-300 rounded-none p-4 text-center bg-white hover:bg-neutral-50 transition-colors relative cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      {proofPreview ? (
-                        <div className="flex items-center justify-center gap-3">
-                          <img
-                            src={proofPreview}
-                            alt="Bukti Transfer"
-                            className="w-12 h-12 object-cover rounded-none border border-neutral-300"
-                          />
-                          <div className="text-left text-xs">
-                            <span className="font-sport font-bold uppercase text-black flex items-center gap-1">
-                              <CheckCircle2 size={13} className="text-amber-500" /> {proofFile?.name}
-                            </span>
-                            <span className="text-[10px] text-neutral-400 font-medium block">Klik untuk mengganti foto</span>
+                    <FileInput accept="image/*" onChange={handleFileChange}>
+                      <div className="border-2 border-dashed border-neutral-300 rounded-none p-4 text-center bg-white hover:bg-neutral-50 transition-colors relative cursor-pointer">
+                        {proofPreview ? (
+                          <div className="flex items-center justify-center gap-3">
+                            <img
+                              src={proofPreview}
+                              alt="Bukti Transfer"
+                              className="w-12 h-12 object-cover rounded-none border border-neutral-300"
+                            />
+                            <div className="text-left text-xs">
+                              <span className="font-sport font-bold uppercase text-black flex items-center gap-1">
+                                <CheckCircle2 size={13} className="text-amber-500" /> {proofFile?.name}
+                              </span>
+                              <span className="text-[10px] text-neutral-400 font-medium block">Klik untuk mengganti foto</span>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <UploadCloud size={22} className="mx-auto text-black" />
-                          <p className="text-xs font-sport font-bold uppercase text-black">Pilih foto struk / tangkapan layar m-banking</p>
-                          <p className="text-[10px] text-neutral-400 font-medium">Format JPG, PNG, maks 5 MB</p>
-                        </div>
-                      )}
-                    </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <UploadCloud size={22} className="mx-auto text-black" />
+                            <p className="text-xs font-sport font-bold uppercase text-black">Pilih foto struk / tangkapan layar m-banking</p>
+                            <p className="text-[10px] text-neutral-400 font-medium">Format JPG, PNG, maks 5 MB</p>
+                          </div>
+                        )}
+                      </div>
+                    </FileInput>
                   </div>
                 </div>
               )}

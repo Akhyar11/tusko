@@ -1968,12 +1968,15 @@ export default function App() {
               handleResetHome();
             }}
             onViewOrdersList={() => setCurrentView('orders')}
+            onViewInstruction={() => {}}
+            onShowToast={showToast}
           />
         ) : currentView === 'checkout' ? (
           <CheckoutPage
             checkoutItems={checkoutItems}
             availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
+            onShowToast={showToast}
             onFinishOrder={async (order) => {
               // Hapus item yang sudah di-checkout dari keranjang server (mendukung checkout sebagian).
               try {
