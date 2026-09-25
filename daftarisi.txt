@@ -219,14 +219,14 @@
 1003|MINOR|T37.4 [DONE] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
 1006|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
 1010|MINOR|T37.6 [NEW] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
-1011|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
-1013|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
-1015|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
-1017|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
-1025|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-1038|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-1071|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-1104|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-1121|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-1139|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-1158|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+1015|MINOR|T37.7 [NEW] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+1017|MINOR|T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
+1019|MINOR|T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+1021|MINOR|T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+1029|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+1042|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+1075|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+1108|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+1125|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1143|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1162|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
