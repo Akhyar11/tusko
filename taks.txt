@@ -1035,8 +1035,9 @@ T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [PARTIAL]  
            `featureFlags` client dihapus (filter flag server-side).
     T37.8 [NEW] FE storefront nav dari menu `environment='storefront'` (publik) via
            `Navbar`/`UserMenuDropdown` (A1) + uji browser [koordinasi A1].
-    T37.9 [NEW] FE guard halaman: bila view/URL tidak diizinkan menu user ->
-           halaman 403/redirect + Toast; + uji browser.
+    T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+           redirect ke katalog + Toast; + uji browser. [commit 0e0b281]
+           Helper `utils/menuAccess.js` (CHILD_VIEW_TO_MENU + isViewAllowedByMenus).
     T37.10 [NEW] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
            terbatas -> menu tersembunyi & URL ditolak; storefront publik tetap akses.
   Catatan desain:
