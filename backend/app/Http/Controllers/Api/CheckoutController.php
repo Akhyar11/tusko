@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingAddress;
 use App\Services\InventoryService;
+use App\Services\IntegrationService;
 use App\Services\VoucherService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +31,8 @@ class CheckoutController extends Controller
 
     public function __construct(
         private readonly InventoryService $inventoryService,
-        private readonly VoucherService $voucherService
+        private readonly VoucherService $voucherService,
+        private readonly IntegrationService $integrations
     ) {
     }
     /**
@@ -204,17 +206,45 @@ class CheckoutController extends Controller
                 $shippingCost = (float) ($request->input('shipping_cost') ?: 0);
             }
 
-            // 4. Financial breakdown
+            // 4. Financial breakdown (T28.2: server-authoritative — diskon dihitung server dari kupon;
+            //    `discount_amount` dari client DIABAIKAN).
             $insuranceCost = (float) ($request->input('insurance_cost') ?: 0);
-            $serviceFee = (float) ($request->input('service_fee') ?? 1000);
-            $discountAmount = (float) ($request->input('discount_amount') ?: 0);
+            // G6: biaya jasa aplikasi diambil dari konfigurasi Admin (`integrations`), bukan hardcode.
+            $serviceFee = (float) ($this->integrations->get('store.service_fee', 0) ?? 0);
+            $couponCode = $request->input('coupon_code');
+            $discountAmount = 0.0;
+
+            if ($couponCode) {
+                $validation = $this->voucherService->validate(
+                    $couponCode,
+                    array_map(fn ($item) => [
+                        'product_id' => $item['product_id'],
+                        'product_variant_id' => $item['product_variant_id'],
+                        'quantity' => $item['quantity'],
+                    ], $checkoutItemsData),
+                    $subtotal,
+                    $user
+                );
+
+                if (! ($validation['valid'] ?? false)) {
+                    throw ValidationException::withMessages([
+                        'coupon_code' => [$validation['message'] ?? 'Voucher tidak valid.'],
+                    ]);
+                }
+
+                $discountAmount = (float) ($validation['discount_amount'] ?? 0);
+
+                if (! empty($validation['free_shipping'])) {
+                    $shippingCost = 0.0;
+                }
+            }
+
             $grandTotal = max(0, $subtotal + $shippingCost + $insuranceCost + $serviceFee - $discountAmount);
 
             // 5. Payment details
             $paymentMethod = $request->input('payment_method', 'midtrans');
             $paymentChannel = $request->input('payment_channel', 'bca_va');
             $vaNumber = '8808' . mt_rand(1000000000, 9999999999);
-            $couponCode = $request->input('coupon_code');
 
             // 6. Create Order
             $order = Order::create([

@@ -47,6 +47,9 @@ class CheckoutApiTest extends TestCase
             'cost' => 12000,
         ]);
 
+        // T28.2: biaya jasa aplikasi otoritatif dari konfigurasi Admin.
+        app(\App\Services\IntegrationService::class)->set('store.service_fee', '1000', 'store');
+
         $payload = [
             'items' => [
                 [

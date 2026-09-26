@@ -6,6 +6,7 @@ use App\Models\Expedition;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -182,6 +183,81 @@ class CheckoutTamperingTest extends TestCase
             ->assertJsonValidationErrors(['items']);
 
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_client_supplied_discount_amount_is_ignored_server_computes_from_coupon(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Kemeja Diskon', 'price' => 100000, 'stock' => 10]);
+        Voucher::create([
+            'code' => 'HEMAT10',
+            'title' => 'Hemat 10rb',
+            'discount_type' => 'fixed',
+            'discount_value' => 10000,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'recipient_name' => 'Pembeli Diskon',
+            'phone' => '081200000005',
+            'full_address' => 'Jl. Diskon No. 5',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            'coupon_code' => 'HEMAT10',
+            // Diskon palsu dari client — wajib diabaikan; server hitung 10.000.
+            'discount_amount' => 999999,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.subtotal', 100000)
+            ->assertJsonPath('data.totals.discount_amount', 10000)
+            ->assertJsonPath('data.totals.grand_total', 90000);
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'subtotal' => 100000,
+            'discount_amount' => 10000,
+            'grand_total' => 90000,
+        ]);
+    }
+
+    public function test_free_shipping_voucher_zeroes_shipping_cost(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Sepatu Gratis Ongkir', 'price' => 200000, 'stock' => 10]);
+        $expedition = Expedition::factory()->create(['name' => 'JNE', 'service' => 'REG', 'cost' => 20000]);
+        Voucher::create([
+            'code' => 'FREEONG',
+            'title' => 'Gratis Ongkir',
+            'discount_type' => 'fixed',
+            'discount_value' => 0,
+            'is_free_shipping' => true,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'recipient_name' => 'Pembeli Free Ongkir',
+            'phone' => '081200000006',
+            'full_address' => 'Jl. Free Ongkir No. 6',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            'coupon_code' => 'FREEONG',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 0)
+            ->assertJsonPath('data.totals.grand_total', 200000);
     }
 
     public function test_forwarded_item_price_does_not_alter_order_level_amounts(): void
