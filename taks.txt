@@ -487,7 +487,9 @@ T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  
            -> `POST /api/vouchers/claim` + Toast + uji browser Playwright. [OWNER:A1]
     T08.2 [DONE] POST /api/vouchers/validate (min belanja/kuota/cakupan/per-user/
            stacking/gratis ongkir) + VoucherValidationTest. (Dasar; dipakai T28.2) [OWNER:A1]
-    T08.3 [TODO] FE terapkan kupon di CheckoutPage (server-authoritative T28.2).
+    T08.3 [DONE] FE terapkan kupon di CheckoutPage via `POST /api/vouchers/validate`
+           (server-authoritative; hapus hardcode kupon) + biaya checkout dinamis
+           (`/api/checkout/config`) + uji browser. [OWNER:A1]
     T08.4 [TODO] FE tukar poin di CheckoutPage -> server hitung (T28.2) + ledger (T31).
 
 ==============================================================================
