@@ -314,6 +314,61 @@ class CheckoutTamperingTest extends TestCase
         $this->assertSame(0, (int) $user->fresh()->points);
     }
 
+    public function test_client_supplied_shipping_cost_is_ignored_with_expedition_id(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Produk Ongkir', 'price' => 100000, 'stock' => 5, 'weight' => 1000]);
+        $expedition = Expedition::factory()->create(['name' => 'JNE', 'service' => 'REG', 'cost' => 10000, 'is_free' => false]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Ongkir',
+            'phone' => '081200000011',
+            'full_address' => 'Jl. Ongkir No. 11',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            // Ongkir palsu dari client — wajib diabaikan; server hitung dari tarif ekspedisi.
+            'shipping_cost' => 1,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 10000)
+            ->assertJsonPath('data.totals.grand_total', 110000);
+    }
+
+    public function test_client_supplied_shipping_cost_is_ignored_with_expedition_service(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Produk Layanan', 'price' => 100000, 'stock' => 5, 'weight' => 1000]);
+        $expedition = Expedition::factory()->create(['name' => 'SiCepat', 'service' => 'REG', 'cost' => 0]);
+        $service = \App\Models\ExpeditionService::create([
+            'expedition_id' => $expedition->id,
+            'service_code' => 'REG',
+            'service_name' => 'Reguler',
+            'etd_days' => '2-3',
+            'base_rate' => 11000,
+            'per_kg_rate' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Layanan',
+            'phone' => '081200000012',
+            'full_address' => 'Jl. Layanan No. 12',
+            'expedition_service_id' => $service->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            'shipping_cost' => 1,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 11000);
+    }
+
     public function test_forwarded_item_price_does_not_alter_order_level_amounts(): void
     {
         $user = User::factory()->create();

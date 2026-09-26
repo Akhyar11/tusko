@@ -202,20 +202,18 @@ class CheckoutController extends Controller
                 $expeditionService = $service->service_name ?: $service->service_code;
                 $expeditionEtd = $service->etd_days;
                 $chargedWeight = max(1, (int) ceil($totalWeight));
-                $shippingCost = $request->has('shipping_cost')
-                    ? (float) $request->input('shipping_cost')
-                    : (float) (($service->per_kg_rate ?? 0) > 0
-                        ? ($service->per_kg_rate * $chargedWeight)
-                        : ($service->base_rate ?? 0));
+                // T28.2: ongkir otoritatif dari tarif layanan (client `shipping_cost` diabaikan).
+                $shippingCost = (float) (($service->per_kg_rate ?? 0) > 0
+                    ? ($service->per_kg_rate * $chargedWeight)
+                    : ($service->base_rate ?? 0));
             } elseif ($expeditionId) {
                 $expedition = Expedition::findOrFail($expeditionId);
                 $expeditionName = $expedition->name;
                 $expeditionService = $expedition->service;
                 $expeditionEtd = $expedition->etd;
                 $chargedWeight = max(1, (int) ceil($totalWeight));
-                $shippingCost = $request->has('shipping_cost')
-                    ? (float) $request->input('shipping_cost')
-                    : ($expedition->is_free ? 0.0 : (float) ($expedition->cost * $chargedWeight));
+                // T28.2: ongkir otoritatif dari tarif ekspedisi (client `shipping_cost` diabaikan).
+                $shippingCost = $expedition->is_free ? 0.0 : (float) ($expedition->cost * $chargedWeight);
             } else {
                 $expeditionName = $request->input('expedition_name');
                 $expeditionService = $request->input('expedition_service');
