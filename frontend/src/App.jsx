@@ -728,14 +728,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView, selectedProduct]);
 
-  // Auth guard: Jika belum login dan mencoba membuka keranjang, alihkan ke login
-  useEffect(() => {
-    if (currentView === 'cart' && !currentUser) {
-      setPendingCartAction(prev => prev || { type: 'open_cart', returnView: 'cart' });
-      showToast('Silakan masuk ke akun (Login) terlebih dahulu untuk mengakses keranjang belanja.');
-      setCurrentView('login');
-    }
-  }, [currentView, currentUser]);
+  // T05.5: keranjang dapat diakses TAMU (tanpa login) — backend `auth.optional` siap.
 
   // Total quantity in cart
   const cartItemCount = useMemo(() => {
@@ -928,44 +921,13 @@ export default function App() {
     sortBy
   ]);
 
-  // Auth requirement handler for cart actions
-  const handleRequireLogin = (action = null, message = 'Silakan masuk ke akun (Login) terlebih dahulu.') => {
-    if (action) {
-      setPendingCartAction(action);
-    }
-    showToast(message);
-    setCurrentView('login');
-  };
-
-  // Safe cart opener with auth check
+  // Safe cart opener (T05.5: tamu diizinkan membuka keranjang)
   const handleOpenCart = () => {
-    if (!currentUser) {
-      handleRequireLogin(
-        { type: 'open_cart', returnView: 'cart' },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk membuka keranjang belanja.'
-      );
-      return;
-    }
     setCurrentView('cart');
   };
 
   // Cart operations (API-backed)
   const handleAddToCart = async (product, quantity = 1, notes = '') => {
-    // Jika belum login, simpan aksi pending dan arahkan login terlebih dahulu
-    if (!currentUser) {
-      handleRequireLogin(
-        { 
-          type: 'add_to_cart', 
-          product, 
-          quantity, 
-          notes, 
-          returnView: currentView === 'detail' ? 'detail' : 'catalog' 
-        },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk menambahkan produk ke keranjang.'
-      );
-      return;
-    }
-
     try {
       await cartService.addItem({
         productId: product.id,
@@ -983,19 +945,6 @@ export default function App() {
   };
 
   const handleBuyNow = (product, quantity = 1, notes = '') => {
-    if (!currentUser) {
-      handleRequireLogin(
-        { 
-          type: 'buy_now', 
-          product, 
-          quantity, 
-          notes, 
-          returnView: 'cart' 
-        },
-        'Silakan masuk ke akun (Login) terlebih dahulu untuk melakukan pembelian produk.'
-      );
-      return;
-    }
     handleAddToCart(product, quantity, notes);
     setCurrentView('cart');
   };
