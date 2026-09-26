@@ -707,15 +707,17 @@ T18. Analisis Profit & HPP/COGS .................................... [PARTIAL]  
     T18.3 [DONE] Backend endpoint laporan laba kotor + test (depend T18.1).
     T18.4 [TODO] FE halaman laporan profit (filter periode + tabel + ringkasan).
 
-T19. Dashboard BI (Revenue, Tren, Fast/Slow Moving, Liabilitas Poin) [TODO]  [OWNER:A2]
+T19. Dashboard BI (Revenue, Tren, Fast/Slow Moving, Liabilitas Poin) [DONE]  [OWNER:A2]
   DB: agregasi orders/order_items/transactions/loyalty.
   FE: AdminDashboardPage API-backed (KPI + grafik + tabel).
   API: [NEW] GET /api/dashboard/summary (cache).
   Test: [NEW] DashboardBiApiTest.
   Minor:
-    T19.1 [NEW] Endpoint agregasi BI via ReportQueryService (T18.2) + cache + test
-           (depend T18.1, T31).
-    T19.2 [TODO] FE AdminDashboardPage API-backed (KPI, tren, fast/slow moving).
+    T19.1 [DONE] Endpoint agregasi BI via ReportQueryService (T18.2) + cache + test.
+           [commit 6105b6d] `GET /api/dashboard/summary` (KPI + tren 30 hari +
+           fast/slow moving + liabilitas poin), cache 5 menit.
+    T19.2 [DONE] FE AdminDashboardPage API-backed (KPI, tren, fast/slow moving).
+           [commit dd00e0c] section "Ringkasan BI (Live API)" + fix cache serialize.
 
 ==============================================================================
 CROSS-CUTTING
