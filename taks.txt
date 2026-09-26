@@ -540,7 +540,9 @@ T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL] 
              [OWNER:A1]
     T11.1 [DONE] FE ProfilePage -> API (biodata + password + sesi) via authService
            (getProfile/updateProfile/updatePassword/revokeSession) + uji browser. [OWNER:A1]
-    T11.2 [TODO] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS).
+    T11.2 [DONE] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS)
+           + fallback input lokasi manual (Provinsi/Kota/Kecamatan) bila API kode wilayah
+           kosong + uji browser. [OWNER:A1]
     T11.3 [DONE] FE riwayat poin loyalitas (tab "Poin Loyalitas" di ProfilePage,
            via `GET /api/loyalty/ledger`) + uji browser. [OWNER:A1]
 
