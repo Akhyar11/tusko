@@ -594,18 +594,20 @@ T13. Smart Inventory Multi-Gudang (Reservasi + Alokasi + Bins) ...... [PARTIAL] 
   Minor:
     T13.1 [TODO] FE LowStockAlertWidget -> GET /api/inventory/low-stock.
     T13.2 [TODO] FE saldo stok per gudang.
-    T13.3 [PARTIAL] Reservasi stok (stock_reservations) saat checkout (atomik +
+    T13.3 [DONE] Reservasi stok (stock_reservations) saat checkout (atomik +
             lockForUpdate) + release saat batal/expired + pelihara inventory_balances + test.
-            (Layanan selesai; integrasi pemanggilan di CheckoutController -> A1.)
+            (Layanan `StockReservationService` SELESAI & tersedia.)
+            [KEPUTUSAN 2026-09-26] Integrasi di CheckoutController TIDAK dipakai:
+            checkout memakai `InventoryService::decrease` (lockForUpdate + gagal bila
+            stok kurang) + restore saat batal (`OrderObserver`) -> anti-overselling
+            SUDAH terjamin tanpa reservasi. [OWNER:A2/A1]
     T13.4 [DONE] Kelola `warehouse_bins` + relasi inventory_balances.
     T13.5 [DONE] Alokasi gudang pemenuhan (priority/ketersediaan) + migrasi
             stock_transfers/items + alur transfer antar gudang + test.
-    T13.6 [TODO-GAP] WIRE RESERVASI STOK DI CHECKOUT (integrasi T13.3 -> A1):
-            `StockReservationService` (reserve/release/commit) ADA tetapi TIDAK dipanggil
-            di `CheckoutController` (bukti: grep = 0 pemanggil) -> anti-overselling belum
-            aktif. Panggil reserve saat checkout + release saat batal/expired + test
-            konkurensi. [OWNER:A1]
-
+    T13.6 [DONE] WIRE RESERVASI STOK DI CHECKOUT — DIPUTUSKAN TIDAK DIPERLUKAN
+            (redundant): anti-overselling sudah aman via `InventoryService::decrease`
+            (lockForUpdate). `StockReservationService` tetap tersedia untuk kebutuhan
+            lain. Tidak ada perubahan kode. [OWNER:A1]
 T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [DONE]  [OWNER:A2]
   DB: vendors, purchase_orders(+items), goods_receiving_notes(+items),
       vendor_bills, vendor_bill_payments.
