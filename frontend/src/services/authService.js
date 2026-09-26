@@ -464,6 +464,18 @@ export const authService = {
   },
 
   /**
+   * Riwayat poin loyalitas pengguna (T31).
+   */
+  async getLoyaltyLedger(params = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.append('page', params.page);
+    if (params.per_page) qs.append('per_page', params.per_page);
+    const query = qs.toString();
+    const response = await apiClient.get(query ? `/api/loyalty/ledger?${query}` : '/api/loyalty/ledger');
+    return { data: response.data || [], balance: response.balance ?? 0, meta: response.meta || null };
+  },
+
+  /**
    * Ambil daftar sesi login aktif akun pengguna dari backend API.
    */
   async getActiveSessions() {

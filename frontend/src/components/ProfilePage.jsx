@@ -55,7 +55,7 @@ export default function ProfilePage({
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const savedTab = localStorage.getItem('tusko_profile_tab');
-      if (savedTab && ['biodata', 'address', 'security', 'vouchers'].includes(savedTab)) {
+      if (savedTab && ['biodata', 'address', 'security', 'vouchers', 'points'].includes(savedTab)) {
         return savedTab;
       }
     } catch {
@@ -105,6 +105,8 @@ export default function ProfilePage({
   // State Kupon & Sesi Login
   const [vouchers, setVouchers] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [loyaltyLedger, setLoyaltyLedger] = useState([]);
+  const [loyaltyBalance, setLoyaltyBalance] = useState(0);
 
   // State Halaman Form Alamat Khusus
   const [isAddressFormPageOpen, setIsAddressFormPageOpen] = useState(false);
@@ -137,11 +139,12 @@ export default function ProfilePage({
 
     const fetchAllData = async () => {
       try {
-        const [profile, addrs, vchs, sess] = await Promise.allSettled([
+        const [profile, addrs, vchs, sess, loyalty] = await Promise.allSettled([
           authService.getProfile(),
           authService.getAddresses(),
           authService.getVouchers(),
           authService.getActiveSessions(),
+          authService.getLoyaltyLedger(),
         ]);
 
         if (!isMounted) return;
@@ -169,6 +172,11 @@ export default function ProfilePage({
 
         if (sess.status === 'fulfilled' && Array.isArray(sess.value) && sess.value.length > 0) {
           setSessions(sess.value);
+        }
+
+        if (loyalty.status === 'fulfilled' && loyalty.value) {
+          setLoyaltyLedger(Array.isArray(loyalty.value.data) ? loyalty.value.data : []);
+          setLoyaltyBalance(Number(loyalty.value.balance) || 0);
         }
       } catch (err) {
         console.warn('Gagal memuat sinkronisasi backend profil:', err);
@@ -653,6 +661,18 @@ export default function ProfilePage({
           >
             <Ticket size={15} />
             <span>Voucher Diskon ({vouchers.length || userProfile?.stats?.active_vouchers_count || 0})</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('points')}
+            className={`px-4 sm:px-6 py-3 font-sport font-bold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'points'
+                ? 'border-black text-black bg-white shadow-xs'
+                : 'border-transparent text-neutral-500 hover:text-black hover:border-neutral-300'
+            }`}
+          >
+            <Award size={15} />
+            <span>Poin Loyalitas</span>
           </button>
         </div>
 
@@ -1259,6 +1279,53 @@ export default function ProfilePage({
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 5: RIWAYAT POIN LOYALITAS */}
+        {activeTab === 'points' && (
+          <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
+            <div className="border-b border-neutral-200 pb-4 mb-6 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="font-sport font-black text-lg sm:text-xl uppercase tracking-tight text-black">
+                  Riwayat Poin Loyalitas
+                </h2>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Kumpulkan poin dari setiap transaksi dan tukarkan saat checkout.
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-[10px] font-sport font-bold uppercase text-neutral-500 block">Saldo Poin</span>
+                <span className="font-sport font-black text-2xl text-amber-600">
+                  {Number(loyaltyBalance).toLocaleString('id-ID')} PTS
+                </span>
+              </div>
+            </div>
+
+            {loyaltyLedger.length === 0 ? (
+              <p className="text-xs text-neutral-500 text-center py-8">Belum ada riwayat poin.</p>
+            ) : (
+              <div className="divide-y divide-neutral-100">
+                {loyaltyLedger.map((entry) => (
+                  <div key={entry.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-neutral-900 block truncate">
+                        {entry.description || entry.type}
+                      </span>
+                      <span className="text-[10px] text-neutral-400 font-mono">
+                        {entry.reference_id || '-'} • {entry.created_at ? new Date(entry.created_at).toLocaleDateString('id-ID') : '-'}
+                      </span>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className={`font-sport font-black text-sm ${Number(entry.points) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {Number(entry.points) >= 0 ? '+' : ''}{entry.points} PTS
+                      </span>
+                      <span className="text-[10px] text-neutral-400 block">Saldo: {entry.balance_after}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

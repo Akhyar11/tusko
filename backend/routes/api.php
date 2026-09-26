@@ -41,6 +41,10 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::prefix('loyalty')->middleware('auth:sanctum')->group(function () {
+    Route::get('/ledger', [\App\Http\Controllers\Api\LoyaltyController::class, 'ledger']);
+});
+
 Route::prefix('vouchers')->group(function () {
     Route::get('/', [VoucherController::class, 'index']);
     Route::post('/validate', [VoucherController::class, 'validateVoucher'])->middleware('auth.optional');
