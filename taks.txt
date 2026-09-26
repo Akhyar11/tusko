@@ -421,10 +421,10 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
     T05.2 [DONE] CartPage -> API (list/add/update/remove/clear) + Toast (App API-backed).
     T05.3 [DONE] Validasi stok live dari inventory_balances (D1) + subtotal + badge.
     T05.4 [DONE] Merge keranjang guest (session_id) -> user saat login (FE kirim session_id).
-    T05.5 [TODO] [KEPUTUSAN DIBUTUHKAN] Kebijakan keranjang guest: hapus gate login
-           pada add-to-cart (App.handleAddToCart) agar guest benar-benar bisa belanja
-           (backend `auth.optional` sudah siap) ATAU pertahankan wajib login. Jika
-           dihapus: sesuaikan badge/pending action + test browser.
+    T05.5 [DONE] Kebijakan keranjang guest DIPUTUSKAN: HAPUS gate login (guest boleh
+           belanja). Gate di `handleAddToCart`/`handleBuyNow`/`handleOpenCart` + guard view
+           `cart` dihapus; `handleRequireLogin` dibuang; backend `auth.optional` dipakai.
+           + uji browser (guest add-to-cart & buka keranjang). [OWNER:A1]
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
