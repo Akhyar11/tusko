@@ -750,7 +750,7 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
            (payment_proof/invoice/proof) + akses `temporaryUrl()`; bucket publik
            hanya untuk aset publik. (MENYERAP T35.3 lama.)
            SISA: payment_proof di ManualPaymentController (milik A1) -> storePrivate.
-    T21.4 [PARTIAL] [OWNER:A2] FE "Kurir & Layanan" sync-based dari KiriminAja.
+    T21.4 [DONE] [OWNER:A2] FE "Kurir & Layanan" sync-based dari KiriminAja.
            STATUS (temuan 2026-09-24): SystemSettingsHub hanya menyediakan tautan
            "Buka Sinkron Kurir" yang SEKADAR NAVIGASI ke `/admin/expeditions`
            (onOpenExpeditions); `ExpeditionSettingsPage` masih CRUD manual dan
@@ -768,11 +768,11 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
              disabled bila `shipping.base_url`/`api_key` kosong; + uji browser.
              [commit 43d390a] (sekalian refactor aksi tabel ke RowActionMenu portal
              + kartu KPI kanonis).
-           - T21.4c [TODO][A2] Refaktor halaman: master kurir hasil sync (identitas
+           - T21.4c [DONE][A2] Refaktor halaman: master kurir hasil sync (identitas
              read-only) + override lokal (fee/free/priority/aktif); tombol di
              Settings Hub memicu sync langsung (bukan hanya navigasi).
-             (Override lokal SUDAH aman: `ExpeditionSyncService` tidak menimpa
-             field lokal. Sisa: tombol sync langsung di Settings Hub.)
+             [commit a286436] tombol "Sinkron Kurir Sekarang" di `SystemSettingsHub`
+             section pengiriman (override lokal tetap aman via ExpeditionSyncService).
            - T21.4d [DONE][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
              [commit 434d2e2] `dailyAt('02:00')`.
 
