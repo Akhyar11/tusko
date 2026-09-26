@@ -389,7 +389,9 @@ T01. Katalog Produk Publik (Grid, Multi-filter, Search, Sorting) .... [PARTIAL] 
   Test: ProductListApiTest, ProductApiTest.
   Minor:
     T01.1 [DONE] katalog + filter + search (existing).
-    T01.2 [TODO] Filter rating dari agregat product_reviews (depend T32.1).
+    T01.2 [DONE] Filter rating dari agregat product_reviews: kontrol Rating di
+           `ProductGrid` (`onSelectMinRating`) + `products.rating` diagregasi dari ulasan
+           (T32.2) + hapus `FilterSidebar` dead + uji browser. [OWNER:A1]
 
 T02. Detail Produk & Varian Bertingkat (Matrix SKU) ................ [DONE]  [OWNER:A1]
   Minor: (selesai).
