@@ -7,11 +7,33 @@ use App\Http\Requests\StoreExpeditionRequest;
 use App\Http\Requests\UpdateExpeditionRequest;
 use App\Http\Resources\ExpeditionResource;
 use App\Models\Expedition;
+use App\Services\ExpeditionSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpeditionController extends Controller
 {
+    /**
+     * Sinkronkan master kurir & layanan dari agregator (KiriminAja) — T21.4a.
+     */
+    public function sync(ExpeditionSyncService $sync): JsonResponse
+    {
+        if (!$sync->isConfigured()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Integrasi pengiriman belum dikonfigurasi admin (shipping.base_url/api_key).',
+            ], 422);
+        }
+
+        $result = $sync->sync();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Sinkronisasi selesai: {$result['couriers']} kurir, {$result['services']} layanan.",
+            'data' => $result,
+        ]);
+    }
+
     /**
      * List all active expeditions with optional category and weight tariff calculation.
      */

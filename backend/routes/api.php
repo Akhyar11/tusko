@@ -154,6 +154,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
 
+    Route::post('/admin/expeditions/sync', [\App\Http\Controllers\Api\ExpeditionController::class, 'sync']);
+
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\ProductReviewController::class, 'adminIndex']);
         Route::match(['put', 'patch'], '/{review}/moderate', [\App\Http\Controllers\Api\ProductReviewController::class, 'moderate']);
