@@ -6,7 +6,8 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   ServerCog,
-  CheckCircle2
+  CheckCircle2,
+  CloudDownload
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import TextInput from './molecules/TextInput';
@@ -15,6 +16,7 @@ import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { settingsService } from '../services/settingsService';
+import { expeditionService } from '../services/expeditionService';
 
 const TESTABLE_GROUPS = ['shipping', 'payment', 'storage', 'notification'];
 
@@ -28,6 +30,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
   const [activeLabel, setActiveLabel] = useState('');
   const [fields, setFields] = useState([]);
   const [values, setValues] = useState({});
+  const [isSyncingCouriers, setIsSyncingCouriers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -252,13 +255,32 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
                 <div className="text-[11px] text-neutral-600">
                   Sinkronkan daftar kurir &amp; layanan dari KiriminAja ke master ekspedisi.
                 </div>
-                <button
-                  type="button"
-                  onClick={onOpenExpeditions}
-                  className="px-3 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 cursor-pointer shrink-0"
-                >
-                  Buka Sinkron Kurir
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <IconButton
+                    icon={CloudDownload}
+                    onClick={async () => {
+                      setIsSyncingCouriers(true);
+                      try {
+                        const result = await expeditionService.syncExpeditions();
+                        onShowToast(`Sinkronisasi selesai: ${result?.couriers ?? 0} kurir, ${result?.services ?? 0} layanan.`);
+                      } catch (err) {
+                        onShowToast(err?.message || 'Gagal sinkronisasi kurir.', { type: 'error' });
+                      } finally {
+                        setIsSyncingCouriers(false);
+                      }
+                    }}
+                    title="Sinkron Kurir Sekarang"
+                    variant="primary"
+                    disabled={isSyncingCouriers}
+                  />
+                  <button
+                    type="button"
+                    onClick={onOpenExpeditions}
+                    className="px-3 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 cursor-pointer shrink-0"
+                  >
+                    Buka Sinkron Kurir
+                  </button>
+                </div>
               </div>
             )}
 
