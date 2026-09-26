@@ -7,7 +7,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\VendorBill;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -177,6 +179,92 @@ class ReportQueryService
             'total_expense' => $totalExpense,
             'net_income' => round($totalRevenue - $totalExpense, 2),
         ];
+    }
+
+    /**
+     * Laporan aging hutang vendor (T34.3) — bucket umur berdasarkan `due_date`.
+     *
+     * @return array<string, mixed>
+     */
+    public function vendorAging(?string $asOf = null): array
+    {
+        $asOfDate = ($asOf ? Carbon::parse($asOf) : now())->startOfDay();
+
+        $bills = VendorBill::query()
+            ->with('vendor:id,code,company_name')
+            ->whereRaw('(amount - paid_amount) > 0')
+            ->orderBy('due_date')
+            ->get();
+
+        $bucketKeys = ['current', '1_30', '31_60', '61_90', 'over_90'];
+        $buckets = array_fill_keys($bucketKeys, 0.0);
+        $rows = [];
+        $byVendor = [];
+
+        foreach ($bills as $bill) {
+            $outstanding = round((float) $bill->amount - (float) $bill->paid_amount, 2);
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $due = $bill->due_date ? Carbon::parse($bill->due_date)->startOfDay() : null;
+            $daysOverdue = $due ? (int) floor(($asOfDate->timestamp - $due->timestamp) / 86400) : 0;
+            $bucket = $this->agingBucket($daysOverdue);
+
+            $buckets[$bucket] = round($buckets[$bucket] + $outstanding, 2);
+
+            $vendorId = (int) $bill->vendor_id;
+            if (!isset($byVendor[$vendorId])) {
+                $byVendor[$vendorId] = array_merge([
+                    'vendor_id' => $vendorId,
+                    'vendor_code' => $bill->vendor?->code,
+                    'vendor_name' => $bill->vendor?->company_name,
+                    'total_outstanding' => 0.0,
+                ], array_fill_keys($bucketKeys, 0.0));
+            }
+            $byVendor[$vendorId]['total_outstanding'] = round($byVendor[$vendorId]['total_outstanding'] + $outstanding, 2);
+            $byVendor[$vendorId][$bucket] = round($byVendor[$vendorId][$bucket] + $outstanding, 2);
+
+            $rows[] = [
+                'bill_id' => $bill->id,
+                'bill_number' => $bill->bill_number,
+                'vendor_id' => $vendorId,
+                'vendor_name' => $bill->vendor?->company_name,
+                'due_date' => $due?->toDateString(),
+                'days_overdue' => $daysOverdue,
+                'bucket' => $bucket,
+                'amount' => round((float) $bill->amount, 2),
+                'paid_amount' => round((float) $bill->paid_amount, 2),
+                'outstanding' => $outstanding,
+                'status' => $bill->status,
+            ];
+        }
+
+        return [
+            'as_of' => $asOfDate->toDateString(),
+            'buckets' => $buckets,
+            'total_outstanding' => round(array_sum($buckets), 2),
+            'by_vendor' => array_values($byVendor),
+            'bills' => $rows,
+        ];
+    }
+
+    private function agingBucket(int $daysOverdue): string
+    {
+        if ($daysOverdue <= 0) {
+            return 'current';
+        }
+        if ($daysOverdue <= 30) {
+            return '1_30';
+        }
+        if ($daysOverdue <= 60) {
+            return '31_60';
+        }
+        if ($daysOverdue <= 90) {
+            return '61_90';
+        }
+
+        return 'over_90';
     }
 
     private function productSalesQuery(?string $from, ?string $to): Builder

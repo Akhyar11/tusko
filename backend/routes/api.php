@@ -129,6 +129,7 @@ Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/reports/income-statement', [\App\Http\Controllers\Api\ReportController::class, 'incomeStatement']);
     Route::get('/reports/trial-balance', [\App\Http\Controllers\Api\ReportController::class, 'trialBalance']);
+    Route::get('/reports/vendor-aging', [\App\Http\Controllers\Api\ReportController::class, 'vendorAging']);
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {

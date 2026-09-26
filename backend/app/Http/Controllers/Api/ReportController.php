@@ -73,4 +73,17 @@ class ReportController extends Controller
             'data' => $lines,
         ]);
     }
+
+    /**
+     * Laporan aging hutang vendor (T34.3).
+     */
+    public function vendorAging(Request $request, ReportQueryService $reports): JsonResponse
+    {
+        $asOf = $request->query('as_of');
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $reports->vendorAging($asOf),
+        ]);
+    }
 }
