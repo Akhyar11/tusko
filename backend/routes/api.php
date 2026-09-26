@@ -156,6 +156,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::post('/returns/{idOrNumber}/approve', [\App\Http\Controllers\Api\ReturnController::class, 'approve'])->where('idOrNumber', '.*');
     Route::post('/returns/{idOrNumber}/reject', [\App\Http\Controllers\Api\ReturnController::class, 'reject'])->where('idOrNumber', '.*');
+    Route::post('/returns/{idOrNumber}/refund', [\App\Http\Controllers\Api\ReturnController::class, 'refund'])->where('idOrNumber', '.*');
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoyaltyPointsLedger;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderReturn;
 use App\Models\ReturnItem;
 use App\Services\ActivityLogService;
 use App\Services\IdentityCodeService;
+use App\Services\InventoryService;
+use App\Services\JournalMappingService;
+use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +20,12 @@ use Illuminate\Validation\ValidationException;
 
 class ReturnController extends Controller
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly InventoryService $inventory,
+        private readonly MidtransService $midtrans,
+        private readonly JournalMappingService $journalMapping
+    ) {
     }
 
     /**
@@ -238,6 +246,123 @@ class ReturnController extends Controller
             'status' => 'success',
             'message' => "Retur {$return->return_number} ditolak.",
             'data' => $this->formatReturn($return->fresh(['order', 'items.product'])),
+        ]);
+    }
+
+    /**
+     * Proses refund retur (admin): Midtrans/manual + stok kembali + poin reversal
+     * + jurnal balik via T34.1 (T29.3) + audit log.
+     */
+    public function refund(Request $request, string $idOrNumber): JsonResponse
+    {
+        $return = $this->findReturn($idOrNumber);
+
+        if ($return->status !== 'approved') {
+            return response()->json(['message' => 'Hanya retur berstatus approved yang dapat direfund.'], 422);
+        }
+
+        $validated = $request->validate([
+            'refund_method' => ['required', 'string', 'in:midtrans,manual'],
+            'refund_reference' => ['nullable', 'string', 'max:150'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ], [
+            'refund_method.required' => 'Metode refund wajib dipilih.',
+            'refund_method.in' => 'Metode refund tidak valid.',
+        ]);
+
+        $order = $return->order()->with('user')->firstOrFail();
+        $amount = (float) $return->refund_amount;
+        $reference = $validated['refund_reference'] ?? null;
+
+        if ($validated['refund_method'] === 'midtrans') {
+            if (!$this->midtrans->isConfigured()) {
+                return response()->json(['message' => 'Midtrans belum dikonfigurasi. Gunakan refund manual.'], 422);
+            }
+
+            $result = $this->midtrans->refund($order, $amount, $validated['reason'] ?? null);
+            if (!($result['success'] ?? false)) {
+                return response()->json([
+                    'message' => 'Refund Midtrans gagal: ' . ($result['raw']['message'] ?? 'tidak diketahui'),
+                ], 422);
+            }
+            $reference = $result['refund_key'];
+        }
+
+        DB::transaction(function () use ($return, $order, $validated, $reference, $request, $amount) {
+            // 1. Kembalikan stok otoritatif (D1) + kartu stok.
+            foreach ($return->items()->with('product', 'variant')->get() as $item) {
+                if ($item->restocked || !$item->product) {
+                    continue;
+                }
+
+                $this->inventory->increase($item->product, (int) $item->quantity, [
+                    'reference_type' => 'return',
+                    'reference_id' => $return->return_number,
+                    'notes' => "Restock retur {$return->return_number}",
+                    'created_by' => $request->user()->id,
+                ], $item->variant);
+
+                $item->update(['restocked' => true]);
+            }
+
+            // 2. Reversal poin loyalitas.
+            $customer = $order->user;
+            if ($customer) {
+                $earned = (int) $order->loyalty_points_earned;
+                if ($earned > 0) {
+                    $deduct = min((int) $customer->points, $earned);
+                    if ($deduct > 0) {
+                        $customer->decrement('points', $deduct);
+                        LoyaltyPointsLedger::create([
+                            'user_id' => $customer->id,
+                            'type' => 'reversal',
+                            'points' => -$deduct,
+                            'balance_after' => (int) $customer->fresh()->points,
+                            'reference_type' => 'return',
+                            'reference_id' => $return->return_number,
+                            'description' => "Reversal poin retur {$return->return_number}",
+                        ]);
+                    }
+                }
+
+                $redeemed = (int) $order->loyalty_points_redeemed;
+                if ($redeemed > 0) {
+                    $customer->increment('points', $redeemed);
+                    LoyaltyPointsLedger::create([
+                        'user_id' => $customer->id,
+                        'type' => 'refund',
+                        'points' => $redeemed,
+                        'balance_after' => (int) $customer->fresh()->points,
+                        'reference_type' => 'return',
+                        'reference_id' => $return->return_number,
+                        'description' => "Pengembalian poin retur {$return->return_number}",
+                    ]);
+                }
+            }
+
+            // 3. Jurnal balik (T34.1).
+            $this->journalMapping->postRefund($order, $amount);
+
+            // 4. Tandai retur selesai.
+            $return->update([
+                'status' => 'refunded',
+                'refunded_at' => now(),
+                'refunded_by' => $request->user()->id,
+                'refund_method' => $validated['refund_method'],
+                'refund_reference' => $reference,
+            ]);
+
+            $this->activityLog->log('return.refunded', $return, [
+                'return_number' => $return->return_number,
+                'amount' => $amount,
+                'method' => $validated['refund_method'],
+            ]);
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Retur {$return->return_number} berhasil direfund.",
+            'data' => $this->formatReturn($return->fresh(['order', 'items.product', 'refunder'])),
         ]);
     }
 
