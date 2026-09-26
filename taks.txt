@@ -876,18 +876,22 @@ T30. Scheduler & Queue ............................................. [TODO]  [OW
     T30.2 [DONE] Scheduled: auto-cancel order expired + release reservasi (T13.3).
     T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
 
-T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [TODO]  [OWNER:A1]
+T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [PARTIAL]  [OWNER:A1]
   DB: loyalty_points_ledger, users.points, orders.loyalty_points_*,
       order_items.points_earned. (membership_tier tidak dipakai, D9.)
   FE: riwayat poin (ProfilePage).
   API: [NEW] GET /api/loyalty/ledger.
   Test: [NEW] LoyaltyLifecycleTest.
   Minor:
-    T31.1 [NEW] Earning poin saat paid (idempoten) + ledger + test.
+    T31.1 [DONE] Earning poin saat paid (idempoten) + ledger — terimplementasi di
+           `OrderObserver` (A2) + diverifikasi `LoyaltyLifecycleTest` (idempoten). [OWNER:A1/A2]
     T31.2 [NEW] Expiry poin via scheduler (T30.3) — durasi
            [KEPUTUSAN DIBUTUHKAN] (usulan 12 bulan, via config G6).
     T31.3 [REMOVED] Aturan tier DIHAPUS (D9 — semua member flat).
-    T31.4 [NEW] Reversal poin saat refund/cancel.
+    T31.4 [DONE] Reversal poin saat refund/cancel — terimplementasi di `OrderObserver`
+           (A2) + diverifikasi `LoyaltyLifecycleTest`. [OWNER:A1/A2]
+    T31.5 [DONE] API `GET /api/loyalty/ledger` (auth) + FE tab "Poin Loyalitas" di
+           ProfilePage (saldo + riwayat) + uji browser Playwright. [OWNER:A1]
 
 T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OWNER:A2]
   DB: [NEW] product_reviews.
