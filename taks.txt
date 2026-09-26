@@ -836,7 +836,7 @@ T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OW
            WAJIB memakai middleware `auth.optional` (bukan `$request->user('sanctum')`
            ad-hoc) + test. [OWNER:A2]
 
-T28. Checkout Server-Authoritative ................................. [TODO]  [OWNER:A1]
+T28. Checkout Server-Authoritative ................................. [DONE]  [OWNER:A1]
   Fitur: server hitung ulang harga, diskon, ongkir, poin, grand_total (anti-tampering).
   DB: orders, order_items, vouchers, products/variants, inventory_balances.
   API: perbaiki POST /api/checkout.
@@ -847,14 +847,18 @@ T28. Checkout Server-Authoritative ................................. [TODO]  [OW
   Minor:
     T28.1 [DONE] Server hitung ulang product_price/subtotal dari DB (harga produk/varian,
            input client diabaikan) + CheckoutTamperingTest. [OWNER:A1]
-    T28.2 [PARTIAL] Server hitung discount (T08.2, gratis ongkir, stacking) + ongkir
+    T28.2 [DONE] Server hitung discount (T08.2, gratis ongkir, stacking) + ongkir
            (T06.2) + poin redeem (T31) + grand_total.
            [DONE] Diskon kupon server-authoritative via `VoucherService::validate`
                   (client `discount_amount` diabaikan), gratis ongkir menihilkan
                   `shipping_cost`, `grand_total` server, `service_fee` dinamis dari
-                  `integrations` (hapus hardcode 1000) + CheckoutTamperingTest. [OWNER:A1]
-           [TODO] Ongkir server-side penuh (tarif API) & poin redeem (T31).
-    T28.3 [NEW] Test tampering end-to-end.
+                  `integrations` (hapus hardcode 1000).
+           [DONE] Ongkir server-authoritative dari tarif ekspedisi/layanan (client
+                  `shipping_cost` diabaikan untuk expedition_id/expedition_service_id).
+           [DONE] Poin redeem server-authoritative + ledger (T08.4). [OWNER:A1]
+           [SISA] Fallback ekspedisi kustom (tanpa id) masih memakai `shipping_cost` client.
+    T28.3 [DONE] Test tampering end-to-end: `CheckoutTamperingTest` (harga/subtotal item,
+           harga varian, diskon kupon, gratis ongkir, poin cap, ongkir) + test. [OWNER:A1]
 
 T29. Retur & Refund ................................................ [TODO]  [OWNER:A2]
   DB: [NEW] returns, return_items.
