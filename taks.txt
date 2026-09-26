@@ -837,7 +837,7 @@ T26. Auth Pelanggan ................................................ [DONE]  [OW
     T26.4 [DONE] FE verifikasi email (banner global + kirim ulang) + halaman /email-verified.
     T26.5 [DONE] Merge keranjang guest (session_id) -> user saat login + test (CartService).
 
-T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OWNER:A2]
+T27. Pesanan Sisi Pelanggan ........................................ [DONE]  [OWNER:A2]
   DB: orders, order_items, order_status_histories, shipments, shipment_trackings.
   FE: [NEW] MyOrdersPage, OrderDetailPage pelanggan.
   API: GET /api/orders (milik user); [NEW] POST /api/orders/{id}/cancel, /complete,
@@ -846,8 +846,11 @@ T27. Pesanan Sisi Pelanggan ........................................ [TODO]  [OW
   Minor:
     T27.1 [DONE] Otorisasi kepemilikan resource (anti-IDOR) menyeluruh untuk
            endpoint pelanggan + test. (MENYERAP T35.2 lama.)
-    T27.2 [TODO] FE daftar pesanan pelanggan + filter status.
-    T27.3 [TODO] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
+    T27.2 [DONE] FE daftar pesanan pelanggan + filter status. (OrderListPage +
+           OrderFilterDrawer server-side; telah ada, diverifikasi.)
+    T27.3 [DONE] FE detail + batal (jika diizinkan) + konfirmasi terima (completed_at).
+           [commit bfaff49] tombol Batal (pending/unpaid) & Pesanan Diterima
+           (shipped/delivered) di OrderDetailPage + endpoint aman (anti-IDOR) + test/E2E.
     T27.4 [DONE] Guest order lookup (order_number + email/phone).
     T27.5 [DONE] Audit konsistensi endpoint guest-allowed (auth opsional):
            rute yang menerima tamu + token (cart, checkout, shipping, tracking)
