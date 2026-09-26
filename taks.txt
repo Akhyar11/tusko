@@ -883,10 +883,10 @@ T29. Retur & Refund ................................................ [TODO]  [OW
   ACCEPTANCE: (1) refund Midtrans via API (config T21.2) ATAU manual; (2) stok
   kembali ke inventory_balances; (3) poin reversal; (4) jurnal balik via T34.1.
   Minor:
-    T29.1 [NEW] Migrasi returns + return_items.
-    T29.2 [NEW] Backend alur retur (request, approve, reject) + test.
-    T29.3 [NEW] Refund + stok kembali (inventory_balances) + poin reversal +
-           jurnal balik via T34.1.
+    T29.1 [DONE] Migrasi returns + return_items. [commit 5dfbdf1]
+    T29.2 [DONE] Backend alur retur (request, approve, reject) + test. [commit 4b97001]
+    T29.3 [DONE] Refund + stok kembali (inventory_balances) + poin reversal +
+           jurnal balik via T34.1. [commit 38efbf9] (menutup T34.9)
     T29.4 [TODO] FE pelanggan ajukan retur + admin kelola.
 
 T30. Scheduler & Queue ............................................. [TODO]  [OWNER:A2]
@@ -973,7 +973,8 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.8 [TODO-GAP] JURNAL LIABILITAS POIN: earn/redeem poin (T31/T08.4) belum dijurnal
            (Deferred Liability -> Revenue saat redeem); tambah akun poin di mapping + test.
            [OWNER:A2] (menyentuh CheckoutController A1 -> koordinasi).
-    T34.9 [TODO-GAP] WIRE JURNAL REFUND saat retur/batal (bergantung T29.3) + test. [OWNER:A2]
+    T34.9 [DONE] WIRE JURNAL REFUND saat retur/batal (bergantung T29.3) + test.
+           [commit 38efbf9] `ReturnController::refund` memanggil `postRefund`. [OWNER:A2]
 
 T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
   Minor:
