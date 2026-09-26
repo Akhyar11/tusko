@@ -135,6 +135,12 @@ Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [\App\Http\Controllers\Api\ProductReviewController::class, 'store']);
+
+    Route::prefix('returns')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\ReturnController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\ReturnController::class, 'store']);
+        Route::get('/{idOrNumber}', [\App\Http\Controllers\Api\ReturnController::class, 'show'])->where('idOrNumber', '.*');
+    });
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -147,6 +153,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::match(['put', 'patch'], '/{review}/moderate', [\App\Http\Controllers\Api\ProductReviewController::class, 'moderate']);
         Route::delete('/{review}', [\App\Http\Controllers\Api\ProductReviewController::class, 'destroy']);
     });
+
+    Route::post('/returns/{idOrNumber}/approve', [\App\Http\Controllers\Api\ReturnController::class, 'approve'])->where('idOrNumber', '.*');
+    Route::post('/returns/{idOrNumber}/reject', [\App\Http\Controllers\Api\ReturnController::class, 'reject'])->where('idOrNumber', '.*');
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
