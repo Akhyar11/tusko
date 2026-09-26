@@ -34,6 +34,7 @@ class Product extends Model
         'specifications',
         'variants',
         'rating',
+        'rating_count',
         'sold_count',
         'point_type',
         'point_value',
@@ -130,7 +131,17 @@ class Product extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)->where('is_approved', true);
     }
 
     public function stockMutations(): HasMany
