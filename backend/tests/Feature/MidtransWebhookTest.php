@@ -88,6 +88,41 @@ class MidtransWebhookTest extends TestCase
         $this->assertEquals('paid', $order->payment_status);
     }
 
+    public function test_settlement_records_gateway_fee(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('payment.midtrans_fee_percent', '2.9', 'payment');
+
+        $order = Order::factory()->create([
+            'order_number' => 'INV/20260907/TK/FEE001',
+            'grand_total' => 100000,
+            'status' => 'pending',
+            'payment_status' => 'pending',
+        ]);
+
+        $signature = $this->generateSignature($order->order_number, '200', '100000.00');
+
+        $this->postJson('/api/webhooks/midtrans', [
+            'order_id' => $order->order_number,
+            'status_code' => '200',
+            'gross_amount' => '100000.00',
+            'signature_key' => $signature,
+            'transaction_status' => 'settlement',
+            'transaction_id' => 'midtrans-fee-1',
+            'payment_type' => 'bank_transfer',
+        ])->assertOk();
+
+        // fee = 2.9% dari 100.000 = 2.900
+        $this->assertDatabaseHas('payments', [
+            'order_id' => $order->id,
+            'fee' => 2900,
+        ]);
+        $this->assertDatabaseHas('transactions', [
+            'order_id' => $order->id,
+            'category' => 'order_payment',
+            'fee_deducted' => 2900,
+        ]);
+    }
+
     public function test_webhook_expire_cancels_order_and_restores_product_stock(): void
     {
         $product = Product::factory()->create(['stock' => 5]);

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Transaction;
+use App\Services\IntegrationService;
 use App\Services\MidtransService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +16,10 @@ use Illuminate\Support\Facades\Log;
 
 class MidtransWebhookController extends Controller
 {
+    public function __construct(private readonly IntegrationService $integrations)
+    {
+    }
+
     /**
      * Handle incoming Midtrans HTTP notification webhook (idempoten, D8/T07.3).
      */
@@ -101,6 +107,20 @@ class MidtransWebhookController extends Controller
                 $locked->update(['payment_status' => $mappedStatus]);
             }
 
+            // T07.7: catat fee gateway saat lunas (dari konfigurasi Admin, G6) + sinkron ke kas.
+            if ($mappedStatus === 'paid') {
+                $fee = $this->calculateGatewayFee((float) $payment->amount);
+                $payment->fee = $fee;
+                $payment->save();
+
+                Transaction::where('order_id', $locked->id)
+                    ->where('category', 'order_payment')
+                    ->update([
+                        'fee_deducted' => $fee,
+                        'net_amount' => max(0, (float) $payment->amount - $fee),
+                    ]);
+            }
+
             if ($paymentType) {
                 $locked->midtrans_payment_type = $paymentType;
             }
@@ -123,6 +143,17 @@ class MidtransWebhookController extends Controller
                 'payment_status' => $order->payment_status,
             ],
         ]);
+    }
+
+    /**
+     * Hitung fee gateway dari konfigurasi Admin (persen + nominal tetap) — G6.
+     */
+    private function calculateGatewayFee(float $amount): float
+    {
+        $percent = (float) ($this->integrations->get('payment.midtrans_fee_percent', 0) ?? 0);
+        $fixed = (float) ($this->integrations->get('payment.midtrans_fee_fixed', 0) ?? 0);
+
+        return round(max(0, ($amount * $percent / 100) + $fixed), 2);
     }
 
     /**
