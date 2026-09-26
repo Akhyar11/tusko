@@ -425,9 +425,8 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
            belanja). Gate di `handleAddToCart`/`handleBuyNow`/`handleOpenCart` + guard view
            `cart` dihapus; `handleRequireLogin` dibuang; backend `auth.optional` dipakai.
            + uji browser (guest add-to-cart & buka keranjang). [OWNER:A1]
-    T05.6 [TODO-GAP] TEST GUEST CHECKOUT: T05.5 membuka belanja tamu, tetapi belum ada
-           feature test end-to-end guest (keranjang `session_id` -> order `guest_session_id`).
-           Tambah `GuestCheckoutTest` (guest checkout via session_id + validasi stok). [OWNER:A1]
+    T05.6 [DONE] TEST GUEST CHECKOUT: `GuestCheckoutTest` (guest tambah via `session_id`
+           -> checkout tanpa auth -> order `guest_session_id`, stok berkurang). [OWNER:A1]
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
@@ -485,10 +484,9 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            config + rekening manual dinamis `integrations`; Midtrans disembunyikan bila
            belum dikonfigurasi) + FE `CheckoutPage` consume (ganti mock) + test + uji browser.
            [OWNER:A1]
-    T07.7 [TODO-GAP] CATAT FEE MIDTRANS (T07 ACCEPTANCE #4): `transactions.fee_deducted`
-           TIDAK pernah diisi & tabel `payments` tidak punya kolom fee (bukti: grep
-           `fee_deducted` di backend/app = 0). Tambah kolom `payments.fee` + isi dari
-           Midtrans saat webhook/approve + expose di resource; jurnal fee via T34.5 (A2).
+    T07.7 [DONE] CATAT FEE MIDTRANS (T07 ACCEPTANCE #4): migrasi kolom `payments.fee` +
+           hitung fee dari `integrations` (persen+fixed) saat webhook lunas + sinkron
+           `transactions.fee_deducted`/`net_amount` + test. Jurnal fee via T34.5 (A2).
            [OWNER:A1]
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
