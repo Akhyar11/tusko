@@ -299,7 +299,9 @@ export default function CheckoutPage({
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [checkoutFees, setCheckoutFees] = useState({ service_fee: 0, insurance_cost: 0 });
+  const [checkoutFees, setCheckoutFees] = useState({ service_fee: 0, insurance_cost: 0, points_redeem_value: 1 });
+  const [availablePoints, setAvailablePoints] = useState(0);
+  const [pointsToRedeem, setPointsToRedeem] = useState('');
 
   // Biaya checkout dinamis dari konfigurasi Admin (G6, T08.3) — tanpa hardcode.
   useEffect(() => {
@@ -307,7 +309,11 @@ export default function CheckoutPage({
       .then((cfg) => setCheckoutFees({
         service_fee: Number(cfg.service_fee) || 0,
         insurance_cost: Number(cfg.insurance_cost) || 0,
+        points_redeem_value: Number(cfg.points_redeem_value) || 1,
       }))
+      .catch(() => {});
+    authService.getLoyaltyLedger()
+      .then((res) => setAvailablePoints(Number(res.balance) || 0))
       .catch(() => {});
   }, []);
 
@@ -368,9 +374,11 @@ export default function CheckoutPage({
   const shippingSavings = selectedExpedition?.is_free ? Number(selectedExpedition?.baseCost ?? selectedExpedition?.baseRate ?? 15000) : 0;
   const totalSavings = discountAmount + shippingSavings;
 
+  const pointsDiscount = Math.min(Number(pointsToRedeem) || 0, availablePoints) * (Number(checkoutFees.points_redeem_value) || 1);
+
   const grandTotal = Math.max(
     0, 
-    totalItemPrice + shippingCost + insuranceCost + serviceFee + paymentFee - discountAmount
+    totalItemPrice + shippingCost + insuranceCost + serviceFee + paymentFee - discountAmount - pointsDiscount
   );
 
   // Order processing state & order success modal
@@ -446,6 +454,7 @@ export default function CheckoutPage({
       service_fee: serviceFee,
       discount_amount: discountAmount,
       coupon_code: appliedCoupon?.code || null,
+      loyalty_points_redeemed: Math.min(Number(pointsToRedeem) || 0, availablePoints),
       payment_method: isManualTransfer ? 'manual_transfer' : 'midtrans',
       payment_channel: selectedPayment?.name || null,
     };
@@ -909,6 +918,34 @@ export default function CheckoutPage({
                 </div>
               )}
             </div>
+
+            {/* Tukar Poin Loyalitas (T08.4) */}
+            {availablePoints > 0 && (
+              <div className="space-y-2 pt-3 border-t border-neutral-200">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                    Tukar Poin Loyalitas
+                  </label>
+                  <span className="text-[11px] font-mono font-bold text-amber-600">
+                    {availablePoints.toLocaleString('id-ID')} PTS
+                  </span>
+                </div>
+                <TextInput
+                  type="number"
+                  min={0}
+                  max={availablePoints}
+                  value={pointsToRedeem}
+                  onChange={setPointsToRedeem}
+                  placeholder="Jumlah poin yang ditukar..."
+                  weight="mono"
+                />
+                {pointsDiscount > 0 && (
+                  <span className="text-[11px] text-emerald-700 font-bold block">
+                    Hemat {formatRupiah(pointsDiscount)} dari poin
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Detailed Itemized Costs */}
             <div className="space-y-2.5 text-xs text-neutral-700 pt-3 border-t border-neutral-200">

@@ -239,7 +239,22 @@ class CheckoutController extends Controller
                 }
             }
 
-            $grandTotal = max(0, $subtotal + $shippingCost + $insuranceCost + $serviceFee - $discountAmount);
+            // 4b. Tukar poin loyalitas (T08.4/T28.2 tahap 2) — server-authoritative.
+            $pointsRedeemed = 0;
+            $pointsDiscount = 0.0;
+            if ($user && $request->filled('loyalty_points_redeemed')) {
+                $requestedPoints = max(0, (int) $request->input('loyalty_points_redeemed'));
+                $pointsRedeemed = min($requestedPoints, (int) $user->points);
+
+                if ($pointsRedeemed > 0) {
+                    // Nilai tukar poin dari konfigurasi Admin (G6), default 1 rupiah/poin.
+                    $redeemValue = (float) ($this->integrations->get('loyalty.points_redeem_value', 1) ?? 1);
+                    $maxRedeemable = max(0, $subtotal + $shippingCost + $insuranceCost + $serviceFee - $discountAmount);
+                    $pointsDiscount = min($pointsRedeemed * $redeemValue, $maxRedeemable);
+                }
+            }
+
+            $grandTotal = max(0, $subtotal + $shippingCost + $insuranceCost + $serviceFee - $discountAmount - $pointsDiscount);
 
             // 5. Payment details
             $paymentMethod = $request->input('payment_method', 'midtrans');
@@ -278,6 +293,7 @@ class CheckoutController extends Controller
                 'grand_total' => $grandTotal,
                 'total_weight' => $totalWeight,
                 'loyalty_points_earned' => $totalLoyaltyPointsEarned,
+                'loyalty_points_redeemed' => $pointsRedeemed,
                 'coupon_code' => $couponCode,
                 'notes' => $request->input('notes'),
                 'expires_at' => Carbon::now()->addHours(24),
@@ -291,6 +307,23 @@ class CheckoutController extends Controller
             // 6b. T15.1b: catat pemakaian voucher (kuota + voucher_usages) saat order dibuat.
             if ($couponCode) {
                 $this->voucherService->redeemForOrder($order, $couponCode, $user);
+            }
+
+            // 6c. T08.4/T31: potong poin loyalitas yang ditukar + catat ledger.
+            if ($user && $pointsRedeemed > 0) {
+                $customer = \App\Models\User::lockForUpdate()->find($user->id);
+                if ($customer) {
+                    $customer->decrement('points', $pointsRedeemed);
+                    \App\Models\LoyaltyPointsLedger::create([
+                        'user_id' => $customer->id,
+                        'type' => 'redeemed',
+                        'points' => -$pointsRedeemed,
+                        'balance_after' => (int) $customer->fresh()->points,
+                        'reference_type' => 'order',
+                        'reference_id' => $order->order_number,
+                        'description' => "Penukaran {$pointsRedeemed} poin untuk pesanan {$order->order_number}",
+                    ]);
+                }
             }
 
             // 7. Create OrderItems & Decrement Stock
@@ -367,6 +400,7 @@ class CheckoutController extends Controller
             'data' => [
                 'service_fee' => (float) ($this->integrations->get('store.service_fee', 0) ?? 0),
                 'insurance_cost' => (float) ($this->integrations->get('store.insurance_cost', 0) ?? 0),
+                'points_redeem_value' => (float) ($this->integrations->get('loyalty.points_redeem_value', 1) ?? 1),
             ],
         ]);
     }

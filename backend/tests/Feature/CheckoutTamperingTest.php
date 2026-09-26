@@ -260,6 +260,60 @@ class CheckoutTamperingTest extends TestCase
             ->assertJsonPath('data.totals.grand_total', 200000);
     }
 
+    public function test_loyalty_points_redeemed_applied_server_side(): void
+    {
+        $user = User::factory()->create(['points' => 1000]);
+        $product = Product::factory()->create(['name' => 'Produk Poin', 'price' => 100000, 'stock' => 5]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Poin',
+            'phone' => '081200000007',
+            'full_address' => 'Jl. Poin No. 7',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            'loyalty_points_redeemed' => 500,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.grand_total', 99500);
+
+        $this->assertSame(500, (int) $user->fresh()->points);
+        $this->assertDatabaseHas('loyalty_points_ledger', [
+            'user_id' => $user->id,
+            'type' => 'redeemed',
+            'points' => -500,
+        ]);
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'loyalty_points_redeemed' => 500,
+        ]);
+    }
+
+    public function test_loyalty_points_redeemed_capped_at_available(): void
+    {
+        $user = User::factory()->create(['points' => 100]);
+        $product = Product::factory()->create(['name' => 'Produk Poin 2', 'price' => 50000, 'stock' => 5]);
+
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Poin 2',
+            'phone' => '081200000008',
+            'full_address' => 'Jl. Poin No. 8',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+            'loyalty_points_redeemed' => 99999,
+        ])->assertCreated();
+
+        $this->assertSame(0, (int) $user->fresh()->points);
+    }
+
     public function test_forwarded_item_price_does_not_alter_order_level_amounts(): void
     {
         $user = User::factory()->create();

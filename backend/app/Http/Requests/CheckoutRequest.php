@@ -44,6 +44,7 @@ class CheckoutRequest extends FormRequest
             'insurance_cost' => ['nullable', 'numeric', 'min:0'],
             'service_fee' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'loyalty_points_redeemed' => ['nullable', 'integer', 'min:0'],
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:500'],
             'session_id' => ['nullable', 'string', 'max:100'],
