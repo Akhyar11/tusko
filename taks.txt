@@ -425,6 +425,9 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
            belanja). Gate di `handleAddToCart`/`handleBuyNow`/`handleOpenCart` + guard view
            `cart` dihapus; `handleRequireLogin` dibuang; backend `auth.optional` dipakai.
            + uji browser (guest add-to-cart & buka keranjang). [OWNER:A1]
+    T05.6 [TODO-GAP] TEST GUEST CHECKOUT: T05.5 membuka belanja tamu, tetapi belum ada
+           feature test end-to-end guest (keranjang `session_id` -> order `guest_session_id`).
+           Tambah `GuestCheckoutTest` (guest checkout via session_id + validasi stok). [OWNER:A1]
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
@@ -481,6 +484,11 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
     T07.6 [DONE] PAYMENT METHODS API: `GET /api/payment-methods` (katalog metode dari
            config + rekening manual dinamis `integrations`; Midtrans disembunyikan bila
            belum dikonfigurasi) + FE `CheckoutPage` consume (ganti mock) + test + uji browser.
+           [OWNER:A1]
+    T07.7 [TODO-GAP] CATAT FEE MIDTRANS (T07 ACCEPTANCE #4): `transactions.fee_deducted`
+           TIDAK pernah diisi & tabel `payments` tidak punya kolom fee (bukti: grep
+           `fee_deducted` di backend/app = 0). Tambah kolom `payments.fee` + isi dari
+           Midtrans saat webhook/approve + expose di resource; jurnal fee via T34.5 (A2).
            [OWNER:A1]
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
@@ -1513,4 +1521,28 @@ Bukan gap (terverifikasi OK):
 - T30.2 auto-cancel terjadwal; `payments` (D8) ada; `product_reviews`/`stock_transfers` ada.
 
 Kepemilikan: T07.6 & T13.6 [A1]; T31.2/T30.3/T13.1/T17/T18/T19/T20/T21/T29 [A2].
+==============================================================================
+
+==============================================================================
+REVISI 10 — AUDIT GAP DOMAIN A1 (bukti kode)
+==============================================================================
+Temuan (terverifikasi):
+1. FEE MIDTRANS TIDAK DICATAT (T07 acceptance #4): `transactions.fee_deducted` TIDAK
+   pernah diisi (grep di backend/app = 0) dan tabel `payments` TIDAK punya kolom fee.
+   -> task baru T07.7 [A1] (+ jurnal via T34.5 A2).
+2. GUEST CHECKOUT BELUM DIUJI: T05.5 membuka belanja tamu, tetapi tidak ada feature
+   test end-to-end guest (session_id -> guest_session_id). -> task baru T05.6 [A1].
+3. VOUCHER "CLAIM" TIDAK DIPERSIST: `VoucherController::claim` hanya memvalidasi
+   (soft claim) tanpa menyimpan apa pun. -> catatan (prioritas rendah; `voucher_usages`
+   dicatat saat order dibuat via T15.1b).
+4. VA NUMBER PREFIX `'8808'` HARDCODE di CheckoutController:277 -> sebaiknya config
+   (prioritas rendah).
+
+Bukan gap (terverifikasi OK):
+- Guest cart/checkout code path ADA (session_id -> guest_session_id).
+- Anti-overselling AMAN via `InventoryService::decrease` (lockForUpdate) — T13.3/T13.6
+  diputuskan tidak pakai reservasi.
+- Midtrans webhook: idempoten via `payments` + markAsPaid; fee yang belum tercatat.
+- A1 FE mock tersisa hanya FALLBACK (CheckoutPage mock*, ProfilePage/UserMenu mockDemoUsers).
+Kepemilikan: T07.7 & T05.6 [A1]; jurnal fee [A2].
 ==============================================================================
