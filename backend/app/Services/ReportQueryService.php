@@ -267,6 +267,29 @@ class ReportQueryService
         return 'over_90';
     }
 
+    /**
+     * Tren pendapatan harian (T19.1) — pesanan terbayar N hari terakhir.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function revenueTrend(int $days = 30): Collection
+    {
+        $start = now()->subDays(max(1, $days) - 1)->startOfDay();
+
+        return Order::query()
+            ->where('payment_status', 'paid')
+            ->where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_total) as revenue')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => $row->date,
+                'orders' => (int) $row->orders,
+                'revenue' => round((float) $row->revenue, 2),
+            ]);
+    }
+
     private function productSalesQuery(?string $from, ?string $to): Builder
     {
         return OrderItem::query()

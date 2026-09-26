@@ -152,6 +152,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/reports/trial-balance', [\App\Http\Controllers\Api\ReportController::class, 'trialBalance']);
     Route::get('/reports/vendor-aging', [\App\Http\Controllers\Api\ReportController::class, 'vendorAging']);
 
+    Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
+
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\ProductReviewController::class, 'adminIndex']);
         Route::match(['put', 'patch'], '/{review}/moderate', [\App\Http\Controllers\Api\ProductReviewController::class, 'moderate']);
