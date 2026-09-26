@@ -490,7 +490,8 @@ T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  
     T08.3 [DONE] FE terapkan kupon di CheckoutPage via `POST /api/vouchers/validate`
            (server-authoritative; hapus hardcode kupon) + biaya checkout dinamis
            (`/api/checkout/config`) + uji browser. [OWNER:A1]
-    T08.4 [TODO] FE tukar poin di CheckoutPage -> server hitung (T28.2) + ledger (T31).
+    T08.4 [DONE] FE tukar poin di CheckoutPage -> server hitung (T28.2 tahap 2) + ledger (T31)
+           + uji browser. [OWNER:A1]
 
 ==============================================================================
 FASE 3 — PESANAN, KIRIM & AKUN
@@ -534,7 +535,8 @@ T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL] 
     T11.1 [DONE] FE ProfilePage -> API (biodata + password + sesi) via authService
            (getProfile/updateProfile/updatePassword/revokeSession) + uji browser. [OWNER:A1]
     T11.2 [TODO] FE AddressFormPage + MapPickerModal -> ShippingAddressController (GPS).
-    T11.3 [TODO] FE riwayat poin loyalitas (depend T31).
+    T11.3 [DONE] FE riwayat poin loyalitas (tab "Poin Loyalitas" di ProfilePage,
+           via `GET /api/loyalty/ledger`) + uji browser. [OWNER:A1]
 
 ==============================================================================
 FASE 4 — PRODUK, STOK, PENGADAAN & PROMOSI (ERP)
