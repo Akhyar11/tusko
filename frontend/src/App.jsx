@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import PromoBanner from './components/PromoBanner';
 import CategoryBar from './components/CategoryBar';
-import FilterSidebar from './components/FilterSidebar';
 import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
@@ -2196,6 +2195,7 @@ export default function App() {
               }}
               onClearFilter={handleClearSingleFilter}
               onResetFilters={handleResetFilters}
+              onSelectMinRating={setMinRating}
             />
 
             {/* 7. Tusko Club Loyalty Banner */}

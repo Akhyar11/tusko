@@ -15,7 +15,8 @@ export default function ProductGrid({
   onClearSearch = () => {},
   activeFilters = {},
   onClearFilter = () => {},
-  onResetFilters = () => {}
+  onResetFilters = () => {},
+  onSelectMinRating = () => {}
 }) {
   const {
     minPrice,
@@ -57,22 +58,41 @@ export default function ProductGrid({
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-neutral-500 font-bold uppercase shrink-0">Urutkan:</span>
-            <div className="w-48 sm:w-56">
-              <ServerSideSelect 
-                value={sortBy}
-                onChange={(val) => onSortChange(val)}
-                options={[
-                  { value: 'relevant', label: 'Paling Sesuai' },
-                  { value: 'price-asc', label: 'Harga: Rendah ke Tinggi' },
-                  { value: 'price-desc', label: 'Harga: Tinggi ke Rendah' },
-                  { value: 'newest', label: 'Produk Terbaru' },
-                  { value: 'rating', label: 'Rating Tertinggi' }
-                ]}
-                className="py-1.5 px-2.5 text-xs font-bold"
-                scrollPadding={30}
-              />
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-neutral-500 font-bold uppercase shrink-0">Rating:</span>
+              <div className="w-40">
+                <ServerSideSelect
+                  value={minRating}
+                  onChange={(val) => onSelectMinRating(Number(val) || 0)}
+                  options={[
+                    { value: 0, label: 'Semua Rating' },
+                    { value: 4, label: '4 Bintang ke atas' },
+                    { value: 3, label: '3 Bintang ke atas' },
+                    { value: 2, label: '2 Bintang ke atas' }
+                  ]}
+                  className="py-1.5 px-2.5 text-xs font-bold"
+                  scrollPadding={30}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-neutral-500 font-bold uppercase shrink-0">Urutkan:</span>
+              <div className="w-48 sm:w-56">
+                <ServerSideSelect 
+                  value={sortBy}
+                  onChange={(val) => onSortChange(val)}
+                  options={[
+                    { value: 'relevant', label: 'Paling Sesuai' },
+                    { value: 'price-asc', label: 'Harga: Rendah ke Tinggi' },
+                    { value: 'price-desc', label: 'Harga: Tinggi ke Rendah' },
+                    { value: 'newest', label: 'Produk Terbaru' },
+                    { value: 'rating', label: 'Rating Tertinggi' }
+                  ]}
+                  className="py-1.5 px-2.5 text-xs font-bold"
+                  scrollPadding={30}
+                />
+              </div>
             </div>
           </div>
         </div>
