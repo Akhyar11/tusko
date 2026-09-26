@@ -39,7 +39,8 @@ export default function OrderDetailPage({
   onCompleteOrder = () => {},
   onUpdateStatus = () => {},
   onPrintReceipt = null,
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onReviewProduct = () => {}
 }) {
   const [order, setOrder] = useState(initialOrder);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
@@ -476,6 +477,15 @@ export default function OrderDetailPage({
                   <span className="font-sport font-black text-neutral-950 text-base">
                     {formatRupiah(itemSubtotal)}
                   </span>
+                  {['completed', 'delivered'].includes(order.status) && (
+                    <button
+                      type="button"
+                      onClick={() => onReviewProduct(order, item)}
+                      className="mt-2 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-[10px] font-sport font-black uppercase tracking-wider cursor-pointer rounded-none"
+                    >
+                      Beri Ulasan
+                    </button>
+                  )}
                 </div>
               </div>
             );

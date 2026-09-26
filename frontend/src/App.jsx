@@ -49,6 +49,8 @@ import RoleMenuMappingPage from './components/RoleMenuMappingPage';
 import StockOpnameListPage from './components/StockOpnameListPage';
 import StockOpnameCreatePage from './components/StockOpnameCreatePage';
 import StockOpnameDetailPage from './components/StockOpnameDetailPage';
+import ReviewListPage from './components/ReviewListPage';
+import ReviewCreatePage from './components/ReviewCreatePage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -141,6 +143,8 @@ const VALID_VIEWS = [
   'stock-opname',
   'stock-opname-create',
   'stock-opname-detail',
+  'reviews-admin',
+  'review-create',
   'settings',
   'login',
   'register',
@@ -174,6 +178,7 @@ const ADMIN_CORE_VIEWS = [
   'stock-opname',
   'stock-opname-create',
   'stock-opname-detail',
+  'reviews-admin',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -225,6 +230,8 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/stock-opname' || rawPath === '/admin/stock-opnames') return 'stock-opname';
     if (rawPath === '/admin/stock-opname/create') return 'stock-opname-create';
     if (rawPath.startsWith('/admin/stock-opname/')) return 'stock-opname-detail';
+    if (rawPath === '/admin/reviews' || rawPath === '/admin/review') return 'reviews-admin';
+    if (rawPath === '/reviews/create') return 'review-create';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -430,6 +437,7 @@ export default function App() {
   const [editingUser, setEditingUser] = useState(null);
   const [editingRole, setEditingRole] = useState(null);
   const [editingOpname, setEditingOpname] = useState(null);
+  const [reviewContext, setReviewContext] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -1507,6 +1515,14 @@ export default function App() {
           <OrderDetailPage
             order={selectedOrderForDetail}
             onBack={() => setCurrentView('orders')}
+            onReviewProduct={(order, item) => {
+              setReviewContext({
+                order,
+                product: { id: item.product_id || item.id, name: item.product_name || item.name },
+                returnView: 'order-detail'
+              });
+              setCurrentView('review-create');
+            }}
             onPayOrder={(order) => {
               setLastCompletedOrder(order);
               setCurrentView('order-success');
@@ -1789,6 +1805,14 @@ export default function App() {
             onNavigateBack={() => setCurrentView('stock-opname')}
             onShowToast={showToast}
           />
+        ) : currentView === 'reviews-admin' ? (
+          <ReviewListPage onShowToast={showToast} />
+        ) : currentView === 'review-create' ? (
+          <ReviewCreatePage
+            context={reviewContext}
+            onNavigateBack={() => setCurrentView(reviewContext?.returnView || 'orders')}
+            onShowToast={showToast}
+          />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (
           <PurchaseOrderListPage
             onShowToast={(msg) => {
@@ -2069,6 +2093,7 @@ export default function App() {
             onSelectCategory={handleSelectCategory}
             onOpenRegister={() => setCurrentView('register')}
             onOpenCart={handleOpenCart}
+            onShowToast={showToast}
           />
         ) : (
           <>

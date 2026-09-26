@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
+import ProductReviewsSection from './organisms/ProductReviewsSection';
 
 export default function ProductDetail({ 
   product, 
@@ -27,7 +28,8 @@ export default function ProductDetail({
   onBuyNow = () => {},
   onSelectCategory = () => {},
   onOpenRegister = () => {},
-  onOpenCart = () => {}
+  onOpenCart = () => {},
+  onShowToast = () => {}
 }) {
   if (!product) return null;
 
@@ -616,6 +618,11 @@ export default function ProductDetail({
 
         </div>
       </main>
+
+      {/* 4b. Ulasan & Rating Pembeli (T32.3) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ProductReviewsSection productId={product?.id} onShowToast={onShowToast} />
+      </section>
 
       {/* 5. Editorial Narrative & Technology Overview (Benchmark: adidas Ultimashow Spec) */}
       <section className="bg-neutral-50 border-t border-b border-neutral-200 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">

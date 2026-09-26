@@ -134,6 +134,13 @@ class ProductReviewApiTest extends TestCase
         $list = $this->getJson('/api/admin/reviews?is_approved=1')->assertStatus(200);
         $this->assertSame(1, $list->json('total'));
 
+        // Filter pengulas & rentang tanggal.
+        $byUser = $this->getJson('/api/admin/reviews?userSearch=' . urlencode($user->name))->assertStatus(200);
+        $this->assertSame(1, $byUser->json('total'));
+
+        $byDate = $this->getJson('/api/admin/reviews?created_from=' . now()->toDateString() . '&created_to=' . now()->toDateString())->assertStatus(200);
+        $this->assertGreaterThanOrEqual(1, $byDate->json('total'));
+
         $this->deleteJson("/api/admin/reviews/{$review->id}")->assertStatus(200);
         $this->assertDatabaseMissing('product_reviews', ['id' => $review->id]);
     }

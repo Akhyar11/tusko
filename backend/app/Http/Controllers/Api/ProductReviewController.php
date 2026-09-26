@@ -143,6 +143,22 @@ class ProductReviewController extends Controller
             });
         }
 
+        if ($request->filled('userSearch')) {
+            $userSearch = $request->input('userSearch');
+            $query->whereHas('user', function ($q) use ($userSearch) {
+                $q->where('name', 'like', "%{$userSearch}%")
+                    ->orWhere('email', 'like', "%{$userSearch}%");
+            });
+        }
+
+        if ($request->filled('created_from')) {
+            $query->whereDate('created_at', '>=', $request->input('created_from'));
+        }
+
+        if ($request->filled('created_to')) {
+            $query->whereDate('created_at', '<=', $request->input('created_to'));
+        }
+
         if ($request->filled('product_id') && $request->input('product_id') !== 'all') {
             $query->where('product_id', (int) $request->input('product_id'));
         }

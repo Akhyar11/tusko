@@ -39,6 +39,7 @@ class MenuSeeder extends Seeder
 
         // ==== ADMIN: Pemasaran & Promo ====
         ['environment' => 'admin', 'section' => 'Pemasaran & Promo', 'label' => 'Voucher & Promo', 'sublabel' => 'Kelola kode promo & kuota', 'path_prefix' => '/admin/voucher', 'view_key' => 'vouchers-admin', 'icon' => 'Ticket', 'feature_flag' => null, 'sort_order' => 45],
+        ['environment' => 'admin', 'section' => 'Pemasaran & Promo', 'label' => 'Moderasi Ulasan', 'sublabel' => 'Tinjau ulasan & rating produk', 'path_prefix' => '/admin/reviews', 'view_key' => 'reviews-admin', 'icon' => 'Star', 'feature_flag' => null, 'sort_order' => 46],
 
         // ==== ADMIN: Keuangan & Sistem ====
         ['environment' => 'admin', 'section' => 'Keuangan & Sistem', 'label' => 'Buku Kas & Transaksi', 'sublabel' => 'Arus kas masuk & beban toko', 'path_prefix' => '/admin/transaction', 'view_key' => 'transactions', 'icon' => 'Wallet', 'feature_flag' => 'feature_flags.finance_menu', 'sort_order' => 50],
