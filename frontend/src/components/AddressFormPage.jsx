@@ -67,6 +67,7 @@ export default function AddressFormPage({
   const [cityCode, setCityCode] = useState(addressToEdit?.city_code || '');
   const [districtCode, setDistrictCode] = useState(addressToEdit?.district_code || '');
   const [subdistrictCode, setSubdistrictCode] = useState(addressToEdit?.subdistrict_code || '');
+  const [isManualLocation, setIsManualLocation] = useState(false);
   const [formError, setFormError] = useState('');
   const regionSelectedRef = useRef(false);
   const formRef = useRef(null);
@@ -425,6 +426,13 @@ export default function AddressFormPage({
     };
   };
 
+  // T11.2: fallback input manual bila API kode wilayah (KiriminAja) kosong/tak tersedia.
+  useEffect(() => {
+    locationService.getProvinces()
+      .then((list) => { if (!Array.isArray(list) || list.length === 0) setIsManualLocation(true); })
+      .catch(() => setIsManualLocation(true));
+  }, []);
+
   const handleProvinceChange = (value, option) => {
     regionSelectedRef.current = true;
     setProvinceCode(value || '');
@@ -750,26 +758,44 @@ export default function AddressFormPage({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Provinsi <span className="text-rose-500">*</span>
                   </label>
-                  <ServerSideSelect
-                    value={provinceCode}
-                    onChange={handleProvinceChange}
-                    loadOptions={loadProvinces}
-                    placeholder="Pilih provinsi..."
-                    isClearable
-                  />
+                  {isManualLocation ? (
+                    <TextInput
+                      value={province}
+                      onChange={setProvince}
+                      placeholder="Ketik provinsi..."
+                      weight="bold"
+                    />
+                  ) : (
+                    <ServerSideSelect
+                      value={provinceCode}
+                      onChange={handleProvinceChange}
+                      loadOptions={loadProvinces}
+                      placeholder="Pilih provinsi..."
+                      isClearable
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Kota / Kabupaten <span className="text-rose-500">*</span>
                   </label>
-                  <ServerSideSelect
-                    value={cityCode}
-                    onChange={handleCityChange}
-                    loadOptions={loadCities}
-                    placeholder="Pilih kota/kabupaten..."
-                    disabled={!provinceCode}
-                    isClearable
-                  />
+                  {isManualLocation ? (
+                    <TextInput
+                      value={city}
+                      onChange={setCity}
+                      placeholder="Ketik kota/kabupaten..."
+                      weight="bold"
+                    />
+                  ) : (
+                    <ServerSideSelect
+                      value={cityCode}
+                      onChange={handleCityChange}
+                      loadOptions={loadCities}
+                      placeholder="Pilih kota/kabupaten..."
+                      disabled={!provinceCode}
+                      isClearable
+                    />
+                  )}
                 </div>
               </div>
 
@@ -778,14 +804,22 @@ export default function AddressFormPage({
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                     Kecamatan
                   </label>
-                  <ServerSideSelect
-                    value={districtCode}
-                    onChange={handleDistrictChange}
-                    loadOptions={loadDistricts}
-                    placeholder="Pilih kecamatan..."
-                    disabled={!cityCode}
-                    isClearable
-                  />
+                  {isManualLocation ? (
+                    <TextInput
+                      value={district}
+                      onChange={setDistrict}
+                      placeholder="Ketik kecamatan..."
+                    />
+                  ) : (
+                    <ServerSideSelect
+                      value={districtCode}
+                      onChange={handleDistrictChange}
+                      loadOptions={loadDistricts}
+                      placeholder="Pilih kecamatan..."
+                      disabled={!cityCode}
+                      isClearable
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
