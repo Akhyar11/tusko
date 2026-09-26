@@ -897,15 +897,19 @@ T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [PARTIAL] 
     T31.5 [DONE] API `GET /api/loyalty/ledger` (auth) + FE tab "Poin Loyalitas" di
            ProfilePage (saldo + riwayat) + uji browser Playwright. [OWNER:A1]
 
-T32. Ulasan Produk (Review & Rating) ............................... [TODO]  [OWNER:A2]
+T32. Ulasan Produk (Review & Rating) ............................... [DONE]  [OWNER:A2]
   DB: [NEW] product_reviews.
   FE: form ulasan di pesanan pelanggan + tampil di ProductDetail.
   API: [NEW] GET /api/products/{id}/reviews, POST /api/reviews.
   Test: [NEW] ProductReviewApiTest.
   Minor:
-    T32.1 [NEW] Migrasi product_reviews + model.
-    T32.2 [NEW] Endpoint ulasan (list + create hanya pembeli) + moderasi + test.
-    T32.3 [TODO] FE form + tampilan ulasan + agregat rating (dipakai T01.2).
+    T32.1 [DONE] Migrasi product_reviews + model. [commit 25a67ee]
+    T32.2 [DONE] Endpoint ulasan (list + create hanya pembeli) + moderasi + test.
+           [commit 3a7977a] list publik + agregat, create pembeli, moderasi admin
+           (recompute rating produk) + audit log.
+    T32.3 [DONE] FE form + tampilan ulasan + agregat rating (dipakai T01.2).
+           [commit 2eae110] ReviewListPage/FilterDrawer (moderasi), ProductReviewsSection
+           di ProductDetail, ReviewCreatePage dari OrderDetail + menu + E2E.
 
 T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OWNER:A2]
   CATATAN: seeder referensi SUDAH ADA (MasterReferenceSeeder) untuk roles,
