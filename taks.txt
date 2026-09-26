@@ -903,7 +903,7 @@ T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OW
            `menus` + `role_menus` (T37.3).
     T33.3 [DONE] Seeder `receipt_templates` default.
 
-T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
+T34. Auto-Journal & Laporan Keuangan ............................... [DONE]  [OWNER:A2]
   DB: transactions, financial_ledger_entries, chart_of_accounts, vendor_bills, returns.
   API: [NEW] /api/reports/income-statement, /trial-balance, /vendor-aging; export CSV.
   Test: [NEW] JournalPostingTest, FinancialReportApiTest.
@@ -913,8 +913,9 @@ T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OW
            (TIDAK bergantung pada T07/T14/T25/T29 — sebaliknya task tsb memanggil mapping.)
     T34.2 [DONE] Laporan laba rugi + neraca saldo. [commit ea43ff6]
            `GET /api/reports/income-statement` + `/trial-balance` (dari ledger T34.1).
-    T34.3 [NEW] Laporan aging hutang vendor (menyerap T14.5 lama).
-    T34.4 [NEW] Ekspor CSV/Excel/PDF laporan.
+    T34.3 [DONE] Laporan aging hutang vendor (menyerap T14.5 lama). [commit 70d0150]
+    T34.4 [DONE] Ekspor CSV/Excel/PDF laporan. [commit ae9dd2a] CSV untuk laba rugi,
+           neraca saldo, dan aging hutang (Excel/PDF opsional lanjutan).
 
 T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
   Minor:

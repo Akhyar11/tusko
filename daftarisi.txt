@@ -185,57 +185,57 @@
 894|MAJOR|T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OWNER:A2]
 900|MINOR|T33.1 [DONE] Migrasi activity_logs + logging aksi admin (HARGA/STOK/ROLE, G9).
 903|MINOR|T33.3 [DONE] Seeder `receipt_templates` default.
-905|MAJOR|T34. Auto-Journal & Laporan Keuangan ............................... [TODO]  [OWNER:A2]
+905|MAJOR|T34. Auto-Journal & Laporan Keuangan ............................... [DONE]  [OWNER:A2]
 910|MINOR|T34.1 [DONE] MAPPING EVENT->JURNAL memakai mesin T16.4 (order lunas, fee Midtrans,
 913|MINOR|T34.2 [DONE] Laporan laba rugi + neraca saldo. [commit ea43ff6]
-915|MINOR|T34.3 [NEW] Laporan aging hutang vendor (menyerap T14.5 lama).
-916|MINOR|T34.4 [NEW] Ekspor CSV/Excel/PDF laporan.
-918|MAJOR|T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
-920|MINOR|T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime
-921|MINOR|T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
-922|MINOR|T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
-923|MINOR|T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
-925|MAJOR|T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
-947|MINOR|T36.1 [DONE] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
-950|MINOR|T36.2 [DONE] `SettingsService`: baca/tulis per grup via `IntegrationService`,
-952|MINOR|T36.3 [DONE] Migrasi/seeder default settings semua grup + command
-955|MINOR|T36.4 [DONE] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
-956|MINOR|T36.5 [DONE] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
-958|MINOR|T36.6 [DONE] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
-961|MINOR|T36.7 [DONE] Guard keamanan: route admin-only (`admin` + `menu.access:/admin/settin
-964|MINOR|T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + erro
-965|MINOR|T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 
-967|MINOR|T36.10 [DONE] FE Section Profil Toko: nama toko, email/telepon, alamat,
-969|MINOR|T36.11 [DONE] FE Section Pengiriman: provider, base_url, api_key (secret), origin
-972|MINOR|T36.12 [DONE] FE Section Pembayaran: Midtrans server/client key (secret),
-975|MINOR|T36.13 [DONE] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
-977|MINOR|T36.14 [DONE] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan)
-979|MINOR|T36.15 [DONE] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial maile
-981|MINOR|T36.16 [DONE] FE Section Feature Flag: aktif/nonaktif menu operasional per environme
-983|MINOR|T36.17 [DONE] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
-985|MINOR|T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
-989|MINOR|T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
-999|MAJOR|T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [DONE]  [OWNER:A2]
-1017|MINOR|T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
-1021|MINOR|T37.2 [DONE] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
-1035|MINOR|T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
-1038|MINOR|T37.4 [DONE] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
-1041|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
-1045|MINOR|T37.6 [DONE] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
-1051|MINOR|T37.7 [DONE] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
-1055|MINOR|T37.8 [DONE] FE storefront nav dari menu `environment='storefront'` (publik) via
-1059|MINOR|T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
-1062|MINOR|T37.10 [DONE] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
-1073|MAJOR|T38. Master Users & Role Access (Admin) ............................ [DONE]  [OWNER:A2]
-1084|MINOR|T38.1 [DONE] Backend CRUD user admin (list server-side + filter + create/update/
-1087|MINOR|T38.2 [DONE] Endpoint assign role ke user + test (tolak non-admin, 401/403).
-1090|MINOR|T38.3 [DONE] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
-1092|MINOR|T38.4 [DONE] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel) +
-1094|MINOR|T38.5 [DONE] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
-1104|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
-1117|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
-1150|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
-1183|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
-1200|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
-1218|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
-1237|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
+915|MINOR|T34.3 [DONE] Laporan aging hutang vendor (menyerap T14.5 lama). [commit 70d0150]
+916|MINOR|T34.4 [DONE] Ekspor CSV/Excel/PDF laporan. [commit ae9dd2a] CSV untuk laba rugi,
+919|MAJOR|T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
+921|MINOR|T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime
+922|MINOR|T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
+923|MINOR|T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
+924|MINOR|T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
+926|MAJOR|T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
+948|MINOR|T36.1 [DONE] `SettingsRegistry` (single source of truth): definisi grup+key, tipe,
+951|MINOR|T36.2 [DONE] `SettingsService`: baca/tulis per grup via `IntegrationService`,
+953|MINOR|T36.3 [DONE] Migrasi/seeder default settings semua grup + command
+956|MINOR|T36.4 [DONE] Endpoint admin: GET semua grup + GET per grup (secret dimask) + test.
+957|MINOR|T36.5 [DONE] Endpoint admin: PUT per grup (validasi registry, hanya key grup tsb,
+959|MINOR|T36.6 [DONE] Endpoint uji koneksi per grup: shipping (ping KiriminAja/api.co.id),
+962|MINOR|T36.7 [DONE] Guard keamanan: route admin-only (`admin` + `menu.access:/admin/settin
+965|MINOR|T36.8 [DONE] FE `settingsService.js` (get/update per grup + test-connection) + erro
+966|MINOR|T36.9 [DONE] FE `SystemSettingsPage` kerangka: header modul (ikon+judul), grid 3/4 
+968|MINOR|T36.10 [DONE] FE Section Profil Toko: nama toko, email/telepon, alamat,
+970|MINOR|T36.11 [DONE] FE Section Pengiriman: provider, base_url, api_key (secret), origin
+973|MINOR|T36.12 [DONE] FE Section Pembayaran: Midtrans server/client key (secret),
+976|MINOR|T36.13 [DONE] FE Section Storage: disk, bucket publik/privat, base URL; catatan D7
+978|MINOR|T36.14 [DONE] FE Section Loyalitas & Kebijakan: durasi expiry poin (usulan 12 bulan)
+980|MINOR|T36.15 [DONE] FE Section Notifikasi/Email: `from_name`/`reply_to` + kredensial maile
+982|MINOR|T36.16 [DONE] FE Section Feature Flag: aktif/nonaktif menu operasional per environme
+984|MINOR|T36.17 [DONE] FE Section Keamanan: Sanctum token expiry, kebijakan sesi, rate limit
+986|MINOR|T36.18 [DONE] Navigasi `AdminSidebar`: entri "Pengaturan Sistem" (ikon Settings) +
+990|MINOR|T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+1000|MAJOR|T37. Dynamic Menu & Role-Menu Access (TANPA permissions) ........... [DONE]  [OWNER:A2]
+1018|MINOR|T37.1 [DONE] Migrasi `menus` + `role_menus` + model `Menu` (relasi
+1022|MINOR|T37.2 [DONE] Hapus/buang kode permissions + RAPIKAN DONE YANG TERDAMPAK:
+1036|MINOR|T37.3 [DONE] Seeder `menus` (admin + storefront, environment, path_prefix, view_key
+1039|MINOR|T37.4 [DONE] Endpoint `GET /api/auth/menus` (menu per-role user, filter aktif/flag)
+1042|MINOR|T37.5 [DONE] Middleware `menu.access` (admin): cocokkan PREFIX path/view dengan
+1046|MINOR|T37.6 [DONE] Endpoint + FE admin kelola `menus` (CRUD) & assign menu ke role + test
+1052|MINOR|T37.7 [DONE] FE store menu (Zustand) memuat `GET /api/auth/menus` saat login;
+1056|MINOR|T37.8 [DONE] FE storefront nav dari menu `environment='storefront'` (publik) via
+1060|MINOR|T37.9 [DONE] FE guard halaman: bila view/URL tidak diizinkan menu user ->
+1063|MINOR|T37.10 [DONE] Uji browser E2E: admin punya menu -> tampil & bisa dibuka; role
+1074|MAJOR|T38. Master Users & Role Access (Admin) ............................ [DONE]  [OWNER:A2]
+1085|MINOR|T38.1 [DONE] Backend CRUD user admin (list server-side + filter + create/update/
+1088|MINOR|T38.2 [DONE] Endpoint assign role ke user + test (tolak non-admin, 401/403).
+1091|MINOR|T38.3 [DONE] FE UserListPage + FilterDrawer (server-side, 100% kolom terfilter).
+1093|MINOR|T38.4 [DONE] FE UserCreatePage/UserEditPage (form kanonis + FormTipsPanel) +
+1095|MINOR|T38.5 [DONE] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
+1105|SEKSI|ACCEPTANCE CRITERIA (task berisiko uang/stok)
+1118|SEKSI|MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
+1151|SEKSI|URUTAN PENGERJAAN (PATCH 3.1 — konsisten dgn matriks; deploy paling akhir)
+1184|SEKSI|MILESTONE RILIS AMAN (sebelum menerima uang asli) — WAJIB selesai lebih dulu:
+1201|SEKSI|CATATAN REVISI 3 (perbaikan atas review Revisi 2)
+1219|SEKSI|PATCH 3.1 (perbaikan atas review Revisi 3)
+1238|SEKSI|REVISI 4 (penyelerasan berbasis pengalaman eksekusi) — status terbaru
