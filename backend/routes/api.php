@@ -58,6 +58,7 @@ Route::prefix('products')->group(function () {
     Route::match(['put', 'patch'], '/{idOrSlug}', [ProductController::class, 'update']);
     Route::delete('/{idOrSlug}', [ProductController::class, 'destroy']);
     Route::post('/{idOrSlug}/toggle-status', [ProductController::class, 'toggleStatus']);
+    Route::get('/{idOrSlug}/reviews', [\App\Http\Controllers\Api\ProductReviewController::class, 'indexForProduct']);
     Route::get('/{idOrSlug}', [ProductController::class, 'show']);
 });
 Route::post('/upload', [ProductController::class, 'uploadImage']);
@@ -131,10 +132,20 @@ Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController
 
 Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class, 'profit']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/reviews', [\App\Http\Controllers\Api\ProductReviewController::class, 'store']);
+});
+
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/reports/income-statement', [\App\Http\Controllers\Api\ReportController::class, 'incomeStatement']);
     Route::get('/reports/trial-balance', [\App\Http\Controllers\Api\ReportController::class, 'trialBalance']);
     Route::get('/reports/vendor-aging', [\App\Http\Controllers\Api\ReportController::class, 'vendorAging']);
+
+    Route::prefix('admin/reviews')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\ProductReviewController::class, 'adminIndex']);
+        Route::match(['put', 'patch'], '/{review}/moderate', [\App\Http\Controllers\Api\ProductReviewController::class, 'moderate']);
+        Route::delete('/{review}', [\App\Http\Controllers\Api\ProductReviewController::class, 'destroy']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
