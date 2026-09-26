@@ -173,6 +173,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class);
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
+    }
+
     public function shipment(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Shipment::class);
