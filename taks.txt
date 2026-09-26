@@ -381,7 +381,7 @@ T00. Fondasi, Design System & Auditor Pre-Commit .................... [DONE]  [O
 FASE 1 — ETALASE & VARIAN
 ==============================================================================
 
-T01. Katalog Produk Publik (Grid, Multi-filter, Search, Sorting) .... [PARTIAL]  [OWNER:A1]
+T01. Katalog Produk Publik (Grid, Multi-filter, Search, Sorting) .... [DONE]  [OWNER:A1]
   DB: categories, products, product_images, category_product,
       [NEW] product_reviews (agregat rating -> T32).
   FE: ProductGrid/ProductCard, FilterSidebar, CategoryBar, PopularChipsBar.
@@ -426,7 +426,7 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
            (backend `auth.optional` sudah siap) ATAU pertahankan wajib login. Jika
            dihapus: sesuaikan badge/pending action + test browser.
 
-T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [PARTIAL]  [OWNER:A1]
+T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
   FE: CheckoutPage, OrderSuccessPage.
   API: POST /api/checkout; [NEW] GET /api/shipping/rates.
@@ -483,7 +483,7 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            belum dikonfigurasi) + FE `CheckoutPage` consume (ganti mock) + test + uji browser.
            [OWNER:A1]
 
-T08. Voucher (Pelanggan) & Loyalitas ............................... [PARTIAL]  [OWNER:A1]
+T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
   DB: vouchers, voucher_usages, loyalty_points_ledger, users.points.
   FE: daftar/klaim voucher (ProfilePage), input kupon & tukar poin (CheckoutPage).
@@ -530,7 +530,7 @@ T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL] 
     T10.3 [TODO] FE PrintReceiptModal (label termal 100x150 + barcode) dari API.
     T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3).
 
-T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [PARTIAL]  [OWNER:A1]
+T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [DONE]  [OWNER:A1]
   DB: users, shipping_addresses, loyalty_points_ledger.
   FE: ProfilePage, AddressFormPage, MapPickerModal, UserMenuDropdown.
   API: /api/auth/me|profile|password|sessions, /api/addresses (CRUD+set-default).
@@ -644,7 +644,8 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
              status pesanan menjadi 'cancelled' + test E2E pembatalan.
              (A1 tidak boleh edit `OrderObserver` — koordinasi K5.)
     T15.2 [DONE] Backend CRUD voucher admin + validasi + VoucherApiTest. [OWNER:A1]
-    T15.3 [PARTIAL] FE VoucherListPage + FilterDrawer (server-side).
+    T15.3 [DONE] FE VoucherListPage + FilterDrawer (server-side) — menu "Voucher & Promo"
+           sudah terdaftar via `MenuSeeder` (T15.5 A2) + uji browser. [OWNER:A1]
              [DONE][A1] halaman kanonis (ServerSideTable + KPI + RowActionMenu portal),
              FilterDrawer 100% kolom, voucherService, useVoucherTableStore, rute App.jsx,
              perluasan filter backend + uji Playwright Python. [OWNER:A1]
