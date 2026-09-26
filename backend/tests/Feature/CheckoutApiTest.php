@@ -33,6 +33,15 @@ class CheckoutApiTest extends TestCase
         ]);
     }
 
+    public function test_checkout_config_endpoint_returns_dynamic_fees(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('store.service_fee', '1500', 'store');
+
+        $this->getJson('/api/checkout/config')
+            ->assertOk()
+            ->assertJsonPath('data.service_fee', 1500);
+    }
+
     public function test_can_checkout_with_explicit_items_and_decrements_stock(): void
     {
         $user = User::factory()->create();

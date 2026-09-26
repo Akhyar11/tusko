@@ -29,6 +29,27 @@ export const checkoutService = {
   },
 
   /**
+   * Konfigurasi biaya checkout (publik) — T08.3/G6 (tanpa hardcode di FE).
+   */
+  async getCheckoutConfig() {
+    const response = await apiClient.get('/api/checkout/config');
+    return response.data || {};
+  },
+
+  /**
+   * Validasi kupon server-authoritative (T08.2/T08.3).
+   */
+  async validateVoucher({ code, items = [], subtotal = null, appliedCodes = [] } = {}) {
+    const response = await apiClient.post('/api/vouchers/validate', {
+      code,
+      items,
+      subtotal,
+      applied_codes: appliedCodes,
+    });
+    return response.data;
+  },
+
+  /**
    * Kirim konfirmasi transfer manual + bukti (multipart) — T07.2.
    */
   async confirmManualPayment(orderRef, formData) {

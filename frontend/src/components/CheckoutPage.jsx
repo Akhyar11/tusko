@@ -294,29 +294,57 @@ export default function CheckoutPage({
   // Insurance checkbox
   const [withInsurance, setWithInsurance] = useState(true);
 
-  // Promo coupon
+  // Promo coupon (server-authoritative, T08.3)
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [checkoutFees, setCheckoutFees] = useState({ service_fee: 0, insurance_cost: 0 });
 
-  const handleApplyCoupon = (e) => {
+  // Biaya checkout dinamis dari konfigurasi Admin (G6, T08.3) — tanpa hardcode.
+  useEffect(() => {
+    checkoutService.getCheckoutConfig()
+      .then((cfg) => setCheckoutFees({
+        service_fee: Number(cfg.service_fee) || 0,
+        insurance_cost: Number(cfg.insurance_cost) || 0,
+      }))
+      .catch(() => {});
+  }, []);
+
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
-    if (!couponInput.trim()) return;
+    const code = couponInput.trim();
+    if (!code) return;
 
-    if (couponInput.toUpperCase() === 'DISKON20' || couponInput.toUpperCase() === 'TUSKO20') {
-      setAppliedCoupon({
-        code: couponInput.toUpperCase(),
-        discount: 25000
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    try {
+      const result = await checkoutService.validateVoucher({
+        code,
+        items: checkoutItems.map((item) => ({
+          product_id: item.product_id ?? item.id,
+          product_variant_id: item.product_variant_id ?? null,
+          quantity: item.quantity,
+        })),
+        subtotal: totalItemPrice,
       });
-      setCouponError('');
-    } else if (couponInput.toUpperCase() === 'HEMAT50') {
-      setAppliedCoupon({
-        code: couponInput.toUpperCase(),
-        discount: 50000
-      });
-      setCouponError('');
-    } else {
-      setCouponError('Kupon tidak valid atau syarat minimal belanja belum terpenuhi.');
+
+      if (result?.valid) {
+        setAppliedCoupon({
+          code: result.code || code.toUpperCase(),
+          title: result.message,
+          discount_amount: Number(result.discount_amount) || 0,
+          free_shipping: Boolean(result.free_shipping),
+        });
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(result?.message || 'Kupon tidak valid.');
+      }
+    } catch (err) {
+      setAppliedCoupon(null);
+      setCouponError(err?.message || 'Gagal memvalidasi kupon.');
+    } finally {
+      setIsApplyingCoupon(false);
     }
   };
 
@@ -332,11 +360,11 @@ export default function CheckoutPage({
   }, [checkoutItems]);
 
   const expeditionCost = selectedExpedition?.is_free ? 0 : (selectedExpedition?.cost ?? selectedExpedition?.baseRate ?? 0);
-  const shippingCost = Number(expeditionCost) || 0;
-  const insuranceCost = withInsurance ? 2500 : 0;
-  const serviceFee = 1000;
+  const shippingCost = appliedCoupon?.free_shipping ? 0 : (Number(expeditionCost) || 0);
+  const insuranceCost = withInsurance ? (Number(checkoutFees.insurance_cost) || 0) : 0;
+  const serviceFee = Number(checkoutFees.service_fee) || 0;
   const paymentFee = selectedPayment?.fee || 0;
-  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
+  const discountAmount = appliedCoupon?.discount_amount || 0;
   const shippingSavings = selectedExpedition?.is_free ? Number(selectedExpedition?.baseCost ?? selectedExpedition?.baseRate ?? 15000) : 0;
   const totalSavings = discountAmount + shippingSavings;
 
@@ -831,7 +859,7 @@ export default function CheckoutPage({
             {/* Promo / Coupon Input */}
             <div className="space-y-2">
               <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                Kupon Promo (Coba: "DISKON20")
+                Kupon Promo
               </label>
 
               {appliedCoupon ? (
@@ -840,7 +868,7 @@ export default function CheckoutPage({
                     <Sparkles size={14} className="text-black shrink-0" />
                     <div>
                       <span className="font-sport font-black uppercase text-black block">{appliedCoupon.code}</span>
-                      <span className="text-[10px] font-sport font-bold uppercase text-neutral-700">Hemat {formatRupiah(appliedCoupon.discount)}</span>
+                      <span className="text-[10px] font-sport font-bold uppercase text-neutral-700">Hemat {formatRupiah(appliedCoupon.discount_amount)}</span>
                     </div>
                   </div>
                   <button

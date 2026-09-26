@@ -359,6 +359,19 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Konfigurasi biaya checkout (publik) — T08.3/G6: FE TIDAK hardcode biaya.
+     */
+    public function config(): JsonResponse
+    {
+        return response()->json([
+            'data' => [
+                'service_fee' => (float) ($this->integrations->get('store.service_fee', 0) ?? 0),
+                'insurance_cost' => (float) ($this->integrations->get('store.insurance_cost', 0) ?? 0),
+            ],
+        ]);
+    }
+
+    /**
      * Show single order details by ID or order_number.
      */
     public function show(string $idOrOrderNumber): JsonResponse
