@@ -663,6 +663,10 @@ T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  
            `chart_of_accounts` + `financial_ledger_entries` + JournalPostingService
            (helper post debit/credit, idempoten) + endpoint + test.
            (TIDAK bergantung pada T34.1 — justru T34.1 bergantung pada ini.)
+    T16.5 [TODO-GAP] Rekonsiliasi bank: cocokkan mutasi rekening (import/manual) dengan
+           `financial_ledger_entries`/`transactions`, tandai selisih + test. [OWNER:A2]
+    T16.6 [TODO-GAP] Tutup buku / period closing: kunci periode akuntansi, saldo awal
+           periode berikutnya + test. [OWNER:A2]
 
 T17. E-Invoice & Cetak (Invoice/Resi/PO/GRN/Bill) .................. [PARTIAL]  [OWNER:A2]
   DB: receipt_templates, orders, order_items; [NEW] invoices.
@@ -926,7 +930,7 @@ T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OW
            `menus` + `role_menus` (T37.3).
     T33.3 [DONE] Seeder `receipt_templates` default.
 
-T34. Auto-Journal & Laporan Keuangan ............................... [DONE]  [OWNER:A2]
+T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  [OWNER:A2]
   DB: transactions, financial_ledger_entries, chart_of_accounts, vendor_bills, returns.
   API: [NEW] /api/reports/income-statement, /trial-balance, /vendor-aging; export CSV.
   Test: [NEW] JournalPostingTest, FinancialReportApiTest.
@@ -939,6 +943,22 @@ T34. Auto-Journal & Laporan Keuangan ............................... [DONE]  [OW
     T34.3 [DONE] Laporan aging hutang vendor (menyerap T14.5 lama). [commit 70d0150]
     T34.4 [DONE] Ekspor CSV/Excel/PDF laporan. [commit ae9dd2a] CSV untuk laba rugi,
            neraca saldo, dan aging hutang (Excel/PDF opsional lanjutan).
+    T34.5 [TODO-GAP] WIRE JURNAL ORDER LUNAS + FEE GATEWAY: `JournalMappingService::postOrderPaid`
+           dan `postPaymentGatewayFee` sudah ADA tetapi TIDAK DIPANGGIL di mana pun
+           (bukti: `grep -rn postOrderPaid backend/app` = 0 pemanggil). Panggil di
+           `OrderObserver` (status paid) / `MidtransWebhookController` (fee) secara
+           idempoten + test. [OWNER:A2]
+    T34.6 [TODO-GAP] WIRE JURNAL GRN: `postGoodsReceiving` belum dipanggil di alur
+           receive GRN (`GoodsReceivingNoteController`) + test. [OWNER:A2]
+    T34.7 [TODO-GAP] JURNAL TRANSAKSI MANUAL + KONSISTENSI: `TransactionController::store`
+           & `OrderObserver` menulis `transactions` TANPA `financial_ledger_entries`
+           (buku kas vs jurnal double-entry bisa divergen). Buat jurnal untuk transaksi
+           manual + test konsistensi `transactions` <-> `financial_ledger_entries` +
+           `financial_accounts.current_balance`. [OWNER:A2]
+    T34.8 [TODO-GAP] JURNAL LIABILITAS POIN: earn/redeem poin (T31/T08.4) belum dijurnal
+           (Deferred Liability -> Revenue saat redeem); tambah akun poin di mapping + test.
+           [OWNER:A2] (menyentuh CheckoutController A1 -> koordinasi).
+    T34.9 [TODO-GAP] WIRE JURNAL REFUND saat retur/batal (bergantung T29.3) + test. [OWNER:A2]
 
 T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
   Minor:
@@ -1404,4 +1424,31 @@ Perubahan task:
 - Kepemilikan: seluruhnya [OWNER:A2] (domain RBAC/ERP). Koordinasi A1 bila
   menyentuh `Navbar`/`UserMenuDropdown` (tidak diperlukan untuk task ini).
 Catatan: DILARANG menghidupkan kembali `permissions`/`role_permissions`.
+==============================================================================
+
+==============================================================================
+REVISI 8 — AUDIT GAP MODUL KEUANGAN (bukti kode, bukan klaim)
+==============================================================================
+Temuan (terverifikasi langsung di kode):
+1. `JournalMappingService` punya 6 mapping, tetapi HANYA 2 yang dipanggil:
+   - DIPANGGIL  : `postVendorBillPayment` (VendorBillController), `postStockOpname`
+                  (StockOpnameController).
+   - TIDAK      : `postOrderPaid`, `postPaymentGatewayFee`, `postGoodsReceiving`,
+                  `postRefund` (0 pemanggil di `backend/app`).
+   => pendapatan pesanan, fee Midtrans, HPP/COGS (GRN), dan refund TIDAK masuk jurnal.
+2. `transactions` (buku kas) ditulis TANPA `financial_ledger_entries` (double-entry)
+   pada transaksi manual (`TransactionController::store`) & event order (`OrderObserver`)
+   => buku kas vs jurnal bisa divergen; `financial_accounts.current_balance` hanya
+   ter-update oleh event yang ter-wire.
+3. Liabilitas poin (earn/redeem, T31/T08.4) belum dijurnal.
+4. Rencana belum mencakup rekonsiliasi bank & tutup buku.
+
+Perubahan task:
+- T34 status [DONE] -> [PARTIAL] (wiring belum lengkap).
+- Minor baru: T34.5 (order lunas + fee gateway), T34.6 (GRN), T34.7 (transaksi manual +
+  konsistensi buku kas/jurnal), T34.8 (jurnal liabilitas poin), T34.9 (jurnal refund).
+- Minor baru: T16.5 (rekonsiliasi bank), T16.6 (tutup buku).
+- Kepemilikan: mayoritas [OWNER:A2] (file order/GRN/journal milik A2); T34.8 menyentuh
+  CheckoutController (A1) -> koordinasi.
+Catatan: FE T16.1-3/T18.4/T19.2 tetap TODO (sudah tercatat).
 ==============================================================================
