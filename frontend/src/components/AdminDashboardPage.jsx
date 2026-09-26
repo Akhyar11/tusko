@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Package, 
   AlertTriangle, 
@@ -23,6 +23,7 @@ import {
   Truck
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import { dashboardService } from '../services/dashboardService';
 
 export default function AdminDashboardPage({
   products = [],
@@ -33,6 +34,18 @@ export default function AdminDashboardPage({
   const [chartPeriod, setChartPeriod] = useState('monthly'); // 'monthly' | 'weekly'
   const [hoveredBar, setHoveredBar] = useState(null);
   const [biTab, setBiTab] = useState('fast'); // 'fast' | 'slow'
+  const [bi, setBi] = useState(null);
+  const [isBiLoading, setIsBiLoading] = useState(true);
+
+  // T19.2: ringkasan BI dari API (fallback ke agregasi props bila gagal).
+  useEffect(() => {
+    let active = true;
+    dashboardService.fetchSummary()
+      .then((data) => { if (active && data) setBi(data); })
+      .catch(() => {})
+      .finally(() => { if (active) setIsBiLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   // 1. KPI Metrics
   const metrics = useMemo(() => {
@@ -146,6 +159,95 @@ export default function AdminDashboardPage({
             <span>Live Sync 2026</span>
           </div>
         </div>
+      </div>
+
+      {/* 1b. BI Live dari API (T19.2) */}
+      <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+          <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2">
+            <BarChart3 size={16} className="text-amber-500" />
+            <span>Ringkasan BI (Live API)</span>
+          </h2>
+          <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">
+            {isBiLoading ? 'Memuat…' : bi ? 'Tersinkron' : 'Fallback lokal'}
+          </span>
+        </div>
+
+        {bi ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+              <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+                <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+                  <span className="text-xs font-sport font-black uppercase tracking-wider">Pendapatan</span>
+                  <DollarSign size={16} className="text-emerald-600" />
+                </div>
+                <div className="text-xl font-black font-sport text-neutral-950">{formatRupiah(bi.kpi.revenue)}</div>
+                <div className="mt-2 text-[11px] border-t border-neutral-100 pt-1.5 text-neutral-500">Bulan berjalan</div>
+              </div>
+              <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+                <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+                  <span className="text-xs font-sport font-black uppercase tracking-wider">Laba Kotor</span>
+                  <TrendingUp size={16} className="text-amber-500" />
+                </div>
+                <div className="text-xl font-black font-sport text-neutral-950">{formatRupiah(bi.kpi.gross_profit)}</div>
+                <div className="mt-2 text-[11px] border-t border-neutral-100 pt-1.5 text-neutral-500">Revenue − HPP</div>
+              </div>
+              <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+                <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+                  <span className="text-xs font-sport font-black uppercase tracking-wider">Arus Kas</span>
+                  <Wallet size={16} className="text-sky-600" />
+                </div>
+                <div className="text-xl font-black font-sport text-neutral-950">{formatRupiah(bi.kpi.net_cashflow)}</div>
+                <div className="mt-2 text-[11px] border-t border-neutral-100 pt-1.5 text-neutral-500">Net kas bulan ini</div>
+              </div>
+              <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
+                <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+                  <span className="text-xs font-sport font-black uppercase tracking-wider">Liabilitas Poin</span>
+                  <Award size={16} className="text-rose-500" />
+                </div>
+                <div className="text-xl font-black font-sport text-neutral-950">{Number(bi.kpi.points_liability).toLocaleString('id-ID')} poin</div>
+                <div className="mt-2 text-[11] border-t border-neutral-100 pt-1.5 text-neutral-500">Total poin beredar</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="border border-neutral-200 rounded-none">
+                <div className="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 text-[11px] font-sport font-black uppercase tracking-wider text-neutral-800">
+                  Fast Moving (5)
+                </div>
+                <div className="divide-y divide-neutral-100">
+                  {(bi.fast_moving || []).length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-neutral-500">Belum ada penjualan.</div>
+                  ) : bi.fast_moving.map((p) => (
+                    <div key={p.product_id} className="px-4 py-2.5 flex items-center justify-between text-xs">
+                      <span className="font-sport font-bold text-neutral-900 uppercase truncate mr-2">{p.product_name || `#${p.product_id}`}</span>
+                      <span className="font-mono text-neutral-600 shrink-0">{p.total_quantity} unit</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border border-neutral-200 rounded-none">
+                <div className="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 text-[11px] font-sport font-black uppercase tracking-wider text-neutral-800">
+                  Slow Moving (5)
+                </div>
+                <div className="divide-y divide-neutral-100">
+                  {(bi.slow_moving || []).length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-neutral-500">Belum ada data.</div>
+                  ) : bi.slow_moving.map((p) => (
+                    <div key={p.product_id} className="px-4 py-2.5 flex items-center justify-between text-xs">
+                      <span className="font-sport font-bold text-neutral-900 uppercase truncate mr-2">{p.product_name || `#${p.product_id}`}</span>
+                      <span className="font-mono text-neutral-600 shrink-0">{p.total_quantity} unit</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-xs text-neutral-500">
+            {isBiLoading ? 'Memuat ringkasan BI dari server…' : 'Ringkasan BI server tidak tersedia; menampilkan agregasi lokal.'}
+          </p>
+        )}
       </div>
 
       {/* 2. Top 5 KPI Cards Grid (Wajib Sudut Siku rounded-none) */}

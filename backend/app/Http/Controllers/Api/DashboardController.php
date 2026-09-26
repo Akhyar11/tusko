@@ -33,9 +33,9 @@ class DashboardController extends Controller
                     'low_stock' => Product::whereColumn('stock', '<=', 'stock_minimum')->count(),
                     'points_liability' => $reports->pointsLiability(),
                 ],
-                'trend' => $reports->revenueTrend(30),
-                'fast_moving' => $reports->fastMovingProducts(5),
-                'slow_moving' => $reports->slowMovingProducts(5),
+                'trend' => $reports->revenueTrend(30)->toArray(),
+                'fast_moving' => $reports->fastMovingProducts(5)->toArray(),
+                'slow_moving' => $reports->slowMovingProducts(5)->toArray(),
             ];
         });
 
