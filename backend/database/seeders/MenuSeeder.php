@@ -30,6 +30,7 @@ class MenuSeeder extends Seeder
         // ==== ADMIN: Penjualan & Pengiriman ====
         ['environment' => 'admin', 'section' => 'Penjualan & Pengiriman', 'label' => 'Antrean Pesanan', 'sublabel' => 'Pesanan pembeli & status order', 'path_prefix' => '/admin/order', 'view_key' => 'orders', 'icon' => 'ShoppingBag', 'feature_flag' => 'feature_flags.orders_menu', 'sort_order' => 30],
         ['environment' => 'admin', 'section' => 'Penjualan & Pengiriman', 'label' => 'Jasa Ekspedisi & Ongkir', 'sublabel' => 'Kurir aktif & tarif pengiriman', 'path_prefix' => '/admin/expedition', 'view_key' => 'expeditions', 'icon' => 'Truck', 'feature_flag' => 'feature_flags.expeditions_menu', 'sort_order' => 31],
+        ['environment' => 'admin', 'section' => 'Penjualan & Pengiriman', 'label' => 'Retur & Refund', 'sublabel' => 'Pengajuan retur & pengembalian dana', 'path_prefix' => '/admin/returns', 'view_key' => 'returns-admin', 'icon' => 'RotateCcw', 'feature_flag' => null, 'sort_order' => 32],
 
         // ==== ADMIN: Pengadaan & Rantai Pasok ====
         ['environment' => 'admin', 'section' => 'Pengadaan & Rantai Pasok', 'label' => 'Purchase Order (PO)', 'sublabel' => 'Pemesanan stok ke supplier', 'path_prefix' => '/admin/procurement/pos', 'view_key' => 'procurement-pos', 'icon' => 'ClipboardList', 'feature_flag' => 'feature_flags.procurement_menu', 'sort_order' => 40],

@@ -64,6 +64,19 @@ class ReturnController extends Controller
             $query->whereDate('requested_at', '<=', $request->input('requested_to'));
         }
 
+        if ($request->filled('items_min')) {
+            $query->has('items', '>=', (int) $request->input('items_min'));
+        }
+        if ($request->filled('items_max')) {
+            $query->has('items', '<=', (int) $request->input('items_max'));
+        }
+        if ($request->filled('refund_amount_min')) {
+            $query->where('refund_amount', '>=', $request->input('refund_amount_min'));
+        }
+        if ($request->filled('refund_amount_max')) {
+            $query->where('refund_amount', '<=', $request->input('refund_amount_max'));
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = strtolower((string) $request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
         $allowedSorts = ['created_at', 'requested_at', 'refund_amount', 'status', 'id'];

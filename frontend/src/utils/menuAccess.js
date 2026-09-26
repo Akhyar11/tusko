@@ -31,6 +31,7 @@ export const CHILD_VIEW_TO_MENU = {
   'role-edit': 'roles-admin',
   'stock-opname-create': 'stock-opname',
   'stock-opname-detail': 'stock-opname',
+  'return-detail': 'returns-admin',
   'voucher-create': 'vouchers-admin',
   'voucher-edit': 'vouchers-admin'
 };

@@ -51,6 +51,9 @@ import StockOpnameCreatePage from './components/StockOpnameCreatePage';
 import StockOpnameDetailPage from './components/StockOpnameDetailPage';
 import ReviewListPage from './components/ReviewListPage';
 import ReviewCreatePage from './components/ReviewCreatePage';
+import ReturnListPage from './components/ReturnListPage';
+import ReturnDetailPage from './components/ReturnDetailPage';
+import ReturnRequestPage from './components/ReturnRequestPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
@@ -145,6 +148,9 @@ const VALID_VIEWS = [
   'stock-opname-detail',
   'reviews-admin',
   'review-create',
+  'returns-admin',
+  'return-detail',
+  'return-request',
   'settings',
   'login',
   'register',
@@ -179,6 +185,8 @@ const ADMIN_CORE_VIEWS = [
   'stock-opname-create',
   'stock-opname-detail',
   'reviews-admin',
+  'returns-admin',
+  'return-detail',
   'suppliers-admin',
   'supplier-create',
   'supplier-edit',
@@ -232,6 +240,8 @@ const getViewFromPathOrHash = () => {
     if (rawPath.startsWith('/admin/stock-opname/')) return 'stock-opname-detail';
     if (rawPath === '/admin/reviews' || rawPath === '/admin/review') return 'reviews-admin';
     if (rawPath === '/reviews/create') return 'review-create';
+    if (rawPath === '/admin/returns' || rawPath === '/admin/return') return 'returns-admin';
+    if (rawPath === '/returns/request') return 'return-request';
     if (rawPath === '/admin/suppliers' || rawPath === '/admin/supplier') return 'suppliers-admin';
     if (rawPath === '/admin/suppliers/create') return 'supplier-create';
     if (rawPath === '/admin/vouchers' || rawPath === '/admin/voucher') return 'vouchers-admin';
@@ -438,6 +448,8 @@ export default function App() {
   const [editingRole, setEditingRole] = useState(null);
   const [editingOpname, setEditingOpname] = useState(null);
   const [reviewContext, setReviewContext] = useState(null);
+  const [editingReturn, setEditingReturn] = useState(null);
+  const [returnContext, setReturnContext] = useState(null);
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
@@ -1523,6 +1535,10 @@ export default function App() {
               });
               setCurrentView('review-create');
             }}
+            onRequestReturn={(order) => {
+              setReturnContext({ order, returnView: 'order-detail' });
+              setCurrentView('return-request');
+            }}
             onPayOrder={(order) => {
               setLastCompletedOrder(order);
               setCurrentView('order-success');
@@ -1811,6 +1827,26 @@ export default function App() {
           <ReviewCreatePage
             context={reviewContext}
             onNavigateBack={() => setCurrentView(reviewContext?.returnView || 'orders')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'returns-admin' ? (
+          <ReturnListPage
+            onShowToast={showToast}
+            onNavigateToDetail={(ret) => {
+              setEditingReturn(ret);
+              setCurrentView('return-detail');
+            }}
+          />
+        ) : currentView === 'return-detail' ? (
+          <ReturnDetailPage
+            orderReturn={editingReturn}
+            onNavigateBack={() => setCurrentView('returns-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'return-request' ? (
+          <ReturnRequestPage
+            context={returnContext}
+            onNavigateBack={() => setCurrentView(returnContext?.returnView || 'order-detail')}
             onShowToast={showToast}
           />
         ) : (currentView === 'procurement-pos' || currentView === 'procurement') ? (

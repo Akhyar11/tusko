@@ -40,7 +40,8 @@ export default function OrderDetailPage({
   onUpdateStatus = () => {},
   onPrintReceipt = null,
   onShowToast = () => {},
-  onReviewProduct = () => {}
+  onReviewProduct = () => {},
+  onRequestReturn = () => {}
 }) {
   const [order, setOrder] = useState(initialOrder);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
@@ -478,13 +479,22 @@ export default function OrderDetailPage({
                     {formatRupiah(itemSubtotal)}
                   </span>
                   {['completed', 'delivered'].includes(order.status) && (
-                    <button
-                      type="button"
-                      onClick={() => onReviewProduct(order, item)}
-                      className="mt-2 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-[10px] font-sport font-black uppercase tracking-wider cursor-pointer rounded-none"
-                    >
-                      Beri Ulasan
-                    </button>
+                    <div className="mt-2 flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onReviewProduct(order, item)}
+                        className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-[10px] font-sport font-black uppercase tracking-wider cursor-pointer rounded-none"
+                      >
+                        Beri Ulasan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRequestReturn(order, item)}
+                        className="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-300 text-neutral-800 text-[10px] font-sport font-black uppercase tracking-wider cursor-pointer rounded-none"
+                      >
+                        Ajukan Retur
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

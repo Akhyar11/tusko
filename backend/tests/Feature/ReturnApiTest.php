@@ -134,6 +134,10 @@ class ReturnApiTest extends TestCase
         Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));
         $all = $this->getJson('/api/returns?per_page=100')->assertStatus(200);
         $this->assertSame(2, $all->json('total'));
+
+        // Filter rentang nominal & jumlah item.
+        $byAmount = $this->getJson('/api/returns?refund_amount_min=1&refund_amount_max=100&items_max=5')->assertStatus(200);
+        $this->assertSame(2, $byAmount->json('total'));
     }
 
     public function test_non_admin_cannot_approve_and_guest_unauthorized(): void
