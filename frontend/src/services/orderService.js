@@ -111,6 +111,16 @@ export const orderService = {
     return res.data || res;
   },
 
+  async cancelOrder(idOrOrderNumber, cancellationReason = null) {
+    const res = await apiClient.post(`/api/orders/${idOrOrderNumber}/cancel`, { cancellation_reason: cancellationReason });
+    return res.data || res;
+  },
+
+  async completeOrder(idOrOrderNumber) {
+    const res = await apiClient.post(`/api/orders/${idOrOrderNumber}/complete`);
+    return res.data || res;
+  },
+
   async generateReceipt(idOrOrderNumber) {
     const res = await apiClient.post(`/api/orders/${idOrOrderNumber}/generate-receipt`);
     return res.data || res;

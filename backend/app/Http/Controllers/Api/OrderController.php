@@ -271,6 +271,80 @@ class OrderController extends Controller
     }
 
     /**
+     * Batalkan pesanan oleh pelanggan (pemilik) — T27.3.
+     * Hanya pesanan yang belum dibayar & masih `pending` yang dapat dibatalkan sendiri.
+     */
+    public function cancel(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $this->ensureOrderAccess($request, $order);
+
+        if ($order->status !== 'pending') {
+            return response()->json([
+                'message' => 'Pesanan ini tidak dapat dibatalkan lagi. Hubungi admin atau ajukan retur bila sudah diterima.',
+            ], 422);
+        }
+
+        if (in_array((string) $order->payment_status, ['paid', 'settlement', 'capture'], true)) {
+            return response()->json([
+                'message' => 'Pesanan yang sudah dibayar tidak dapat dibatalkan sendiri; silakan ajukan retur/refund.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'cancellation_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $order->update([
+            'status' => 'cancelled',
+            'payment_status' => 'cancelled',
+            'cancelled_at' => Carbon::now(),
+            'notes' => $validated['cancellation_reason'] ?? $order->notes,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Pesanan {$order->order_number} berhasil dibatalkan.",
+            'data' => new OrderResource($order->fresh(['items', 'shippingAddress', 'expedition', 'transactions'])),
+        ]);
+    }
+
+    /**
+     * Konfirmasi penerimaan pesanan oleh pelanggan (pemilik) — T27.3.
+     * Hanya pesanan berstatus `shipped`/`delivered` yang dapat diselesaikan.
+     */
+    public function complete(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $this->ensureOrderAccess($request, $order);
+
+        if (!in_array($order->status, ['shipped', 'delivered'], true)) {
+            return response()->json([
+                'message' => 'Pesanan belum dikirim atau sudah selesai, sehingga belum dapat dikonfirmasi diterima.',
+            ], 422);
+        }
+
+        $order->update([
+            'status' => 'completed',
+            'completed_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Terima kasih! Pesanan {$order->order_number} dikonfirmasi diterima.",
+            'data' => new OrderResource($order->fresh(['items', 'shippingAddress', 'expedition', 'transactions'])),
+        ]);
+    }
+
+    /**
      * Booking pickup kurir → buat `shipments` (waybill, status, pickup_time) (T10.1).
      */
     public function bookPickup(Request $request, string $idOrOrderNumber): JsonResponse

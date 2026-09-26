@@ -25,8 +25,10 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import IconButton from './atoms/IconButton';
+import TextArea from './molecules/TextArea';
 import { orderService } from '../services/orderService';
 import OrderStatusModal from './OrderStatusModal';
+import ConfirmationModal from './ConfirmationModal';
 import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
 
@@ -52,6 +54,9 @@ export default function OrderDetailPage({
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
   const [isBookingPickup, setIsBookingPickup] = useState(false);
+  const [customerAction, setCustomerAction] = useState(null);
+  const [customerActionSubmitting, setCustomerActionSubmitting] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
 
   // T09.5: selaraskan dari prop + ambil detail terbaru dari API
   // (item, alamat, pembayaran, riwayat status).
@@ -233,6 +238,25 @@ export default function OrderDetailPage({
     }
   };
 
+  const runCustomerAction = async () => {
+    if (!order || !customerAction) return;
+    setCustomerActionSubmitting(true);
+    try {
+      const updated = customerAction === 'cancel'
+        ? await orderService.cancelOrder(order.id, cancellationReason)
+        : await orderService.completeOrder(order.id);
+
+      if (updated) setOrder(updated);
+      onShowToast(customerAction === 'cancel' ? 'Pesanan berhasil dibatalkan.' : 'Pesanan dikonfirmasi diterima.');
+      setCustomerAction(null);
+      setCancellationReason('');
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal memproses pesanan.', { type: 'error' });
+    } finally {
+      setCustomerActionSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       
@@ -257,6 +281,12 @@ export default function OrderDetailPage({
               variant="primary"
               disabled={isBookingPickup}
             />
+          )}
+          {order.status === 'pending' && !['paid', 'settlement', 'capture'].includes(String(order.payment_status)) && (
+            <IconButton icon={XCircle} onClick={() => setCustomerAction('cancel')} title="Batalkan Pesanan" variant="secondary" />
+          )}
+          {['shipped', 'delivered'].includes(order.status) && (
+            <IconButton icon={CheckCircle2} onClick={() => setCustomerAction('complete')} title="Pesanan Diterima" variant="primary" />
           )}
           <IconButton icon={Printer} onClick={handleOpenPrintReceipt} title="Cetak Label Resi" variant="secondary" />
           <IconButton icon={FileText} onClick={() => setIsPrintInvoiceModalOpen(true)} title="E-Invoice" variant="secondary" />
@@ -736,6 +766,35 @@ export default function OrderDetailPage({
         onClose={() => setIsStatusModalOpen(false)}
         order={order}
         onUpdateStatus={onUpdateStatus}
+      />
+
+      {customerAction === 'cancel' && (
+        <ConfirmationModal
+          isOpen
+          onClose={() => setCustomerAction(null)}
+          onConfirm={runCustomerAction}
+          title="Batalkan Pesanan"
+          subtitle="Tindakan ini menghentikan pesanan sebelum diproses."
+          message="Tuliskan alasan pembatalan (opsional)."
+          confirmText="Ya, Batalkan"
+          cancelText="Batal"
+          variant="danger"
+          isLoading={customerActionSubmitting}
+        >
+          <TextArea rows={3} value={cancellationReason} onChange={setCancellationReason} placeholder="Alasan pembatalan..." />
+        </ConfirmationModal>
+      )}
+
+      <ConfirmationModal
+        isOpen={customerAction === 'complete'}
+        onClose={() => setCustomerAction(null)}
+        onConfirm={runCustomerAction}
+        title="Konfirmasi Pesanan Diterima"
+        message={`Tandai pesanan ${order?.order_number || ''} sebagai selesai/diterima?`}
+        confirmText="Pesanan Diterima"
+        cancelText="Batal"
+        variant="info"
+        isLoading={customerActionSubmitting}
       />
 
       {/* Shipping Receipt Print Modal (Thermal 100x150 mm) */}

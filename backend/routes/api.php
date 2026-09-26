@@ -108,6 +108,10 @@ Route::prefix('orders')->middleware('auth.optional')->group(function () {
     Route::post('/{idOrOrderNumber}/book-pickup', [\App\Http\Controllers\Api\OrderController::class, 'bookPickup'])->where('idOrOrderNumber', '.*');
     Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
     Route::match(['put', 'patch'], '/{idOrOrderNumber}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus'])->where('idOrOrderNumber', '.*');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{idOrOrderNumber}/cancel', [\App\Http\Controllers\Api\OrderController::class, 'cancel'])->where('idOrOrderNumber', '.*');
+        Route::post('/{idOrOrderNumber}/complete', [\App\Http\Controllers\Api\OrderController::class, 'complete'])->where('idOrOrderNumber', '.*');
+    });
     Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/confirm-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'confirm'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/approve-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'approve'])->where('idOrOrderNumber', '.*');
