@@ -8,9 +8,10 @@ import {
   Trash2, 
   CheckCircle2, 
   XCircle, 
-  MoreVertical,
   Check,
-  X
+  X,
+  CloudDownload,
+  Wallet
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
@@ -19,6 +20,9 @@ import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
 import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
 import { useExpeditionTableStore } from '../stores/useExpeditionTableStore';
+import { expeditionService } from '../services/expeditionService';
+import { settingsService } from '../services/settingsService';
+import RowActionMenu from './molecules/RowActionMenu';
 
 export default function ExpeditionSettingsPage({
   expeditions = initialExpeditions,
@@ -56,8 +60,35 @@ export default function ExpeditionSettingsPage({
 
   // Filter drawer & active filters
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [canSync, setCanSync] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // T21.4b: tombol sync aktif hanya bila integrasi pengiriman sudah dikonfigurasi.
+  useEffect(() => {
+    let active = true;
+    settingsService.getGroup('shipping')
+      .then((res) => {
+        if (!active) return;
+        const values = res?.values || {};
+        setCanSync(Boolean(values['shipping.base_url'] && values['shipping.api_key']));
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const handleSyncExpeditions = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await expeditionService.syncExpeditions();
+      onShowToast(`Sinkronisasi selesai: ${result?.couriers ?? 0} kurir, ${result?.services ?? 0} layanan.`);
+      fetchData();
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal sinkronisasi kurir dari KiriminAja.', { type: 'error' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   const [selectedExpeditionIds, setSelectedExpeditionIds] = useState([]);
-  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
   // Modals state
   const [expeditionToDelete, setExpeditionToDelete] = useState(null);
@@ -279,52 +310,24 @@ export default function ExpeditionSettingsPage({
       sortable: false,
       align: 'right',
       width: 'w-24',
-      render: (_, exp, rowIdx) => {
-        const isOpen = activeActionMenuId === exp.id;
-        const isNearBottom = rowIdx >= paginatedExpeditions.length - 2 && paginatedExpeditions.length > 3;
-
-        return (
-          <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setActiveActionMenuId(isOpen ? null : exp.id)}
-              className={`p-1.5 rounded-none border transition-colors cursor-pointer ${
-                isOpen 
-                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs' 
-                  : 'text-neutral-700 hover:text-black hover:bg-neutral-100 border-neutral-300 bg-white shadow-2xs'
-              }`}
-              title="Menu Aksi Ekspedisi"
-            >
-              <MoreVertical size={16} />
-            </button>
-
-            {isOpen && (
-              <div 
-                className={`absolute right-0 ${
-                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
-                } w-48 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100`}
-              >
-                {/* 1. Atur Tarif */}
+      render: (_, exp) => (
+        <div className="inline-flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+          <RowActionMenu buttonTitle="Menu Aksi Ekspedisi">
+            {(close) => (
+              <>
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveActionMenuId(null);
-                    onNavigateToEdit(exp);
-                  }}
+                  onClick={() => { close(); onNavigateToEdit(exp); }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <Edit size={14} className="text-neutral-500" />
                   <span>Atur Tarif Ongkir</span>
                 </button>
 
-                {/* 2. Jadikan Utama */}
                 {!exp.isDefault && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveActionMenuId(null);
-                      onSetDefault(exp);
-                    }}
+                    onClick={() => { close(); onSetDefault(exp); }}
                     className="w-full px-3.5 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950 flex items-center gap-2 cursor-pointer transition-colors"
                   >
                     <Star size={14} className="text-amber-500" />
@@ -332,25 +335,21 @@ export default function ExpeditionSettingsPage({
                   </button>
                 )}
 
-                {/* 3. Hapus (Destructive Red) */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveActionMenuId(null);
-                    setExpeditionToDelete(exp);
-                  }}
+                  onClick={() => { close(); setExpeditionToDelete(exp); }}
                   className="w-full px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer border-t border-neutral-100 transition-colors"
                 >
                   <Trash2 size={14} className="text-rose-600" />
                   <span>Hapus Layanan</span>
                 </button>
-              </div>
+              </>
             )}
-          </div>
-        );
-      }
+          </RowActionMenu>
+        </div>
+      )
     }
-  ], [paginatedExpeditions, activeActionMenuId, onNavigateToEdit]);
+  ], [onNavigateToEdit]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -373,8 +372,15 @@ export default function ExpeditionSettingsPage({
           </div>
         </div>
 
-        {/* Action Controls: [Tambah Ekspedisi] -> [Filter] */}
+        {/* Action Controls: [Sinkron] [Tambah Ekspedisi] -> [Filter] */}
         <div className="flex items-center gap-2 self-start xl:self-auto">
+          <IconButton
+            icon={CloudDownload}
+            onClick={handleSyncExpeditions}
+            tooltip="Sinkron dari KiriminAja"
+            variant="secondary"
+            disabled={!canSync || isSyncing}
+          />
           <IconButton
             icon={Plus}
             onClick={onNavigateToCreate}
@@ -394,55 +400,51 @@ export default function ExpeditionSettingsPage({
       {/* 2. 4 Kartu KPI Ekspedisi */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
-          <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500 block">
-            Total Layanan
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-neutral-950 font-sport font-mono">{totalCount}</span>
-            <span className="text-[10px] font-mono text-neutral-400">Kurir</span>
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Total Layanan</span>
+            <Truck size={16} />
           </div>
-          <p className="text-[10px] text-neutral-500 border-t border-neutral-100 pt-1">
-            Layanan pengiriman terkonfigurasi
-          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-sport text-neutral-950">{totalCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Kurir</span>
+          </div>
+          <div className="mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5">Layanan pengiriman terkonfigurasi</div>
         </div>
 
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
-          <span className="text-xs font-sport font-black uppercase tracking-wider text-emerald-700 block">
-            Ekspedisi Aktif
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-700 font-sport font-mono">{activeCount}</span>
-            <span className="text-[10px] font-mono text-emerald-600/70">Layanan</span>
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Ekspedisi Aktif</span>
+            <CheckCircle2 size={16} />
           </div>
-          <p className="text-[10px] text-neutral-500 border-t border-neutral-100 pt-1">
-            Tersedia untuk dipilih pembeli
-          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-sport text-neutral-950">{activeCount}</span>
+            <span className="text-[11px] font-mono font-bold text-neutral-400">Layanan</span>
+          </div>
+          <div className="mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5">Tersedia untuk dipilih pembeli</div>
         </div>
 
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
-          <span className="text-xs font-sport font-black uppercase tracking-wider text-amber-700 block">
-            Ekspedisi Utama
-          </span>
-          <div className="flex items-baseline gap-2 truncate">
-            <span className="text-lg sm:text-xl font-black text-neutral-950 font-sport uppercase truncate">
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Ekspedisi Utama</span>
+            <Star size={16} />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-sport text-neutral-950 uppercase truncate" title={defaultExp?.name || '-'}>
               {defaultExp?.name || '-'}
             </span>
           </div>
-          <p className="text-[10px] text-neutral-500 border-t border-neutral-100 pt-1 truncate">
-            {defaultExp?.service} (Default toko)
-          </p>
+          <div className="mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5 truncate">{defaultExp?.service || 'Default toko'}</div>
         </div>
 
         <div className="bg-white p-4 rounded-none border border-neutral-300 shadow-2xs">
-          <span className="text-xs font-sport font-black uppercase tracking-wider text-neutral-500 block">
-            Rata-rata Tarif
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-neutral-950 font-mono truncate">
-            {formatRupiah(avgRate)}
+          <div className="flex items-center justify-between text-neutral-500 mb-1.5">
+            <span className="text-xs font-sport font-black uppercase tracking-wider">Rata-rata Tarif</span>
+            <Wallet size={16} />
           </div>
-          <p className="text-[10px] text-neutral-500 border-t border-neutral-100 pt-1">
-            Biaya rata-rata ongkir per paket
-          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black font-sport text-neutral-950">{formatRupiah(avgRate)}</span>
+          </div>
+          <div className="mt-2 text-[11px] text-neutral-500 border-t border-neutral-100 pt-1.5">Biaya rata-rata ongkir per paket</div>
         </div>
       </div>
 

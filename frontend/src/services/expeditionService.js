@@ -119,5 +119,10 @@ export const expeditionService = {
   async setDefault(id) {
     const res = await apiClient.post(`/api/expeditions/${id}/set-default`);
     return res.data || res;
+  },
+
+  async syncExpeditions() {
+    const res = await apiClient.post('/api/admin/expeditions/sync');
+    return res.data || res;
   }
 };
