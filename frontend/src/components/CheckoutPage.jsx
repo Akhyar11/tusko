@@ -290,6 +290,25 @@ export default function CheckoutPage({
   const [selectedPayment, setSelectedPayment] = useState(() => {
     return mockPaymentMethods[0].methods[0];
   });
+  const [paymentCategories, setPaymentCategories] = useState(mockPaymentCategories);
+  const [paymentMethods, setPaymentMethods] = useState(mockPaymentMethods);
+
+  // Katalog metode pembayaran dinamis (T07.6) — fallback mock bila API kosong.
+  useEffect(() => {
+    checkoutService.getPaymentMethods()
+      .then((res) => {
+        const cats = res?.categories;
+        if (Array.isArray(cats) && cats.length > 0) {
+          setPaymentCategories(['Semua', ...cats.map((c) => c.key)]);
+          const methods = cats.map((c) => ({ category: c.label, subCategory: c.key, methods: c.methods }));
+          setPaymentMethods(methods);
+          if (methods[0]?.methods?.[0]) {
+            setSelectedPayment(methods[0].methods[0]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Insurance checkbox
   const [withInsurance, setWithInsurance] = useState(true);
@@ -776,7 +795,7 @@ export default function CheckoutPage({
 
             {/* Category Filter Tabs */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {mockPaymentCategories.map(cat => (
+              {paymentCategories.map(cat => (
                 <button
                   key={cat}
                   type="button"
@@ -793,7 +812,7 @@ export default function CheckoutPage({
             </div>
 
             {/* Payment Methods List */}
-            {mockPaymentMethods
+            {paymentMethods
               .filter(cat => selectedPaymentCategory === 'Semua' || cat.subCategory === selectedPaymentCategory)
               .map((cat, catIdx) => (
                 <div key={catIdx} className="space-y-2 pt-1">

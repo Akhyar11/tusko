@@ -118,6 +118,7 @@ Route::prefix('orders')->middleware('auth.optional')->group(function () {
 });
 
 
+Route::get('/payment-methods', [\App\Http\Controllers\Api\PaymentMethodController::class, 'index']);
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
 

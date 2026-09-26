@@ -29,6 +29,14 @@ export const checkoutService = {
   },
 
   /**
+   * Katalog metode pembayaran dinamis (T07.6).
+   */
+  async getPaymentMethods() {
+    const response = await apiClient.get('/api/payment-methods');
+    return response.data || {};
+  },
+
+  /**
    * Konfigurasi biaya checkout (publik) — T08.3/G6 (tanpa hardcode di FE).
    */
   async getCheckoutConfig() {
