@@ -18,6 +18,7 @@ use App\Models\ShippingAddress;
 use App\Services\InventoryService;
 use App\Services\IntegrationService;
 use App\Services\VoucherService;
+use App\Services\WarehouseAllocationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,8 @@ class CheckoutController extends Controller
     public function __construct(
         private readonly InventoryService $inventoryService,
         private readonly VoucherService $voucherService,
-        private readonly IntegrationService $integrations
+        private readonly IntegrationService $integrations,
+        private readonly WarehouseAllocationService $warehouseAllocation
     ) {
     }
     /**
@@ -148,6 +150,21 @@ class CheckoutController extends Controller
                 $subtotal += $itemSubtotal;
                 $totalWeight += ($weightPerUnit * $qty);
                 $totalLoyaltyPointsEarned += $earnedPoints;
+            }
+
+            // 1c. T06.6: tentukan gudang pemenuh (alokasi D1) untuk fulfillment.
+            $fulfillmentWarehouseId = null;
+            if (! empty($checkoutItemsData)) {
+                $first = $checkoutItemsData[0];
+                $allocation = $this->warehouseAllocation->allocate(
+                    (int) $first['product_id'],
+                    $first['product_variant_id'] ? (int) $first['product_variant_id'] : null,
+                    (int) $first['quantity']
+                );
+                $fulfillmentWarehouseId = $allocation?->warehouse_id;
+            }
+            if (! $fulfillmentWarehouseId) {
+                $fulfillmentWarehouseId = \App\Models\Warehouse::query()->where('is_primary', true)->value('id');
             }
 
             // 2. Resolve Shipping Address
@@ -302,6 +319,11 @@ class CheckoutController extends Controller
             // `expedition_service_id` dikelola di luar mass-assignment (Order fillable milik A2).
             if ($expeditionServiceId) {
                 $order->forceFill(['expedition_service_id' => $expeditionServiceId])->save();
+            }
+
+            // T06.6: simpan gudang pemenuh hasil alokasi (D1).
+            if ($fulfillmentWarehouseId) {
+                $order->forceFill(['warehouse_id' => $fulfillmentWarehouseId])->save();
             }
 
             // 6b. T15.1b: catat pemakaian voucher (kuota + voucher_usages) saat order dibuat.

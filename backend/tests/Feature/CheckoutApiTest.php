@@ -33,6 +33,31 @@ class CheckoutApiTest extends TestCase
         ]);
     }
 
+    public function test_checkout_sets_fulfillment_warehouse(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100000, 'stock' => 5]);
+
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Penerima Gudang',
+            'phone' => '081200000010',
+            'full_address' => 'Jl. Gudang No. 10',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+        ])->assertCreated();
+
+        $warehouseId = Warehouse::where('is_primary', true)->value('id');
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'warehouse_id' => $warehouseId,
+        ]);
+    }
+
     public function test_checkout_config_endpoint_returns_dynamic_fees(): void
     {
         app(\App\Services\IntegrationService::class)->set('store.service_fee', '1500', 'store');
