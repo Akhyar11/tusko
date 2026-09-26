@@ -759,16 +759,22 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
            belum tersinkron dari API.
            Backend tersedia [OWNER:A1]: `ExpeditionSyncService` + command `expeditions:sync`.
            Sub-minor:
-           - T21.4a [TODO][A2] Endpoint admin `POST /api/admin/expeditions/sync`
+           - T21.4a [DONE][A2] Endpoint admin `POST /api/admin/expeditions/sync`
              (admin-only, tolak bila integrasi belum dikonfigurasi) memanggil
              `ExpeditionSyncService::sync()` -> balikan `{couriers, services}` + test.
-           - T21.4b [TODO][A2] Tombol icon-only "Sinkron dari KiriminAja" (+tooltip)
+             [commit fc17c4b]
+           - T21.4b [DONE][A2] Tombol icon-only "Sinkron dari KiriminAja" (+tooltip)
              di `ExpeditionSettingsPage`: panggil endpoint, Toast, reload tabel,
              disabled bila `shipping.base_url`/`api_key` kosong; + uji browser.
+             [commit 43d390a] (sekalian refactor aksi tabel ke RowActionMenu portal
+             + kartu KPI kanonis).
            - T21.4c [TODO][A2] Refaktor halaman: master kurir hasil sync (identitas
              read-only) + override lokal (fee/free/priority/aktif); tombol di
              Settings Hub memicu sync langsung (bukan hanya navigasi).
-           - T21.4d [TODO][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
+             (Override lokal SUDAH aman: `ExpeditionSyncService` tidak menimpa
+             field lokal. Sisa: tombol sync langsung di Settings Hub.)
+           - T21.4d [DONE][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
+             [commit 434d2e2] `dailyAt('02:00')`.
 
 T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
   Minor: (berjalan terus tiap minor task).
