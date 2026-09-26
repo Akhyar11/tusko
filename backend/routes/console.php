@@ -14,3 +14,6 @@ Schedule::command('queue:prune-batches --hours=48')->daily();
 
 // T30.2: auto-cancel pesanan kedaluwarsa + lepaskan reservasi stok.
 Schedule::command('orders:cancel-expired')->everyTenMinutes();
+
+// T21.4d: sinkronisasi master kurir & layanan dari agregator (harian).
+Schedule::command('expeditions:sync')->dailyAt('02:00');
