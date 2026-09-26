@@ -875,7 +875,7 @@ T28. Checkout Server-Authoritative ................................. [DONE]  [OW
     T28.3 [DONE] Test tampering end-to-end: `CheckoutTamperingTest` (harga/subtotal item,
            harga varian, diskon kupon, gratis ongkir, poin cap, ongkir) + test. [OWNER:A1]
 
-T29. Retur & Refund ................................................ [TODO]  [OWNER:A2]
+T29. Retur & Refund ................................................ [DONE]  [OWNER:A2]
   DB: [NEW] returns, return_items.
   FE: ReturnRequestPage (pelanggan), ReturnManagementPage (admin).
   API: [NEW] /api/returns (CRUD + approve/reject/refund).
@@ -887,7 +887,9 @@ T29. Retur & Refund ................................................ [TODO]  [OW
     T29.2 [DONE] Backend alur retur (request, approve, reject) + test. [commit 4b97001]
     T29.3 [DONE] Refund + stok kembali (inventory_balances) + poin reversal +
            jurnal balik via T34.1. [commit 38efbf9] (menutup T34.9)
-    T29.4 [TODO] FE pelanggan ajukan retur + admin kelola.
+    T29.4 [DONE] FE pelanggan ajukan retur + admin kelola. [commit 24e4b61]
+           ReturnRequestPage (dari OrderDetail), ReturnListPage+FilterDrawer,
+           ReturnDetailPage (approve/reject/refund) + menu + E2E.
 
 T30. Scheduler & Queue ............................................. [TODO]  [OWNER:A2]
   DB: jobs (infra), orders.expires_at, stock_reservations.expires_at,
