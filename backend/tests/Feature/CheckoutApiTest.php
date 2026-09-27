@@ -67,6 +67,15 @@ class CheckoutApiTest extends TestCase
             ->assertJsonPath('data.service_fee', 1500);
     }
 
+    public function test_checkout_config_returns_free_shipping_threshold(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('shipping.free_shipping_min_purchase', '500000', 'shipping');
+
+        $this->getJson('/api/checkout/config')
+            ->assertOk()
+            ->assertJsonPath('data.free_shipping_min_purchase', 500000);
+    }
+
     public function test_can_checkout_with_explicit_items_and_decrements_stock(): void
     {
         $user = User::factory()->create();

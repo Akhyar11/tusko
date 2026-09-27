@@ -482,6 +482,7 @@ class CheckoutController extends Controller
                 'service_fee' => (float) ($this->integrations->get('store.service_fee', 0) ?? 0),
                 'insurance_cost' => (float) ($this->integrations->get('store.insurance_cost', 0) ?? 0),
                 'points_redeem_value' => (float) ($this->integrations->get('loyalty.points_redeem_value', 1) ?? 1),
+                'free_shipping_min_purchase' => (float) ($this->integrations->get('shipping.free_shipping_min_purchase', 0) ?? 0),
             ],
         ]);
     }

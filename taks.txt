@@ -463,10 +463,15 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            (server-authoritative, subsidi dicatat di `orders.shipping_subsidy`) + test.
            [DONE] migrasi + model + resource + controller + test (CheckoutTamperingTest,
            ProductStoreApiTest). [OWNER:A1]
-    T06.10 [TODO-GAP] THRESHOLD GRATIS ONGKIR GLOBAL: setting
+    T06.10 [DONE] THRESHOLD GRATIS ONGKIR GLOBAL: setting
            `shipping.free_shipping_min_purchase` (integrations, G6) -> bila subtotal >=
-           threshold, `shipping_cost=0` (server). Menutup teks "GRATIS ONGKIR MIN. 500RB"
-           yang saat ini hanya iklan. + test. [OWNER:A1]
+           threshold, `shipping_cost=0` (server) + subsidi `orders.shipping_subsidy`.
+           [DONE] migrasi `orders.shipping_subsidy` + CheckoutController + SettingsRegistry
+           + test. [OWNER:A1]
+    T06.10b [DONE] BANNER NAVBAR DINAMIS: `GET /api/checkout/config` mengekspos
+           `free_shipping_min_purchase`; `Navbar` menampilkan ambang gratis ongkir dari
+           konfigurasi Admin via `formatRupiah` (hapus hardcode "MIN. RP 500.000") + test
+           + bukti browser Playwright. [OWNER:A1]
     T06.11 [DONE] ONGKIR SERVER-AUTHORITATIVE DARI TARIF LIVE KIRIMINAJA + SUBSIDI:
            (a) saat checkout, server memanggil `ShippingRateService::getRates()` (tarif LIVE
            KiriminAja, bukan tarif DB) memakai kode wilayah alamat + berat + kurir untuk

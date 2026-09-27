@@ -25,6 +25,7 @@ import { resolveMenuIcon } from '../utils/menuIcons';
 import SearchBar from './molecules/SearchBar';
 import UserMenuDropdown from './UserMenuDropdown';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
+import { checkoutService } from '../services/checkoutService';
 
 export default function Navbar({ 
   cartCount = 0, 
@@ -55,8 +56,26 @@ export default function Navbar({
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategoryTab, setActiveCategoryTab] = useState('Semua');
+  const [freeShippingMin, setFreeShippingMin] = useState(0);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+
+  // T06.10b: ambang gratis ongkir dibaca dari konfigurasi Admin (bukan hardcode).
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const config = await checkoutService.getCheckoutConfig();
+        const value = Number(config?.free_shipping_min_purchase) || 0;
+        if (active) setFreeShippingMin(value);
+      } catch {
+        // Abaikan; banner memakai teks umum bila konfigurasi tak tersedia.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const trendingSearches = [
     'Jersey Timnas AeroTech', 
@@ -205,8 +224,12 @@ export default function Navbar({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="flex items-center gap-2.5 text-[11px]">
               <Truck size={13} className="text-amber-400 shrink-0" />
-              <span className="sm:hidden">GRATIS ONGKIR MIN. 500RB • GARANSI 14 HARI</span>
-              <span className="hidden sm:inline">GRATIS ONGKIR SELURUH INDONESIA MIN. RP 500.000</span>
+              <span className="sm:hidden">
+                GRATIS ONGKIR{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ' SELURUH INDONESIA'} • GARANSI 14 HARI
+              </span>
+              <span className="hidden sm:inline">
+                GRATIS ONGKIR SELURUH INDONESIA{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ''}
+              </span>
               <span className="hidden md:inline text-neutral-500">|</span>
               <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
             </div>
@@ -592,7 +615,7 @@ export default function Navbar({
                             onSwitchUser({ id: 1, name: 'Akhyar Admin', role: 'admin', email: 'admin@tusko.id' });
                             setIsMobileMenuOpen(false);
                           }}
-                          className="px-2 py-0.5 bg-neutral-800 text-amber-300 rounded font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
+                          className="px-2 py-0.5 bg-neutral-800 text-amber-300 rounded-none font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
                         >
                           Admin
                         </button>
@@ -602,7 +625,7 @@ export default function Navbar({
                             onSwitchUser({ id: 2, name: 'Budi Pembeli', role: 'customer', email: 'budi@gmail.com' });
                             setIsMobileMenuOpen(false);
                           }}
-                          className="px-2 py-0.5 bg-neutral-800 text-neutral-300 rounded font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
+                          className="px-2 py-0.5 bg-neutral-800 text-neutral-300 rounded-none font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
                         >
                           Member
                         </button>
@@ -676,7 +699,7 @@ export default function Navbar({
                       >
                         <span>{item.name}</span>
                         {item.badge ? (
-                          <span className="text-[9px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded-none">
                             {item.badge}
                           </span>
                         ) : (
