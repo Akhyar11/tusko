@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
+use App\Models\VoucherClaim;
 use App\Models\VoucherTarget;
 use App\Services\VoucherService;
 use Illuminate\Http\JsonResponse;
@@ -19,9 +20,17 @@ class VoucherController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $claimedIds = $user
+            ? VoucherClaim::where('user_id', $user->id)->pluck('voucher_id')->all()
+            : [];
+
         $vouchers = Voucher::active()
             ->orderBy('id', 'asc')
-            ->get();
+            ->get()
+            ->map(fn (Voucher $voucher) => array_merge($voucher->toArray(), [
+                'is_claimed' => in_array($voucher->id, $claimedIds, true),
+            ]));
 
         return response()->json([
             'data' => $vouchers,
@@ -29,15 +38,15 @@ class VoucherController extends Controller
     }
 
     /**
-     * Klaim atau validasi voucher dengan kode tertentu.
+     * Klaim voucher pelanggan (T08.5) — disimpan idempoten per (user, voucher).
      */
     public function claim(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'code' => 'required|string',
         ]);
 
-        $code = strtoupper(trim($request->input('code')));
+        $code = strtoupper(trim($validated['code']));
         $voucher = Voucher::active()->where('code', $code)->first();
 
         if (!$voucher) {
@@ -46,9 +55,22 @@ class VoucherController extends Controller
             ], 404);
         }
 
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Silakan masuk untuk mengklaim voucher.'], 401);
+        }
+
+        $claim = VoucherClaim::firstOrCreate(
+            ['voucher_id' => $voucher->id, 'user_id' => $user->id],
+            ['claimed_at' => now()]
+        );
+
         return response()->json([
             'message' => "Voucher \"{$voucher->title}\" berhasil diklaim.",
             'data' => $voucher,
+            'claimed' => true,
+            'already_claimed' => ! $claim->wasRecentlyCreated,
         ]);
     }
 

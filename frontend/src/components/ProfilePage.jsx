@@ -168,6 +168,7 @@ export default function ProfilePage({
 
         if (vchs.status === 'fulfilled' && Array.isArray(vchs.value) && vchs.value.length > 0) {
           setVouchers(vchs.value);
+          setClaimedVouchers(vchs.value.filter((v) => v.is_claimed).map((v) => v.code));
         }
 
         if (sess.status === 'fulfilled' && Array.isArray(sess.value) && sess.value.length > 0) {

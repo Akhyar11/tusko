@@ -46,7 +46,7 @@ Route::prefix('loyalty')->middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('vouchers')->group(function () {
-    Route::get('/', [VoucherController::class, 'index']);
+    Route::get('/', [VoucherController::class, 'index'])->middleware('auth.optional');
     Route::post('/validate', [VoucherController::class, 'validateVoucher'])->middleware('auth.optional');
     Route::post('/claim', [VoucherController::class, 'claim'])->middleware('auth:sanctum');
 });
