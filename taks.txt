@@ -1048,6 +1048,49 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.9 [DONE] WIRE JURNAL REFUND saat retur/batal (bergantung T29.3) + test.
            [commit 38efbf9] `ReturnController::refund` memanggil `postRefund`. [OWNER:A2]
 
+  CATATAN AUDIT MODUL KEUANGAN/AKUNTANSI (2026-09-27):
+    BE — SUDAH ADA: TransactionController, JournalEntryController, ReportController,
+      VendorBillController; JournalPostingService/JournalMappingService/ReportQueryService;
+      model+migrasi financial_accounts/chart_of_accounts/financial_ledger_entries/
+      cogs_histories/transactions/vendor_bills; route /api/transactions, /api/journal-entries,
+      /api/reports/{profit,income-statement,trial-balance,vendor-aging} (+ekspor CSV);
+      11 test file (TransactionApiTest, JournalPostingTest, JournalMappingTest,
+      FinancialReportApiTest, ProfitReportApiTest, ReportExportCsvTest, CogsPipelineTest,
+      VendorBillPaymentJournalTest, dll).
+    BE — GAP: T34.5 (jurnal order lunas + fee gateway belum dipanggil), T34.6 (jurnal GRN),
+      T34.7 (transaksi manual tak menulis ledger -> buku kas vs jurnal bisa divergen),
+      T34.8 (jurnal liabilitas poin), T16.5 (rekonsiliasi bank), T16.6 (tutup buku),
+      T17.3 (migrasi `invoices` + nomor legal + PDF).
+    FE — SUDAH ADA: AdminDashboardPage (BI, API-backed), FinancialTransactionsPage
+      (API-backed via useTransactionTableStore->transactionService), VendorBillListPage/
+      VendorBillDetailPage, PrintInvoiceModal, transactionService.js, dashboardService.js.
+    FE — GAP: TIDAK ADA halaman Laporan Keuangan (laba rugi/neraca saldo/aging hutang),
+      Viewer Jurnal, Laporan Profit/HPP, maupun tombol Ekspor CSV (padahal BE siap);
+      FinancialTransactionCreatePage masih mock/local (tidak POST API, T16.2);
+      ringkasan cashflow & kategori belum ada (T16.3). Menu sidebar hanya "Buku Kas".
+    PEMBAGIAN: pekerjaan FE+B E laporan/jurnal = A2 (T34.10-T34.13). Titik integrasi
+      PRODUCER data (CheckoutController milik A1) = T34.14/T34.15 (KOORDINASI A1<->A2;
+      WAJIB sepakati kontrak data + akun jurnal lebih dulu sebelum implementasi).
+
+    T34.10 [TODO] FE HALAMAN LAPORAN KEUANGAN: halaman admin Laba Rugi + Neraca Saldo +
+           Aging Hutang mengonsumsi `/api/reports/income-statement|trial-balance|vendor-aging`
+           + tombol Ekspor CSV (T34.4). Halaman list kanonis (aturan 26) + FilterDrawer
+           periode/akun (aturan 27). [OWNER:A2]
+    T34.11 [TODO] FE VIEWER JURNAL: halaman daftar `financial_ledger_entries` via
+           `/api/journal-entries` + filter periode/akun/referensi + `ServerSideTable`. [OWNER:A2]
+    T34.12 [TODO] FE LAPORAN PROFIT/HPP: halaman laporan profit mengonsumsi
+           `/api/reports/profit` (filter periode + tabel + ringkasan) — menyerap T18.4. [OWNER:A2]
+    T34.13 [TODO] REGISTRASI MENU & RUTE LAPORAN/JURNAL: entri master `menus`
+           (section "Keuangan & Sistem") + `role_menus` admin + cabang render App.jsx +
+           `adminCoreViews` + feature flag (menu_access_rule). [OWNER:A2]
+    T34.14 [TODO] JURNAL LIABILITAS POIN (KOORDINASI A1<->A2): A1 menyediakan
+           `orders.loyalty_points_earned/redeemed` + event/hook di `CheckoutController`
+           (producer); A2 memetakan ke akun liabilitas poin (Deferred Liability -> Revenue
+           saat redeem) di `JournalMappingService`. Menyerap T34.8. [OWNER:A1+A2]
+    T34.15 [TODO] JURNAL BEBAN PROMOSI ONGKIR (KOORDINASI A1<->A2): A1 sudah mencatat
+           `orders.shipping_subsidy` (T06.10/T06.11) saat gratis ongkir; A2 memetakan ke
+           akun "Beban Promosi" saat order lunas. [OWNER:A1+A2]
+
 T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
   Minor:
     T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime/size).
