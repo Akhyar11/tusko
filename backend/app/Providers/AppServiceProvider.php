@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +26,32 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\OrderItem::observe(\App\Observers\OrderItemObserver::class);
         \App\Models\Product::observe(\App\Observers\ProductObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+
+        $this->configureRateLimiting();
+    }
+
+    /**
+     * T35.1: batasi laju endpoint sensitif (login, register, password, checkout,
+     * voucher, webhook) untuk mencegah brute-force & penyalahgunaan.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
+            ->by(strtolower((string) $request->input('email')) . '|' . $request->ip()));
+
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)
+            ->by($request->ip()));
+
+        RateLimiter::for('password', fn (Request $request) => Limit::perMinute(5)
+            ->by(strtolower((string) $request->input('email')) . '|' . $request->ip()));
+
+        RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(20)
+            ->by((string) ($request->user()?->id ?: $request->ip())));
+
+        RateLimiter::for('voucher', fn (Request $request) => Limit::perMinute(30)
+            ->by((string) ($request->user()?->id ?: $request->ip())));
+
+        RateLimiter::for('webhook', fn (Request $request) => Limit::perMinute(120)
+            ->by($request->ip()));
     }
 }

@@ -815,6 +815,27 @@ class ProductController extends Controller
             'image_base64' => 'nullable|string',
         ]);
 
+        if ($request->filled('image_base64')) {
+            $raw = (string) $request->input('image_base64');
+            $isHttpUrl = str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://');
+
+            if (!$isHttpUrl) {
+                if (!preg_match('/^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/i', $raw)) {
+                    return response()->json([
+                        'message' => 'Format gambar base64 tidak valid.',
+                        'errors' => ['image_base64' => ['Gambar harus berupa data image (PNG, JPG, WEBP, GIF, SVG) dalam bentuk base64.']],
+                    ], 422);
+                }
+
+                if (strlen($raw) > 14000000) {
+                    return response()->json([
+                        'message' => 'Ukuran gambar base64 terlalu besar.',
+                        'errors' => ['image_base64' => ['Ukuran gambar base64 maksimal 10 MB.']],
+                    ], 422);
+                }
+            }
+        }
+
         if ($request->hasFile('image')) {
             $stored = FileStorageService::storeUploadedFile($request->file('image'), 'products');
         } elseif ($request->hasFile('file')) {

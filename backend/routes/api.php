@@ -21,10 +21,10 @@ Route::prefix('categories')->group(function () {
 });
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:password');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:password');
     Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
         ->middleware('signed')
         ->name('verification.verify');
@@ -47,8 +47,8 @@ Route::prefix('loyalty')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('vouchers')->group(function () {
     Route::get('/', [VoucherController::class, 'index'])->middleware('auth.optional');
-    Route::post('/validate', [VoucherController::class, 'validateVoucher'])->middleware('auth.optional');
-    Route::post('/claim', [VoucherController::class, 'claim'])->middleware('auth:sanctum');
+    Route::post('/validate', [VoucherController::class, 'validateVoucher'])->middleware(['auth.optional', 'throttle:voucher']);
+    Route::post('/claim', [VoucherController::class, 'claim'])->middleware(['auth:sanctum', 'throttle:voucher']);
 });
 
 Route::prefix('products')->group(function () {
@@ -90,7 +90,7 @@ Route::prefix('expeditions')->group(function () {
 });
 
 
-Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware('auth.optional');
+Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware(['auth.optional', 'throttle:checkout']);
 Route::get('/checkout/config', [\App\Http\Controllers\Api\CheckoutController::class, 'config'])->middleware('auth.optional');
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
 Route::get('/shipping/services', [\App\Http\Controllers\Api\ShippingRateController::class, 'localServices'])->middleware('auth.optional');
@@ -124,7 +124,7 @@ Route::prefix('orders')->middleware('auth.optional')->group(function () {
 
 Route::get('/payment-methods', [\App\Http\Controllers\Api\PaymentMethodController::class, 'index']);
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
-Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle']);
+Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle'])->middleware('throttle:webhook');
 
 Route::prefix('transactions')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
