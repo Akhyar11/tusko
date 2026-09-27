@@ -61,6 +61,15 @@ class OrderObserver
             if (!$hasPaymentTrx) {
                 Transaction::recordOrderPayment($order, $order->payment_channel ?: $order->payment_method);
             }
+
+            // T34.5: jurnal double-entry pendapatan pesanan lunas (idempoten).
+            if (\App\Models\ChartOfAccount::where('account_code', '4100')->exists()) {
+                try {
+                    app(\App\Services\JournalMappingService::class)->postOrderPaid($order);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('postOrderPaid gagal: ' . $e->getMessage());
+                }
+            }
         }
 
         // 2. Transaksi Otomatis Uang Keluar (Expense: shipping_fee)
