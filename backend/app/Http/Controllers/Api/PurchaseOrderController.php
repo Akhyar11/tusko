@@ -18,14 +18,18 @@ use App\Models\Warehouse;
 use App\Services\FileStorageService;
 use App\Services\IdentityCodeService;
 use App\Services\InventoryService;
+use App\Services\JournalMappingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
-    public function __construct(private readonly InventoryService $inventoryService)
-    {
+    public function __construct(
+        private readonly InventoryService $inventoryService,
+        private readonly JournalMappingService $journalMapping,
+    ) {
     }
     /**
      * Display a listing of purchase orders.
@@ -379,6 +383,16 @@ class PurchaseOrderController extends Controller
                             'unit_cost' => (float) $item->unit_price,
                         ], $variant);
                     }
+                }
+            }
+
+            // T34.6: jurnal double-entry penerimaan barang (Debit Persediaan, Kredit Utang Usaha).
+            if (\App\Models\ChartOfAccount::where('account_code', '1300')->exists()) {
+                try {
+                    $grn->load('items');
+                    $this->journalMapping->postGoodsReceiving($grn);
+                } catch (\Throwable $e) {
+                    Log::warning('postGoodsReceiving gagal: ' . $e->getMessage());
                 }
             }
 
