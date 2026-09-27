@@ -636,7 +636,7 @@ T14. Procurement: Vendor, PO, GRN, Vendor Bills + Pembayaran ........ [DONE]  [O
             (Terpenuhi via InventoryService pada T14.2.)
     T14.5 [DONE] Pembayaran vendor bill -> posting jurnal via T34.1 (mapping).
 
-T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OWNER:A1]
+T15. Voucher: Schema + Admin + Kupon ............................... [PARTIAL]  [OWNER:A1]
   (SUMBER TUNGGAL schema voucher — T08 bergantung pada T15.1a.)
   DB: vouchers + [NEW] quota, used_count, per_user_limit, is_free_shipping,
       stackable; [NEW] voucher_targets; [NEW] voucher_usages.
@@ -669,6 +669,23 @@ T15. Voucher: Schema + Admin + Kupon ............................... [TODO]  [OW
              master `menus`/`MenuSeeder` (sidebar dinamis T37.7) — bukan lagi
              `menuSections` statis: section "Pemasaran & Promo", path_prefix
              `/admin/voucher`, view_key `vouchers-admin`, ikon `Ticket`.
+    T15.6 [NEW] Jendela Klaim & Kuota Klaim Voucher (permintaan user 2026-09-26).
+           Fitur: (a) batasi RENTANG WAKTU KLAIM (terpisah dari `expires_at` pemakaian);
+           (b) batasi JUMLAH KLAIM total lintas pelanggan; (c) batasi klaim per pelanggan.
+           DB : tambah `vouchers.claim_starts_at`, `claim_ends_at` (nullable date/datetime),
+                `claim_quota` (nullable int), `per_user_claim_limit` (nullable int, default 1).
+           FE : `VoucherFormFields` (create/edit) — field jendela klaim + kuota klaim;
+                `VoucherFilterDrawer` — filter masa klaim; `ProfilePage` — voucher di luar
+                jendela / kuota klaim habis ditandai tidak dapat diklaim.
+           API: penegakan di `VoucherController::claim` (claim_starts_at/claim_ends_at,
+                claim_quota vs COUNT(voucher_claims), per_user_claim_limit) + expose di
+                resource voucher.
+           Test: [NEW] VoucherClaimWindowTest + perluasan VoucherApiTest (field baru).
+           [OWNER:A1]
+    T15.7 [TODO] Mekanisme voucher opsional (backlog): publik/rahasia (`is_public`),
+           auto-apply, first-order-only, member-only, min item count, khusus metode
+           bayar/kurir, BOGO (buy X get Y), happy-hour/jadwal, kuota harian, referral,
+           stacking group. (Dipilih sebagian sesuai kebutuhan.) [OWNER:A1]
 
 ==============================================================================
 FASE 5 — KEUANGAN & ANALITIK (BI)
@@ -1548,4 +1565,30 @@ Bukan gap (terverifikasi OK):
 - Midtrans webhook: idempoten via `payments` + markAsPaid; fee yang belum tercatat.
 - A1 FE mock tersisa hanya FALLBACK (CheckoutPage mock*, ProfilePage/UserMenu mockDemoUsers).
 Kepemilikan: T07.7 & T05.6 [A1]; jurnal fee [A2].
+==============================================================================
+
+==============================================================================
+REVISI 11 — DESAIN MEKANISME VOUCHER (permintaan user 2026-09-26)
+==============================================================================
+Ekspektasi user:
+1. Voucher dapat di-set ke BEBERAPA KATEGORI atau PRODUK pilihan.
+2. Ada BATAS WAKTU KLAIM (jendela klaim).
+3. Ada BATAS JUMLAH KLAIM (kuota klaim) total pelanggan.
+
+Status vs skema saat ini:
+1. [SUDAH ADA] `voucher_targets(target_type: all|product|variant|category, target_id)`
+   multi-baris -> multi-kategori/produk/varian. (Form admin T15.4 sudah mendukung.)
+2. [BELUM] hanya `vouchers.expires_at` = batas PEMAKAIAN, bukan jendela KLAIM.
+   -> tambah `claim_starts_at`, `claim_ends_at`.
+3. [BELUM] `quota`=kuota pemakaian; `per_user_limit`=pemakaian per user; tidak ada
+   kuota KLAIM. -> tambah `claim_quota` (total klaim) + `per_user_claim_limit`.
+
+Perubahan task:
+- MAJOR T15 status [TODO] -> [PARTIAL].
+- Minor baru T15.6 (Jendela Klaim & Kuota Klaim) [A1].
+- Minor baru T15.7 (Mekanisme voucher opsional: publik/rahasia, auto-apply,
+  first-order-only, member-only, min item count, khusus metode bayar/kurir, BOGO,
+  happy-hour, kuota harian, referral, stacking group) [A1].
+Catatan: `voucher_claims` (T08.5) sudah menyimpan klaim per (user, voucher);
+T15.6 menambah penegakan jendela & kuota pada klaim tsb.
 ==============================================================================
