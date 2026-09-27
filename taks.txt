@@ -1101,7 +1101,9 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
            + idempotensi webhook Midtrans (tidak dobel payment/kas/restore stok).
            [commit 9c938a4] [OWNER:A2]
     T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
-    T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
+    T35.4 [DONE] Monitoring/logging terstruktur (channel `api` JSON + middleware),
+           health check `GET /api/health` (db/cache/queue/storage), caching wilayah
+           KiriminAja, eager loading produk (vendor/variants). [commit 22f5d6b] [OWNER:A2]
 
 T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH
