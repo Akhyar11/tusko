@@ -13,4 +13,5 @@ return [
         ? 'https://api.midtrans.com/v2'
         : 'https://api.sandbox.midtrans.com/v2',
     'merchant_id' => env('MIDTRANS_MERCHANT_ID', 'G123456789'),
+    'va_prefix' => env('MIDTRANS_VA_PREFIX', '8808'),
 ];

@@ -274,7 +274,7 @@ class CheckoutController extends Controller
             // 5. Payment details
             $paymentMethod = $request->input('payment_method', 'midtrans');
             $paymentChannel = $request->input('payment_channel', 'bca_va');
-            $vaNumber = '8808' . mt_rand(1000000000, 9999999999);
+            $vaNumber = (string) config('midtrans.va_prefix', '8808') . mt_rand(1000000000, 9999999999);
 
             // 6. Create Order
             $order = Order::create([
