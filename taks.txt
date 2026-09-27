@@ -1030,11 +1030,10 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.3 [DONE] Laporan aging hutang vendor (menyerap T14.5 lama). [commit 70d0150]
     T34.4 [DONE] Ekspor CSV/Excel/PDF laporan. [commit ae9dd2a] CSV untuk laba rugi,
            neraca saldo, dan aging hutang (Excel/PDF opsional lanjutan).
-    T34.5 [TODO-GAP] WIRE JURNAL ORDER LUNAS + FEE GATEWAY: `JournalMappingService::postOrderPaid`
-           dan `postPaymentGatewayFee` sudah ADA tetapi TIDAK DIPANGGIL di mana pun
-           (bukti: `grep -rn postOrderPaid backend/app` = 0 pemanggil). Panggil di
-           `OrderObserver` (status paid) / `MidtransWebhookController` (fee) secara
-           idempoten + test. [OWNER:A2]
+    T34.5 [PARTIAL] WIRE JURNAL ORDER LUNAS + FEE GATEWAY: `postOrderPaid` sekarang
+           dipanggil di `OrderObserver` (saat `isPaid`, idempoten) + test. [commit 9036c1e]
+           SISA: `postPaymentGatewayFee` belum bisa di-wire — `transactions.fee_deducted`
+           tak pernah diisi (tak ada sumber fee) → menunggu T07/payment capture (A1). [OWNER:A2]
     T34.6 [TODO-GAP] WIRE JURNAL GRN: `postGoodsReceiving` belum dipanggil di alur
            receive GRN (`GoodsReceivingNoteController`) + test. [OWNER:A2]
     T34.7 [TODO-GAP] JURNAL TRANSAKSI MANUAL + KONSISTENSI: `TransactionController::store`
