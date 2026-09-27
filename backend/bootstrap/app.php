@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'menu.access' => \App\Http\Middleware\EnsureMenuAccess::class,
             'auth.optional' => \App\Http\Middleware\AuthenticateOptional::class,
         ]);
+
+        // T35.4: logging terstruktur seluruh request API.
+        $middleware->api(append: \App\Http\Middleware\LogApiRequests::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

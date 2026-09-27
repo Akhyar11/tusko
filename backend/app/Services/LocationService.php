@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -33,7 +34,9 @@ class LocationService
      */
     public function provinces(): array
     {
-        return $this->normalize($this->post('/api/mitra/province')['datas'] ?? []);
+        return Cache::remember('locations.provinces', now()->addDay(), function () {
+            return $this->normalize($this->post('/api/mitra/province')['datas'] ?? []);
+        });
     }
 
     /**
@@ -41,7 +44,9 @@ class LocationService
      */
     public function cities(int $provinceId): array
     {
-        return $this->normalize($this->post('/api/mitra/city', ['provinsi_id' => $provinceId])['datas'] ?? []);
+        return Cache::remember("locations.cities.{$provinceId}", now()->addHours(12), function () use ($provinceId) {
+            return $this->normalize($this->post('/api/mitra/city', ['provinsi_id' => $provinceId])['datas'] ?? []);
+        });
     }
 
     /**
@@ -49,7 +54,9 @@ class LocationService
      */
     public function districts(int $cityId): array
     {
-        return $this->normalize($this->post('/api/mitra/kecamatan', ['kabupaten_id' => $cityId])['datas'] ?? []);
+        return Cache::remember("locations.districts.{$cityId}", now()->addHours(12), function () use ($cityId) {
+            return $this->normalize($this->post('/api/mitra/kecamatan', ['kabupaten_id' => $cityId])['datas'] ?? []);
+        });
     }
 
     /**
@@ -57,7 +64,9 @@ class LocationService
      */
     public function subdistricts(int $districtId): array
     {
-        return $this->normalize($this->post('/api/mitra/kelurahan', ['kecamatan_id' => $districtId])['results'] ?? []);
+        return Cache::remember("locations.subdistricts.{$districtId}", now()->addDay(), function () use ($districtId) {
+            return $this->normalize($this->post('/api/mitra/kelurahan', ['kecamatan_id' => $districtId])['results'] ?? []);
+        });
     }
 
     /**

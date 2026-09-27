@@ -126,6 +126,9 @@ Route::get('/payment-methods', [\App\Http\Controllers\Api\PaymentMethodControlle
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle'])->middleware('throttle:webhook');
 
+// T35.4: health check untuk monitoring/uptime probe.
+Route::get('/health', [\App\Http\Controllers\Api\HealthController::class, 'index']);
+
 Route::prefix('transactions')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransactionController::class, 'index']);
     Route::get('/categories', fn () => response()->json(['data' => \App\Http\Controllers\Api\TransactionController::CATEGORIES]));

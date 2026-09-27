@@ -21,7 +21,7 @@ class ProductController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Product::query()->with(['category', 'categories', 'images']);
+        $query = Product::query()->with(['category', 'categories', 'images', 'vendor', 'variants']);
 
         // Filter status aktif / inaktif
         if ($request->has('status') && $request->status !== 'all') {
