@@ -457,10 +457,12 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            [TODO] Backfill kode alamat LAMA (opsional; butuh mapping nama->kode).
     T06.8 [DONE] Caching tarif per (asal, tujuan, berat, kurir, dimensi) + TTL
            (integrations `shipping.rate_cache_ttl`) + retry/backoff provider + test. [OWNER:A1]
-    T06.9 [TODO-GAP] GRATIS ONGKIR PER PRODUK: kolom `products.free_shipping` (TIDAK ADA
-           di DB saat ini; FE hanya mock) + expose `ProductResource` + `CheckoutController`
-           menihilkan `shipping_cost` bila ada item free_shipping (server-authoritative).
-           (Kolom produk milik A2 -> koordinasi.) [OWNER:A1]
+    T06.9 [DONE] GRATIS ONGKIR PER PRODUK: kolom `products.free_shipping` + expose
+           `ProductResource`/`ProductDetailResource` + `ProductController` store/update
+           + `CheckoutController` menihilkan `shipping_cost` bila ada item free_shipping
+           (server-authoritative, subsidi dicatat di `orders.shipping_subsidy`) + test.
+           [DONE] migrasi + model + resource + controller + test (CheckoutTamperingTest,
+           ProductStoreApiTest). [OWNER:A1]
     T06.10 [TODO-GAP] THRESHOLD GRATIS ONGKIR GLOBAL: setting
            `shipping.free_shipping_min_purchase` (integrations, G6) -> bila subtotal >=
            threshold, `shipping_cost=0` (server). Menutup teks "GRATIS ONGKIR MIN. 500RB"

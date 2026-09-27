@@ -100,6 +100,7 @@ class CheckoutController extends Controller
             $totalWeight = 0.0;
             $subtotal = 0.0;
             $totalLoyaltyPointsEarned = 0;
+            $hasFreeShippingItem = false;
 
             foreach ($rawItems as $rawItem) {
                 $product = Product::lockForUpdate()->findOrFail($rawItem['product_id']);
@@ -116,6 +117,11 @@ class CheckoutController extends Controller
                 }
 
                 $qty = max(1, (int) $rawItem['quantity']);
+
+                // T06.9: tandai bila salah satu produk bergratis ongkir.
+                if ($product->free_shipping) {
+                    $hasFreeShippingItem = true;
+                }
 
                 // Harga otoritatif: harga varian bila ada, selain itu harga produk (dari DB).
                 $itemPrice = (float) ($variant && $variant->price !== null ? $variant->price : $product->price);
@@ -290,6 +296,11 @@ class CheckoutController extends Controller
             // T06.10: gratis ongkir otomatis bila subtotal mencapai ambang (setting Admin, G6).
             $freeShippingThreshold = (float) ($this->integrations->get('shipping.free_shipping_min_purchase', 0) ?? 0);
             if ($freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
+                $freeShipping = true;
+            }
+
+            // T06.9: gratis ongkir bila salah satu produk ditandai gratis ongkir.
+            if ($hasFreeShippingItem) {
                 $freeShipping = true;
             }
 

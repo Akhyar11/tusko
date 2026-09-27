@@ -313,6 +313,34 @@ class CheckoutTamperingTest extends TestCase
             ->assertJsonPath('data.totals.grand_total', 220000);
     }
 
+    public function test_product_free_shipping_zeroes_cost_and_records_subsidy(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create([
+            'name' => 'Produk Gratis Ongkir',
+            'price' => 200000,
+            'stock' => 10,
+            'free_shipping' => true,
+        ]);
+        $expedition = Expedition::factory()->create(['name' => 'JNE', 'service' => 'REG', 'cost' => 20000]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Produk Free',
+            'phone' => '081200000014',
+            'full_address' => 'Jl. Produk Free No. 14',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 0)
+            ->assertJsonPath('data.totals.shipping_subsidy', 20000)
+            ->assertJsonPath('data.totals.grand_total', 200000);
+    }
+
     public function test_loyalty_points_redeemed_applied_server_side(): void
     {
         $user = User::factory()->create(['points' => 1000]);

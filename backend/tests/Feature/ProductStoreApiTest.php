@@ -123,4 +123,26 @@ class ProductStoreApiTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['category_id']);
     }
+
+    public function test_can_create_product_with_free_shipping_flag(): void
+    {
+        $category = Category::create(['name' => 'Olahraga', 'slug' => 'olahraga']);
+
+        $response = $this->postJson('/api/products', [
+            'name' => 'Produk Gratis Ongkir',
+            'category_id' => $category->id,
+            'price' => 100000,
+            'stock' => 5,
+            'free_shipping' => true,
+            'status' => 'active',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.free_shipping', true);
+
+        $this->assertDatabaseHas('products', [
+            'name' => 'Produk Gratis Ongkir',
+            'free_shipping' => true,
+        ]);
+    }
 }

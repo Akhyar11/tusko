@@ -231,6 +231,7 @@ class ProductController extends Controller
             'image_url' => 'nullable|string',
             'status' => 'nullable|string|in:active,inactive,draft',
             'active' => 'nullable|boolean',
+            'free_shipping' => 'nullable|boolean',
             'specifications' => 'nullable',
             'variants' => 'nullable',
             'images' => 'nullable|array',
@@ -324,6 +325,7 @@ class ProductController extends Controller
             'image_url' => $finalImageUrl,
             'status' => $status,
             'active' => $active,
+            'free_shipping' => (bool) ($validated['free_shipping'] ?? false),
             'specifications' => $validated['specifications'] ?? null,
             'variants' => $validated['variants'] ?? null,
             'rating' => 5.00,
@@ -486,6 +488,7 @@ class ProductController extends Controller
             'image_url' => 'nullable|string',
             'status' => 'nullable|string|in:active,inactive,draft',
             'active' => 'nullable|boolean',
+            'free_shipping' => 'nullable|boolean',
             'specifications' => 'nullable',
             'variants' => 'nullable',
             'images' => 'nullable|array',
@@ -605,6 +608,9 @@ class ProductController extends Controller
             if (!$request->has('status')) {
                 $product->status = $product->active ? 'active' : 'inactive';
             }
+        }
+        if (array_key_exists('free_shipping', $validated)) {
+            $product->free_shipping = (bool) $validated['free_shipping'];
         }
         if (array_key_exists('specifications', $validated)) {
             $product->specifications = $validated['specifications'];

@@ -55,6 +55,7 @@ class ProductResource extends JsonResource
             'warehouse_bin' => $this->warehouse_bin ?: 'Gudang Utama',
             'image_url' => $this->image_url,
             'active' => (bool) $this->active,
+            'free_shipping' => (bool) $this->free_shipping,
             'status' => $this->status ?: ($this->active ? 'active' : 'inactive'),
             'stock_status' => $this->isOutOfStock() ? 'out_of_stock' : ($this->isLowStock() ? 'low' : 'safe'),
             'is_low_stock' => $this->isLowStock(),
