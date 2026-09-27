@@ -248,6 +248,8 @@ export default function CheckoutPage({
       try {
         const res = await checkoutService.getShippingRates({
           destination,
+          destinationDistrictCode: currentAddress?.district_code || undefined,
+          subdistrictDestination: currentAddress?.subdistrict_code || undefined,
           weight: numericWeight,
           length: packageLength === '' ? undefined : Number(packageLength),
           width: packageWidth === '' ? undefined : Number(packageWidth),
@@ -283,7 +285,7 @@ export default function CheckoutPage({
     return () => {
       active = false;
     };
-  }, [currentAddress?.city, numericWeight, packageLength, packageWidth, packageHeight, weightValid, dimensionError]);
+  }, [currentAddress?.city, currentAddress?.district_code, currentAddress?.subdistrict_code, numericWeight, packageLength, packageWidth, packageHeight, weightValid, dimensionError]);
 
   // Payment Selection State
   const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');

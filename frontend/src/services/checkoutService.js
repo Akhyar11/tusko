@@ -67,10 +67,12 @@ export const checkoutService = {
   /**
    * Ambil tarif pengiriman (layanan kurir) dari agregator yang dikonfigurasi admin.
    */
-  async getShippingRates({ origin, destination, weight, courier, length, width, height, itemValue, insurance } = {}) {
+  async getShippingRates({ origin, destination, destinationDistrictCode, subdistrictDestination, weight, courier, length, width, height, itemValue, insurance } = {}) {
     const params = new URLSearchParams();
     if (origin) params.set('origin', origin);
     if (destination) params.set('destination', destination);
+    if (destinationDistrictCode) params.set('destination_district_code', destinationDistrictCode);
+    if (subdistrictDestination) params.set('subdistrict_destination', String(subdistrictDestination));
     if (weight) params.set('weight', String(weight));
     if (courier) params.set('courier', courier);
     if (length) params.set('length', String(length));

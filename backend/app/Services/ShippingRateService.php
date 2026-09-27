@@ -113,6 +113,41 @@ class ShippingRateService
     }
 
     /**
+     * T06.11 — tarif LIVE untuk pasangan kurir+layanan tertentu.
+     * Mengembalikan null bila provider belum dikonfigurasi / layanan tak ditemukan,
+     * sehingga pemanggil dapat fallback ke tarif lokal (DB).
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function rateFor(string $courier, ?string $service, array $context): ?float
+    {
+        $courier = strtolower(trim($courier));
+        if ($courier === '') {
+            return null;
+        }
+
+        $rates = $this->getRates(array_merge($context, ['courier' => $courier]));
+        $serviceUpper = ($service !== null && trim($service) !== '') ? strtoupper(trim($service)) : null;
+
+        foreach ($rates as $rate) {
+            if (strtolower((string) ($rate['courier'] ?? '')) !== $courier) {
+                continue;
+            }
+
+            if ($serviceUpper !== null) {
+                $rateService = strtoupper(trim((string) ($rate['service'] ?? '')));
+                if ($rateService !== '' && $rateService !== $serviceUpper) {
+                    continue;
+                }
+            }
+
+            return (float) ($rate['cost'] ?? 0);
+        }
+
+        return null;
+    }
+
+    /**
      * @param  array<string, mixed>  $context
      */
     private function cacheKey(array $context): string

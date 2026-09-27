@@ -17,6 +17,7 @@ use App\Models\ProductVariant;
 use App\Models\ShippingAddress;
 use App\Services\InventoryService;
 use App\Services\IntegrationService;
+use App\Services\ShippingRateService;
 use App\Services\VoucherService;
 use App\Services\WarehouseAllocationService;
 use Carbon\Carbon;
@@ -34,7 +35,8 @@ class CheckoutController extends Controller
         private readonly InventoryService $inventoryService,
         private readonly VoucherService $voucherService,
         private readonly IntegrationService $integrations,
-        private readonly WarehouseAllocationService $warehouseAllocation
+        private readonly WarehouseAllocationService $warehouseAllocation,
+        private readonly ShippingRateService $shippingRate
     ) {
     }
     /**
@@ -194,6 +196,22 @@ class CheckoutController extends Controller
             $expeditionId = $request->input('expedition_id');
             $expeditionServiceId = $request->input('expedition_service_id');
 
+            // T06.11: kode wilayah tujuan untuk tarif LIVE (dari alamat tersimpan / request).
+            $destinationDistrictCode = $addressId
+                ? ($savedAddress->district_code ?? null)
+                : $request->input('destination_district_code');
+            $destinationSubdistrict = $addressId
+                ? ($savedAddress->subdistrict_code ?? null)
+                : $request->input('subdistrict_destination');
+
+            // T06.11: konteks tarif LIVE (berat gram + tujuan + nilai barang).
+            $liveRateContext = [
+                'weight_grams' => max(1, (int) round($totalWeight * 1000)),
+                'destination_district_code' => $destinationDistrictCode,
+                'subdistrict_destination' => $destinationSubdistrict,
+                'item_value' => (int) round($subtotal),
+            ];
+
             if ($expeditionServiceId) {
                 $service = ExpeditionService::with('expedition')->findOrFail($expeditionServiceId);
                 $expedition = $service->expedition;
@@ -203,9 +221,16 @@ class CheckoutController extends Controller
                 $expeditionEtd = $service->etd_days;
                 $chargedWeight = max(1, (int) ceil($totalWeight));
                 // T28.2: ongkir otoritatif dari tarif layanan (client `shipping_cost` diabaikan).
-                $shippingCost = (float) (($service->per_kg_rate ?? 0) > 0
+                $fallbackCost = (float) (($service->per_kg_rate ?? 0) > 0
                     ? ($service->per_kg_rate * $chargedWeight)
                     : ($service->base_rate ?? 0));
+                // T06.11: utamakan tarif LIVE KiriminAja (server-authoritative), fallback DB.
+                $liveCost = $this->shippingRate->rateFor(
+                    (string) ($expedition?->code ?? ''),
+                    (string) ($service->service_code ?? ''),
+                    $liveRateContext
+                );
+                $shippingCost = $liveCost ?? $fallbackCost;
             } elseif ($expeditionId) {
                 $expedition = Expedition::findOrFail($expeditionId);
                 $expeditionName = $expedition->name;
@@ -213,7 +238,14 @@ class CheckoutController extends Controller
                 $expeditionEtd = $expedition->etd;
                 $chargedWeight = max(1, (int) ceil($totalWeight));
                 // T28.2: ongkir otoritatif dari tarif ekspedisi (client `shipping_cost` diabaikan).
-                $shippingCost = $expedition->is_free ? 0.0 : (float) ($expedition->cost * $chargedWeight);
+                $fallbackCost = $expedition->is_free ? 0.0 : (float) ($expedition->cost * $chargedWeight);
+                // T06.11: utamakan tarif LIVE KiriminAja (server-authoritative), fallback DB.
+                $liveCost = $expedition->is_free ? 0.0 : $this->shippingRate->rateFor(
+                    (string) ($expedition->code ?? ''),
+                    (string) ($expedition->service ?? ''),
+                    $liveRateContext
+                );
+                $shippingCost = $liveCost ?? $fallbackCost;
             } else {
                 $expeditionName = $request->input('expedition_name');
                 $expeditionService = $request->input('expedition_service');

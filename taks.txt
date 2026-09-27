@@ -465,13 +465,16 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            `shipping.free_shipping_min_purchase` (integrations, G6) -> bila subtotal >=
            threshold, `shipping_cost=0` (server). Menutup teks "GRATIS ONGKIR MIN. 500RB"
            yang saat ini hanya iklan. + test. [OWNER:A1]
-    T06.11 [TODO-GAP] ONGKIR SERVER-AUTHORITATIVE DARI TARIF LIVE KIRIMINAJA + SUBSIDI:
+    T06.11 [DONE] ONGKIR SERVER-AUTHORITATIVE DARI TARIF LIVE KIRIMINAJA + SUBSIDI:
            (a) saat checkout, server memanggil `ShippingRateService::getRates()` (tarif LIVE
            KiriminAja, bukan tarif DB) memakai kode wilayah alamat + berat + kurir untuk
            `shipping_cost` (fallback tarif DB bila API belum dikonfigurasi);
            (b) catat `orders.shipping_subsidy` = biaya kurir yang DITANGGUNG merchant saat
            gratis ongkir (dasar jurnal beban promosi via T34.x).
-           [OWNER:A1] (menyentuh alur checkout; koordinasi dgn T28.2/T34).
+           [DONE] `ShippingRateService::rateFor()` + CheckoutController pakai tarif live
+           (kode wilayah dari alamat) + FE kirim `destination_district_code`/`subdistrict_destination`
+           + test CheckoutLiveShippingRateTest + bukti browser Playwright. [OWNER:A1]
+           (Jurnal beban promosi tetap milik T34.x/A2.)
     T06.12 [TODO] GRATIS ONGKIR PER KURIR/LAYANAN: bila `expedition_service_id` tertentu
            ditandai gratis (kolom `expedition_services.is_free`) -> `shipping_cost=0`. [OWNER:A1]
 
