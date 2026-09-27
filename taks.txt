@@ -1037,11 +1037,12 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.6 [DONE] WIRE JURNAL GRN: `postGoodsReceiving` dipanggil di alur receive
            (`PurchaseOrderController::receive`) + test (endpoint riil, jurnal 1300/2100
            seimbang & idempoten). [commit 18869a2] [OWNER:A2]
-    T34.7 [TODO-GAP] JURNAL TRANSAKSI MANUAL + KONSISTENSI: `TransactionController::store`
-           & `OrderObserver` menulis `transactions` TANPA `financial_ledger_entries`
-           (buku kas vs jurnal double-entry bisa divergen). Buat jurnal untuk transaksi
-           manual + test konsistensi `transactions` <-> `financial_ledger_entries` +
-           `financial_accounts.current_balance`. [OWNER:A2]
+    T34.7 [DONE] JURNAL TRANSAKSI MANUAL + KONSISTENSI: jurnal double-entry untuk
+           transaksi manual (`TransactionController::store` → `postManualTransaction`,
+           akun COA baru 3100/6100/6300, taut `financial_account_id`) + jurnal kas otomatis
+           shipping/refund di `OrderObserver`; test konsistensi `transactions` <->
+           `financial_ledger_entries` <-> `financial_accounts.current_balance`.
+           [commit ff38978] [OWNER:A2]
     T34.8 [TODO-GAP] JURNAL LIABILITAS POIN: earn/redeem poin (T31/T08.4) belum dijurnal
            (Deferred Liability -> Revenue saat redeem); tambah akun poin di mapping + test.
            [OWNER:A2] (menyentuh CheckoutController A1 -> koordinasi).
