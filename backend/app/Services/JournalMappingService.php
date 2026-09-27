@@ -27,9 +27,12 @@ class JournalMappingService
         'bank' => '1200',
         'inventory' => '1300',
         'payable' => '2100',
+        'equity' => '3100',
         'revenue' => '4100',
         'cogs' => '5100',
+        'shipping_expense' => '6100',
         'gateway_fee' => '6200',
+        'operating_expense' => '6300',
     ];
 
     public function __construct(private readonly JournalPostingService $journal)
@@ -228,6 +231,76 @@ class JournalMappingService
             ['account_code' => self::ACCOUNTS['cogs'], 'debit' => $absolute],
             ['account_code' => self::ACCOUNTS['inventory'], 'credit' => $absolute],
         ], "Jurnal selisih kurang opname {$opname->opname_number}");
+    }
+
+    /**
+     * Event: transaksi keuangan manual (buku kas) → jurnal double-entry (T34.7).
+     *
+     * Pemetaan akun per kategori operasional:
+     * - order_payment  : Debit Kas/Bank, Kredit Pendapatan
+     * - capital_deposit: Debit Kas/Bank, Kredit Modal Pemilik
+     * - restock        : Debit Persediaan, Kredit Kas/Bank
+     * - shipping_fee   : Debit Beban Pengiriman, Kredit Kas/Bank
+     * - gateway_fee    : Debit Beban Gateway, Kredit Kas/Bank
+     * - operational    : Debit Beban Operasional, Kredit Kas/Bank
+     * - vendor_payment : Debit Utang Usaha, Kredit Kas/Bank
+     * - refund         : Debit Pendapatan, Kredit Kas/Bank
+     *
+     * Transaksi itu sendiri menjadi kontainer jurnal sehingga posting idempoten.
+     *
+     * @return array<int, \App\Models\FinancialLedgerEntry>|null
+     */
+    public function postManualTransaction(Transaction $transaction): ?array
+    {
+        $amount = $this->round((float) $transaction->amount);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $settlement = $this->settlementCode($transaction->payment_method);
+
+        $lines = match ($transaction->category) {
+            'order_payment' => [
+                ['account_code' => $settlement, 'debit' => $amount],
+                ['account_code' => self::ACCOUNTS['revenue'], 'credit' => $amount],
+            ],
+            'capital_deposit' => [
+                ['account_code' => $settlement, 'debit' => $amount],
+                ['account_code' => self::ACCOUNTS['equity'], 'credit' => $amount],
+            ],
+            'restock' => [
+                ['account_code' => self::ACCOUNTS['inventory'], 'debit' => $amount],
+                ['account_code' => $settlement, 'credit' => $amount],
+            ],
+            'shipping_fee' => [
+                ['account_code' => self::ACCOUNTS['shipping_expense'], 'debit' => $amount],
+                ['account_code' => $settlement, 'credit' => $amount],
+            ],
+            'gateway_fee' => [
+                ['account_code' => self::ACCOUNTS['gateway_fee'], 'debit' => $amount],
+                ['account_code' => $settlement, 'credit' => $amount],
+            ],
+            'vendor_payment' => [
+                ['account_code' => self::ACCOUNTS['payable'], 'debit' => $amount],
+                ['account_code' => $settlement, 'credit' => $amount],
+            ],
+            'refund' => [
+                ['account_code' => self::ACCOUNTS['revenue'], 'debit' => $amount],
+                ['account_code' => $settlement, 'credit' => $amount],
+            ],
+            default => $transaction->type === 'income'
+                ? [
+                    ['account_code' => $settlement, 'debit' => $amount],
+                    ['account_code' => self::ACCOUNTS['revenue'], 'credit' => $amount],
+                ]
+                : [
+                    ['account_code' => self::ACCOUNTS['operating_expense'], 'debit' => $amount],
+                    ['account_code' => $settlement, 'credit' => $amount],
+                ],
+        };
+
+        return $this->journal->post($transaction, $lines, "Jurnal transaksi {$transaction->transaction_number}");
     }
 
     /**

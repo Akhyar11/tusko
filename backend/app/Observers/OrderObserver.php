@@ -63,13 +63,7 @@ class OrderObserver
             }
 
             // T34.5: jurnal double-entry pendapatan pesanan lunas (idempoten).
-            if (\App\Models\ChartOfAccount::where('account_code', '4100')->exists()) {
-                try {
-                    app(\App\Services\JournalMappingService::class)->postOrderPaid($order);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('postOrderPaid gagal: ' . $e->getMessage());
-                }
-            }
+            $this->guardJournal(fn () => app(\App\Services\JournalMappingService::class)->postOrderPaid($order));
         }
 
         // 2. Transaksi Otomatis Uang Keluar (Expense: shipping_fee)
@@ -82,7 +76,8 @@ class OrderObserver
                 ->exists();
 
             if (!$hasShippingTrx) {
-                Transaction::recordShippingExpense($order);
+                $shippingTransaction = Transaction::recordShippingExpense($order);
+                $this->guardJournal(fn () => app(\App\Services\JournalMappingService::class)->postManualTransaction($shippingTransaction));
             }
         }
 
@@ -101,7 +96,7 @@ class OrderObserver
                 ->exists();
 
             if ($hasSettledPayment && !$hasRefundTrx) {
-                Transaction::create([
+                $refundTransaction = Transaction::create([
                     'transaction_number' => Transaction::generateTransactionNumber('expense'),
                     'order_id' => $order->id,
                     'type' => 'expense',
@@ -114,6 +109,8 @@ class OrderObserver
                     'customer_name' => $order->recipient_name,
                     'notes' => $order->notes ?: 'Pesanan dibatalkan',
                 ]);
+
+                $this->guardJournal(fn () => app(\App\Services\JournalMappingService::class)->postManualTransaction($refundTransaction));
             }
 
             // 4. Pengembalian Stok Otomatis saat Pesanan Dibatalkan (Restore Stock)
@@ -203,6 +200,22 @@ class OrderObserver
                     ]);
                 }
             }
+        }
+    }
+
+    /**
+     * T34.5/T34.7: bungkus posting jurnal otomatis (guard COA + log; idempoten).
+     */
+    private function guardJournal(callable $post): void
+    {
+        if (!\App\Models\ChartOfAccount::where('account_code', '1100')->exists()) {
+            return;
+        }
+
+        try {
+            $post();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Jurnal otomatis gagal: ' . $e->getMessage());
         }
     }
 }

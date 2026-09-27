@@ -76,10 +76,12 @@ class MasterReferenceSeeder extends Seeder
             ['account_code' => '1200', 'account_name' => 'Bank Operasional BCA', 'account_type' => 'asset'],
             ['account_code' => '1300', 'account_name' => 'Persediaan Barang Dagang (Inventory Asset)', 'account_type' => 'asset'],
             ['account_code' => '2100', 'account_name' => 'Utang Usaha / Hutang Vendor', 'account_type' => 'liability'],
+            ['account_code' => '3100', 'account_name' => 'Modal Pemilik / Setoran Kas Pemilik', 'account_type' => 'equity'],
             ['account_code' => '4100', 'account_name' => 'Pendapatan Penjualan Toko (Sales Revenue)', 'account_type' => 'revenue'],
             ['account_code' => '5100', 'account_name' => 'Beban Pokok Penjualan (HPP / COGS)', 'account_type' => 'expense'],
             ['account_code' => '6100', 'account_name' => 'Beban Biaya Pengiriman / Kurir', 'account_type' => 'expense'],
             ['account_code' => '6200', 'account_name' => 'Beban Biaya Gateway & Transaksi', 'account_type' => 'expense'],
+            ['account_code' => '6300', 'account_name' => 'Beban Operasional & Kemasan Toko', 'account_type' => 'expense'],
         ];
 
         foreach ($coaList as $coa) {

@@ -4,13 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TransactionResource;
+use App\Models\ChartOfAccount;
+use App\Models\FinancialAccount;
 use App\Models\Transaction;
+use App\Services\JournalMappingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TransactionController extends Controller
 {
+    public function __construct(private readonly JournalMappingService $journalMapping)
+    {
+    }
+
     /**
      * Daftar kategori standar transaksi keuangan.
      */
@@ -174,6 +182,7 @@ class TransactionController extends Controller
             'customer_name' => 'nullable|string|max:150',
             'notes' => 'nullable|string|max:500',
             'order_id' => 'nullable|exists:orders,id',
+            'financial_account_id' => 'nullable|exists:financial_accounts,id',
         ]);
 
         $categoryLabels = [
@@ -188,9 +197,16 @@ class TransactionController extends Controller
 
         $categoryLabel = $categoryLabels[$validated['category']] ?? 'Lain-lain';
 
+        $transactionNumber = Transaction::generateTransactionNumber($validated['type']);
+        $financialAccountId = $validated['financial_account_id']
+            ?? FinancialAccount::where('is_active', true)->orderBy('id')->value('id');
+
         $transaction = Transaction::create([
-            'transaction_number' => Transaction::generateTransactionNumber($validated['type']),
+            'transaction_number' => $transactionNumber,
             'order_id' => $validated['order_id'] ?? null,
+            'financial_account_id' => $financialAccountId,
+            'reference_type' => 'manual',
+            'reference_id' => $transactionNumber,
             'type' => $validated['type'],
             'category' => $validated['category'],
             'category_label' => $categoryLabel,
@@ -201,6 +217,15 @@ class TransactionController extends Controller
             'customer_name' => $validated['customer_name'] ?? 'Admin Toko',
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        // T34.7: catat jurnal double-entry agar buku kas selaras dengan jurnal & saldo rekening.
+        if (ChartOfAccount::where('account_code', '1100')->exists()) {
+            try {
+                $this->journalMapping->postManualTransaction($transaction);
+            } catch (\Throwable $e) {
+                Log::warning('postManualTransaction gagal: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'message' => 'Transaksi keuangan berhasil dicatat.',
