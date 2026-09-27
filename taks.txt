@@ -506,6 +506,10 @@ T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OW
            (`/api/checkout/config`) + uji browser. [OWNER:A1]
     T08.4 [DONE] FE tukar poin di CheckoutPage -> server hitung (T28.2 tahap 2) + ledger (T31)
            + uji browser. [OWNER:A1]
+    T08.5 [DONE] Persist klaim voucher (schema `voucher_claims`): migrasi + model
+           `VoucherClaim` + `claim` idempoten (firstOrCreate) + `is_claimed` pada
+           `GET /api/vouchers` (auth.optional) + FE ProfilePage status dari server
+           + VoucherClaimTest + uji browser. [OWNER:A1]
 
 ==============================================================================
 FASE 3 — PESANAN, KIRIM & AKUN
