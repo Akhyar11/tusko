@@ -1532,9 +1532,10 @@ Temuan (terverifikasi):
    test end-to-end guest (session_id -> guest_session_id). -> task baru T05.6 [A1].
 3. VOUCHER "CLAIM" TIDAK DIPERSIST: `VoucherController::claim` hanya memvalidasi
    (soft claim) tanpa menyimpan apa pun. -> catatan (prioritas rendah; `voucher_usages`
-   dicatat saat order dibuat via T15.1b).
-4. VA NUMBER PREFIX `'8808'` HARDCODE di CheckoutController:277 -> sebaiknya config
-   (prioritas rendah).
+   dicatat saat order dibuat via T15.1b). [TETAP: butuh schema `voucher_claims` baru
+   -> menunggu keputusan user sebelum implementasi.]
+4. VA NUMBER PREFIX `'8808'` HARDCODE di CheckoutController:277 -> [RESOLVED 2026-09-26]
+   dipindah ke `config/midtrans.php` (`va_prefix`, env `MIDTRANS_VA_PREFIX`) — G6.
 
 Bukan gap (terverifikasi OK):
 - Guest cart/checkout code path ADA (session_id -> guest_session_id).
