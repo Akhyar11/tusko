@@ -41,6 +41,7 @@ class SettingsRegistry
                 'shipping.origin' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:100', 'is_secret' => false, 'label' => 'Kota Asal Pengiriman', 'description' => 'Kota asal default kalkulasi tarif.'],
                 'shipping.origin_district_code' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:50', 'is_secret' => false, 'label' => 'Kode Kecamatan Asal', 'description' => 'Kode wilayah kecamatan asal (KiriminAja).'],
                 'shipping.rate_cache_ttl' => ['type' => 'integer', 'default' => 3600, 'rule' => 'nullable|integer|min:60|max:86400', 'is_secret' => false, 'label' => 'TTL Cache Tarif (detik)', 'description' => 'Durasi cache tarif pengiriman per kombinasi asal/tujuan/berat/kurir.'],
+                'shipping.free_shipping_min_purchase' => ['type' => 'integer', 'default' => 0, 'rule' => 'nullable|integer|min:0', 'is_secret' => false, 'label' => 'Ambang Gratis Ongkir (Rp)', 'description' => 'Subtotal minimum agar ongkir otomatis gratis (T06.10). 0 = nonaktif.'],
             ],
         ],
         'payment' => [

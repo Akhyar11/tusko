@@ -257,7 +257,60 @@ class CheckoutTamperingTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('data.totals.shipping_cost', 0)
+            ->assertJsonPath('data.totals.shipping_subsidy', 20000)
             ->assertJsonPath('data.totals.grand_total', 200000);
+    }
+
+    public function test_threshold_free_shipping_zeroes_cost_and_records_subsidy(): void
+    {
+        app(\App\Services\IntegrationService::class)
+            ->set('shipping.free_shipping_min_purchase', '150000', 'shipping');
+
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Produk Ambang', 'price' => 200000, 'stock' => 10]);
+        $expedition = Expedition::factory()->create(['name' => 'JNE', 'service' => 'REG', 'cost' => 20000]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Ambang',
+            'phone' => '081200000009',
+            'full_address' => 'Jl. Ambang No. 9',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 0)
+            ->assertJsonPath('data.totals.shipping_subsidy', 20000)
+            ->assertJsonPath('data.totals.grand_total', 200000);
+    }
+
+    public function test_below_threshold_keeps_shipping_cost_without_subsidy(): void
+    {
+        app(\App\Services\IntegrationService::class)
+            ->set('shipping.free_shipping_min_purchase', '500000', 'shipping');
+
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['name' => 'Produk Kecil', 'price' => 200000, 'stock' => 10]);
+        $expedition = Expedition::factory()->create(['name' => 'JNE', 'service' => 'REG', 'cost' => 20000]);
+
+        $response = $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Pembeli Kecil',
+            'phone' => '081200000010',
+            'full_address' => 'Jl. Kecil No. 10',
+            'expedition_id' => $expedition->id,
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.totals.shipping_cost', 20000)
+            ->assertJsonPath('data.totals.shipping_subsidy', 0)
+            ->assertJsonPath('data.totals.grand_total', 220000);
     }
 
     public function test_loyalty_points_redeemed_applied_server_side(): void

@@ -69,6 +69,7 @@ class Order extends Model
     protected $casts = [
         'subtotal' => 'float',
         'shipping_cost' => 'float',
+        'shipping_subsidy' => 'float',
         'insurance_cost' => 'float',
         'service_fee' => 'float',
         'discount_amount' => 'float',

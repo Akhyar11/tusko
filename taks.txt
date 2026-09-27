@@ -457,6 +457,23 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            [TODO] Backfill kode alamat LAMA (opsional; butuh mapping nama->kode).
     T06.8 [DONE] Caching tarif per (asal, tujuan, berat, kurir, dimensi) + TTL
            (integrations `shipping.rate_cache_ttl`) + retry/backoff provider + test. [OWNER:A1]
+    T06.9 [TODO-GAP] GRATIS ONGKIR PER PRODUK: kolom `products.free_shipping` (TIDAK ADA
+           di DB saat ini; FE hanya mock) + expose `ProductResource` + `CheckoutController`
+           menihilkan `shipping_cost` bila ada item free_shipping (server-authoritative).
+           (Kolom produk milik A2 -> koordinasi.) [OWNER:A1]
+    T06.10 [TODO-GAP] THRESHOLD GRATIS ONGKIR GLOBAL: setting
+           `shipping.free_shipping_min_purchase` (integrations, G6) -> bila subtotal >=
+           threshold, `shipping_cost=0` (server). Menutup teks "GRATIS ONGKIR MIN. 500RB"
+           yang saat ini hanya iklan. + test. [OWNER:A1]
+    T06.11 [TODO-GAP] ONGKIR SERVER-AUTHORITATIVE DARI TARIF LIVE KIRIMINAJA + SUBSIDI:
+           (a) saat checkout, server memanggil `ShippingRateService::getRates()` (tarif LIVE
+           KiriminAja, bukan tarif DB) memakai kode wilayah alamat + berat + kurir untuk
+           `shipping_cost` (fallback tarif DB bila API belum dikonfigurasi);
+           (b) catat `orders.shipping_subsidy` = biaya kurir yang DITANGGUNG merchant saat
+           gratis ongkir (dasar jurnal beban promosi via T34.x).
+           [OWNER:A1] (menyentuh alur checkout; koordinasi dgn T28.2/T34).
+    T06.12 [TODO] GRATIS ONGKIR PER KURIR/LAYANAN: bila `expedition_service_id` tertentu
+           ditandai gratis (kolom `expedition_services.is_free`) -> `shipping_cost=0`. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.

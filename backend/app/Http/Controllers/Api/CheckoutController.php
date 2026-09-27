@@ -228,6 +228,7 @@ class CheckoutController extends Controller
             $serviceFee = (float) ($this->integrations->get('store.service_fee', 0) ?? 0);
             $couponCode = $request->input('coupon_code');
             $discountAmount = 0.0;
+            $freeShipping = false;
 
             if ($couponCode) {
                 $validation = $this->voucherService->validate(
@@ -250,8 +251,20 @@ class CheckoutController extends Controller
                 $discountAmount = (float) ($validation['discount_amount'] ?? 0);
 
                 if (! empty($validation['free_shipping'])) {
-                    $shippingCost = 0.0;
+                    $freeShipping = true;
                 }
+            }
+
+            // T06.10: gratis ongkir otomatis bila subtotal mencapai ambang (setting Admin, G6).
+            $freeShippingThreshold = (float) ($this->integrations->get('shipping.free_shipping_min_purchase', 0) ?? 0);
+            if ($freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
+                $freeShipping = true;
+            }
+
+            // T06.11(a): biaya kurir yang DITANGGUNG merchant (subsidi) dicatat sebelum di-nihilkan.
+            $shippingSubsidy = $freeShipping ? $shippingCost : 0.0;
+            if ($freeShipping) {
+                $shippingCost = 0.0;
             }
 
             // 4b. Tukar poin loyalitas (T08.4/T28.2 tahap 2) — server-authoritative.
@@ -322,6 +335,11 @@ class CheckoutController extends Controller
             // T06.6: simpan gudang pemenuh hasil alokasi (D1).
             if ($fulfillmentWarehouseId) {
                 $order->forceFill(['warehouse_id' => $fulfillmentWarehouseId])->save();
+            }
+
+            // T06.10: catat subsidi ongkir (biaya kurir yang ditanggung merchant).
+            if ($shippingSubsidy > 0) {
+                $order->forceFill(['shipping_subsidy' => $shippingSubsidy])->save();
             }
 
             // 6b. T15.1b: catat pemakaian voucher (kuota + voucher_usages) saat order dibuat.
