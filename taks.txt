@@ -1092,9 +1092,11 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
            `orders.shipping_subsidy` (T06.10/T06.11) saat gratis ongkir; A2 memetakan ke
            akun "Beban Promosi" saat order lunas. [OWNER:A1+A2]
 
-T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [TODO]  [OWNER:A2]
+T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  [OWNER:A2]
   Minor:
-    T35.1 [NEW] Rate limiting (login/checkout/voucher/webhook) + validasi upload (mime/size).
+    T35.1 [DONE] Rate limiting (login/register/password/checkout/voucher/webhook) +
+           validasi upload base64 (mime/size) di `ProductController::uploadImage`.
+           [commit 40241c9] [OWNER:A2]
     T35.2 [NEW] Test konkurensi anti-overselling + idempotensi webhook Midtrans.
     T35.3 [NEW] CI pipeline (gerbang kedua selain pre-commit) + backup DB.
     T35.4 [NEW] Monitoring/logging terstruktur + health check + caching/eager loading.
