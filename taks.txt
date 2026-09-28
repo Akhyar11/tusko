@@ -494,6 +494,11 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            (Jurnal beban promosi tetap milik T34.x/A2.)
     T06.12 [TODO] GRATIS ONGKIR PER KURIR/LAYANAN: bila `expedition_service_id` tertentu
            ditandai gratis (kolom `expedition_services.is_free`) -> `shipping_cost=0`. [OWNER:A1]
+    T06.13 [DONE] CHECKOUT ALAMAT TANPA MOCK FALLBACK: `CheckoutPage` dulu jatuh ke
+           `mockAddresses` saat API kosong/gagal. Kini pakai `isLoadingAddresses`
+           (skeleton saat memuat) + empty-state asli ("Belum ada alamat pengiriman
+           tersimpan" + tombol Tambah Alamat); `handlePayNow` menolak tanpa alamat
+           (buka modal alamat). Impor `mockAddresses` dihapus. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.

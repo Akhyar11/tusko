@@ -23,7 +23,7 @@ import {
   Scale
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { mockAddresses, mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
+import { mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import { checkoutService } from '../services/checkoutService';
 import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
@@ -42,6 +42,7 @@ export default function CheckoutPage({
   onShowToast = () => {}
 }) {
   const [addresses, setAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
@@ -85,22 +86,25 @@ export default function CheckoutPage({
     }
   };
 
-  // Muat alamat tersimpan pengguna dari API (fallback ke contoh bila kosong).
+  // Muat alamat tersimpan pengguna dari API (tanpa fallback mock; pakai loading/empty asli).
   useEffect(() => {
     let active = true;
 
     (async () => {
+      setIsLoadingAddresses(true);
       try {
         const list = await authService.getAddresses();
-        const source = Array.isArray(list) && list.length > 0 ? list : mockAddresses;
         if (!active) return;
+        const source = Array.isArray(list) ? list : [];
         setAddresses(source);
         const preferred = source.find((a) => a.is_default) || source[0];
         setSelectedAddressId(preferred?.id ?? null);
-      } catch {
+      } catch (err) {
         if (!active) return;
-        setAddresses(mockAddresses);
-        setSelectedAddressId(mockAddresses[0]?.id ?? null);
+        setAddresses([]);
+        onShowToast(err?.message || 'Gagal memuat alamat tersimpan.', { type: 'error' });
+      } finally {
+        if (active) setIsLoadingAddresses(false);
       }
     })();
 
@@ -110,15 +114,7 @@ export default function CheckoutPage({
   }, []);
 
   const currentAddress = useMemo(() => {
-    return addresses.find(a => a.id === selectedAddressId) || addresses[0] || {
-      recipient_name: 'Penerima',
-      phone: '081234567890',
-      label: 'Rumah',
-      full_address: 'Alamat belum diatur',
-      city: 'Jakarta',
-      province: 'DKI Jakarta',
-      postal_code: '10110'
-    };
+    return addresses.find(a => a.id === selectedAddressId) || addresses[0] || null;
   }, [addresses, selectedAddressId]);
 
   // Group items by seller
@@ -456,8 +452,16 @@ export default function CheckoutPage({
   };
 
   const handlePayNow = async () => {
-    setIsProcessing(true);
     setCheckoutError('');
+
+    // Wajib punya alamat pengiriman sebelum membuat pesanan.
+    if (!currentAddress) {
+      setCheckoutError('Alamat pengiriman belum diatur. Tambahkan alamat terlebih dahulu.');
+      handleOpenAddressModal('add');
+      return;
+    }
+
+    setIsProcessing(true);
 
     const isManualTransfer = /manual|bank|transfer/i.test(selectedPayment?.name || '');
 
@@ -613,19 +617,38 @@ export default function CheckoutPage({
               </div>
             </div>
 
-            <div className="mt-3 text-xs text-neutral-700">
-              <div className="flex items-center gap-2">
-                <span className="font-sport font-black uppercase text-black text-sm">{currentAddress.recipient_name}</span>
-                <span className="text-neutral-400">|</span>
-                <span className="font-mono text-neutral-600 font-bold">{currentAddress.phone}</span>
-                <span className="bg-black text-white font-sport font-black text-[9px] uppercase px-2 py-0.5 rounded-none ml-2">
-                  {currentAddress.label}
-                </span>
+            {isLoadingAddresses ? (
+              <div className="mt-3 space-y-2">
+                <div className="h-4 w-40 bg-neutral-100 animate-pulse" />
+                <div className="h-3 w-56 bg-neutral-100 animate-pulse" />
+                <div className="h-3 w-full bg-neutral-100 animate-pulse" />
               </div>
-              <p className="mt-1.5 text-neutral-600 leading-relaxed font-medium">
-                {currentAddress.full_address}, {currentAddress.city}, {currentAddress.province}, {currentAddress.postal_code}
-              </p>
-            </div>
+            ) : currentAddress ? (
+              <div className="mt-3 text-xs text-neutral-700">
+                <div className="flex items-center gap-2">
+                  <span className="font-sport font-black uppercase text-black text-sm">{currentAddress.recipient_name}</span>
+                  <span className="text-neutral-400">|</span>
+                  <span className="font-mono text-neutral-600 font-bold">{currentAddress.phone}</span>
+                  <span className="bg-black text-white font-sport font-black text-[9px] uppercase px-2 py-0.5 rounded-none ml-2">
+                    {currentAddress.label}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-neutral-600 leading-relaxed font-medium">
+                  {currentAddress.full_address}, {currentAddress.city}, {currentAddress.province}, {currentAddress.postal_code}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 bg-neutral-50 border border-dashed border-neutral-300 p-4 text-center">
+                <p className="text-xs text-neutral-600 font-medium">Belum ada alamat pengiriman tersimpan.</p>
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddressModal('add')}
+                  className="mt-3 px-4 py-2 bg-black hover:bg-neutral-800 text-white text-[11px] font-sport font-black uppercase tracking-wider rounded-none transition-colors cursor-pointer"
+                >
+                  + Tambah Alamat
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 2. Daftar Barang per Toko & Pilihan Kurir */}
