@@ -1186,6 +1186,12 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
            di bawah jatah 750 jam Render Free) untuk mencegah spin-down/cold-start ±1 menit.
            Catatan: Render Free tetap boleh restart kapan saja; data produksi aman
            (Postgres eksternal + storage S3/R2, terverifikasi `/api/health`). [OWNER:A1]
+    T35.7 [DONE] AUTO-RETRY API (COLD-START/GATEWAY): `apiClient` mengulang request saat
+           status **502/503/504** (semua metode) atau **error jaringan** (khusus
+           GET/PUT/DELETE; POST tidak di-retry pada error jaringan agar tak dobel-proses),
+           backoff 1.5s→4s→8s (maks 4 percobaan). Pesan error jaringan diperjelas
+           ("server sedang bangun/koneksi terputus"). Terverifikasi via failure-injection
+           502 → request diulang lalu sukses. [OWNER:A1]
 
 T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH

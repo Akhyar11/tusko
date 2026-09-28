@@ -61,6 +61,14 @@ export function clearStoredAuth() {
   }
 }
 
+// Retry untuk kegagalan transien (Render free cold-start/restart): edge/gateway
+// mengembalikan 502/503/504 atau koneksi putus sebelum request diproses aplikasi.
+const RETRYABLE_STATUS = new Set([502, 503, 504]);
+const MAX_ATTEMPTS = 4;
+const RETRY_DELAYS_MS = [1500, 4000, 8000];
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
  * Base request dispatcher
  */
@@ -69,6 +77,10 @@ async function request(endpoint, options = {}) {
   const token = getStoredToken();
 
   const isFormData = options.body instanceof FormData;
+  const method = (options.method || 'GET').toUpperCase();
+  // POST tidak di-retry pada error jaringan (berisiko dobel-proses); tetap di-retry
+  // untuk 502/503/504 (request belum sampai aplikasi).
+  const retryOnNetworkError = method !== 'POST';
 
   const headers = {
     Accept: 'application/json',
@@ -86,44 +98,61 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
-  try {
-    const response = await fetch(url, config);
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    const isLastAttempt = attempt === MAX_ATTEMPTS - 1;
 
-    let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      data = text ? { message: text } : {};
-    }
+    try {
+      const response = await fetch(url, config);
 
-    if (!response.ok) {
-      const error = new Error(data.message || `Request failed with status ${response.status}`);
-      error.status = response.status;
-      error.data = data;
-      error.errors = data.errors || null;
-      // Tampilkan detail error API di console agar mudah didiagnosis walau toast tertutup.
-      console.error('[apiClient] API request failed:', {
-        method: config.method,
-        url,
-        status: response.status,
-        message: error.message,
-        errors: error.errors,
-        response: data,
-      });
+      if (RETRYABLE_STATUS.has(response.status) && !isLastAttempt) {
+        await sleep(RETRY_DELAYS_MS[attempt] ?? 8000);
+        continue;
+      }
+
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = text ? { message: text } : {};
+      }
+
+      if (!response.ok) {
+        const error = new Error(data.message || `Request failed with status ${response.status}`);
+        error.status = response.status;
+        error.data = data;
+        error.errors = data.errors || null;
+        // Tampilkan detail error API di console agar mudah didiagnosis walau toast tertutup.
+        console.error('[apiClient] API request failed:', {
+          method: config.method,
+          url,
+          status: response.status,
+          message: error.message,
+          errors: error.errors,
+          response: data,
+        });
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      const isNetworkError = !error.status
+        && (error.name === 'TypeError' || String(error.message).includes('fetch'));
+
+      if (isNetworkError && retryOnNetworkError && !isLastAttempt) {
+        await sleep(RETRY_DELAYS_MS[attempt] ?? 8000);
+        continue;
+      }
+
+      // Tangani kemungkinan server backend sedang tidak aktif (Network Error / Failed to fetch)
+      if (isNetworkError) {
+        error.isNetworkError = true;
+        error.message = 'Server backend sedang bangun atau koneksi terputus. Silakan coba lagi sebentar lagi.';
+        console.error('[apiClient] Network error:', { method: config.method, url, error: error.message });
+      }
       throw error;
     }
-
-    return data;
-  } catch (error) {
-    // Tangani kemungkinan server backend sedang tidak aktif (Network Error / Failed to fetch)
-    if (!error.status && (error.name === 'TypeError' || error.message.includes('fetch'))) {
-      error.isNetworkError = true;
-      error.message = 'Tidak dapat terhubung ke server backend (Offline).';
-      console.error('[apiClient] Network error:', { method: config.method, url, error: error.message });
-    }
-    throw error;
   }
 }
 
