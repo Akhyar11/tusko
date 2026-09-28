@@ -79,8 +79,13 @@ class OrderResource extends JsonResource
                 ])->values();
             }),
             'flags' => [
-                'can_pay' => $this->status === 'pending' && $this->payment_status === 'pending',
+                'can_pay' => $this->status === 'pending'
+                    && ! in_array((string) $this->payment_status, ['paid', 'settlement', 'capture'], true)
+                    && ($this->expires_at === null || $this->expires_at->isFuture()),
                 'can_cancel' => in_array($this->status, ['pending', 'processing']),
+                'can_complete' => in_array($this->status, ['shipped', 'delivered'], true),
+                'can_track' => ! empty($this->tracking_number)
+                    || in_array($this->status, ['shipped', 'delivered', 'completed'], true),
                 'can_confirm_payment' => $this->payment_method === 'manual_transfer' && $this->payment_status === 'pending',
                 'is_completed' => $this->status === 'completed',
             ],
