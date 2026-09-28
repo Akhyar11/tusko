@@ -31,6 +31,7 @@ import Checkbox from './molecules/Checkbox';
 import TurnstileWidget from './molecules/TurnstileWidget';
 import IconButton from './atoms/IconButton';
 import AddressModal from './AddressModal';
+import AddressFormPage from './AddressFormPage';
 import ExpeditionModal from './ExpeditionModal';
 import PaymentInstructionModal from './PaymentInstructionModal';
 
@@ -47,34 +48,50 @@ export default function CheckoutPage({
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressModalInitialTab, setAddressModalInitialTab] = useState('list');
+  // Form tambah/ubah alamat memakai halaman lengkap (sama dengan Profil: peta GPS + wilayah).
+  const [isAddressFormOpen, setIsAddressFormOpen] = useState(false);
+  const [addressToEdit, setAddressToEdit] = useState(null);
 
   const handleOpenAddressModal = (mode = 'list') => {
     setAddressModalInitialTab(mode);
     setIsAddressModalOpen(true);
   };
 
-  const handleSaveAddress = (newOrUpdated) => {
-    setAddresses(prev => {
-      const exists = prev.some(a => a.id === newOrUpdated.id);
-      let updated;
-      if (exists) {
-        updated = prev.map(a => a.id === newOrUpdated.id ? newOrUpdated : a);
+  const handleOpenAddressForm = (address = null) => {
+    setAddressToEdit(address);
+    setIsAddressFormOpen(true);
+  };
+
+  const handleSaveAddress = async (payload) => {
+    // Persist ke API (create/update) — komponen AddressFormPage hanya mengirim payload.
+    try {
+      let saved;
+      if (addressToEdit?.id) {
+        saved = await authService.updateAddress(addressToEdit.id, payload);
       } else {
-        updated = [...prev, newOrUpdated];
+        saved = await authService.createAddress(payload);
       }
 
-      if (newOrUpdated.is_default) {
-        updated = updated.map(a => ({
-          ...a,
-          is_default: a.id === newOrUpdated.id
-        }));
+      const list = await authService.getAddresses();
+      if (Array.isArray(list)) {
+        setAddresses(list);
+        const savedId = saved?.id ?? payload?.id;
+        const target = list.find(a => a.id === savedId)
+          || list.find(a => a.is_default)
+          || list[list.length - 1]
+          || null;
+        setSelectedAddressId(target?.id ?? null);
       }
 
-      return updated;
-    });
+      onShowToast('✓ Alamat pengiriman berhasil disimpan.');
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal menyimpan alamat ke server.', { type: 'error' });
+      return; // jangan tutup form bila gagal
+    }
 
-    setSelectedAddressId(newOrUpdated.id);
     setIsAddressModalOpen(false);
+    setIsAddressFormOpen(false);
+    setAddressToEdit(null);
   };
 
   const handleDeleteAddress = (id) => {
@@ -458,7 +475,7 @@ export default function CheckoutPage({
     // Wajib punya alamat pengiriman sebelum membuat pesanan.
     if (!currentAddress) {
       setCheckoutError('Alamat pengiriman belum diatur. Tambahkan alamat terlebih dahulu.');
-      handleOpenAddressModal('add');
+      handleOpenAddressForm();
       return;
     }
 
@@ -602,6 +619,22 @@ export default function CheckoutPage({
     );
   }
 
+  // Form tambah/ubah alamat (halaman lengkap dengan peta GPS — sama seperti Profil).
+  if (isAddressFormOpen) {
+    return (
+      <AddressFormPage
+        addressToEdit={addressToEdit}
+        defaultRecipientName={currentAddress?.recipient_name || ''}
+        defaultPhone={currentAddress?.phone || ''}
+        onSaveAddress={handleSaveAddress}
+        onCancel={() => {
+          setIsAddressFormOpen(false);
+          setAddressToEdit(null);
+        }}
+      />
+    );
+  }
+
   if (checkoutItems.length === 0) {
     return (
       <div className="w-full py-16 px-4 text-center">
@@ -651,7 +684,7 @@ export default function CheckoutPage({
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => handleOpenAddressModal('add')}
+                  onClick={() => handleOpenAddressForm()}
                   className="text-xs font-sport font-bold uppercase text-black hover:text-amber-600 cursor-pointer flex items-center gap-1"
                 >
                   <Plus size={13} strokeWidth={2.5} />
@@ -693,7 +726,7 @@ export default function CheckoutPage({
                 <p className="text-xs text-neutral-600 font-medium">Belum ada alamat pengiriman tersimpan.</p>
                 <button
                   type="button"
-                  onClick={() => handleOpenAddressModal('add')}
+                  onClick={() => handleOpenAddressForm()}
                   className="mt-3 px-4 py-2 bg-black hover:bg-neutral-800 text-white text-[11px] font-sport font-black uppercase tracking-wider rounded-none transition-colors cursor-pointer"
                 >
                   + Tambah Alamat

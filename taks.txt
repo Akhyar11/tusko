@@ -504,6 +504,12 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            palsu. Kini App memuat keranjang aktif (`GET /api/cart`) saat masuk view
            checkout tanpa item (`isLoadingCheckout` -> skeleton "Memuat data checkout…"),
            lalu mengisi `checkoutItems`. [OWNER:A1]
+    T06.15 [DONE] FORM TAMBAH ALAMAT CHECKOUT = FORM PROFIL (lengkap + GPS): tombol
+           "Tambah Alamat" di checkout dulu membuka `AddressModal` (form sederhana tanpa
+           GPS/kelurahan). Kini membuka komponen yang SAMA dengan Profil
+           (`AddressFormPage`: peta interaktif + GPS "Isi Otomatis" + wilayah
+           provinsi->kota->kecamatan->kelurahan + kode wilayah). `handleSaveAddress`
+           memuat ulang daftar dari `/api/addresses`. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
