@@ -63,14 +63,36 @@ export default function PaymentInstructionModal({
     return () => { mounted = false; };
   }, [isOpen]);
 
+  const [statusChecking, setStatusChecking] = useState(false);
+
+  // Sinkronkan countdown dengan kedaluwarsa pembayaran Midtrans (bila ada).
+  useEffect(() => {
+    if (!isOpen) return;
+    const expires = orderData?.paymentExpiresAt;
+    if (expires) {
+      const diff = Math.max(0, Math.floor((new Date(expires).getTime() - Date.now()) / 1000));
+      setTimeLeft(diff);
+    }
+  }, [isOpen, orderData?.paymentExpiresAt]);
+
   if (!isOpen || !orderData) return null;
 
   const {
     invoiceNumber = 'INV/2026/TSK-0001',
-    vaNumber = '8808123456789012',
+    vaNumber = '',
+    billerCode = null,
+    billKey = null,
+    qrString = null,
+    qrUrl = null,
+    paymentChannel = null,
+    paymentStatus = null,
+    paymentExpiresAt = null,
     totalAmount = 0,
     paymentMethod = { name: 'BCA Virtual Account', type: 'midtrans' }
   } = orderData;
+
+  const isQris = paymentMethod?.id === 'qris' || paymentChannel === 'qris';
+  const isMandiri = paymentMethod?.id === 'mandiri_va' || paymentChannel === 'mandiri_va' || paymentMethod?.type === 'echannel';
 
   const handleCopy = (text, type) => {
     navigator.clipboard?.writeText(text);
@@ -118,6 +140,26 @@ export default function PaymentInstructionModal({
       onShowToast(msg || 'Gagal mengunggah bukti pembayaran.', { type: 'error' });
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  // Cek status pembayaran online (VA/QRIS) ke backend.
+  const handleCheckStatus = async () => {
+    setStatusChecking(true);
+    try {
+      const fresh = await checkoutService.getOrder(invoiceNumber);
+      const status = fresh?.payment_status;
+      if (status === 'paid') {
+        setPaymentSuccess(true);
+        onShowToast('Pembayaran terverifikasi. Terima kasih!');
+        onPaymentConfirmed({ ...orderData, paymentStatus: 'paid' });
+      } else {
+        onShowToast(`Status pembayaran saat ini: ${status || 'pending'}`, { type: 'info' });
+      }
+    } catch {
+      onShowToast('Gagal memeriksa status pembayaran.', { type: 'error' });
+    } finally {
+      setStatusChecking(false);
     }
   };
 
@@ -204,8 +246,8 @@ export default function PaymentInstructionModal({
               </div>
 
               {/* Payment Method Specific Credentials */}
-              {paymentMethod.type === 'midtrans' && paymentMethod.id !== 'qris' && (
-                /* Virtual Account details */
+              {paymentMethod.type === 'midtrans' && !isQris && (
+                /* Virtual Account / Mandiri biller details */
                 <div className="p-4 bg-white rounded-none border-2 border-black space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-sport font-black uppercase text-black">{paymentMethod.name}</span>
@@ -213,51 +255,85 @@ export default function PaymentInstructionModal({
                       Otomatis
                     </span>
                   </div>
-                  <div className="p-3 bg-neutral-50 rounded-none border border-neutral-300 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block">Nomor Virtual Account</span>
-                      <span className="font-mono text-sm sm:text-base font-black text-black tracking-wider">
-                        {vaNumber}
-                      </span>
+
+                  {isMandiri ? (
+                    <>
+                      <div className="p-3 bg-neutral-50 rounded-none border border-neutral-300 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block">Kode Perusahaan (Biller)</span>
+                          <span className="font-mono text-sm sm:text-base font-black text-black tracking-wider">
+                            {billerCode || '-'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(String(billerCode || ''), 'va')}
+                          className="px-3.5 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Copy size={12} />
+                          <span>{copiedVa ? 'Disalin!' : 'Salin'}</span>
+                        </button>
+                      </div>
+                      <div className="p-3 bg-neutral-50 rounded-none border border-neutral-300 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block">Nomor Pembayaran (Bill Key)</span>
+                          <span className="font-mono text-sm sm:text-base font-black text-black tracking-wider">
+                            {billKey || '-'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(String(billKey || ''), 'va')}
+                          className="px-3.5 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Copy size={12} />
+                          <span>{copiedVa ? 'Disalin!' : 'Salin'}</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-3 bg-neutral-50 rounded-none border border-neutral-300 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block">Nomor Virtual Account</span>
+                        <span className="font-mono text-sm sm:text-base font-black text-black tracking-wider">
+                          {vaNumber || '-'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(vaNumber, 'va')}
+                        className="px-3.5 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Copy size={12} />
+                        <span>{copiedVa ? 'Disalin!' : 'Salin'}</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(vaNumber, 'va')}
-                      className="px-3.5 py-2 bg-black hover:bg-neutral-800 text-white rounded-none text-xs font-sport font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      <Copy size={12} />
-                      <span>{copiedVa ? 'Disalin!' : 'Salin'}</span>
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
 
               {/* QRIS Display */}
-              {paymentMethod.id === 'qris' && (
+              {isQris && (
                 <div className="p-4 bg-white rounded-none border-2 border-black text-center space-y-3">
                   <div className="flex items-center justify-center gap-1.5 text-xs font-sport font-black uppercase text-black">
                     <QrCode size={16} className="text-black" />
                     <span>Scan Kode QRIS Nasional</span>
                   </div>
 
-                  {/* Visual SVG QR Code placeholder */}
-                  <div className="w-48 h-48 mx-auto bg-white p-3 rounded-none border-2 border-dashed border-black flex flex-col items-center justify-center relative">
-                    <div className="grid grid-cols-6 gap-1 w-full h-full p-2 bg-neutral-100 rounded-none">
-                      {Array.from({ length: 36 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`rounded-none ${
-                            (i % 2 === 0 || i % 5 === 0) ? 'bg-black' : 'bg-transparent'
-                          }`}
-                        />
-                      ))}
+                  {qrUrl ? (
+                    <img
+                      src={qrUrl}
+                      alt="Kode QRIS"
+                      className="w-56 h-56 mx-auto object-contain bg-white p-2 rounded-none border-2 border-black"
+                    />
+                  ) : qrString ? (
+                    <div className="p-3 bg-neutral-50 border border-neutral-300 rounded-none text-left">
+                      <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 block mb-1">QR String</span>
+                      <span className="font-mono text-[10px] text-neutral-700 break-all block">{qrString}</span>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="bg-black p-1.5 text-white font-sport font-black text-[10px] tracking-wider rounded-none">
-                        QRIS
-                      </div>
-                    </div>
-                  </div>
+                  ) : (
+                    <div className="py-6 text-xs text-neutral-500 font-medium">Kode QR sedang disiapkan...</div>
+                  )}
 
                   <p className="text-[11px] text-neutral-500 font-medium">
                     Mendukung GoPay, OVO, DANA, BCA mobile, LinkAja, ShopeePay, dan semua aplikasi bank berlogo QRIS.
@@ -380,6 +456,19 @@ export default function PaymentInstructionModal({
           )}
 
         </div>
+
+        {/* Cek Status Pembayaran Online (VA/QRIS) */}
+        {!paymentSuccess && paymentMethod.type !== 'manual' && (
+          <button
+            type="button"
+            disabled={statusChecking}
+            onClick={handleCheckStatus}
+            className="mt-3 w-full py-2.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 border border-amber-500 text-neutral-950 rounded-none font-sport font-black uppercase text-xs tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
+          >
+            <CheckCircle2 size={14} />
+            <span>{statusChecking ? 'Memeriksa...' : 'Cek Status Pembayaran'}</span>
+          </button>
+        )}
 
         {/* Modal Action Buttons Footer */}
         <div className="pt-3 border-t-2 border-black flex items-center gap-3 shrink-0">

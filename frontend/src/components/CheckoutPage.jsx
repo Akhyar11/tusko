@@ -492,7 +492,7 @@ export default function CheckoutPage({
       coupon_code: appliedCoupon?.code || null,
       loyalty_points_redeemed: Math.min(Number(pointsToRedeem) || 0, availablePoints),
       payment_method: isManualTransfer ? 'manual_transfer' : 'midtrans',
-      payment_channel: selectedPayment?.name || null,
+      payment_channel: selectedPayment?.id || selectedPayment?.name || null,
       cf_turnstile_response: turnstileToken || undefined,
     };
 
@@ -500,7 +500,10 @@ export default function CheckoutPage({
       const response = await checkoutService.createOrder(payload);
       const order = response.data || {};
 
-      const completedOrder = {
+      const channel = selectedPayment?.id;
+      const coreApiChannels = ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'qris'];
+
+      let completedOrder = {
         invoiceNumber: order.order_number,
         vaNumber: order.va_number,
         address: currentAddress,
@@ -513,10 +516,41 @@ export default function CheckoutPage({
         createdAt: order.created_at || new Date().toISOString(),
       };
 
+      // T07.9: Core API (VA/Mandiri/QRIS) — ambil instruksi bayar asli, UI full Tusko.
+      if (payload.payment_method === 'midtrans' && coreApiChannels.includes(channel)) {
+        try {
+          const instruction = await checkoutService.chargeOrder(order.order_number, channel);
+          completedOrder = {
+            ...completedOrder,
+            vaNumber: instruction?.va_number || order.va_number,
+            billerCode: instruction?.biller_code || null,
+            billKey: instruction?.bill_key || null,
+            qrString: instruction?.qr_string || null,
+            qrUrl: instruction?.qr_url || null,
+            paymentChannel: instruction?.payment_channel || channel,
+            paymentStatus: instruction?.payment_status || 'pending',
+            paymentExpiresAt: instruction?.payment_expires_at || null,
+          };
+        } catch (err) {
+          const firstErr = err.errors ? Object.values(err.errors)[0] : null;
+          setCheckoutError(
+            (Array.isArray(firstErr) ? firstErr[0] : firstErr)
+            || err.message
+            || 'Gagal membuat instruksi pembayaran Midtrans.'
+          );
+          return;
+        }
+
+        setOrderSuccessData(completedOrder);
+        onFinishOrder(completedOrder);
+        pollPaymentStatus(order.order_number);
+        return;
+      }
+
       setOrderSuccessData(completedOrder);
       onFinishOrder(completedOrder);
 
-      // T07.1: Snap popup (bila Midtrans) + polling status pembayaran.
+      // Kartu kredit / kanal non-Core: Snap popup + polling status pembayaran.
       if (payload.payment_method === 'midtrans') {
         try {
           const snap = await checkoutService.getSnapToken(order.order_number);

@@ -103,6 +103,17 @@ export const checkoutService = {
   },
 
   /**
+   * T07.9: buat charge Core API (VA/Mandiri/QRIS) dan ambil instruksi bayar.
+   */
+  async chargeOrder(idOrOrderNumber, paymentMethod) {
+    const response = await apiClient.post(
+      `/api/orders/${encodeURIComponent(idOrOrderNumber)}/charge`,
+      { payment_method: paymentMethod }
+    );
+    return response.data;
+  },
+
+  /**
    * Ambil detail pesanan berdasarkan ID atau nomor pesanan.
    */
   async getOrder(idOrOrderNumber) {
