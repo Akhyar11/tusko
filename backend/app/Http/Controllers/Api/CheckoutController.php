@@ -215,11 +215,22 @@ class CheckoutController extends Controller
                 ? ($savedAddress->subdistrict_code ?? null)
                 : $request->input('subdistrict_destination');
 
+            // T40: konteks Biteship (Area ID tujuan dari alamat; Area ID asal dari gudang pemenuh).
+            $destinationBiteshipAreaId = $addressId
+                ? ($savedAddress->biteship_area_id ?? null)
+                : $request->input('destination_biteship_area_id');
+            $originBiteshipAreaId = $fulfillmentWarehouseId
+                ? \App\Models\Warehouse::whereKey($fulfillmentWarehouseId)->value('biteship_area_id')
+                : null;
+
             // T06.11: konteks tarif LIVE (berat gram + tujuan + nilai barang).
             $liveRateContext = [
                 'weight_grams' => max(1, (int) round($totalWeight * 1000)),
                 'destination_district_code' => $destinationDistrictCode,
                 'subdistrict_destination' => $destinationSubdistrict,
+                'destination_biteship_area_id' => $destinationBiteshipAreaId,
+                'destination_postal_code' => $postalCode,
+                'origin_biteship_area_id' => $originBiteshipAreaId,
                 'item_value' => (int) round($subtotal),
             ];
 

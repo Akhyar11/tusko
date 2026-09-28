@@ -23,6 +23,7 @@ class ShippingAddress extends Model
         'city_code',
         'district_code',
         'subdistrict_code',
+        'biteship_area_id',
         'postal_code',
         'notes',
         'latitude',

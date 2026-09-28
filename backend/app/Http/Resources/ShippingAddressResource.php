@@ -28,6 +28,7 @@ class ShippingAddressResource extends JsonResource
             'city_code' => $this->city_code,
             'district_code' => $this->district_code,
             'subdistrict_code' => $this->subdistrict_code,
+            'biteship_area_id' => $this->biteship_area_id,
             'postal_code' => $this->postal_code,
             'latitude' => $this->latitude ? (float) $this->latitude : null,
             'longitude' => $this->longitude ? (float) $this->longitude : null,

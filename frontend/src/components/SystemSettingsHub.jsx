@@ -251,35 +251,50 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
             )}
 
             {activeGroup === 'shipping' && (
-              <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-between gap-3">
-                <div className="text-[11px] text-neutral-600">
-                  Sinkronkan daftar kurir &amp; layanan dari KiriminAja ke master ekspedisi.
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <IconButton
-                    icon={CloudDownload}
-                    onClick={async () => {
-                      setIsSyncingCouriers(true);
-                      try {
-                        const result = await expeditionService.syncExpeditions();
-                        onShowToast(`Sinkronisasi selesai: ${result?.couriers ?? 0} kurir, ${result?.services ?? 0} layanan.`);
-                      } catch (err) {
-                        onShowToast(err?.message || 'Gagal sinkronisasi kurir.', { type: 'error' });
-                      } finally {
-                        setIsSyncingCouriers(false);
-                      }
-                    }}
-                    title="Sinkron Kurir Sekarang"
-                    variant="primary"
-                    disabled={isSyncingCouriers}
-                  />
-                  <button
-                    type="button"
-                    onClick={onOpenExpeditions}
-                    className="px-3 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 cursor-pointer shrink-0"
-                  >
-                    Buka Sinkron Kurir
-                  </button>
+              <div className="space-y-3">
+                {(values['shipping.provider'] === 'biteship') && (
+                  <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none">
+                    <p className="text-[11px] font-sport font-black uppercase tracking-wider text-neutral-800 mb-1">
+                      URL Webhook Biteship
+                    </p>
+                    <code className="block text-[11px] font-mono text-neutral-700 break-all select-all">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/biteship` : '/api/webhooks/biteship'}
+                    </code>
+                    <p className="text-[10px] text-neutral-500 mt-1">
+                      Daftarkan URL ini di dashboard Biteship → Integrations → Webhook (event order.status/order.waybill_id/order.price).
+                    </p>
+                  </div>
+                )}
+                <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-none flex items-center justify-between gap-3">
+                  <div className="text-[11px] text-neutral-600">
+                    Sinkronkan daftar kurir &amp; layanan dari provider pengiriman aktif ke master ekspedisi.
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <IconButton
+                      icon={CloudDownload}
+                      onClick={async () => {
+                        setIsSyncingCouriers(true);
+                        try {
+                          const result = await expeditionService.syncExpeditions();
+                          onShowToast(`Sinkronisasi selesai: ${result?.couriers ?? 0} kurir, ${result?.services ?? 0} layanan.`);
+                        } catch (err) {
+                          onShowToast(err?.message || 'Gagal sinkronisasi kurir.', { type: 'error' });
+                        } finally {
+                          setIsSyncingCouriers(false);
+                        }
+                      }}
+                      title="Sinkron Kurir Sekarang"
+                      variant="primary"
+                      disabled={isSyncingCouriers}
+                    />
+                    <button
+                      type="button"
+                      onClick={onOpenExpeditions}
+                      className="px-3 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 cursor-pointer shrink-0"
+                    >
+                      Buka Sinkron Kurir
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -23,6 +23,7 @@ import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import SearchBar from './molecules/SearchBar';
 import { locationService } from '../services/locationService';
+import { checkoutService } from '../services/checkoutService';
 import IconButton from './atoms/IconButton';
 import FormTipsPanel from './organisms/FormTipsPanel';
 
@@ -68,6 +69,12 @@ export default function AddressFormPage({
   const [districtCode, setDistrictCode] = useState(addressToEdit?.district_code || '');
   const [subdistrictCode, setSubdistrictCode] = useState(addressToEdit?.subdistrict_code || '');
   const [isManualLocation, setIsManualLocation] = useState(false);
+  const [biteshipAreaId, setBiteshipAreaId] = useState(addressToEdit?.biteship_area_id || '');
+  const [biteshipAreaLabel, setBiteshipAreaLabel] = useState('');
+  const [biteshipAreaQuery, setBiteshipAreaQuery] = useState('');
+  const [biteshipAreaOptions, setBiteshipAreaOptions] = useState([]);
+  const [biteshipAreaSearching, setBiteshipAreaSearching] = useState(false);
+  const [biteshipAreasAvailable, setBiteshipAreasAvailable] = useState(false);
   const [formError, setFormError] = useState('');
   const regionSelectedRef = useRef(false);
   const formRef = useRef(null);
@@ -457,6 +464,37 @@ export default function AddressFormPage({
     setSubdistrictCode(value || '');
   };
 
+  // T40.5: pencarian Area ID Biteship (hanya muncul bila provider Biteship aktif).
+  const handleBiteshipAreaSearch = async (query) => {
+    setBiteshipAreaQuery(query);
+    if (!query || query.trim().length < 3) {
+      setBiteshipAreaOptions([]);
+      return;
+    }
+    setBiteshipAreaSearching(true);
+    try {
+      const res = await checkoutService.searchShippingAreas(query.trim());
+      setBiteshipAreasAvailable(Boolean(res.configured));
+      setBiteshipAreaOptions(res.data || []);
+    } catch {
+      setBiteshipAreaOptions([]);
+    } finally {
+      setBiteshipAreaSearching(false);
+    }
+  };
+
+  const handleSelectBiteshipArea = (area) => {
+    setBiteshipAreaId(area.id);
+    setBiteshipAreaLabel(
+      [area.village || area.name, area.district, area.city, area.province].filter(Boolean).join(', ')
+    );
+    if (area.postal_code) setPostalCode(area.postal_code);
+    if (area.city) setCity(area.city);
+    if (area.province) setProvince(area.province);
+    setBiteshipAreaOptions([]);
+    setBiteshipAreaQuery('');
+  };
+
   // Submit Form Alamat
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -480,6 +518,7 @@ export default function AddressFormPage({
       city_code: cityCode || null,
       district_code: districtCode || null,
       subdistrict_code: subdistrictCode || null,
+      biteship_area_id: biteshipAreaId || null,
       postal_code: postalCode.trim() || '12730',
       lat: coords.lat,
       lng: coords.lng,
@@ -846,6 +885,44 @@ export default function AddressFormPage({
                     weight="mono"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                  Area Biteship (Opsional)
+                </label>
+                <SearchBar
+                  value={biteshipAreaQuery}
+                  onChange={handleBiteshipAreaSearch}
+                  onReset={() => handleBiteshipAreaSearch('')}
+                  placeholder="Cari kecamatan/kelurahan/kode pos untuk Area ID Biteship..."
+                />
+                {biteshipAreaSearching && (
+                  <p className="text-[10px] text-neutral-500 font-medium mt-1">Mencari area...</p>
+                )}
+                {biteshipAreasAvailable && biteshipAreaOptions.length > 0 && (
+                  <ul className="mt-1.5 border border-neutral-300 bg-white rounded-none max-h-56 overflow-y-auto divide-y divide-neutral-100">
+                    {biteshipAreaOptions.map((area, areaIdx) => (
+                      <li key={`${area.id}-${areaIdx}`}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectBiteshipArea(area)}
+                          className="w-full text-left px-3 py-2 hover:bg-neutral-50 cursor-pointer rounded-none"
+                        >
+                          <span className="block text-xs font-bold text-neutral-900">{area.name}</span>
+                          <span className="block text-[10px] text-neutral-500">
+                            {[area.district, area.city, area.province, area.postal_code].filter(Boolean).join(' • ')}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {biteshipAreaId && (
+                  <p className="text-[10px] text-neutral-600 font-medium mt-1">
+                    Area Biteship terpilih: {biteshipAreaLabel || biteshipAreaId}
+                  </p>
+                )}
               </div>
 
               {!provinceCode && (

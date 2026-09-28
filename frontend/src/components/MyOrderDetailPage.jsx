@@ -55,6 +55,8 @@ export default function MyOrderDetailPage({
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
+  const [trackingHistory, setTrackingHistory] = useState(null);
+  const [isLoadingTracking, setIsLoadingTracking] = useState(false);
 
   const ref = orderRef || initialOrder?.order_number || initialOrder?.id || null;
 
@@ -185,6 +187,20 @@ export default function MyOrderDetailPage({
       onShowToast(err?.message || 'Gagal menyelesaikan pesanan.', { type: 'error' });
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  // T40.8: lacak pengiriman (riwayat provider Biteship).
+  const handleLoadTracking = async () => {
+    if (!order) return;
+    setIsLoadingTracking(true);
+    try {
+      const data = await checkoutService.getOrderTracking(order.order_number || order.id);
+      setTrackingHistory(data?.history || []);
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal memuat pelacakan pengiriman.', { type: 'error' });
+    } finally {
+      setIsLoadingTracking(false);
     }
   };
 
@@ -360,6 +376,35 @@ export default function MyOrderDetailPage({
             <p className="text-neutral-600">Estimasi: {order.expedition?.etd || '-'}</p>
             {order.expedition?.tracking_number && (
               <p className="font-mono text-neutral-600">Resi: <span className="font-bold">{order.expedition.tracking_number}</span></p>
+            )}
+            {order.expedition?.tracking_number && (
+              <button
+                type="button"
+                onClick={handleLoadTracking}
+                disabled={isLoadingTracking}
+                className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-950 hover:bg-neutral-800 disabled:opacity-50 text-white text-[10px] font-sport font-black uppercase tracking-wider rounded-none cursor-pointer"
+              >
+                <Navigation size={12} />
+                <span>{isLoadingTracking ? 'Memuat...' : 'Lacak Pengiriman'}</span>
+              </button>
+            )}
+            {trackingHistory && (
+              <ul className="mt-2 border-t border-neutral-200 pt-2 space-y-1.5">
+                {trackingHistory.length === 0 ? (
+                  <li className="text-[11px] text-neutral-500">Belum ada riwayat pelacakan.</li>
+                ) : (
+                  trackingHistory.map((entry, idx) => (
+                    <li key={`${entry.time}-${idx}`} className="text-[11px] text-neutral-700">
+                      <span className="font-sport font-black uppercase tracking-wider text-neutral-900 block">
+                        {entry.description}
+                      </span>
+                      <span className="text-neutral-500 font-mono">
+                        {entry.city ? `${entry.city} • ` : ''}{entry.time ? new Date(entry.time).toLocaleString('id-ID') : ''}
+                      </span>
+                    </li>
+                  ))
+                )}
+              </ul>
             )}
           </div>
         </div>

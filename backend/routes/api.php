@@ -94,6 +94,7 @@ Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, '
 Route::get('/checkout/config', [\App\Http\Controllers\Api\CheckoutController::class, 'config'])->middleware('auth.optional');
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
 Route::get('/shipping/services', [\App\Http\Controllers\Api\ShippingRateController::class, 'localServices'])->middleware('auth.optional');
+Route::get('/shipping/areas', [\App\Http\Controllers\Api\ShippingRateController::class, 'areas'])->middleware('auth.optional');
 
 Route::prefix('locations')->group(function () {
     Route::get('/provinces', [\App\Http\Controllers\Api\LocationController::class, 'provinces']);
@@ -104,6 +105,7 @@ Route::prefix('locations')->group(function () {
 Route::prefix('orders')->middleware('auth.optional')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\OrderController::class, 'index']);
     Route::get('/track/{orderNumber}', [\App\Http\Controllers\Api\OrderController::class, 'trackGuestOrder'])->where('orderNumber', '.*');
+    Route::get('/{idOrOrderNumber}/tracking', [\App\Http\Controllers\Api\ShipmentController::class, 'tracking'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/generate-receipt', [\App\Http\Controllers\Api\OrderController::class, 'generateReceipt'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/book-pickup', [\App\Http\Controllers\Api\OrderController::class, 'bookPickup'])->where('idOrOrderNumber', '.*');
     Route::get('/{idOrOrderNumber}/receipt', [\App\Http\Controllers\Api\OrderController::class, 'getReceipt'])->where('idOrOrderNumber', '.*');
@@ -127,6 +129,7 @@ Route::prefix('orders')->middleware('auth.optional')->group(function () {
 Route::get('/payment-methods', [\App\Http\Controllers\Api\PaymentMethodController::class, 'index']);
 Route::get('/payment-methods/manual-banks', [\App\Http\Controllers\Api\ManualPaymentController::class, 'bankAccounts']);
 Route::post('/webhooks/midtrans', [\App\Http\Controllers\Api\MidtransWebhookController::class, 'handle'])->middleware('throttle:webhook');
+Route::post('/webhooks/biteship', [\App\Http\Controllers\Api\BiteshipWebhookController::class, 'handle'])->middleware('throttle:webhook');
 
 // T35.4: health check untuk monitoring/uptime probe.
 Route::get('/health', [\App\Http\Controllers\Api\HealthController::class, 'index']);
@@ -161,6 +164,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
 
     Route::post('/admin/expeditions/sync', [\App\Http\Controllers\Api\ExpeditionController::class, 'sync']);
+
+    Route::post('/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'store'])->where('idOrOrderNumber', '.*');
 
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\ProductReviewController::class, 'adminIndex']);

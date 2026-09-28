@@ -23,8 +23,10 @@ use Illuminate\Support\Facades\Log;
  */
 class ShippingRateService
 {
-    public function __construct(private readonly IntegrationService $integrations)
-    {
+    public function __construct(
+        private readonly IntegrationService $integrations,
+        private readonly BiteshipClient $biteship
+    ) {
     }
 
     public function provider(): string
@@ -36,6 +38,10 @@ class ShippingRateService
 
     public function isConfigured(): bool
     {
+        if ($this->provider() === 'biteship') {
+            return $this->biteship->isConfigured();
+        }
+
         return $this->integrations->isConfigured('shipping.base_url')
             && $this->integrations->isConfigured('shipping.api_key');
     }
@@ -45,7 +51,14 @@ class ShippingRateService
      */
     public function isOriginConfigured(): bool
     {
-        foreach (['store.origin_district_code', 'store.origin_kiriminaja_district_id', 'store.origin_city', 'store.origin_postal_code'] as $key) {
+        foreach ([
+            'store.origin_district_code',
+            'store.origin_kiriminaja_district_id',
+            'store.origin_city',
+            'store.origin_postal_code',
+            'shipping.biteship_origin_area_id',
+            'shipping.biteship_origin_postal_code',
+        ] as $key) {
             if ($this->integrations->isConfigured($key)) {
                 return true;
             }
@@ -90,9 +103,11 @@ class ShippingRateService
         }
 
         try {
-            $rates = $this->provider() === 'apicoid'
-                ? $this->fetchApiCoId($context)
-                : $this->fetchKiriminAja($context);
+            $rates = match ($this->provider()) {
+                'apicoid' => $this->fetchApiCoId($context),
+                'biteship' => $this->fetchBiteship($context),
+                default => $this->fetchKiriminAja($context),
+            };
         } catch (Exception $e) {
             Log::error('Gagal mengambil tarif pengiriman: ' . $e->getMessage());
 
@@ -156,8 +171,20 @@ class ShippingRateService
         ksort($normalized);
 
         return 'shipping_rate:' . md5(
-            $this->provider() . '|' . (string) $this->integrations->get('shipping.base_url') . '|' . json_encode($normalized)
+            $this->provider() . '|' . $this->providerBaseUrl() . '|' . json_encode($normalized)
         );
+    }
+
+    /**
+     * Base URL provider aktif (dipakai untuk cache key & fallback).
+     */
+    private function providerBaseUrl(): string
+    {
+        if ($this->provider() === 'biteship') {
+            return $this->biteship->baseUrl();
+        }
+
+        return (string) $this->integrations->get('shipping.base_url');
     }
 
     /**
@@ -240,6 +267,109 @@ class ShippingRateService
             ->post($baseUrl . '/api/mitra/v6.1/shipping_price', $payload);
 
         return $this->normalizeKiriminAja($response->json() ?? []);
+    }
+
+    /**
+     * Tarif LIVE Biteship (T40.4): POST /v1/rates/couriers.
+     *
+     * Memprioritaskan Area ID (lebih akurat) lalu fallback kode pos. `courier`
+     * dikonversi menjadi CSV `couriers`; bila kosong memakai whitelist admin
+     * (`shipping.biteship_couriers`) atau seluruh kurir.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchBiteship(array $context): array
+    {
+        $originArea = $context['origin_biteship_area_id']
+            ?? $this->integrations->get('shipping.biteship_origin_area_id');
+        $originPostal = $context['origin_postal_code']
+            ?? $this->integrations->get('shipping.biteship_origin_postal_code')
+            ?? $this->integrations->get('store.origin_postal_code');
+
+        $destinationArea = $context['destination_biteship_area_id'] ?? null;
+        $destinationPostal = $context['destination_postal_code'] ?? null;
+
+        if ((! $originArea && ! $originPostal) || (! $destinationArea && ! $destinationPostal)) {
+            return [];
+        }
+
+        $payload = array_filter([
+            'origin_area_id' => $originArea ? (string) $originArea : null,
+            'origin_postal_code' => $originArea ? null : $originPostal,
+            'destination_area_id' => $destinationArea ? (string) $destinationArea : null,
+            'destination_postal_code' => $destinationArea ? null : $destinationPostal,
+            'couriers' => $this->biteshipCouriers($context),
+            'items' => [$this->biteshipRateItem($context)],
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $body = $this->biteship->post('/v1/rates/couriers', $payload);
+
+        return $this->normalizeBiteship($body);
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function biteshipCouriers(array $context): ?string
+    {
+        $courier = $context['courier'] ?? null;
+
+        if (is_array($courier)) {
+            $courier = implode(',', array_filter($courier));
+        }
+
+        if (is_string($courier) && trim($courier) !== '') {
+            return trim($courier);
+        }
+
+        $whitelist = (string) ($this->integrations->get('shipping.biteship_couriers') ?? '');
+
+        return trim($whitelist) !== '' ? trim($whitelist) : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
+    private function biteshipRateItem(array $context): array
+    {
+        return array_filter([
+            'name' => $context['item_name'] ?? 'Paket',
+            'value' => (int) ($context['item_value'] ?? 0),
+            'quantity' => 1,
+            'weight' => max(1, (int) ($context['weight_grams'] ?? 0)),
+            'length' => $context['length'] ?? null,
+            'width' => $context['width'] ?? null,
+            'height' => $context['height'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * Normalisasi respons Biteship: `pricing[]`.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeBiteship(array $body): array
+    {
+        $pricing = $body['pricing'] ?? [];
+        $normalized = [];
+
+        foreach ($pricing as $rate) {
+            $cost = $rate['price'] ?? $rate['shipping_fee'] ?? 0;
+
+            $normalized[] = [
+                'courier' => strtolower((string) ($rate['courier_code'] ?? '')),
+                'service' => $rate['courier_service_code'] ?? null,
+                'description' => $rate['courier_service_name'] ?? $rate['courier_name'] ?? null,
+                'cost' => (float) $cost,
+                'etd' => $rate['duration'] ?? $rate['shipment_duration_range'] ?? null,
+                'provider' => 'biteship',
+            ];
+        }
+
+        return $normalized;
     }
 
     /**

@@ -82,22 +82,51 @@ export const checkoutService = {
   /**
    * Ambil tarif pengiriman (layanan kurir) dari agregator yang dikonfigurasi admin.
    */
-  async getShippingRates({ origin, destination, destinationDistrictCode, subdistrictDestination, weight, courier, length, width, height, itemValue, insurance } = {}) {
+  async getShippingRates({ origin, destination, destinationDistrictCode, subdistrictDestination, destinationBiteshipAreaId, originBiteshipAreaId, destinationPostalCode, originPostalCode, weight, courier, length, width, height, itemName, itemValue, insurance } = {}) {
     const params = new URLSearchParams();
     if (origin) params.set('origin', origin);
     if (destination) params.set('destination', destination);
     if (destinationDistrictCode) params.set('destination_district_code', destinationDistrictCode);
     if (subdistrictDestination) params.set('subdistrict_destination', String(subdistrictDestination));
+    if (destinationBiteshipAreaId) params.set('destination_biteship_area_id', destinationBiteshipAreaId);
+    if (originBiteshipAreaId) params.set('origin_biteship_area_id', originBiteshipAreaId);
+    if (destinationPostalCode) params.set('destination_postal_code', destinationPostalCode);
+    if (originPostalCode) params.set('origin_postal_code', originPostalCode);
     if (weight) params.set('weight', String(weight));
     if (courier) params.set('courier', courier);
     if (length) params.set('length', String(length));
     if (width) params.set('width', String(width));
     if (height) params.set('height', String(height));
+    if (itemName) params.set('item_name', itemName);
     if (itemValue) params.set('item_value', String(itemValue));
     if (insurance !== undefined && insurance !== null && insurance !== '') params.set('insurance', String(insurance));
 
     const response = await apiClient.get(`/api/shipping/rates?${params.toString()}`);
     return { data: response.data || [], provider: response.provider, configured: response.configured };
+  },
+
+  /**
+   * T40.5: cari Area ID Biteship (proxy /v1/maps/areas).
+   */
+  async searchShippingAreas(search) {
+    const params = new URLSearchParams({ search: String(search || '') });
+    const response = await apiClient.get(`/api/shipping/areas?${params.toString()}`);
+    return { data: response.data || [], configured: response.configured };
+  },
+
+  /**
+   * T40.8: lacak pengiriman (riwayat Biteship) sebuah pesanan.
+   */
+  async getOrderTracking(idOrOrderNumber) {
+    const response = await apiClient.get(`/api/orders/${orderPath(idOrOrderNumber)}/tracking`);
+    return response.data;
+  },
+
+  /**
+   * T40.7: buat order pengiriman Biteship untuk sebuah pesanan (admin).
+   */
+  async createBiteshipShipment(idOrOrderNumber) {
+    return await apiClient.post(`/api/admin/orders/${orderPath(idOrOrderNumber)}/shipment`);
   },
 
   /**

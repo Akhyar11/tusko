@@ -70,7 +70,11 @@ export default function ExpeditionSettingsPage({
       .then((res) => {
         if (!active) return;
         const values = res?.values || {};
-        setCanSync(Boolean(values['shipping.base_url'] && values['shipping.api_key']));
+        const provider = values['shipping.provider'] || 'kiriminaja';
+        const configured = provider === 'biteship'
+          ? Boolean(values['shipping.biteship_api_key'])
+          : Boolean(values['shipping.base_url'] && values['shipping.api_key']);
+        setCanSync(configured);
       })
       .catch(() => {});
     return () => { active = false; };
@@ -83,7 +87,7 @@ export default function ExpeditionSettingsPage({
       onShowToast(`Sinkronisasi selesai: ${result?.couriers ?? 0} kurir, ${result?.services ?? 0} layanan.`);
       fetchData();
     } catch (err) {
-      onShowToast(err?.message || 'Gagal sinkronisasi kurir dari KiriminAja.', { type: 'error' });
+      onShowToast(err?.message || 'Gagal sinkronisasi kurir dari provider pengiriman.', { type: 'error' });
     } finally {
       setIsSyncing(false);
     }
@@ -94,13 +98,6 @@ export default function ExpeditionSettingsPage({
   const [expeditionToDelete, setExpeditionToDelete] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Close action popup when clicking outside
-  useEffect(() => {
-    const handleGlobalClick = () => setActiveActionMenuId(null);
-    window.addEventListener('click', handleGlobalClick);
-    return () => window.removeEventListener('click', handleGlobalClick);
-  }, []);
 
   // Courier brand color helper
   const getCourierColor = (code) => {

@@ -215,7 +215,7 @@ role_permissions: role_id(PK), permission_id(PK), created_at, updated_at
 user_roles: user_id(PK), role_id(PK), created_at, updated_at
 shipping_addresses: id, user_id, label(default 'Rumah'), recipient_name, phone,
   full_address, district, city, province, postal_code, notes, is_default(default 0),
-  created_at, updated_at, latitude, longitude
+  created_at, updated_at, latitude, longitude, [NEW T40] biteship_area_id
 
 ## 2. KATALOG PRODUK & VARIAN
 categories: id, name, slug, parent_id, created_at, updated_at, icon, description
@@ -276,8 +276,14 @@ expeditions: id, name, code, service, category(default 'Reguler'), etd, base_cos
 expedition_services: id, expedition_id, service_code, service_name, etd_days(default '1-3 hari'),
   base_rate(default 0), per_kg_rate(default 0), is_active(default 1), created_at, updated_at
 shipments: id, order_id, expedition_service_id, waybill_number, status(default 'manifested'),
-  thermal_label_url, pickup_time, delivered_time, created_at, updated_at
+  thermal_label_url, pickup_time, delivered_time, created_at, updated_at,
+  [NEW T40] provider(default 'manual'), provider_order_id, provider_waybill_id,
+  provider_tracking_id, provider_status, provider_label_url, provider_tracking_url,
+  courier_company, courier_type, provider_payload(json)
 shipment_trackings: id, shipment_id, tracking_time, city_location, status_description, created_at, updated_at
+[NEW T40] shipping_webhook_events: id, provider, event, external_id, payload(json),
+  signature_valid(default 0), status(default 'received'), error_message, processed_at,
+  created_at, updated_at
 [NEW] returns: id, return_number, order_id, user_id, reason, status(default 'requested'),
   refund_amount, refund_method, refund_reference, stock_restored(default 0),
   journal_posted(default 0), requested_at, processed_at, notes, created_at, updated_at
@@ -285,7 +291,8 @@ shipment_trackings: id, shipment_id, tracking_time, city_location, status_descri
 
 ## 5. INVENTORI & MULTI-GUDANG
 warehouses: id, code, name, address, city, province, postal_code, latitude, longitude,
-  is_primary(default 0), is_active(default 1), created_at, updated_at, [NEW] priority
+  is_primary(default 0), is_active(default 1), created_at, updated_at, [NEW] priority,
+  [NEW T40] biteship_area_id
 warehouse_bins: id, warehouse_id, bin_code, zone, notes, created_at, updated_at
 inventory_balances: id, warehouse_id, product_id, product_variant_id, bin_id,
   on_hand_stock(default 0), reserved_stock(default 0), available_stock(default 0),
@@ -522,6 +529,9 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            redirect bila sedang di view `checkout` (sebelumnya data checkout sesi login
            terbawa ke sesi guest, sehingga halaman checkout masih tampak terisi).
            [OWNER:A1]
+    T06.18 [TODO] PROVIDER TARIF BITESHIP (lihat T40.4/T40.5): `ShippingRateService`
+           mendukung provider `biteship` (POST /v1/rates/couriers, area_id/postal) +
+           area lookup; server-authoritative + fallback DB. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
@@ -620,7 +630,10 @@ T10. Fulfillment & Pengiriman (Pickup, Label Termal, Tracking) ...... [PARTIAL] 
             pickup_time) + test.
     T10.2 [DONE] FE aksi booking pickup di OrderDetailPage + Toast resi.
     T10.3 [TODO] FE PrintReceiptModal (label termal 100x150 + barcode) dari API.
-    T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3).
+    T10.4 [NEW] Sinkron `shipment_trackings` + endpoint tracking (depend T30.3)
+           [dituntaskan T40.8 untuk provider Biteship].
+    T10.5 [TODO] BOOKING PICKUP PROVIDER-AWARE BITESHIP (lihat T40.7): buat order
+           Biteship dari OrderDetail + simpan resi/label/provider payload. [OWNER:A2]
 
 T11. Akun Member & Buku Alamat GPS (Leaflet) + Riwayat Poin ......... [DONE]  [OWNER:A1]
   DB: users, shipping_addresses, loyalty_points_ledger.
@@ -885,8 +898,11 @@ T21. Integrasi Pihak Ketiga, Config & Storage ..................... [PARTIAL]  [
              Settings Hub memicu sync langsung (bukan hanya navigasi).
              [commit a286436] tombol "Sinkron Kurir Sekarang" di `SystemSettingsHub`
              section pengiriman (override lokal tetap aman via ExpeditionSyncService).
-           - T21.4d [DONE][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
-             [commit 434d2e2] `dailyAt('02:00')`.
+            - T21.4d [DONE][A2] Penjadwalan `expeditions:sync` via T30 (scheduler).
+              [commit 434d2e2] `dailyAt('02:00')`.
+    CATATAN: Integrasi agregator Biteship (rates/orders/tracking/webhook) dibahas
+             tuntas di MAJOR T40 — T21 hanya menyediakan tabel `integrations` +
+             Settings Hub (T36) yang dipakai bersama.
 
 T22. QA & Quality Gate (Test Suite + Browser Test + 13 Auditor) .... [OPS]  [OWNER:SHARED]
   Minor: (berjalan terus tiap minor task).
@@ -1465,8 +1481,131 @@ T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [PARTIAL]  
    (3) Stok berkurang saat checkout dan DIKEMBALIKAN saat pesanan dibatalkan/kedaluwarsa.
    (4) Auto-cancel pengingat-bayar benar-benar berjalan di PRODUKSI (scheduler aktif).
    (5) Alur status: Menunggu Pembayaran -> Diproses -> Dikirim -> Selesai (+ Dibatalkan).
-  KOORDINASI: BE (order/scheduler) = [OWNER:A2]; FE halaman storefront = [OWNER:A1];
-   kontrak data T39.1 disepakati lebih dulu sebelum FE T39.4/T39.5 dikerjakan.
+   KOORDINASI: BE (order/scheduler) = [OWNER:A2]; FE halaman storefront = [OWNER:A1];
+    kontrak data T39.1 disepakati lebih dulu sebelum FE T39.4/T39.5 dikerjakan.
+
+T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [PARTIAL]  [OWNER:A1+A2]
+  LATAR BELAKANG (permintaan 2026-09-29):
+   - Menambah OPSI jasa pihak ketiga Biteship di samping provider yang ada
+     (KiriminAja/api.co.id) untuk tarif, pembuatan order/resi, label, & lacak.
+   - Biteship = multi-carrier API terpusat (rates, orders, tracking, webhook).
+   - Kredensial test diberikan user; DILARANG hardcode — WAJIB disimpan via
+     Settings Hub (integrations, is_secret terenkripsi) sesuai G6 & auditor 04.
+  REFERENSI API BITESHIP (aktual — ctx7 /websites/biteship + /cloudenum/laravel-biteship):
+   - Base URL: https://api.biteship.com ; Auth header: `Authorization: <api_key>`
+     (tanpa prefix "Bearer"). Test & live memakai base URL SAMA, dibedakan API key.
+   - GET  /v1/couriers            -> daftar kurir + layanan (courier_code,
+                                     courier_service_code, tier, service_type).
+   - POST /v1/rates/couriers      -> tarif; body: origin_area_id/destination_area_id
+                                     (DISARANKAN) atau origin_postal_code/
+                                     destination_postal_code, couriers (csv), items[]
+                                     (name/value/weight gram/quantity/dimensions).
+   - GET  /v1/maps/areas?input=   -> cari Area ID (lebih akurat dari kode pos).
+   - GET  /v1/maps/areas/{areaId} -> detail area.
+   - POST /v1/orders              -> buat order (shipper/origin/destination/
+                                     courier_company/courier_type/items/delivery_type).
+   - GET/POST/DELETE /v1/orders/{id} (ambil/update/batal dengan cancellation_reason).
+   - GET  /v1/trackings/{id} | /v1/trackings/{waybillId}/couriers/{courierCode}.
+   - WEBHOOK events: order.status, order.waybill_id, order.price; otentikasi via
+     custom header "Signature Key" + "Signature Secret" (diisi di dashboard Biteship).
+  DB:
+   - integrations (existing) TAMBAH opsi `biteship` pada `shipping.provider` +
+     [NEW keys] shipping.biteship_base_url (url, default https://api.biteship.com),
+     shipping.biteship_api_key (secret), shipping.biteship_webhook_signature_key,
+     shipping.biteship_webhook_signature_secret (secret),
+     shipping.biteship_origin_area_id, shipping.biteship_origin_postal_code,
+     shipping.biteship_default_delivery_type(default 'now').
+   - warehouses [NEW col] biteship_area_id (string nullable, index) — area asal per gudang.
+   - shipping_addresses [NEW col] biteship_area_id (string nullable, index) — area tujuan.
+   - shipments [NEW cols] provider(default 'manual'), provider_order_id,
+     provider_waybill_id, provider_tracking_id, provider_status, provider_label_url,
+     provider_tracking_url, courier_company, courier_type, provider_payload(json nullable).
+   - [NEW] shipping_webhook_events: id, provider, event, external_id, payload(json),
+     signature_valid(default 0), status(default 'received'), error_message, processed_at,
+     created_at, updated_at — guard idempotensi + audit webhook.
+  FE: CheckoutPage (tarif live Biteship), AddressFormPage (autocomplete Area ID),
+      ExpeditionSettingsPage + SystemSettingsHub (pilih provider Biteship + kredensial +
+      tombol Sinkron Kurir + salin URL webhook), OrderDetailPage (buat order Biteship/
+      label/lacak), MyOrderDetailPage (riwayat lacak pelanggan).
+  API: POST /api/webhooks/biteship (publik, throttle, signature);
+       GET /api/shipping/rates (existing, provider-aware);
+       GET /api/shipping/areas (proxy maps/areas); GET /api/shipping/services (existing);
+       POST /api/admin/expeditions/sync (existing, provider-aware);
+       [NEW] POST /api/orders/{id}/shipment (booking) + GET /api/orders/{id}/tracking.
+  Test: BiteshipRateApiTest, BiteshipAreaSearchTest, BiteshipOrderCreationTest,
+        BiteshipWebhookTest (idempotensi + signature invalid 403 + event tak dikenal 422),
+        BiteshipTrackingSyncTest + uji browser Playwright Python (bukti .agent-test-proofs/).
+  Minor:
+    T40.1 [DONE] SETTINGS & REGISTRY: tambah opsi `biteship` pada `shipping.provider`
+           (rule in:kiriminaja,apicoid,biteship) + semua key Biteship di `SettingsRegistry`
+           (grup shipping, api_key/webhook_secret `is_secret=true` terenkripsi) + default +
+           test SettingsRegistryTest/SettingsApiTest. (G6 — TANPA hardcode.) [OWNER:A2]
+    T40.2 [DONE] MIGRASI & MODEL: kolom `warehouses.biteship_area_id`,
+           `shipping_addresses.biteship_area_id`, kolom provider pada `shipments`, +
+           tabel `shipping_webhook_events`; update fillable/casts `Shipment`/
+           `ShippingAddress`/`Warehouse` + test migrasi (prefix tanggal ganjil A2). [OWNER:A2]
+    T40.3 [DONE] `BiteshipClient` (service reusable): HTTP header Authorization, base_url
+           dari integrations, timeout + retry/backoff, pemetaan error (401/422/429),
+           TANPA hardcode; dipakai bersama oleh rate/area/order/tracking. [OWNER:A1]
+    T40.4 [DONE] RATE PROVIDER BITESHIP: `ShippingRateService::fetchBiteship()` +
+           `normalizeBiteship()` (POST /v1/rates/couriers; `courier` -> `couriers` CSV;
+           area_id prioritas lalu postal_code) + cabang provider + `cacheKey` memuat
+           provider + fallback tarif DB; test Http::fake (BiteshipRateApiTest). [OWNER:A1]
+    T40.5 [DONE] AREA LOOKUP: `BiteshipAreaService` + `GET /api/shipping/areas?search=`
+           (proxy /v1/maps/areas) + FE `AddressFormPage` autocomplete Area ID (simpan
+           `biteship_area_id`) + origin area per gudang di pengaturan; test + uji browser.
+           [OWNER:A1]
+    T40.6 [DONE] SINKRON KURIR BITESHIP: `ExpeditionSyncService` provider-aware — dari
+           GET /v1/couriers upsert `expeditions`/`expedition_services` (idempotent,
+           identitas read-only, override lokal aman); endpoint `POST /api/admin/expeditions/sync`
+           existing dipakai; test + FE tombol sync provider-aware. [OWNER:A1 service; A2 FE]
+    T40.7 [DONE] BOOKING ORDER BITESHIP: `BiteshipOrderService::create()` (POST /v1/orders)
+           + endpoint `POST /api/orders/{id}/shipment` (admin) menyimpan `shipments`
+           provider_order_id/provider_waybill_id/label_url/payload + test
+           (BiteshipOrderCreationTest). [OWNER:A2]
+    T40.8 [DONE] TRACKING BITESHIP: `BiteshipTrackingService` + sinkron `shipment_trackings`
+           + `GET /api/orders/{id}/tracking` provider-aware (menuntaskan T10.4); command/
+           scheduler refresh (T30) + test. [OWNER:A2]
+    T40.9 [DONE] WEBHOOK BITESHIP: `POST /api/webhooks/biteship` (publik, throttle,
+           verifikasi header signature key+secret -> 403 bila invalid) memproses
+           order.status/order.waybill_id/order.price -> update `shipments` + `orders`
+           (status/waybill) + `order_status_histories`; idempoten via
+           `shipping_webhook_events.external_id`; event tak dikenal 422; test
+           (BiteshipWebhookTest). [OWNER:A2]
+    T40.10 [DONE] FE ADMIN: `OrderDetailPage` aksi icon-only "Buat Pengiriman Biteship"
+            (+tooltip) -> booking, tampilkan resi/label (PrintReceiptModal) & tombol lacak;
+            `ExpeditionSettingsPage`/`SystemSettingsHub` pemilih provider + field kredensial
+            Biteship + tombol "Sinkron Kurir" + salin `/api/webhooks/biteship`; Toast;
+            tanpa tombol refresh (aturan 21); + uji browser. [OWNER:A2]
+    T40.11 [DONE] FE STOREFRONT: `CheckoutPage` menampilkan/memilih tarif Biteship
+            (kirim area_id/postal; server-authoritative) + `MyOrderDetailPage` riwayat
+            lacak & tautan tracking Biteship; fallback aman bila provider lokal; + uji browser.
+            [OWNER:A1]
+    T40.12 [DONE] TEST & DOKUMENTASI: suite backend (rate/area/order/webhook/tracking)
+            100% + Playwright Python (pilih provider->sync kurir, area autocomplete,
+            checkout tarif, booking, lacak, webhook diterima) + bukti `.agent-test-proofs/`
+            + catatan konfigurasi (API key & webhook secret via Settings Hub, bukan file).
+            [OWNER:A1+A2]
+  ACCEPTANCE (T40):
+   (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
+       secret via Settings Hub, lalu menyinkronkan kurir/layanan.
+   (2) Checkout menampilkan tarif LIVE Biteship (area_id/postal) & pilihan tersimpan;
+       `shipping_cost` dihitung server-authoritative (fallback DB saat API mati).
+   (3) Admin bisa membuat order Biteship dari OrderDetail -> dapat resi/waybill + label,
+       dan melacak; pelanggan melihat riwayat lacak.
+   (4) Webhook order.status/waybill_id/price memutakhirkan status secara IDEMPOTEN;
+       signature invalid ditolak 403; event tak dikenal 422.
+   (5) TANPA kredensial hardcode (G6); lolos auditor 04/07/08; `php artisan test` 100%;
+       `npm run build` sukses; bukti Playwright Python tersedia.
+  KEPUTUSAN DIBUTUHKAN (sebelum T40.4/T40.7):
+   - Provider default & urutan fallback bila keduanya (kiriminaja & biteship) terisi.
+   - Auto-create order Biteship saat pembayaran sukses ATAU aksi manual admin.
+   - Origin area: global (settings) vs per-gudang (`warehouses.biteship_area_id`).
+   - Whitelist kurir default & `delivery_type` default; asuransi (opsional).
+     (COD tetap OUT-OF-SCOPE — kolom `cod_support` tidak diaktifkan.)
+  DEPENDENSI: T40.1 -> T21.1/T36 ; T40.4 -> T06.2/T06.7/T06.8 ; T40.5 -> T06.7 ;
+    T40.6 -> T06.5 ; T40.7 -> T10.1 ; T40.8 -> T10.4/T30.3 ; T40.9 -> T07.5 (pola webhook);
+    T40.2 -> T12.1d/T06.5.
 
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
@@ -1511,6 +1650,8 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T36 -> T21.1 (integrations) ; T36.7 -> T24 (RBAC) ; T36.16 -> T23.2 (feature flag)
 - T36.11 -> T06.2/T06.7 ; T36.12 -> T07/T21.2 ; T36.13 -> T21.3 ; T36.14 -> T31.2/T29 ; T36.15 -> T20
 - T37 -> T24 (roles/user_roles) ; T37.5 -> T24.2 ; T37.7 -> T36.16 (feature flag) ; T37.8 -> Navbar (A1)
+- T40 -> T21.1/T36 (settings) ; T40.4 -> T06.2/T06.7/T06.8 ; T40.5 -> T06.7 ;
+  T40.6 -> T06.5 ; T40.7 -> T10.1 ; T40.8 -> T10.4/T30.3 ; T40.9 -> T07.5 (pola webhook)
 CATATAN: Tidak ada siklus. T16.4 (mesin) TIDAK bergantung pada T34.1; sebaliknya
 T34.1 dan task event (T07/T14/T25/T29) memakai mesin T16.4 + mapping T34.1.
 

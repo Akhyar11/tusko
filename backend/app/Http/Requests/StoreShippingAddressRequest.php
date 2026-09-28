@@ -50,6 +50,7 @@ class StoreShippingAddressRequest extends FormRequest
             'city_code' => ['nullable', 'string', 'max:30'],
             'district_code' => ['nullable', 'string', 'max:30'],
             'subdistrict_code' => ['nullable', 'string', 'max:30'],
+            'biteship_area_id' => ['nullable', 'string', 'max:50'],
             'postal_code' => ['required', 'string', 'max:10'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],

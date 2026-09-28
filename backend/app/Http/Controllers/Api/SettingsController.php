@@ -197,6 +197,29 @@ class SettingsController extends Controller
      */
     private function testShipping(array $values): array
     {
+        $provider = $values['shipping.provider'] ?? 'kiriminaja';
+
+        if ($provider === 'biteship') {
+            $baseUrl = $values['shipping.biteship_base_url'] ?? null;
+            $apiKey = $values['shipping.biteship_api_key'] ?? null;
+
+            if (empty($baseUrl)) {
+                return ['ok' => false, 'message' => 'Biteship Base URL belum diisi.'];
+            }
+
+            $response = Http::timeout(8)->acceptJson()
+                ->withHeaders(array_filter(['Authorization' => $apiKey]))
+                ->get(rtrim($baseUrl, '/') . '/v1/couriers');
+
+            return [
+                'ok' => $response->successful(),
+                'message' => $response->successful()
+                    ? 'Koneksi ke Biteship berhasil.'
+                    : 'Biteship menolak koneksi (HTTP ' . $response->status() . ').',
+                'details' => ['http_status' => $response->status(), 'provider' => 'biteship'],
+            ];
+        }
+
         $baseUrl = $values['shipping.base_url'] ?? null;
 
         if (empty($baseUrl)) {

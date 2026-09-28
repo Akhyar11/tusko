@@ -4,12 +4,38 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpeditionService;
+use App\Services\BiteshipAreaService;
 use App\Services\ShippingRateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ShippingRateController extends Controller
 {
+    /**
+     * Pencarian Area ID Biteship (T40.5) — proxy /v1/maps/areas.
+     */
+    public function areas(Request $request, BiteshipAreaService $areas): JsonResponse
+    {
+        $validated = $request->validate([
+            'search' => ['required', 'string', 'min:3', 'max:100'],
+            'country' => ['nullable', 'string', 'max:5'],
+        ], [
+            'search.required' => 'Kata kunci pencarian area wajib diisi.',
+            'search.min' => 'Masukkan minimal 3 karakter untuk mencari area.',
+        ]);
+
+        if (! $areas->isConfigured()) {
+            return response()->json([
+                'data' => [],
+                'configured' => false,
+            ]);
+        }
+
+        return response()->json([
+            'data' => $areas->search($validated['search'], $validated['country'] ?? 'ID'),
+            'configured' => true,
+        ]);
+    }
     /**
      * Daftar layanan kurir LOKAL (expedition_services) aktif — sumber fallback
      * saat agregator tidak dikonfigurasi/offline (T06.5).
@@ -47,8 +73,13 @@ class ShippingRateController extends Controller
             'destination' => ['nullable', 'string', 'max:100'],
             'destination_district_code' => ['nullable', 'string', 'max:50'],
             'subdistrict_destination' => ['nullable', 'integer'],
+            'origin_biteship_area_id' => ['nullable', 'string', 'max:50'],
+            'destination_biteship_area_id' => ['nullable', 'string', 'max:50'],
+            'origin_postal_code' => ['nullable', 'string', 'max:10'],
+            'destination_postal_code' => ['nullable', 'string', 'max:10'],
             'weight' => ['required', 'integer', 'min:1'],
             'courier' => ['nullable', 'string', 'max:50'],
+            'item_name' => ['nullable', 'string', 'max:150'],
             'item_value' => ['nullable', 'numeric', 'min:0'],
             'insurance' => ['nullable', 'boolean'],
             'length' => ['nullable', 'integer', 'min:1'],
@@ -71,6 +102,8 @@ class ShippingRateController extends Controller
 
         $hasOrigin = ! empty($validated['origin'])
             || ! empty($validated['origin_district_code'])
+            || ! empty($validated['origin_biteship_area_id'])
+            || ! empty($validated['origin_postal_code'])
             || $shippingRate->isOriginConfigured();
 
         if (! $hasOrigin) {
@@ -88,6 +121,11 @@ class ShippingRateController extends Controller
             'destination_district_code' => $validated['destination_district_code'] ?? null,
             'subdistrict_origin' => $validated['subdistrict_origin'] ?? null,
             'subdistrict_destination' => $validated['subdistrict_destination'] ?? null,
+            'origin_biteship_area_id' => $validated['origin_biteship_area_id'] ?? null,
+            'destination_biteship_area_id' => $validated['destination_biteship_area_id'] ?? null,
+            'origin_postal_code' => $validated['origin_postal_code'] ?? null,
+            'destination_postal_code' => $validated['destination_postal_code'] ?? null,
+            'item_name' => $validated['item_name'] ?? null,
             'item_value' => $validated['item_value'] ?? null,
             'insurance' => $validated['insurance'] ?? null,
             'length' => $validated['length'] ?? null,

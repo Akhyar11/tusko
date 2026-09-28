@@ -22,6 +22,7 @@ class Warehouse extends Model
         'city',
         'province',
         'postal_code',
+        'biteship_area_id',
         'latitude',
         'longitude',
         'is_primary',

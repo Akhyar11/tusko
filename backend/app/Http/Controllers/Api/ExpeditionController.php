@@ -21,7 +21,7 @@ class ExpeditionController extends Controller
         if (!$sync->isConfigured()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Integrasi pengiriman belum dikonfigurasi admin (shipping.base_url/api_key).',
+                'message' => 'Integrasi pengiriman belum dikonfigurasi admin. Atur kredensial provider di Pengaturan Sistem.',
             ], 422);
         }
 

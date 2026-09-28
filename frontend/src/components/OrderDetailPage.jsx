@@ -27,6 +27,7 @@ import { formatRupiah } from '../utils/formatters';
 import IconButton from './atoms/IconButton';
 import TextArea from './molecules/TextArea';
 import { orderService } from '../services/orderService';
+import { checkoutService } from '../services/checkoutService';
 import OrderStatusModal from './OrderStatusModal';
 import ConfirmationModal from './ConfirmationModal';
 import PrintReceiptModal from './PrintReceiptModal';
@@ -54,6 +55,7 @@ export default function OrderDetailPage({
   const [isPrintReceiptModalOpen, setIsPrintReceiptModalOpen] = useState(false);
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false);
   const [isBookingPickup, setIsBookingPickup] = useState(false);
+  const [isCreatingBiteshipShipment, setIsCreatingBiteshipShipment] = useState(false);
   const [customerAction, setCustomerAction] = useState(null);
   const [customerActionSubmitting, setCustomerActionSubmitting] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
@@ -238,6 +240,31 @@ export default function OrderDetailPage({
     }
   };
 
+  // T40.7: buat order pengiriman Biteship (resi + label) dari OrderDetail.
+  const handleCreateBiteshipShipment = async () => {
+    const idOrNumber = order.order_number || order.id;
+    if (!idOrNumber) return;
+
+    setIsCreatingBiteshipShipment(true);
+    try {
+      const result = await checkoutService.createBiteshipShipment(idOrNumber);
+      const data = result?.data || {};
+      const waybill = data.waybill_number || trackingNumber;
+
+      setOrder((prev) => ({
+        ...prev,
+        tracking_number: waybill,
+        expedition: { ...(prev.expedition || {}), tracking_number: waybill },
+      }));
+
+      onShowToast(`Order Biteship dibuat. Resi: ${waybill}`);
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal membuat order pengiriman Biteship.', { type: 'error' });
+    } finally {
+      setIsCreatingBiteshipShipment(false);
+    }
+  };
+
   const runCustomerAction = async () => {
     if (!order || !customerAction) return;
     setCustomerActionSubmitting(true);
@@ -280,6 +307,15 @@ export default function OrderDetailPage({
               title="Booking Pickup Kurir"
               variant="primary"
               disabled={isBookingPickup}
+            />
+          )}
+          {['paid', 'processing', 'shipped'].includes(order.status) && (
+            <IconButton
+              icon={Truck}
+              onClick={handleCreateBiteshipShipment}
+              title="Buat Pengiriman Biteship"
+              variant="secondary"
+              disabled={isCreatingBiteshipShipment}
             />
           )}
           {order.status === 'pending' && !['paid', 'settlement', 'capture'].includes(String(order.payment_status)) && (
