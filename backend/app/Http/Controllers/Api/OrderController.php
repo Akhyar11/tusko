@@ -165,8 +165,7 @@ class OrderController extends Controller
     public function show(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions', 'statusHistories'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
@@ -183,8 +182,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $validated = $request->validate([
@@ -277,8 +275,7 @@ class OrderController extends Controller
     public function cancel(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $this->ensureOrderAccess($request, $order);
@@ -320,8 +317,7 @@ class OrderController extends Controller
     public function complete(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition', 'transactions'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $this->ensureOrderAccess($request, $order);
@@ -350,8 +346,7 @@ class OrderController extends Controller
     public function bookPickup(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['shipment', 'expedition'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         if (in_array($order->status, ['pending', 'cancelled'], true)) {
@@ -467,8 +462,7 @@ class OrderController extends Controller
     public function sendStatusEmail(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'user', 'shippingAddress', 'expedition'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $recipientEmail = $request->input('email');
@@ -495,8 +489,7 @@ class OrderController extends Controller
     public function generateReceipt(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $validated = $request->validate([
@@ -555,8 +548,7 @@ class OrderController extends Controller
     public function getReceipt(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.

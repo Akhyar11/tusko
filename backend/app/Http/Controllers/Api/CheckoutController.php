@@ -505,8 +505,7 @@ class CheckoutController extends Controller
     public function show(string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'shippingAddress', 'expedition'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         return response()->json([
@@ -551,8 +550,7 @@ class CheckoutController extends Controller
     public function getSnapToken(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
@@ -584,8 +582,7 @@ class CheckoutController extends Controller
         ]);
 
         $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
@@ -634,9 +631,7 @@ class CheckoutController extends Controller
     public function syncPayment(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
-            ->orWhere('midtrans_order_id', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $this->ensureOrderAccess($request, $order);
@@ -693,8 +688,7 @@ class CheckoutController extends Controller
     public function sendConfirmationEmail(Request $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with(['items', 'user'])
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         $recipientEmail = $request->input('email') ?: $order->user?->email;

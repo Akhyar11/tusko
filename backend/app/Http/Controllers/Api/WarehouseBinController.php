@@ -144,8 +144,6 @@ class WarehouseBinController extends Controller
 
     private function resolveWarehouse(string $idOrCode): Warehouse
     {
-        return Warehouse::where('id', $idOrCode)
-            ->orWhere('code', $idOrCode)
-            ->firstOrFail();
+        return Warehouse::query()->whereIdOrCode($idOrCode)->firstOrFail();
     }
 }

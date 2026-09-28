@@ -39,8 +39,7 @@ class ManualPaymentController extends Controller
     public function confirm(ConfirmManualPaymentRequest $request, string $idOrOrderNumber): JsonResponse
     {
         $order = Order::with('items')
-            ->where('id', $idOrOrderNumber)
-            ->orWhere('order_number', $idOrOrderNumber)
+            ->whereIdOrCode($idOrOrderNumber)
             ->firstOrFail();
 
         // Store proof file

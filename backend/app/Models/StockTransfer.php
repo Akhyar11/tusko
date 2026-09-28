@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasIdOrCodeLookup;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class StockTransfer extends Model
 {
     use HasFactory;
+    use HasIdOrCodeLookup;
+
+    protected string $idOrCodeColumn = 'transfer_number';
 
     protected $fillable = [
         'transfer_number',

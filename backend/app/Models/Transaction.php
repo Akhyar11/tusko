@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Transaction extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\HasIdOrCodeLookup;
+
+    protected string $idOrCodeColumn = 'transaction_number';
 
     protected $fillable = [
         'transaction_number',

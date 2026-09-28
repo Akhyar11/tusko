@@ -115,8 +115,7 @@ class StockTransferController extends Controller
     public function show(string $idOrNumber): JsonResponse
     {
         $transfer = StockTransfer::with(['fromWarehouse', 'toWarehouse', 'items.product', 'items.variant', 'requester', 'approver'])
-            ->where('id', $idOrNumber)
-            ->orWhere('transfer_number', $idOrNumber)
+            ->whereIdOrCode($idOrNumber)
             ->firstOrFail();
 
         return response()->json([
@@ -131,8 +130,7 @@ class StockTransferController extends Controller
     public function approve(Request $request, string $idOrNumber): JsonResponse
     {
         $transfer = StockTransfer::with(['fromWarehouse', 'toWarehouse', 'items.product', 'items.variant'])
-            ->where('id', $idOrNumber)
-            ->orWhere('transfer_number', $idOrNumber)
+            ->whereIdOrCode($idOrNumber)
             ->firstOrFail();
 
         if ($transfer->status !== 'draft') {

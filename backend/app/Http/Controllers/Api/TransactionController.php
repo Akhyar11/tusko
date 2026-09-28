@@ -158,8 +158,7 @@ class TransactionController extends Controller
     public function show(string $idOrTransactionNumber): JsonResponse
     {
         $transaction = Transaction::with('order')
-            ->where('id', $idOrTransactionNumber)
-            ->orWhere('transaction_number', $idOrTransactionNumber)
+            ->whereIdOrCode($idOrTransactionNumber)
             ->firstOrFail();
 
         return response()->json([

@@ -53,9 +53,7 @@ class MidtransWebhookController extends Controller
             return response()->json(['message' => 'Invalid signature key.'], 403);
         }
 
-        $order = Order::where('midtrans_order_id', $orderId)
-            ->orWhere('order_number', $orderId)
-            ->first();
+        $order = Order::query()->whereIdOrCode($orderId)->first();
 
         if (! $order) {
             return response()->json(['message' => "Order {$orderId} not found."], 404);

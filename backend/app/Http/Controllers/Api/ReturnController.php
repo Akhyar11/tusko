@@ -382,8 +382,7 @@ class ReturnController extends Controller
     private function findReturn(string $idOrNumber): OrderReturn
     {
         return OrderReturn::query()
-            ->where('id', $idOrNumber)
-            ->orWhere('return_number', $idOrNumber)
+            ->whereIdOrCode($idOrNumber)
             ->firstOrFail();
     }
 

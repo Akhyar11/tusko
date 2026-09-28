@@ -137,8 +137,7 @@ class StockOpnameController extends Controller
     public function show(string $idOrNumber): JsonResponse
     {
         $opname = StockOpname::with(['warehouse', 'items.product', 'items.variant', 'conductor', 'approver'])
-            ->where('id', $idOrNumber)
-            ->orWhere('opname_number', $idOrNumber)
+            ->whereIdOrCode($idOrNumber)
             ->firstOrFail();
 
         return response()->json([
@@ -183,8 +182,7 @@ class StockOpnameController extends Controller
     public function approve(Request $request, string $idOrNumber): JsonResponse
     {
         $opname = StockOpname::with(['warehouse', 'items.product', 'items.variant'])
-            ->where('id', $idOrNumber)
-            ->orWhere('opname_number', $idOrNumber)
+            ->whereIdOrCode($idOrNumber)
             ->firstOrFail();
 
         if ($opname->status !== 'in_progress') {
