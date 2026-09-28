@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ArrowLeft,
   AlertCircle,
@@ -8,6 +8,7 @@ import {
   Save
 } from 'lucide-react';
 import TextInput from './molecules/TextInput';
+import TurnstileWidget from './molecules/TurnstileWidget';
 import StorefrontAuthLayout from './templates/StorefrontAuthLayout';
 import { authService } from '../services/authService';
 
@@ -19,6 +20,8 @@ export default function ForgotPasswordPage({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +36,7 @@ export default function ForgotPasswordPage({
     setIsLoading(true);
 
     try {
-      const result = await authService.forgotPassword(email);
+      const result = await authService.forgotPassword(email, turnstileToken);
       setSuccessMessage(result.message || 'Tautan reset kata sandi telah dikirim ke email Anda.');
       setEmail('');
     } catch (err) {
@@ -43,6 +46,8 @@ export default function ForgotPasswordPage({
       } else {
         setErrorMessage(err.message || 'Gagal mengirim tautan reset. Silakan coba lagi.');
       }
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +130,12 @@ export default function ForgotPasswordPage({
             />
           </div>
 
+          <TurnstileWidget
+            ref={turnstileRef}
+            action="password-reset"
+            onVerify={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+          />
           <button
             type="submit"
             disabled={isLoading}

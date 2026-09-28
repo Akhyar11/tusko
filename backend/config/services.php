@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'turnstile' => [
+        'sitekey' => env('TURNSTILE_SITEKEY'),
+        'secret' => env('TURNSTILE_SECRET'),
+        'verify_url' => env('TURNSTILE_VERIFY_URL'),
+        'hostnames' => array_values(array_filter(array_map('trim', explode(',', (string) env('TURNSTILE_HOSTNAMES', ''))))),
+        'enabled' => env('TURNSTILE_ENABLED', false),
+    ],
+
 ];

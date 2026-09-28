@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\VerifiesTurnstile;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 
 class ProductReviewController extends Controller
 {
+    use VerifiesTurnstile;
     public function __construct(private readonly ActivityLogService $activityLog)
     {
     }
@@ -72,6 +74,9 @@ class ProductReviewController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // T35.5e: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'review');
+
         $validated = $request->validate([
             'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
             'order_id' => ['required', 'integer', Rule::exists('orders', 'id')],

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ArrowRight, 
   Gift, 
@@ -10,6 +10,9 @@ import {
   Loader2 
 } from 'lucide-react';
 import { authService } from '../services/authService';
+import TurnstileWidget from './molecules/TurnstileWidget';
+import TextInput from './molecules/TextInput';
+import Checkbox from './molecules/Checkbox';
 
 export default function RegisterPage({
   onRegisterSuccess = () => {},
@@ -27,6 +30,8 @@ export default function RegisterPage({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   // Password strength calculation
   const getPasswordStrength = () => {
@@ -133,7 +138,7 @@ export default function RegisterPage({
         password: password,
         phone: formattedPhone,
         role: 'customer',
-      });
+      }, turnstileToken);
 
       setSuccessMessage(`🎉 ${result.message || 'Akun Berhasil Dibuat!'} Voucher Diskon 15% telah ditambahkan.`);
       setTimeout(() => {
@@ -146,6 +151,8 @@ export default function RegisterPage({
       } else {
         setErrorMessage(err.message || 'Gagal mendaftarkan akun. Silakan coba beberapa saat lagi.');
       }
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsLoading(false);
     }
@@ -304,14 +311,13 @@ export default function RegisterPage({
               >
                 NAMA LENGKAP *
               </label>
-              <input 
-                type="text" 
-                id="reg-name" 
-                required 
-                placeholder="Contoh: Budi Pratama" 
+              <TextInput
+                type="text"
+                name="reg-name"
+                required
+                placeholder="Contoh: Budi Pratama"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                onChange={setName}
               />
             </div>
 
@@ -323,14 +329,13 @@ export default function RegisterPage({
               >
                 ALAMAT EMAIL RESMI *
               </label>
-              <input 
-                type="email" 
-                id="reg-email" 
-                required 
-                placeholder="nama@email.com" 
+              <TextInput
+                type="email"
+                name="reg-email"
+                required
+                placeholder="nama@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
+                onChange={setEmail}
               />
             </div>
 
@@ -342,20 +347,15 @@ export default function RegisterPage({
               >
                 NOMOR HANDPHONE / WHATSAPP *
               </label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 border border-r-0 border-neutral-300 bg-neutral-100 text-neutral-600 font-bold text-xs">
-                  +62
-                </span>
-                <input 
-                  type="tel" 
-                  id="reg-phone" 
-                  required 
-                  placeholder="812-3456-7890" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors"
-                />
-              </div>
+              <TextInput
+                type="tel"
+                name="reg-phone"
+                required
+                prefix="+62"
+                placeholder="812-3456-7890"
+                value={phone}
+                onChange={setPhone}
+              />
               <p className="text-[10px] text-neutral-400 mt-1">
                 Digunakan untuk pengiriman notifikasi resi dan kode voucher.
               </p>
@@ -370,14 +370,13 @@ export default function RegisterPage({
                 KATA SANDI *
               </label>
               <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  id="reg-password" 
-                  required 
-                  placeholder="Minimal 8 karakter kombinasi huruf & angka" 
+                <TextInput
+                  type={showPassword ? 'text' : 'password'}
+                  name="reg-password"
+                  required
+                  placeholder="Minimal 8 karakter kombinasi huruf & angka"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs text-black font-medium focus:outline-none focus:border-black focus:bg-white transition-colors pr-10"
+                  onChange={setPassword}
                 />
                 <button 
                   type="button" 
@@ -448,12 +447,10 @@ export default function RegisterPage({
             {/* Checkboxes Agreements */}
             <div className="space-y-2.5 pt-2 text-xs text-neutral-600">
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  checked={agreeAge} 
-                  onChange={(e) => setAgreeAge(e.target.checked)}
-                  required 
-                  className="accent-black w-4 h-4 rounded-none cursor-pointer shrink-0 mt-0.5"
+                <Checkbox
+                  checked={agreeAge}
+                  onChange={setAgreeAge}
+                  ariaLabel="Setuju syarat dan ketentuan"
                 />
                 <span className="leading-relaxed text-[11px]">
                   Saya berusia di atas 17 tahun dan setuju dengan{' '}
@@ -477,11 +474,10 @@ export default function RegisterPage({
               </label>
 
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  checked={agreePromo} 
-                  onChange={(e) => setAgreePromo(e.target.checked)}
-                  className="accent-black w-4 h-4 rounded-none cursor-pointer shrink-0 mt-0.5"
+                <Checkbox
+                  checked={agreePromo}
+                  onChange={setAgreePromo}
+                  ariaLabel="Setuju terima promo"
                 />
                 <span className="leading-relaxed text-[11px]">
                   Kirimkan saya voucher diskon 15% dan info rilis produk terbaru via WhatsApp &amp; Email.
@@ -490,6 +486,12 @@ export default function RegisterPage({
             </div>
 
             {/* Action Submit Button */}
+            <TurnstileWidget
+              ref={turnstileRef}
+              action="register"
+              onVerify={setTurnstileToken}
+              onExpire={() => setTurnstileToken(null)}
+            />
             <button 
               type="submit" 
               disabled={isLoading}

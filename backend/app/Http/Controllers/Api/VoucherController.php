@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\VerifiesTurnstile;
 use App\Models\Voucher;
 use App\Models\VoucherClaim;
 use App\Models\VoucherTarget;
@@ -15,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class VoucherController extends Controller
 {
+    use VerifiesTurnstile;
     /**
      * Dapatkan daftar kupon dan voucher aktif.
      */
@@ -42,6 +44,9 @@ class VoucherController extends Controller
      */
     public function claim(Request $request): JsonResponse
     {
+        // T35.5e: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'voucher-claim');
+
         $validated = $request->validate([
             'code' => 'required|string',
         ]);
@@ -290,6 +295,9 @@ class VoucherController extends Controller
      */
     public function validateVoucher(Request $request, VoucherService $voucherService): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'voucher-validate');
+
         $data = $request->validate([
             'code' => ['required', 'string', 'max:50'],
             'subtotal' => ['nullable', 'numeric', 'min:0'],

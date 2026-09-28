@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -12,6 +12,7 @@ import IconButton from './atoms/IconButton';
 import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import ServerSideSelect from './molecules/ServerSideSelect';
+import TurnstileWidget from './molecules/TurnstileWidget';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { reviewService } from '../services/reviewService';
 
@@ -37,6 +38,8 @@ export default function ReviewCreatePage({
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   const order = context?.order;
   const product = context?.product;
@@ -61,13 +64,16 @@ export default function ReviewCreatePage({
         order_id: Number(order.id),
         rating: Number(rating),
         title: title.trim() || null,
-        comment: comment.trim() || null
+        comment: comment.trim() || null,
+        cf_turnstile_response: turnstileToken || undefined,
       });
       onShowToast('Ulasan berhasil dikirim dan menunggu moderasi.');
       onNavigateBack();
     } catch (err) {
       const validation = err.errors ? Object.values(err.errors).flat().join(' ') : '';
       setErrorMessage(validation || err.message || 'Gagal mengirim ulasan.');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -167,6 +173,12 @@ export default function ReviewCreatePage({
             </div>
 
             <div className="pt-3 border-t border-neutral-200 space-y-2">
+              <TurnstileWidget
+                ref={turnstileRef}
+                action="review"
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+              />
               <button
                 type="submit"
                 disabled={isSubmitting}

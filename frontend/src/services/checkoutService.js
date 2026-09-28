@@ -47,12 +47,13 @@ export const checkoutService = {
   /**
    * Validasi kupon server-authoritative (T08.2/T08.3).
    */
-  async validateVoucher({ code, items = [], subtotal = null, appliedCodes = [] } = {}) {
+  async validateVoucher({ code, items = [], subtotal = null, appliedCodes = [], turnstileToken = null } = {}) {
     const response = await apiClient.post('/api/vouchers/validate', {
       code,
       items,
       subtotal,
       applied_codes: appliedCodes,
+      cf_turnstile_response: turnstileToken || undefined,
     });
     return response.data;
   },

@@ -18,7 +18,7 @@ export const authService = {
   /**
    * Login pengguna dengan email/no. handphone dan password.
    */
-  async login(emailOrPhone, password) {
+  async login(emailOrPhone, password, turnstileToken = null) {
     const cleanIdentifier = emailOrPhone.trim();
 
     try {
@@ -27,6 +27,7 @@ export const authService = {
         email: cleanIdentifier,
         password: password,
         session_id: getCartSessionId(),
+        cf_turnstile_response: turnstileToken || undefined,
       });
 
       if (response.token) {
@@ -95,7 +96,7 @@ export const authService = {
   /**
    * Pendaftaran akun pengguna baru.
    */
-  async register(userData) {
+  async register(userData, turnstileToken = null) {
     try {
       const payload = {
         name: userData.name,
@@ -105,6 +106,7 @@ export const authService = {
         phone: userData.phone || null,
         role: userData.role || 'customer',
         session_id: getCartSessionId(),
+        cf_turnstile_response: turnstileToken || userData.cf_turnstile_response || undefined,
       };
 
       const response = await apiClient.post('/api/auth/register', payload);
@@ -172,10 +174,11 @@ export const authService = {
   /**
    * Kirim permintaan tautan reset kata sandi ke email terdaftar.
    */
-  async forgotPassword(email) {
+  async forgotPassword(email, turnstileToken = null) {
     try {
       const response = await apiClient.post('/api/auth/forgot-password', {
         email: (email || '').trim().toLowerCase(),
+        cf_turnstile_response: turnstileToken || undefined,
       });
 
       return {
@@ -196,13 +199,14 @@ export const authService = {
   /**
    * Reset kata sandi menggunakan token dari email.
    */
-  async resetPassword({ token, email, password, passwordConfirmation }) {
+  async resetPassword({ token, email, password, passwordConfirmation, turnstileToken = null }) {
     try {
       const response = await apiClient.post('/api/auth/reset-password', {
         token,
         email: (email || '').trim().toLowerCase(),
         password,
         password_confirmation: passwordConfirmation,
+        cf_turnstile_response: turnstileToken || undefined,
       });
 
       return {
@@ -459,8 +463,8 @@ export const authService = {
   /**
    * Klaim voucher pelanggan dengan kode tertentu (T08.1).
    */
-  async claimVoucher(code) {
-    return await apiClient.post('/api/vouchers/claim', { code });
+  async claimVoucher(code, turnstileToken = null) {
+    return await apiClient.post('/api/vouchers/claim', { code, cf_turnstile_response: turnstileToken || undefined });
   },
 
   /**

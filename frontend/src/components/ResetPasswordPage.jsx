@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
@@ -9,6 +9,7 @@ import {
   Save
 } from 'lucide-react';
 import TextInput from './molecules/TextInput';
+import TurnstileWidget from './molecules/TurnstileWidget';
 import IconButton from './atoms/IconButton';
 import StorefrontAuthLayout from './templates/StorefrontAuthLayout';
 import { authService } from '../services/authService';
@@ -32,6 +33,8 @@ export default function ResetPasswordPage({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +63,8 @@ export default function ResetPasswordPage({
         token,
         email,
         password,
-        passwordConfirmation
+        passwordConfirmation,
+        turnstileToken,
       });
       setSuccessMessage(result.message || 'Kata sandi berhasil direset.');
       setPassword('');
@@ -72,6 +76,8 @@ export default function ResetPasswordPage({
       } else {
         setErrorMessage(err.message || 'Gagal mereset kata sandi. Silakan minta tautan baru.');
       }
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsLoading(false);
     }
@@ -223,6 +229,12 @@ export default function ResetPasswordPage({
                 />
               </div>
 
+              <TurnstileWidget
+                ref={turnstileRef}
+                action="password-reset"
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+              />
               <button
                 type="submit"
                 disabled={isLoading}

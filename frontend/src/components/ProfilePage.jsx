@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   User, 
   Mail, 
@@ -40,6 +40,7 @@ import { formatRupiah } from '../utils/formatters';
 import AddressFormPage from './AddressFormPage';
 import TextInput from './molecules/TextInput';
 import FileInput from './molecules/FileInput';
+import TurnstileWidget from './molecules/TurnstileWidget';
 
 export default function ProfilePage({
   currentUser = null,
@@ -127,6 +128,8 @@ export default function ProfilePage({
   const [copiedVoucher, setCopiedVoucher] = useState(null);
   const [claimedVouchers, setClaimedVouchers] = useState([]);
   const [claimingVoucher, setClaimingVoucher] = useState(null);
+  const [claimToken, setClaimToken] = useState(null);
+  const claimRef = useRef(null);
 
   // Toast global (Aturan 17): delegasikan ke App via onShowToast.
   const showToast = (msg, type = 'success') => {
@@ -423,18 +426,21 @@ export default function ProfilePage({
     }
   };
 
-  // Handle Klaim Voucher (T08.1)
+  // Handle Klaim Voucher (T08.1 + T35.5e anti-bot).
   const handleClaimVoucher = async (code) => {
     if (claimingVoucher) return;
     setClaimingVoucher(code);
     try {
-      const res = await authService.claimVoucher(code);
+      const res = await authService.claimVoucher(code, claimToken);
       setClaimedVouchers((prev) => (prev.includes(code) ? prev : [...prev, code]));
       showToast(res?.message || `✓ Voucher "${code}" berhasil diklaim!`);
     } catch (err) {
       showToast(err?.message || 'Gagal mengklaim voucher.', 'error');
     } finally {
       setClaimingVoucher(null);
+      // Token sekali pakai — segarkan widget untuk klaim berikutnya.
+      setClaimToken(null);
+      claimRef.current?.reset();
     }
   };
 
@@ -1152,6 +1158,12 @@ export default function ProfilePage({
                 </p>
               </div>
 
+              <TurnstileWidget
+                ref={claimRef}
+                action="voucher-claim"
+                onVerify={setClaimToken}
+                onExpire={() => setClaimToken(null)}
+              />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
                 {(vouchers.length > 0 ? vouchers : [
                   {

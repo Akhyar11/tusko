@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Api\Concerns\AuthorizesOrderAccess;
+use App\Http\Controllers\Api\Concerns\VerifiesTurnstile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\OrderResource;
@@ -30,6 +31,7 @@ use Illuminate\Validation\ValidationException;
 class CheckoutController extends Controller
 {
     use AuthorizesOrderAccess;
+    use VerifiesTurnstile;
 
     public function __construct(
         private readonly InventoryService $inventoryService,
@@ -44,6 +46,9 @@ class CheckoutController extends Controller
      */
     public function checkout(CheckoutRequest $request): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'checkout');
+
         $user = $request->user();
         $sessionId = $request->input('session_id')
             ?: $request->header('X-Session-ID')

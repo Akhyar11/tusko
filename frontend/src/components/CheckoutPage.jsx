@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -28,6 +28,7 @@ import { checkoutService } from '../services/checkoutService';
 import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
+import TurnstileWidget from './molecules/TurnstileWidget';
 import IconButton from './atoms/IconButton';
 import AddressModal from './AddressModal';
 import ExpeditionModal from './ExpeditionModal';
@@ -320,6 +321,12 @@ export default function CheckoutPage({
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  // T35.5d: token anti-bot (satu widget kupon + satu widget checkout; token sekali pakai).
+  const [voucherToken, setVoucherToken] = useState(null);
+  const voucherRef = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
   const [checkoutFees, setCheckoutFees] = useState({ service_fee: 0, insurance_cost: 0, points_redeem_value: 1 });
   const [availablePoints, setAvailablePoints] = useState(0);
   const [pointsToRedeem, setPointsToRedeem] = useState('');
@@ -354,6 +361,7 @@ export default function CheckoutPage({
           quantity: item.quantity,
         })),
         subtotal: totalItemPrice,
+        turnstileToken: voucherToken,
       });
 
       if (result?.valid) {
@@ -372,6 +380,9 @@ export default function CheckoutPage({
       setCouponError(err?.message || 'Gagal memvalidasi kupon.');
     } finally {
       setIsApplyingCoupon(false);
+      // Token sekali pakai — segarkan widget untuk percobaan kode berikutnya.
+      setVoucherToken(null);
+      voucherRef.current?.reset();
     }
   };
 
@@ -478,6 +489,7 @@ export default function CheckoutPage({
       loyalty_points_redeemed: Math.min(Number(pointsToRedeem) || 0, availablePoints),
       payment_method: isManualTransfer ? 'manual_transfer' : 'midtrans',
       payment_channel: selectedPayment?.name || null,
+      cf_turnstile_response: turnstileToken || undefined,
     };
 
     try {
@@ -527,6 +539,9 @@ export default function CheckoutPage({
         || err.message
         || 'Gagal membuat pesanan. Silakan coba lagi.'
       );
+      // Token sekali pakai — segarkan widget untuk percobaan berikutnya.
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsProcessing(false);
     }
@@ -917,6 +932,12 @@ export default function CheckoutPage({
                     placeholder="Kode Kupon..."
                     weight="mono"
                   />
+                  <TurnstileWidget
+                    ref={voucherRef}
+                    action="voucher-validate"
+                    onVerify={setVoucherToken}
+                    onExpire={() => setVoucherToken(null)}
+                  />
                   <button
                     type="submit"
                     className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer rounded-none"
@@ -1062,6 +1083,12 @@ export default function CheckoutPage({
                 </div>
               )}
 
+              <TurnstileWidget
+                ref={turnstileRef}
+                action="checkout"
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+              />
               <button
                 type="button"
                 disabled={isProcessing}

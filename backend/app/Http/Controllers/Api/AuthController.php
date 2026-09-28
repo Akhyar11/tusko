@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\VerifiesTurnstile;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\FileStorageService;
@@ -18,6 +19,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use VerifiesTurnstile;
+
     /**
      * Registrasi pengguna baru.
      *
@@ -26,6 +29,9 @@ class AuthController extends Controller
      */
     public function register(Request $request, CartService $cartService): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'register');
+
         // Mendukung penamaan passwordConfirmation dari camelCase React frontend
         if ($request->has('passwordConfirmation') && !$request->has('password_confirmation')) {
             $request->merge(['password_confirmation' => $request->input('passwordConfirmation')]);
@@ -89,6 +95,9 @@ class AuthController extends Controller
      */
     public function login(Request $request, CartService $cartService): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'login');
+
         $loginInput = $request->input('email') ?? $request->input('login');
 
         $request->validate([
@@ -143,6 +152,9 @@ class AuthController extends Controller
      */
     public function forgotPassword(Request $request): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'password-reset');
+
         $request->validate([
             'email' => 'required|string|email|max:255',
         ], [
@@ -173,6 +185,9 @@ class AuthController extends Controller
      */
     public function resetPassword(Request $request): JsonResponse
     {
+        // T35.5d: gerbang anti-bot SEBELUM logika apa pun (fail closed bila aktif).
+        $this->requireTurnstile($request, 'password-reset');
+
         if ($request->has('passwordConfirmation') && !$request->has('password_confirmation')) {
             $request->merge(['password_confirmation' => $request->input('passwordConfirmation')]);
         }

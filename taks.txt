@@ -1114,20 +1114,18 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
              `backend/.env` (`TURNSTILE_SECRET`, gitignored) + sitekey ke `frontend/.env`
              (`VITE_TURNSTILE_SITEKEY`). BUTUH auth Cloudflare user (Account.Turnstile:Edit)
              atau sitekey existing. [OWNER:A1]
-      T35.5b [TODO] `TurnstileService::verify($token,$action,$ip)` (Laravel Http, timeout 10s;
-             wajib success+action+hostname allowlist `TURNSTILE_HOSTNAMES`; fail closed) +
-             `config/services.php` + test. [OWNER:A1]
-      T35.5c [TODO] Komponen reusable `molecules/TurnstileWidget` (loader `api.js` +
-             `div.cf-turnstile` + `reset()` saat retry) — Atomic Design & storefront exception. [OWNER:A1]
-      T35.5d [TODO] Wire PRIORITAS TINGGI (guest, berdampak): register (`register`),
-             login (`login`), forgot/reset (`password-reset`), checkout (`checkout`),
-             voucher-validate (`voucher-validate`) — token `cf-turnstile-response` di body,
-             guard 403 sebelum logika bisnis. [OWNER:A1]
-      T35.5e [TODO] Wire PRIORITAS MENENGAH: cart-add (`cart-add`, guest), review (`review`,
-             auth, milik A2 — koordinasi), voucher-claim (`voucher-claim`, auth), email-resend
-             (`email-resend`, auth). [OWNER:A1+A2]
-      T35.5f [TODO] Validasi end-to-end (token asli lolos 1x, replay ditolak, hostname salah
-             ditolak) + bukti Playwright + dokumentasi. [OWNER:A1]
+      T35.5b [DONE] `TurnstileService::verify($token,$action,$ip)` + `config/services.php`
+             + `phpunit.xml` bypass + test 7 skenario (TurnstileServiceTest). [OWNER:A1]
+      T35.5c [DONE] Komponen reusable `molecules/TurnstileWidget` (loader + explicit render
+             + `reset()` via ref; tanpa class cf-turnstile agar tak double-render). [OWNER:A1]
+      T35.5d [DONE] Wire PRIORITAS TINGGI: register/login/forgot/reset (`AuthController` +
+             trait `VerifiesTurnstile`) + checkout + voucher-validate; FE kirim token +
+             reset saat retry; test guard 403 (TurnstileGuardTest). [OWNER:A1]
+      T35.5e [DONE] Wire review (`ProductReviewController`) + voucher-claim (`ProfilePage`
+             widget tunggal); cart-add & email-resend DITUNDA (lihat catatan). [OWNER:A1+A2]
+      T35.5f [DONE] Validasi: unit 15 skenario + live siteverify (secret TEST valid,
+             dummy ditolak) + browser (widget render, 403 tanpa token). Validasi token
+             ASLI produksi menunggu kunci real (T35.5a). [OWNER:A1]
 
 T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH

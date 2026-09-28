@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -13,6 +13,7 @@ import { mockDemoUsers } from '../data/mockAuthData';
 import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
+import TurnstileWidget from './molecules/TurnstileWidget';
 
 export default function LoginPage({
   onLoginSuccess = () => {},
@@ -27,6 +28,8 @@ export default function LoginPage({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef(null);
 
   const handleQuickFill = (userType) => {
     if (userType === 'customer') {
@@ -85,7 +88,7 @@ export default function LoginPage({
     setIsLoading(true);
 
     try {
-      const result = await authService.login(email, password);
+      const result = await authService.login(email, password, turnstileToken);
       const isAdmin = result.user?.role === 'admin';
       setSuccessMessage(`✓ ${result.message || 'Login Berhasil!'} Selamat datang kembali, ${result.user?.name}${isAdmin ? ' (Mengalihkan ke /admin/dashboard...)' : ''}`);
       setTimeout(() => {
@@ -93,6 +96,8 @@ export default function LoginPage({
       }, 500);
     } catch (err) {
       setErrorMessage(err.message || 'Email atau kata sandi yang Anda masukkan tidak valid.');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsLoading(false);
     }
@@ -277,6 +282,12 @@ export default function LoginPage({
             </div>
 
             {/* Submit Button */}
+            <TurnstileWidget
+              ref={turnstileRef}
+              action="login"
+              onVerify={setTurnstileToken}
+              onExpire={() => setTurnstileToken(null)}
+            />
             <button 
               type="submit" 
               disabled={isLoading}
