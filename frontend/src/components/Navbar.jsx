@@ -441,29 +441,6 @@ export default function Navbar({
 
         </div>
 
-        {/* Secondary Navigation: Storefront menu dari DB (T37.8, publik) */}
-        {storefrontMenus.length > 0 && (
-          <div className="hidden lg:block border-t border-neutral-100 bg-white">
-            <nav className="w-full px-4 sm:px-8 lg:px-12 h-10 flex items-center gap-7 font-sport font-black text-xs uppercase tracking-wider text-neutral-600">
-              {storefrontMenus.map((menu) => {
-                const Icon = resolveMenuIcon(menu.icon);
-                return (
-                  <button
-                    key={menu.id}
-                    type="button"
-                    onClick={() => onNavigateStorefrontMenu(menu)}
-                    className="flex items-center gap-1.5 hover:text-black transition-colors cursor-pointer"
-                    title={menu.sublabel || menu.label}
-                  >
-                    <Icon size={13} className="text-neutral-400" />
-                    <span>{menu.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        )}
-
         {/* Mobile Search Dropdown Bar */}
         {isMobileSearchOpen && (
           <div ref={mobileSearchRef} className="lg:hidden p-3 bg-white border-t border-neutral-200 relative">
