@@ -27,12 +27,14 @@ class JournalMappingService
         'bank' => '1200',
         'inventory' => '1300',
         'payable' => '2100',
+        'points_liability' => '2200',
         'equity' => '3100',
         'revenue' => '4100',
         'cogs' => '5100',
         'shipping_expense' => '6100',
         'gateway_fee' => '6200',
         'operating_expense' => '6300',
+        'points_expense' => '6400',
     ];
 
     public function __construct(private readonly JournalPostingService $journal)
@@ -101,6 +103,93 @@ class JournalMappingService
             ['account_code' => self::ACCOUNTS['gateway_fee'], 'debit' => $fee],
             ['account_code' => self::ACCOUNTS['bank'], 'credit' => $fee],
         ], "Jurnal biaya gateway {$order->order_number}");
+    }
+
+    /**
+     * Event: poin loyalitas diperoleh (saat order lunas) →
+     * Debit Beban Program Poin, Kredit Liabilitas Poin (Deferred).
+     *
+     * @return array<int, \App\Models\FinancialLedgerEntry>|null
+     */
+    public function postPointsEarned(Order $order, int $points, float $unitValue): ?array
+    {
+        $amount = $this->round($points * $unitValue);
+
+        if ($points <= 0 || $amount <= 0) {
+            return null;
+        }
+
+        $container = $this->container('order_points_earned', $order->order_number, [
+            'order_id' => $order->id,
+            'type' => 'expense',
+            'category' => 'loyalty_points_earned',
+            'category_label' => 'Poin Loyalitas Diperoleh',
+            'amount' => $amount,
+            'description' => "Poin diperoleh pesanan {$order->order_number}",
+        ]);
+
+        return $this->journal->post($container, [
+            ['account_code' => self::ACCOUNTS['points_expense'], 'debit' => $amount],
+            ['account_code' => self::ACCOUNTS['points_liability'], 'credit' => $amount],
+        ], "Jurnal poin diperoleh {$order->order_number}");
+    }
+
+    /**
+     * Event: poin loyalitas ditukar (saat checkout) →
+     * Debit Liabilitas Poin, Kredit Pendapatan.
+     *
+     * @return array<int, \App\Models\FinancialLedgerEntry>|null
+     */
+    public function postPointsRedeemed(Order $order, int $points, float $unitValue): ?array
+    {
+        $amount = $this->round($points * $unitValue);
+
+        if ($points <= 0 || $amount <= 0) {
+            return null;
+        }
+
+        $container = $this->container('order_points_redeemed', $order->order_number, [
+            'order_id' => $order->id,
+            'type' => 'income',
+            'category' => 'loyalty_points_redeemed',
+            'category_label' => 'Penukaran Poin Loyalitas',
+            'amount' => $amount,
+            'description' => "Poin ditukar pesanan {$order->order_number}",
+        ]);
+
+        return $this->journal->post($container, [
+            ['account_code' => self::ACCOUNTS['points_liability'], 'debit' => $amount],
+            ['account_code' => self::ACCOUNTS['revenue'], 'credit' => $amount],
+        ], "Jurnal poin ditukar {$order->order_number}");
+    }
+
+    /**
+     * Event: subsidi ongkir ditanggung merchant (saat order lunas, T06.10/T06.11) →
+     * Debit Beban Pengiriman, Kredit Bank.
+     *
+     * @return array<int, \App\Models\FinancialLedgerEntry>|null
+     */
+    public function postShippingSubsidy(Order $order): ?array
+    {
+        $amount = $this->round((float) ($order->shipping_subsidy ?? 0));
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $container = $this->container('order_shipping_subsidy', $order->order_number, [
+            'order_id' => $order->id,
+            'type' => 'expense',
+            'category' => 'shipping_subsidy',
+            'category_label' => 'Subsidi Ongkir Ditanggung',
+            'amount' => $amount,
+            'description' => "Subsidi ongkir pesanan {$order->order_number}",
+        ]);
+
+        return $this->journal->post($container, [
+            ['account_code' => self::ACCOUNTS['shipping_expense'], 'debit' => $amount],
+            ['account_code' => self::ACCOUNTS['bank'], 'credit' => $amount],
+        ], "Jurnal subsidi ongkir {$order->order_number}");
     }
 
     /**

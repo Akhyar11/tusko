@@ -404,6 +404,13 @@ class CheckoutController extends Controller
                         'reference_id' => $order->order_number,
                         'description' => "Penukaran {$pointsRedeemed} poin untuk pesanan {$order->order_number}",
                     ]);
+
+                    // T34.14: jurnal liabilitas poin ditukar (idempoten).
+                    try {
+                        app(\App\Services\JournalMappingService::class)->postPointsRedeemed($order, $pointsRedeemed, $redeemValue ?? 1);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('postPointsRedeemed gagal: ' . $e->getMessage());
+                    }
                 }
             }
 

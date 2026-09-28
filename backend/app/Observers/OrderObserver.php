@@ -64,6 +64,11 @@ class OrderObserver
 
             // T34.5: jurnal double-entry pendapatan pesanan lunas (idempoten).
             $this->guardJournal(fn () => app(\App\Services\JournalMappingService::class)->postOrderPaid($order));
+
+            // T34.15: jurnal subsidi ongkir ditanggung merchant (idempoten).
+            if ((float) ($order->shipping_subsidy ?? 0) > 0) {
+                $this->guardJournal(fn () => app(\App\Services\JournalMappingService::class)->postShippingSubsidy($order));
+            }
         }
 
         // 2. Transaksi Otomatis Uang Keluar (Expense: shipping_fee)
@@ -167,6 +172,14 @@ class OrderObserver
                         'reference_id' => $order->order_number,
                         'description' => "Perolehan poin reward dari pesanan {$order->order_number}",
                     ]);
+
+                    // T34.14: jurnal liabilitas poin diperoleh (idempoten).
+                    try {
+                        $unitValue = (float) (app(\App\Services\IntegrationService::class)->get('loyalty.points_redeem_value', 1) ?? 1);
+                        app(\App\Services\JournalMappingService::class)->postPointsEarned($order, (int) $order->loyalty_points_earned, $unitValue);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('postPointsEarned gagal: ' . $e->getMessage());
+                    }
                 }
             }
         }

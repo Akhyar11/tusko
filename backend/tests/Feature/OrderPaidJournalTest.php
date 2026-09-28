@@ -39,4 +39,22 @@ class OrderPaidJournalTest extends TestCase
         $order->update(['notes' => 'trigger resync']);
         $this->assertSame($entries, FinancialLedgerEntry::where('transaction_id', $container->id)->count());
     }
+
+    public function test_paid_order_with_subsidy_posts_shipping_expense_journal(): void
+    {
+        $order = Order::factory()->create([
+            'status' => 'processing',
+            'payment_status' => 'paid',
+            'grand_total' => 200000,
+            'shipping_cost' => 0,
+            'shipping_subsidy' => 15000,
+        ]);
+
+        $container = Transaction::where('order_id', $order->id)
+            ->where('category', 'shipping_subsidy')
+            ->first();
+
+        $this->assertNotNull($container, 'transaksi shipping_subsidy tidak dibuat');
+        $this->assertGreaterThanOrEqual(2, FinancialLedgerEntry::where('transaction_id', $container->id)->count());
+    }
 }

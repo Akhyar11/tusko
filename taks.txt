@@ -1043,9 +1043,8 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
            shipping/refund di `OrderObserver`; test konsistensi `transactions` <->
            `financial_ledger_entries` <-> `financial_accounts.current_balance`.
            [commit ff38978] [OWNER:A2]
-    T34.8 [TODO-GAP] JURNAL LIABILITAS POIN: earn/redeem poin (T31/T08.4) belum dijurnal
-           (Deferred Liability -> Revenue saat redeem); tambah akun poin di mapping + test.
-           [OWNER:A2] (menyentuh CheckoutController A1 -> koordinasi).
+    T34.8 [DONE] JURNAL LIABILITAS POIN: diserap & selesai via T34.14
+           (akun 2200/6400 + mapping + hook + test). [OWNER:A2]
     T34.9 [DONE] WIRE JURNAL REFUND saat retur/batal (bergantung T29.3) + test.
            [commit 38efbf9] `ReturnController::refund` memanggil `postRefund`. [OWNER:A2]
 
@@ -1062,8 +1061,8 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
       T34.6 [DONE] & T34.7 [DONE] (cabang ini: `postGoodsReceiving` di receive GRN;
       `postManualTransaction` + konsistensi kas); T34.5 [PARTIAL] (`postOrderPaid`
       ter-wire idempoten di `OrderObserver`, fee gateway sisa);
-      sisa: T34.8 (jurnal liabilitas poin -> T34.14 koordinasi), T16.5 (rekonsiliasi bank),
-      T16.6 (tutup buku), T17.3 (migrasi `invoices` + nomor legal + PDF).
+      sisa: T16.5 (rekonsiliasi bank), T16.6 (tutup buku),
+      T17.3 (migrasi `invoices` + nomor legal + PDF).
     FE — SUDAH ADA: AdminDashboardPage (BI, API-backed), FinancialTransactionsPage
       (API-backed via useTransactionTableStore->transactionService), VendorBillListPage/
       VendorBillDetailPage, PrintInvoiceModal, transactionService.js, dashboardService.js.
@@ -1086,13 +1085,13 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.13 [TODO] REGISTRASI MENU & RUTE LAPORAN/JURNAL: entri master `menus`
            (section "Keuangan & Sistem") + `role_menus` admin + cabang render App.jsx +
            `adminCoreViews` + feature flag (menu_access_rule). [OWNER:A2]
-    T34.14 [TODO] JURNAL LIABILITAS POIN (KOORDINASI A1<->A2): A1 menyediakan
-           `orders.loyalty_points_earned/redeemed` + event/hook di `CheckoutController`
-           (producer); A2 memetakan ke akun liabilitas poin (Deferred Liability -> Revenue
-           saat redeem) di `JournalMappingService`. Menyerap T34.8. [OWNER:A1+A2]
-    T34.15 [TODO] JURNAL BEBAN PROMOSI ONGKIR (KOORDINASI A1<->A2): A1 sudah mencatat
-           `orders.shipping_subsidy` (T06.10/T06.11) saat gratis ongkir; A2 memetakan ke
-           akun "Beban Promosi" saat order lunas. [OWNER:A1+A2]
+    T34.14 [DONE] JURNAL LIABILITAS POIN: akun 2200 (Liabilitas Poin) + 6400
+           (Beban Program Poin) di seeder+mapping; `postPointsEarned` (OrderObserver saat
+           lunas) + `postPointsRedeemed` (CheckoutController saat tukar) + test
+           PointsLiabilityJournalTest. [OWNER:A1+A2]
+    T34.15 [DONE] JURNAL BEBAN PROMOSI ONGKIR: `postShippingSubsidy` (Debit Beban
+           Pengiriman 6100, Kredit Bank 1200) dipanggil OrderObserver saat lunas bila
+           `orders.shipping_subsidy` > 0 + test. [OWNER:A1+A2]
 
 T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  [OWNER:A2]
   Minor:
