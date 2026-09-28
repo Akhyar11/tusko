@@ -1106,14 +1106,13 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
     T35.4 [DONE] Monitoring/logging terstruktur (channel `api` JSON + middleware),
            health check `GET /api/health` (db/cache/queue/storage), caching wilayah
            KiriminAja, eager loading produk (vendor/variants). [commit 22f5d6b] [OWNER:A2]
-    T35.5 [TODO] ANTI-BOT CLOUDFLARE TURNSTILE (rancangan 2026-09-28; prinsip gate-don't-replace,
-           fail closed, siteverify server-side; 1 widget mode managed; tanpa CAPTCHA existing).
+    T35.5 [DONE] ANTI-BOT CLOUDFLARE TURNSTILE (prinsip gate-don't-replace, fail closed,
+           siteverify server-side; widget managed; tanpa CAPTCHA existing).
            [OWNER:A1] (permukaan prioritas = alur akun & commerce milik A1; koordinasi A2
            hanya untuk endpoint review).
-      T35.5a [TODO] Setup widget (domain localhost,127.0.0.1,+produksi) + secret ke
-             `backend/.env` (`TURNSTILE_SECRET`, gitignored) + sitekey ke `frontend/.env`
-             (`VITE_TURNSTILE_SITEKEY`). BUTUH auth Cloudflare user (Account.Turnstile:Edit)
-             atau sitekey existing. [OWNER:A1]
+      T35.5a [DONE] Widget `0x4AAAAAAFFwxD2UftltgolC` terdaftar (hostname `tusko.vercel.app`
+              + `127.0.0.1`); secret & sitekey diset via Render/Vercel oleh user;
+              `.env.example` BE+FE didokumentasikan. [OWNER:A1]
       T35.5b [DONE] `TurnstileService::verify($token,$action,$ip)` + `config/services.php`
              + `phpunit.xml` bypass + test 7 skenario (TurnstileServiceTest). [OWNER:A1]
       T35.5c [DONE] Komponen reusable `molecules/TurnstileWidget` (loader + explicit render
@@ -1123,9 +1122,10 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
              reset saat retry; test guard 403 (TurnstileGuardTest). [OWNER:A1]
       T35.5e [DONE] Wire review (`ProductReviewController`) + voucher-claim (`ProfilePage`
              widget tunggal); cart-add & email-resend DITUNDA (lihat catatan). [OWNER:A1+A2]
-      T35.5f [DONE] Validasi: unit 15 skenario + live siteverify (secret TEST valid,
-             dummy ditolak) + browser (widget render, 403 tanpa token). Validasi token
-             ASLI produksi menunggu kunci real (T35.5a). [OWNER:A1]
+      T35.5f [DONE] Validasi: unit 15 skenario + live siteverify + produksi — Cloudflare
+             Analytics: hostname tusko.vercel.app, browser nyata (Firefox/Chrome) solved,
+             Token validation 5 (siteverify backend menerima token asli). HeadlessChrome
+             (uji) ditolak bot (wajar). [OWNER:A1]
 
 T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH
