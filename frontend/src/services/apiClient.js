@@ -148,7 +148,7 @@ async function request(endpoint, options = {}) {
       // Tangani kemungkinan server backend sedang tidak aktif (Network Error / Failed to fetch)
       if (isNetworkError) {
         error.isNetworkError = true;
-        error.message = 'Server backend sedang bangun atau koneksi terputus. Silakan coba lagi sebentar lagi.';
+        error.message = `Server backend tidak terjangkau (${url}). Sedang bangun atau koneksi terputus — silakan coba lagi sebentar lagi.`;
         console.error('[apiClient] Network error:', { method: config.method, url, error: error.message });
       }
       throw error;
