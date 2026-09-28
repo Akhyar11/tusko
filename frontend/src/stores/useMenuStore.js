@@ -14,6 +14,7 @@ import { menuService } from '../services/menuService';
 export const useMenuStore = create((set, get) => ({
   adminMenus: [],
   storefrontMenus: [],
+  isAdmin: false,
   isLoading: false,
   isLoaded: false,
   error: null,
@@ -24,27 +25,29 @@ export const useMenuStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const { admin, storefront } = await menuService.fetchUserMenus();
+      const { admin, storefront, isAdmin } = await menuService.fetchUserMenus();
       set({
         adminMenus: admin,
         storefrontMenus: storefront,
+        isAdmin: Boolean(isAdmin),
         isLoading: false,
         isLoaded: true
       });
-      return { admin, storefront };
+      return { admin, storefront, isAdmin };
     } catch (err) {
       set({
         isLoading: false,
         isLoaded: true,
         error: err?.message || 'Gagal memuat menu navigasi'
       });
-      return { admin: [], storefront: [] };
+      return { admin: [], storefront: [], isAdmin: false };
     }
   },
 
   resetMenus: () => set({
     adminMenus: [],
     storefrontMenus: [],
+    isAdmin: false,
     isLoading: false,
     isLoaded: false,
     error: null

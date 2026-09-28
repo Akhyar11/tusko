@@ -43,6 +43,8 @@ export default function Navbar({
   onOpenStock = () => {},
   onOpenTemplates = () => {},
   onOpenExpeditions = () => {},
+  onOpenAdminPanel = () => {},
+  isAdmin = false,
   currentUser = null,
   onOpenLogin = () => {},
   onOpenRegister = () => {},
@@ -399,6 +401,8 @@ export default function Navbar({
                 onOpenStock={onOpenStock}
                 onOpenTemplates={onOpenTemplates}
                 onOpenExpeditions={onOpenExpeditions}
+                onOpenAdminPanel={onOpenAdminPanel}
+                isAdmin={isAdmin}
                 onLogout={onLogout}
                 onSwitchUser={onSwitchUser}
                 storefrontMenus={storefrontMenus}
@@ -748,77 +752,26 @@ export default function Navbar({
                   </div>
                 </div>
 
-                {/* Admin Management Section (If admin) */}
-                {currentUser?.role === 'admin' && (
+                {/* Panel Admin (If role is_admin) */}
+                {isAdmin && (
                   <div className="pt-3 border-t border-neutral-200">
                     <span className="text-[10px] font-black text-amber-700 tracking-wider uppercase block mb-2">
                       PANEL ADMINISTRATOR
                     </span>
-                    <div className="space-y-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          onOpenProductsAdmin();
-                        }}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Boxes size={16} className="text-amber-600 shrink-0" />
-                          <span>Katalog Produk Admin</span>
-                        </div>
-                        <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                      </button>
-
-                      {SHOW_OPERATIONAL_MODULES && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              onOpenStock();
-                            }}
-                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <Boxes size={16} className="text-amber-600 shrink-0" />
-                              <span>Manajemen Stok &amp; Varian</span>
-                            </div>
-                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              onOpenTemplates();
-                            }}
-                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <Boxes size={16} className="text-amber-600 shrink-0" />
-                              <span>Template Master Produk</span>
-                            </div>
-                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              onOpenExpeditions();
-                            }}
-                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-neutral-900 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <Truck size={16} className="text-amber-600 shrink-0" />
-                              <span>Partner Ekspedisi (KiriminAja)</span>
-                            </div>
-                            <ChevronRight size={15} className="text-neutral-400 shrink-0" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        onOpenAdminPanel();
+                      }}
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left text-xs font-bold text-white bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <ShieldCheck size={16} className="text-amber-400 shrink-0" />
+                        <span>Panel Admin (ERP)</span>
+                      </div>
+                      <ChevronRight size={15} className="text-amber-400 shrink-0" />
+                    </button>
                   </div>
                 )}
 

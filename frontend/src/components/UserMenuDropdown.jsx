@@ -7,13 +7,9 @@ import {
   ShieldCheck, 
   ShoppingBag, 
   Wallet, 
-  Boxes, 
-  Mail, 
-  Truck, 
   ChevronDown, 
   Sparkles, 
-  Users,
-  Package
+  Users
 } from 'lucide-react';
 import { mockDemoUsers } from '../data/mockAuthData';
 import { resolveMenuIcon } from '../utils/menuIcons';
@@ -30,6 +26,8 @@ export default function UserMenuDropdown({
   onOpenStock = () => {},
   onOpenTemplates = () => {},
   onOpenExpeditions = () => {},
+  onOpenAdminPanel = () => {},
+  isAdmin = false,
   onLogout = () => {},
   onSwitchUser = () => {},
   storefrontMenus = [],
@@ -228,49 +226,24 @@ export default function UserMenuDropdown({
                 )}
               </div>
 
-              {/* Admin Shortcuts (If admin) */}
-              {currentUser.role === 'admin' && (
+              {/* Panel Admin (If role is_admin) */}
+              {isAdmin && (
                 <div className="p-1 border-t border-neutral-200 bg-neutral-50 rounded-none">
                   <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500">
-                    Akses Khusus Administrator
+                    Akses Administrator
                   </div>
                   <div className="space-y-0.5 mt-0.5">
                     <button
                       type="button"
-                      onClick={() => handleAction(onOpenProductsAdmin)}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
+                      onClick={() => handleAction(onOpenAdminPanel)}
+                      className="w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-none transition-colors cursor-pointer text-left font-black text-xs uppercase bg-neutral-950 text-white hover:bg-neutral-900 group"
                     >
-                      <Package size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                      <span>Manajemen Produk &amp; Katalog</span>
+                      <span className="flex items-center gap-2.5">
+                        <ShieldCheck size={15} className="text-amber-400 shrink-0" />
+                        <span>Panel Admin</span>
+                      </span>
+                      <Sparkles size={13} className="text-amber-400 shrink-0" />
                     </button>
-                    {SHOW_OPERATIONAL_MODULES && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleAction(onOpenStock)}
-                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                        >
-                          <Boxes size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                          <span>Manajemen Stok Gudang</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAction(onOpenTemplates)}
-                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                        >
-                          <Mail size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                          <span>Template Email &amp; Resi</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAction(onOpenExpeditions)}
-                          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                        >
-                          <Truck size={14} className="text-neutral-500 group-hover:text-black shrink-0" />
-                          <span>Pengaturan Ekspedisi &amp; Ongkir</span>
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               )}

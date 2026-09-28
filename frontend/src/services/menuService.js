@@ -68,7 +68,8 @@ export const menuService = {
     const res = await apiClient.get('/api/auth/menus');
     return {
       admin: Array.isArray(res?.data?.admin) ? res.data.admin : [],
-      storefront: Array.isArray(res?.data?.storefront) ? res.data.storefront : []
+      storefront: Array.isArray(res?.data?.storefront) ? res.data.storefront : [],
+      isAdmin: Boolean(res?.data?.is_admin)
     };
   },
 

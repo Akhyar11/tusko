@@ -12,6 +12,7 @@ import {
 import IconButton from '../atoms/IconButton';
 import TextInput from '../molecules/TextInput';
 import TextArea from '../molecules/TextArea';
+import Checkbox from '../molecules/Checkbox';
 import FormTipsPanel from './FormTipsPanel';
 import { roleService } from '../../services/roleService';
 
@@ -28,7 +29,8 @@ export default function RoleForm({
   const [formData, setFormData] = useState({
     name: initialRole?.name || '',
     display_name: initialRole?.display_name || '',
-    description: initialRole?.description || ''
+    description: initialRole?.description || '',
+    is_admin: Boolean(initialRole?.is_admin)
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -47,7 +49,8 @@ export default function RoleForm({
     const payload = {
       name: formData.name.trim(),
       display_name: formData.display_name.trim(),
-      description: formData.description.trim() || null
+      description: formData.description.trim() || null,
+      is_admin: Boolean(formData.is_admin)
     };
 
     try {
@@ -172,6 +175,28 @@ export default function RoleForm({
               </div>
             </div>
 
+            <div>
+              <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                <KeyRound size={16} className="text-amber-500" />
+                <span>Akses Panel Admin</span>
+              </h2>
+
+              <label className="flex items-center gap-3 cursor-pointer p-4 bg-neutral-50 border border-neutral-200 rounded-none hover:bg-neutral-100 transition-colors mt-4">
+                <Checkbox
+                  checked={formData.is_admin}
+                  onChange={(val) => setFormData((p) => ({ ...p, is_admin: val }))}
+                />
+                <div>
+                  <span className="font-sport font-bold uppercase text-xs text-neutral-900 block leading-tight">
+                    Role Ini Dapat Mengakses Panel Admin
+                  </span>
+                  <span className="text-[11px] text-neutral-500 block mt-0.5">
+                    Aktifkan agar pengguna dengan role ini boleh masuk ke Panel Admin (ERP) dan melihat tombol "Panel Admin" di toko.
+                  </span>
+                </div>
+              </label>
+            </div>
+
             <div className="pt-3 border-t border-neutral-200 space-y-2">
               <button
                 type="submit"
@@ -201,6 +226,7 @@ export default function RoleForm({
             { icon: KeyRound, heading: 'Nama Role (key)', text: 'Gunakan huruf kecil, angka, dan garis bawah (contoh: warehouse_staff). Key dipakai sistem untuk mencocokkan akses.' },
             { icon: ShieldCheck, heading: 'Nama Tampilan', text: 'Nama ramah pengguna yang tampil di UI (contoh: Staf Gudang).' },
             { icon: Lock, heading: 'Role Sistem', text: 'Role bawaan (admin/customer/warehouse_staff/finance_officer) terkunci key-nya dan tidak dapat dihapus.' },
+            { icon: ShieldCheck, heading: 'Panel Admin', text: 'Centang "Dapat Mengakses Panel Admin" agar role (mis. keuangan/marketing) boleh masuk Panel Admin ERP.' },
             { icon: Info, heading: 'Akses Menu', text: 'Setelah role dibuat, atur menu yang boleh diakses role ini (Role → Menu Mapping).' }
           ]}
         />

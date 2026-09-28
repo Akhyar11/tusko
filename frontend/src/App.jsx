@@ -449,6 +449,7 @@ export default function App() {
   const authAdminMenus = useMenuStore((state) => state.adminMenus);
   const authStorefrontMenus = useMenuStore((state) => state.storefrontMenus);
   const authMenusLoaded = useMenuStore((state) => state.isLoaded);
+  const authIsAdmin = useMenuStore((state) => state.isAdmin);
 
   useEffect(() => {
     // Storefront menu bersifat PUBLIK (T37.4/T37.8): muat juga untuk tamu.
@@ -523,11 +524,11 @@ export default function App() {
   useEffect(() => {
     if (!currentUser || !authMenusLoaded) return;
     if (!ADMIN_CORE_VIEWS.includes(currentView)) return;
-    if (isViewAllowedByMenus(currentView, authAdminMenus)) return;
+    if (authIsAdmin && isViewAllowedByMenus(currentView, authAdminMenus)) return;
 
     showToast('Akses ditolak. Halaman ini tidak tersedia untuk peran Anda.', { type: 'error' });
     setCurrentView('catalog');
-  }, [currentView, currentUser, authMenusLoaded, authAdminMenus]);
+  }, [currentView, currentUser, authMenusLoaded, authAdminMenus, authIsAdmin]);
 
   // Muat ulang keranjang dari API (akun via token, guest via session_id).
   const refreshCart = async () => {
@@ -1333,6 +1334,11 @@ export default function App() {
           onOpenStock={() => setCurrentView('stock')}
           onOpenTemplates={() => setCurrentView('templates')}
           onOpenExpeditions={() => setCurrentView('expeditions')}
+          onOpenAdminPanel={() => {
+            setCurrentView('admin-dashboard');
+            window.history.pushState(null, '', '/admin/dashboard');
+          }}
+          isAdmin={authIsAdmin}
           currentUser={currentUser}
           onOpenLogin={() => setCurrentView('login')}
           onOpenRegister={() => setCurrentView('register')}
