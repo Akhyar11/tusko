@@ -78,4 +78,36 @@ echo "==> optimize cache"
 # --- Permission ---
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
+# --- Scheduler (T30.5): daftarkan Cron `schedule:run` tiap menit (idempotent) ---
+# Hostinger shared hosting tanpa Supervisor: worker antrean & task terjadwal
+# (queue:work, queue:prune-*, orders:cancel-expired, expeditions:sync —
+# lihat routes/console.php) hanya berjalan bila `schedule:run` dipicu Cron.
+PHP_CLI="$(command -v "$PHP_BIN" || true)"
+if [ -n "$PHP_CLI" ] && command -v crontab >/dev/null 2>&1; then
+    CRON_LINE="* * * * * cd $APP_DIR && $PHP_CLI artisan schedule:run >> /dev/null 2>&1"
+    if crontab -l 2>/dev/null | grep -Fq "artisan schedule:run"; then
+        echo "==> Cron schedule:run sudah terdaftar."
+    else
+        ( crontab -l 2>/dev/null; echo "$CRON_LINE" ) | crontab -
+        echo "==> Cron schedule:run ditambahkan: $CRON_LINE"
+    fi
+else
+    echo "WARNING: 'crontab'/PHP CLI tidak tersedia; daftarkan manual di hPanel Hostinger:" >&2
+    echo "         * * * * * cd $APP_DIR && php artisan schedule:run >> /dev/null 2>&1" >&2
+fi
+
+"$PHP_BIN" artisan schedule:list || true
+
+# --- Verifikasi driver queue & cache (worker + withoutOverlapping) ---
+QUEUE_CONN="$(grep -E '^QUEUE_CONNECTION=' .env | cut -d= -f2- || true)"
+CACHE_STORE="$(grep -E '^CACHE_STORE=' .env | cut -d= -f2- || true)"
+echo "==> QUEUE_CONNECTION=${QUEUE_CONN:-<default: database>} CACHE_STORE=${CACHE_STORE:-<default: database>}"
+
+if [ -n "$QUEUE_CONN" ] && [ "$QUEUE_CONN" != "database" ]; then
+    echo "WARNING: QUEUE_CONNECTION='$QUEUE_CONN' bukan 'database'; worker terjadwal tidak memproses antrean database." >&2
+fi
+if [ -n "$CACHE_STORE" ] && [ "$CACHE_STORE" != "database" ] && [ "$CACHE_STORE" != "redis" ]; then
+    echo "WARNING: CACHE_STORE='$CACHE_STORE' tidak persisten; lock withoutOverlapping bisa gagal." >&2
+fi
+
 echo "==> Deploy selesai."

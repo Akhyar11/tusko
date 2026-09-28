@@ -1060,7 +1060,7 @@ T30. Scheduler & Queue ............................................. [PARTIAL]  
   DB: jobs (infra), orders.expires_at, stock_reservations.expires_at,
       loyalty_points_ledger.expires_at.
   API: -.
-  Test: [NEW] SchedulerJobTest + SchedulerConfigurationTest.
+  Test: [NEW] SchedulerJobTest + SchedulerConfigurationTest + HostingerDeployScriptTest.
   Minor:
     T30.1 [DONE] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
     T30.2 [DONE] Scheduled: auto-cancel order expired + release reservasi (T13.3).
@@ -1070,6 +1070,11 @@ T30. Scheduler & Queue ............................................. [PARTIAL]  
            --tries=3` tiap menit (`withoutOverlapping(10)` + `runInBackground`), prune
            failed/batches, `orders:cancel-expired`, `expeditions:sync`; logging ringkas
            onSuccess/onFailure via `Log`; test `SchedulerConfigurationTest`. [OWNER:A2]
+    T30.5 [DONE] DEPLOY CRON HOSTINGER (menutup GAP CI/CD A2): `backend/deploy/hostinger-deploy.sh`
+           mendaftarkan cron `* * * * * ... artisan schedule:run` secara idempotent
+           (guard `grep -Fq`), menjalankan `schedule:list` untuk verifikasi, dan
+           memverifikasi `QUEUE_CONNECTION`/`CACHE_STORE` (=database) agar worker &
+           lock `withoutOverlapping` berjalan. Test `HostingerDeployScriptTest`. [OWNER:A2]
 
 T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [PARTIAL]  [OWNER:A1]
   DB: loyalty_points_ledger, users.points, orders.loyalty_points_*,
