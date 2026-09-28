@@ -1281,17 +1281,17 @@ export default function App() {
     <div className={`min-h-screen flex flex-col ${currentView === 'catalog' || currentView === 'detail' ? 'bg-white' : 'bg-[#f5f6f8]'}`}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className={`fixed top-6 right-6 z-50 text-white border px-4 py-3 rounded-none shadow-2xl flex items-center gap-3 text-xs sm:text-sm animate-in fade-in slide-in-from-top-4 duration-150 ${
+        <div className={`fixed top-20 right-6 z-[200] max-w-[calc(100vw-3rem)] sm:max-w-md text-white border px-4 py-3 rounded-none shadow-2xl flex items-start gap-3 text-xs sm:text-sm animate-in fade-in slide-in-from-top-4 duration-150 ${
           toastMessage.type === 'error'
             ? 'bg-red-950/95 border-red-700 text-red-100'
             : 'bg-neutral-900/95 border-neutral-700 text-white'
         }`}>
           {toastMessage.type === 'error' ? (
-            <AlertCircle size={18} className="text-red-400 shrink-0" />
+            <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
           ) : (
-            <CheckCircle2 size={18} className="text-amber-400 shrink-0" />
+            <CheckCircle2 size={18} className="text-amber-400 shrink-0 mt-0.5" />
           )}
-          <span className="font-semibold">{toastMessage.message || toastMessage}</span>
+          <span className="font-semibold whitespace-normal break-words">{toastMessage.message || toastMessage}</span>
           {toastMessage.showCart && (
             <button
               type="button"

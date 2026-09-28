@@ -103,6 +103,15 @@ async function request(endpoint, options = {}) {
       error.status = response.status;
       error.data = data;
       error.errors = data.errors || null;
+      // Tampilkan detail error API di console agar mudah didiagnosis walau toast tertutup.
+      console.error('[apiClient] API request failed:', {
+        method: config.method,
+        url,
+        status: response.status,
+        message: error.message,
+        errors: error.errors,
+        response: data,
+      });
       throw error;
     }
 
@@ -112,6 +121,7 @@ async function request(endpoint, options = {}) {
     if (!error.status && (error.name === 'TypeError' || error.message.includes('fetch'))) {
       error.isNetworkError = true;
       error.message = 'Tidak dapat terhubung ke server backend (Offline).';
+      console.error('[apiClient] Network error:', { method: config.method, url, error: error.message });
     }
     throw error;
   }
