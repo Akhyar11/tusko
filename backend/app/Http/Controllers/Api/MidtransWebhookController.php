@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Transaction;
 use App\Services\IntegrationService;
+use App\Services\JournalMappingService;
 use App\Services\MidtransService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +17,10 @@ use Illuminate\Support\Facades\Log;
 
 class MidtransWebhookController extends Controller
 {
-    public function __construct(private readonly IntegrationService $integrations)
-    {
+    public function __construct(
+        private readonly IntegrationService $integrations,
+        private readonly JournalMappingService $journalMapping
+    ) {
     }
 
     /**
@@ -119,6 +122,13 @@ class MidtransWebhookController extends Controller
                         'fee_deducted' => $fee,
                         'net_amount' => max(0, (float) $payment->amount - $fee),
                     ]);
+
+                // T34.5: jurnal biaya gateway (idempoten) saat lunas.
+                try {
+                    $this->journalMapping->postPaymentGatewayFee($locked, $fee);
+                } catch (\Throwable $e) {
+                    Log::warning('postPaymentGatewayFee gagal: ' . $e->getMessage());
+                }
             }
 
             if ($paymentType) {

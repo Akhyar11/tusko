@@ -1030,10 +1030,10 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
     T34.3 [DONE] Laporan aging hutang vendor (menyerap T14.5 lama). [commit 70d0150]
     T34.4 [DONE] Ekspor CSV/Excel/PDF laporan. [commit ae9dd2a] CSV untuk laba rugi,
            neraca saldo, dan aging hutang (Excel/PDF opsional lanjutan).
-    T34.5 [PARTIAL] WIRE JURNAL ORDER LUNAS + FEE GATEWAY: `postOrderPaid` sekarang
-           dipanggil di `OrderObserver` (saat `isPaid`, idempoten) + test. [commit 9036c1e]
-           SISA: `postPaymentGatewayFee` belum bisa di-wire — `transactions.fee_deducted`
-           tak pernah diisi (tak ada sumber fee) → menunggu T07/payment capture (A1). [OWNER:A2]
+    T34.5 [DONE] WIRE JURNAL ORDER LUNAS + FEE GATEWAY: `postOrderPaid` dipanggil di
+           `OrderObserver` (saat `isPaid`, idempoten) + test. [commit 9036c1e]
+           `postPaymentGatewayFee` di-wire di `MidtransWebhookController` (saat settlement,
+           memakai fee T07.7) + test idempoten. [OWNER:A2]
     T34.6 [DONE] WIRE JURNAL GRN: `postGoodsReceiving` dipanggil di alur receive
            (`PurchaseOrderController::receive`) + test (endpoint riil, jurnal 1300/2100
            seimbang & idempoten). [commit 18869a2] [OWNER:A2]
@@ -1058,10 +1058,12 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
       11 test file (TransactionApiTest, JournalPostingTest, JournalMappingTest,
       FinancialReportApiTest, ProfitReportApiTest, ReportExportCsvTest, CogsPipelineTest,
       VendorBillPaymentJournalTest, dll).
-    BE — GAP: T34.5 (jurnal order lunas + fee gateway belum dipanggil), T34.6 (jurnal GRN),
-      T34.7 (transaksi manual tak menulis ledger -> buku kas vs jurnal bisa divergen),
-      T34.8 (jurnal liabilitas poin), T16.5 (rekonsiliasi bank), T16.6 (tutup buku),
-      T17.3 (migrasi `invoices` + nomor legal + PDF).
+    BE — GAP (diperbarui pasca-rebase `feat/journal-wiring` 2026-09-27):
+      T34.6 [DONE] & T34.7 [DONE] (cabang ini: `postGoodsReceiving` di receive GRN;
+      `postManualTransaction` + konsistensi kas); T34.5 [PARTIAL] (`postOrderPaid`
+      ter-wire idempoten di `OrderObserver`, fee gateway sisa);
+      sisa: T34.8 (jurnal liabilitas poin -> T34.14 koordinasi), T16.5 (rekonsiliasi bank),
+      T16.6 (tutup buku), T17.3 (migrasi `invoices` + nomor legal + PDF).
     FE — SUDAH ADA: AdminDashboardPage (BI, API-backed), FinancialTransactionsPage
       (API-backed via useTransactionTableStore->transactionService), VendorBillListPage/
       VendorBillDetailPage, PrintInvoiceModal, transactionService.js, dashboardService.js.

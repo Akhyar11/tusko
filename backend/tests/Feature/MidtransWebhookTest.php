@@ -123,6 +123,39 @@ class MidtransWebhookTest extends TestCase
         ]);
     }
 
+    public function test_settlement_posts_gateway_fee_journal(): void
+    {
+        $this->seed(\Database\Seeders\MasterReferenceSeeder::class);
+        app(\App\Services\IntegrationService::class)->set('payment.midtrans_fee_percent', '2.9', 'payment');
+
+        $order = Order::factory()->create([
+            'order_number' => 'INV/20260907/TK/FEEJ001',
+            'grand_total' => 100000,
+            'status' => 'pending',
+            'payment_status' => 'pending',
+        ]);
+
+        $signature = $this->generateSignature($order->order_number, '200', '100000.00');
+
+        $this->postJson('/api/webhooks/midtrans', [
+            'order_id' => $order->order_number,
+            'status_code' => '200',
+            'gross_amount' => '100000.00',
+            'signature_key' => $signature,
+            'transaction_status' => 'settlement',
+            'transaction_id' => 'midtrans-fee-j-1',
+            'payment_type' => 'bank_transfer',
+        ])->assertOk();
+
+        // Jurnal biaya gateway (idempoten): Debit Beban Gateway, Kredit Bank.
+        $container = \App\Models\Transaction::where('order_id', $order->id)
+            ->where('category', 'gateway_fee')
+            ->first();
+
+        $this->assertNotNull($container, 'transaksi gateway_fee tidak dibuat');
+        $this->assertGreaterThanOrEqual(2, \App\Models\FinancialLedgerEntry::where('transaction_id', $container->id)->count());
+    }
+
     public function test_webhook_expire_cancels_order_and_restores_product_stock(): void
     {
         $product = Product::factory()->create(['stock' => 5]);
