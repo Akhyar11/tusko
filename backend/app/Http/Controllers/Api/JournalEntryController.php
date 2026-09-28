@@ -26,6 +26,12 @@ class JournalEntryController extends Controller
             $query->where('chart_of_account_id', (int) $request->query('chart_of_account_id'));
         }
 
+        // T34.11: saring berdasarkan kode akun (mis. 1100) untuk dropdown FE.
+        if ($request->filled('account_code')) {
+            $code = trim((string) $request->query('account_code'));
+            $query->whereHas('account', fn ($q) => $q->where('account_code', $code));
+        }
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [
                 Carbon::parse($request->query('start_date'))->startOfDay(),

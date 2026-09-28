@@ -54,6 +54,11 @@ import ReturnListPage from './components/ReturnListPage';
 import ReturnDetailPage from './components/ReturnDetailPage';
 import ReturnRequestPage from './components/ReturnRequestPage';
 import FinancialTransactionCreatePage from './components/FinancialTransactionCreatePage';
+import JournalEntriesPage from './components/JournalEntriesPage';
+import IncomeStatementPage from './components/IncomeStatementPage';
+import TrialBalancePage from './components/TrialBalancePage';
+import VendorAgingPage from './components/VendorAgingPage';
+import ProfitReportPage from './components/ProfitReportPage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
 import PopularChipsBar from './components/PopularChipsBar';
@@ -123,6 +128,11 @@ const VALID_VIEWS = [
   'product-edit',
   'transactions',
   'transaction-create',
+  'journal',
+  'income-statement',
+  'trial-balance',
+  'vendor-aging',
+  'profit-report',
   'procurement-po-create',
   'procurement-po-detail',
   'expeditions',
@@ -209,6 +219,11 @@ const ADMIN_CORE_VIEWS = [
   'expedition-edit',
   'transactions',
   'transaction-create',
+  'journal',
+  'income-statement',
+  'trial-balance',
+  'vendor-aging',
+  'profit-report',
   'settings'
 ];
 
@@ -256,6 +271,11 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement/vendors' || rawPath === '/admin/procurement/vendor') return 'suppliers-admin';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
     if (rawPath === '/admin/transactions/create') return 'transaction-create';
+    if (rawPath === '/admin/journal') return 'journal';
+    if (rawPath === '/admin/reports/income-statement') return 'income-statement';
+    if (rawPath === '/admin/reports/trial-balance') return 'trial-balance';
+    if (rawPath === '/admin/reports/vendor-aging') return 'vendor-aging';
+    if (rawPath === '/admin/reports/profit') return 'profit-report';
     if (rawPath === '/admin/expeditions' || rawPath === '/admin/expedition') return 'expeditions';
     if (rawPath === '/admin/expeditions/create') return 'expedition-create';
     if (rawPath === '/admin/templates' || rawPath === '/admin/template') return 'templates';
@@ -540,7 +560,7 @@ export default function App() {
     }
     handleUpdateUser(null);
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
     if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -661,6 +681,26 @@ export default function App() {
     } else if (currentView === 'transaction-create') {
       if (window.location.pathname !== '/admin/transactions/create') {
         window.history.pushState(null, '', '/admin/transactions/create');
+      }
+    } else if (currentView === 'journal') {
+      if (window.location.pathname !== '/admin/journal') {
+        window.history.pushState(null, '', '/admin/journal');
+      }
+    } else if (currentView === 'income-statement') {
+      if (window.location.pathname !== '/admin/reports/income-statement') {
+        window.history.pushState(null, '', '/admin/reports/income-statement');
+      }
+    } else if (currentView === 'trial-balance') {
+      if (window.location.pathname !== '/admin/reports/trial-balance') {
+        window.history.pushState(null, '', '/admin/reports/trial-balance');
+      }
+    } else if (currentView === 'vendor-aging') {
+      if (window.location.pathname !== '/admin/reports/vendor-aging') {
+        window.history.pushState(null, '', '/admin/reports/vendor-aging');
+      }
+    } else if (currentView === 'profit-report') {
+      if (window.location.pathname !== '/admin/reports/profit') {
+        window.history.pushState(null, '', '/admin/reports/profit');
       }
     } else if (currentView === 'expeditions') {
       if (window.location.pathname !== '/admin/expeditions') {
@@ -1571,6 +1611,16 @@ export default function App() {
             onNavigateBack={() => setCurrentView('transactions')}
             onShowToast={showToast}
           />
+        ) : currentView === 'journal' ? (
+          <JournalEntriesPage onShowToast={showToast} />
+        ) : currentView === 'income-statement' ? (
+          <IncomeStatementPage onShowToast={showToast} />
+        ) : currentView === 'trial-balance' ? (
+          <TrialBalancePage onShowToast={showToast} />
+        ) : currentView === 'vendor-aging' ? (
+          <VendorAgingPage onShowToast={showToast} />
+        ) : currentView === 'profit-report' ? (
+          <ProfitReportPage onShowToast={showToast} />
         ) : currentView === 'stock' ? (
           <StockManagementPage
             inventory={inventory}

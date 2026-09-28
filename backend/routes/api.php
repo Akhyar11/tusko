@@ -137,6 +137,7 @@ Route::prefix('transactions')->group(function () {
 });
 
 Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
+Route::get('/chart-of-accounts', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'index']);
 
 Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class, 'profit']);
 

@@ -78,7 +78,7 @@ class AuthMenuEndpointTest extends TestCase
 
         $paths = collect($response->json('data.admin'))->pluck('path_prefix');
         $this->assertTrue($paths->contains('/admin/transaction'));
-        $this->assertCount(22, $response->json('data.admin'));
+        $this->assertCount(27, $response->json('data.admin'));
     }
 
     public function test_limited_role_only_sees_assigned_menus(): void

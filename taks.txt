@@ -730,7 +730,8 @@ T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  
     T16.2 [DONE] FE FinancialTransactionCreatePage -> POST `transactionService.
            createTransaction` + Toast + navigasi kembali (server-authoritative,
            memicu jurnal T34.7) + bukti browser Playwright.
-    T16.3 [TODO] FE kategori & ringkasan cashflow.
+    T16.3 [DONE] FE kategori & ringkasan cashflow (KPI Net Cashflow/Income/Expense +
+           kolom & filter kategori di FinancialTransactionsPage).
     T16.4 [DONE] MESIN JURNAL: `financial_accounts` (saldo rekening) +
            `chart_of_accounts` + `financial_ledger_entries` + JournalPostingService
            (helper post debit/credit, idempoten) + endpoint + test.
@@ -1076,17 +1077,15 @@ T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  
       PRODUCER data (CheckoutController milik A1) = T34.14/T34.15 (KOORDINASI A1<->A2;
       WAJIB sepakati kontrak data + akun jurnal lebih dulu sebelum implementasi).
 
-    T34.10 [TODO] FE HALAMAN LAPORAN KEUANGAN: halaman admin Laba Rugi + Neraca Saldo +
-           Aging Hutang mengonsumsi `/api/reports/income-statement|trial-balance|vendor-aging`
-           + tombol Ekspor CSV (T34.4). Halaman list kanonis (aturan 26) + FilterDrawer
-           periode/akun (aturan 27). [OWNER:A2]
-    T34.11 [TODO] FE VIEWER JURNAL: halaman daftar `financial_ledger_entries` via
-           `/api/journal-entries` + filter periode/akun/referensi + `ServerSideTable`. [OWNER:A2]
-    T34.12 [TODO] FE LAPORAN PROFIT/HPP: halaman laporan profit mengonsumsi
-           `/api/reports/profit` (filter periode + tabel + ringkasan) — menyerap T18.4. [OWNER:A2]
-    T34.13 [TODO] REGISTRASI MENU & RUTE LAPORAN/JURNAL: entri master `menus`
-           (section "Keuangan & Sistem") + `role_menus` admin + cabang render App.jsx +
-           `adminCoreViews` + feature flag (menu_access_rule). [OWNER:A2]
+    T34.10 [DONE] FE HALAMAN LAPORAN KEUANGAN: IncomeStatementPage + TrialBalancePage +
+           VendorAgingPage (consume `/api/reports/*` + Ekspor CSV) + ReportFilterDrawer
+           reusable + bukti browser Playwright.
+    T34.11 [DONE] FE VIEWER JURNAL: JournalEntriesPage (`ServerSideTable` +
+           useJournalTableStore + filter akun/periode) + `account_code` di API.
+    T34.12 [DONE] FE LAPORAN PROFIT/HPP: ProfitReportPage (`/api/reports/profit`) —
+           menyerap T18.4.
+    T34.13 [DONE] REGISTRASI MENU & RUTE: 5 entri `menus` (MenuSeeder, auto-assign admin)
+           + VALID_VIEWS/path/render/adminViews di App.jsx + test menu diperbarui.
     T34.14 [DONE] JURNAL LIABILITAS POIN: akun 2200 (Liabilitas Poin) + 6400
            (Beban Program Poin) di seeder+mapping; `postPointsEarned` (OrderObserver saat
            lunas) + `postPointsRedeemed` (CheckoutController saat tukar) + test
