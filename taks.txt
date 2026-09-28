@@ -537,6 +537,12 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            Tambah `payment.snap_js_url` ke registry + `snap_js_url` ke `config/midtrans.php`
            (default sandbox/produksi) agar Snap.js popup punya sumber konfigurasi.
            Test `MidtransConfigTest` (4) + suite 708 PASSED. [OWNER:A1]
+    T07.9 [DONE] MIDTRANS CORE API (VA/Mandiri/QRIS) — UI full Tusko: `MidtransService::createCharge`
+           (bank_transfer BCA/BRI/BNI, echannel Mandiri, qris) + kolom order
+           (biller_code/bill_key/qr_string/qr_url/payment_expires_at) + endpoint
+           `POST /api/orders/{id}/charge` + webhook VA/QR + FE `checkoutService.chargeOrder` +
+           `PaymentInstructionModal` Tusko (VA/biller/QR asli, countdown, Cek Status).
+           Kartu kredit tetap via Snap. [commit 2c3dfd9 (BE) + 718c499 (FE)] (koordinasi lintas-owner A1)
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
