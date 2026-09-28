@@ -575,6 +575,53 @@ class CheckoutController extends Controller
     }
 
     /**
+     * T07.9: buat charge Core API (VA/Mandiri/QRIS) untuk order + instruksi bayar.
+     */
+    public function charge(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $validated = $request->validate([
+            'payment_method' => 'required|string|in:bca_va,bni_va,bri_va,mandiri_va,qris',
+        ]);
+
+        $order = Order::with('items')
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->firstOrFail();
+
+        // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
+        $this->ensureOrderAccess($request, $order);
+
+        $midtransService = app(\App\Services\MidtransService::class);
+        $result = $midtransService->createCharge($order, $validated['payment_method']);
+
+        if (! $result['success']) {
+            return response()->json([
+                'message' => $result['raw']['message'] ?? 'Gagal membuat transaksi pembayaran.',
+                'errors' => ['payment_method' => [$result['raw']['status_message'] ?? 'Charge Midtrans gagal.']],
+            ], $result['http_status'] >= 400 ? min($result['http_status'], 502) : 422);
+        }
+
+        $order->refresh();
+
+        return response()->json([
+            'message' => 'Instruksi pembayaran berhasil dibuat.',
+            'data' => [
+                'order_number' => $order->order_number,
+                'payment_status' => $order->payment_status,
+                'payment_channel' => $order->payment_channel,
+                'midtrans_payment_type' => $order->midtrans_payment_type,
+                'transaction_id' => $order->midtrans_transaction_id,
+                'va_number' => $order->va_number,
+                'biller_code' => $order->midtrans_biller_code,
+                'bill_key' => $order->midtrans_bill_key,
+                'qr_string' => $order->midtrans_qr_string,
+                'qr_url' => $order->midtrans_qr_url,
+                'payment_expires_at' => $order->payment_expires_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
      * Send or re-send order confirmation email to customer.
      */
     public function sendConfirmationEmail(Request $request, string $idOrOrderNumber): JsonResponse

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\Payment;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,7 @@ class MidtransService
     protected bool $isProduction;
     protected string $snapUrl;
     protected string $refundUrl;
+    protected string $apiUrl;
 
     public function __construct(private readonly IntegrationService $integrations)
     {
@@ -23,6 +25,7 @@ class MidtransService
         $this->isProduction = filter_var($this->resolve('payment.is_production', 'midtrans.is_production', 'midtrans.is_production', false), FILTER_VALIDATE_BOOLEAN);
         $this->snapUrl = (string) $this->resolve('payment.snap_url', 'midtrans.snap_url', 'midtrans.snap_url', '');
         $this->refundUrl = (string) $this->resolve('payment.refund_url', 'midtrans.refund_url', 'midtrans.refund_url', '');
+        $this->apiUrl = (string) $this->resolve('payment.midtrans_api_url', 'midtrans.api_url', 'midtrans.api_url', '');
     }
 
     /**
@@ -69,15 +72,22 @@ class MidtransService
     }
 
     /**
-     * Create Midtrans Snap Token for an Order.
-     *
-     * @return array{token: string, redirect_url: string}
+     * Base URL Midtrans Core API (tanpa hardcode).
      */
-    public function createSnapToken(Order $order): array
+    public function apiUrl(): string
     {
-        $order->loadMissing(['items', 'user']);
+        return rtrim($this->apiUrl, '/');
+    }
 
+    /**
+     * Detail item Midtrans dari order (dipakai Snap & Core API).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function itemDetails(Order $order): array
+    {
         $itemDetails = [];
+
         foreach ($order->items as $item) {
             $itemDetails[] = [
                 'id' => (string) $item->product_id,
@@ -123,6 +133,192 @@ class MidtransService
             ];
         }
 
+        return $itemDetails;
+    }
+
+    /**
+     * Detail pelanggan Midtrans dari order (dipakai Snap & Core API).
+     *
+     * @return array<string, mixed>
+     */
+    private function customerDetails(Order $order): array
+    {
+        return [
+            'first_name' => $order->recipient_name,
+            'email' => $order->user?->email ?: 'customer@tokoonline.test',
+            'phone' => $order->phone ?: $order->phone_number ?: '081234567890',
+            'billing_address' => [
+                'first_name' => $order->recipient_name,
+                'phone' => $order->phone ?: $order->phone_number,
+                'address' => $order->full_address,
+                'city' => $order->city,
+                'postal_code' => $order->postal_code,
+                'country_code' => 'IDN',
+            ],
+            'shipping_address' => [
+                'first_name' => $order->recipient_name,
+                'phone' => $order->phone ?: $order->phone_number,
+                'address' => $order->full_address,
+                'city' => $order->city,
+                'postal_code' => $order->postal_code,
+                'country_code' => 'IDN',
+            ],
+        ];
+    }
+
+    /**
+     * Buat transaksi Core API untuk channel VA/Mandiri/QRIS (T07.9).
+     *
+     * @return array{success: bool, http_status: int, raw: array<string, mixed>}
+     */
+    public function createCharge(Order $order, string $channel): array
+    {
+        $order->loadMissing(['items', 'user']);
+
+        $payload = $this->chargePayload($order, $channel);
+
+        if ($payload === null) {
+            return [
+                'success' => false,
+                'http_status' => 422,
+                'raw' => ['message' => 'Channel pembayaran tidak didukung via Core API.', 'channel' => $channel],
+            ];
+        }
+
+        if ($this->apiUrl() === '' || $this->serverKey === '') {
+            return [
+                'success' => false,
+                'http_status' => 503,
+                'raw' => ['message' => 'Midtrans Core API belum dikonfigurasi.'],
+            ];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->timeout(15)->post($this->apiUrl() . '/v2/charge', $payload);
+
+            $body = $response->json() ?? [];
+
+            if (! $response->successful()) {
+                Log::warning('Midtrans charge gagal', [
+                    'channel' => $channel,
+                    'status' => $response->status(),
+                    'body' => $body,
+                ]);
+
+                return ['success' => false, 'http_status' => $response->status(), 'raw' => $body];
+            }
+
+            $this->persistCharge($order, $channel, $body);
+
+            return ['success' => true, 'http_status' => $response->status(), 'raw' => $body];
+        } catch (Exception $e) {
+            Log::error('Midtrans charge exception: ' . $e->getMessage());
+
+            return ['success' => false, 'http_status' => 500, 'raw' => ['message' => $e->getMessage()]];
+        }
+    }
+
+    /**
+     * Payload Core API per channel (VA/echannel/QRIS).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function chargePayload(Order $order, string $channel): ?array
+    {
+        $base = [
+            'transaction_details' => [
+                'order_id' => $order->order_number,
+                'gross_amount' => (int) round($order->grand_total),
+            ],
+            'customer_details' => $this->customerDetails($order),
+            'item_details' => $this->itemDetails($order),
+        ];
+
+        return match ($channel) {
+            'bca_va' => array_merge($base, ['payment_type' => 'bank_transfer', 'bank_transfer' => ['bank' => 'bca']]),
+            'bni_va' => array_merge($base, ['payment_type' => 'bank_transfer', 'bank_transfer' => ['bank' => 'bni']]),
+            'bri_va' => array_merge($base, ['payment_type' => 'bank_transfer', 'bank_transfer' => ['bank' => 'bri']]),
+            'mandiri_va' => array_merge($base, [
+                'payment_type' => 'echannel',
+                'echannel' => [
+                    'bill_info1' => 'Pembayaran Tusko',
+                    'bill_info2' => 'Pesanan ' . $order->order_number,
+                ],
+            ]),
+            'qris' => array_merge($base, ['payment_type' => 'qris']),
+            default => null,
+        };
+    }
+
+    /**
+     * Simpan hasil charge (VA/biller/QR) ke order + baris `payments` (pending).
+     *
+     * @param  array<string, mixed>  $body
+     */
+    private function persistCharge(Order $order, string $channel, array $body): void
+    {
+        $updates = [
+            'payment_method' => 'midtrans',
+            'payment_channel' => $channel,
+            'payment_status' => 'pending',
+            'midtrans_transaction_id' => $body['transaction_id'] ?? $order->midtrans_transaction_id,
+            'midtrans_payment_type' => $body['payment_type'] ?? $channel,
+            'payment_expires_at' => $order->payment_expires_at ?? now()->addDay(),
+        ];
+
+        if (isset($body['va_numbers'][0]['va_number'])) {
+            $updates['va_number'] = (string) $body['va_numbers'][0]['va_number'];
+        } elseif (isset($body['permata_va_number'])) {
+            $updates['va_number'] = (string) $body['permata_va_number'];
+        }
+
+        if (isset($body['biller_code'])) {
+            $updates['midtrans_biller_code'] = (string) $body['biller_code'];
+        }
+        if (isset($body['bill_key'])) {
+            $updates['midtrans_bill_key'] = (string) $body['bill_key'];
+        }
+        if (isset($body['qr_string'])) {
+            $updates['midtrans_qr_string'] = (string) $body['qr_string'];
+        }
+
+        foreach (($body['actions'] ?? []) as $action) {
+            if (($action['name'] ?? null) === 'generate-qr-code' && ! empty($action['url'])) {
+                $updates['midtrans_qr_url'] = (string) $action['url'];
+            }
+        }
+
+        $order->update($updates);
+
+        // Reservasi slot pembayaran pending (idempoten per reference/transaction_id).
+        Payment::updateOrCreate(
+            [
+                'order_id' => $order->id,
+                'reference' => (string) ($body['transaction_id'] ?? $order->order_number),
+            ],
+            [
+                'method' => 'midtrans',
+                'channel' => (string) ($body['payment_type'] ?? $channel),
+                'amount' => (float) $order->grand_total,
+                'status' => 'pending',
+            ]
+        );
+    }
+
+    /**
+     * Create Midtrans Snap Token for an Order.
+     *
+     * @return array{token: string, redirect_url: string}
+     */
+    public function createSnapToken(Order $order): array
+    {
+        $order->loadMissing(['items', 'user']);
+
+        $itemDetails = $this->itemDetails($order);
         $grossAmount = (int) round($order->grand_total);
 
         $payload = [
@@ -130,27 +326,7 @@ class MidtransService
                 'order_id' => $order->order_number,
                 'gross_amount' => $grossAmount,
             ],
-            'customer_details' => [
-                'first_name' => $order->recipient_name,
-                'email' => $order->user?->email ?: 'customer@tokoonline.test',
-                'phone' => $order->phone ?: $order->phone_number ?: '081234567890',
-                'billing_address' => [
-                    'first_name' => $order->recipient_name,
-                    'phone' => $order->phone ?: $order->phone_number,
-                    'address' => $order->full_address,
-                    'city' => $order->city,
-                    'postal_code' => $order->postal_code,
-                    'country_code' => 'IDN',
-                ],
-                'shipping_address' => [
-                    'first_name' => $order->recipient_name,
-                    'phone' => $order->phone ?: $order->phone_number,
-                    'address' => $order->full_address,
-                    'city' => $order->city,
-                    'postal_code' => $order->postal_code,
-                    'country_code' => 'IDN',
-                ],
-            ],
+            'customer_details' => $this->customerDetails($order),
             'item_details' => $itemDetails,
         ];
 

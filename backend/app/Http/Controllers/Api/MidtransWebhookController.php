@@ -59,11 +59,36 @@ class MidtransWebhookController extends Controller
             return response()->json(['message' => "Order {$orderId} not found."], 404);
         }
 
-        // Update payment channel & VA if present in payload.
+        // Update payment channel, VA, biller, dan QR bila ada di payload (Core API & Snap).
         if ($request->has('va_numbers') && is_array($request->input('va_numbers')) && count($request->input('va_numbers')) > 0) {
             $vaInfo = $request->input('va_numbers')[0];
             $order->va_number = $vaInfo['va_number'] ?? $order->va_number;
             $order->payment_channel = ($vaInfo['bank'] ?? 'bank') . '_va';
+        }
+
+        if ($paymentType === 'echannel') {
+            $order->payment_channel = 'mandiri_va';
+        } elseif ($paymentType === 'qris') {
+            $order->payment_channel = 'qris';
+        }
+
+        if ($request->filled('biller_code')) {
+            $order->midtrans_biller_code = (string) $request->input('biller_code');
+        }
+        if ($request->filled('bill_key')) {
+            $order->midtrans_bill_key = (string) $request->input('bill_key');
+        }
+        if ($request->filled('qr_string')) {
+            $order->midtrans_qr_string = (string) $request->input('qr_string');
+        }
+        foreach ((array) $request->input('actions', []) as $action) {
+            if (($action['name'] ?? null) === 'generate-qr-code' && !empty($action['url'])) {
+                $order->midtrans_qr_url = (string) $action['url'];
+            }
+        }
+
+        if ($order->isDirty()) {
+            $order->save();
         }
 
         $mappedStatus = $this->mapPaymentStatus($transactionStatus, $fraudStatus);

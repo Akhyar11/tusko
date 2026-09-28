@@ -113,6 +113,7 @@ Route::prefix('orders')->middleware('auth.optional')->group(function () {
         Route::post('/{idOrOrderNumber}/complete', [\App\Http\Controllers\Api\OrderController::class, 'complete'])->where('idOrOrderNumber', '.*');
     });
     Route::post('/{idOrOrderNumber}/snap-token', [\App\Http\Controllers\Api\CheckoutController::class, 'getSnapToken'])->where('idOrOrderNumber', '.*');
+    Route::post('/{idOrOrderNumber}/charge', [\App\Http\Controllers\Api\CheckoutController::class, 'charge'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/confirm-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'confirm'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/approve-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'approve'])->where('idOrOrderNumber', '.*');
     Route::post('/{idOrOrderNumber}/reject-payment', [\App\Http\Controllers\Api\ManualPaymentController::class, 'reject'])->where('idOrOrderNumber', '.*');

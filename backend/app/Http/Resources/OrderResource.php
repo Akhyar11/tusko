@@ -28,6 +28,12 @@ class OrderResource extends JsonResource
             'midtrans_snap_token' => $this->midtrans_snap_token,
             'midtrans_transaction_id' => $this->midtrans_transaction_id,
             'midtrans_pdf_url' => $this->midtrans_pdf_url,
+            'midtrans_payment_type' => $this->midtrans_payment_type,
+            'midtrans_biller_code' => $this->midtrans_biller_code,
+            'midtrans_bill_key' => $this->midtrans_bill_key,
+            'midtrans_qr_string' => $this->midtrans_qr_string,
+            'midtrans_qr_url' => $this->midtrans_qr_url,
+            'payment_expires_at' => $this->payment_expires_at?->toIso8601String(),
             'payment_proof' => $this->payment_proof
                 ? (str_starts_with($this->payment_proof, 'http') ? $this->payment_proof : Storage::disk(config('filesystems.default', 'public'))->url($this->payment_proof))
                 : null,
