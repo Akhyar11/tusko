@@ -80,6 +80,22 @@ class MidtransService
     }
 
     /**
+     * order_id versi Midtrans (hanya dash/underscore/tilde/dot yang diizinkan).
+     * Disimpan di `orders.midtrans_order_id` untuk mapping notifikasi webhook.
+     */
+    private function midtransOrderId(Order $order): string
+    {
+        if (! empty($order->midtrans_order_id)) {
+            return (string) $order->midtrans_order_id;
+        }
+
+        $sanitized = preg_replace('/[^A-Za-z0-9._~-]/', '-', (string) $order->order_number) ?: (string) $order->id;
+        $order->forceFill(['midtrans_order_id' => $sanitized])->save();
+
+        return $sanitized;
+    }
+
+    /**
      * Detail item Midtrans dari order (dipakai Snap & Core API).
      *
      * @return array<int, array<string, mixed>>
@@ -231,12 +247,16 @@ class MidtransService
     {
         $base = [
             'transaction_details' => [
-                'order_id' => $order->order_number,
+                'order_id' => $this->midtransOrderId($order),
                 'gross_amount' => (int) round($order->grand_total),
             ],
             'customer_details' => $this->customerDetails($order),
-            'item_details' => $this->itemDetails($order),
         ];
+
+        $items = $this->itemDetails($order);
+        if ($items !== []) {
+            $base['item_details'] = $items;
+        }
 
         return match ($channel) {
             'bca_va' => array_merge($base, ['payment_type' => 'bank_transfer', 'bank_transfer' => ['bank' => 'bca']]),
@@ -323,12 +343,15 @@ class MidtransService
 
         $payload = [
             'transaction_details' => [
-                'order_id' => $order->order_number,
+                'order_id' => $this->midtransOrderId($order),
                 'gross_amount' => $grossAmount,
             ],
             'customer_details' => $this->customerDetails($order),
-            'item_details' => $itemDetails,
         ];
+
+        if ($itemDetails !== []) {
+            $payload['item_details'] = $itemDetails;
+        }
 
         try {
             $response = Http::withHeaders([

@@ -166,4 +166,50 @@ class MidtransChargeTest extends TestCase
         $this->assertSame('QR-FROM-HOOK', $fresh->midtrans_qr_string);
         $this->assertSame('pending', $fresh->payment_status);
     }
+
+    public function test_charge_sanitizes_order_id_for_midtrans(): void
+    {
+        $order = $this->order();
+        // order_number default memakai '/' yang tidak diizinkan Midtrans.
+        $this->assertStringContainsString('/', $order->order_number);
+
+        $this->fakeCharge([
+            'status_code' => '201',
+            'transaction_id' => 'trx-sanitize',
+            'payment_type' => 'qris',
+            'transaction_status' => 'pending',
+            'qr_string' => 'QR',
+            'actions' => [],
+        ]);
+
+        app(MidtransService::class)->createCharge($order, 'qris');
+
+        Http::assertSent(function ($request) {
+            $orderId = $request['transaction_details']['order_id'] ?? '';
+            return ! str_contains($orderId, '/') && ! str_contains($orderId, ' ');
+        });
+
+        $this->assertNotNull($order->fresh()->midtrans_order_id);
+        $this->assertStringNotContainsString('/', (string) $order->fresh()->midtrans_order_id);
+    }
+
+    public function test_webhook_resolves_order_by_midtrans_order_id(): void
+    {
+        $order = $this->order();
+        $order->update(['midtrans_order_id' => 'INV-20260928-TK-000001']);
+
+        $signature = hash('sha512', 'INV-20260928-TK-000001' . '200' . '150000.00' . self::SERVER_KEY);
+
+        $this->postJson('/api/webhooks/midtrans', [
+            'order_id' => 'INV-20260928-TK-000001',
+            'status_code' => '200',
+            'gross_amount' => '150000.00',
+            'signature_key' => $signature,
+            'transaction_status' => 'settlement',
+            'transaction_id' => 'trx-resolve',
+            'payment_type' => 'bank_transfer',
+        ])->assertOk();
+
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
 }
