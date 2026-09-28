@@ -124,6 +124,7 @@ export default function ProfilePage({
 
   // State Feedback & Toast
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedVoucher, setCopiedVoucher] = useState(null);
   const [claimedVouchers, setClaimedVouchers] = useState([]);
@@ -141,6 +142,7 @@ export default function ProfilePage({
     let isMounted = true;
 
     const fetchAllData = async () => {
+      setIsLoadingData(true);
       try {
         const [profile, addrs, vchs, sess, loyalty] = await Promise.allSettled([
           authService.getProfile(),
@@ -184,6 +186,8 @@ export default function ProfilePage({
         }
       } catch (err) {
         console.warn('Gagal memuat sinkronisasi backend profil:', err);
+      } finally {
+        if (isMounted) setIsLoadingData(false);
       }
     };
 
@@ -1164,6 +1168,18 @@ export default function ProfilePage({
                 onVerify={setClaimToken}
                 onExpire={() => setClaimToken(null)}
               />
+              {isLoadingData ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="border border-neutral-200 p-4 space-y-3">
+                      <div className="h-4 w-2/3 bg-neutral-100 animate-pulse" />
+                      <div className="h-3 w-1/2 bg-neutral-100 animate-pulse" />
+                      <div className="h-3 w-full bg-neutral-100 animate-pulse" />
+                      <div className="h-8 w-24 bg-neutral-100 animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
                 {(vouchers.length > 0 ? vouchers : [
                   {
@@ -1291,6 +1307,7 @@ export default function ProfilePage({
                   );
                 })}
               </div>
+              )}
             </div>
           </div>
         )}
@@ -1315,7 +1332,19 @@ export default function ProfilePage({
               </div>
             </div>
 
-            {loyaltyLedger.length === 0 ? (
+            {isLoadingData ? (
+              <div className="py-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="py-3 flex items-center justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/3 bg-neutral-100 animate-pulse" />
+                      <div className="h-3 w-1/3 bg-neutral-100 animate-pulse" />
+                    </div>
+                    <div className="h-4 w-16 bg-neutral-100 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : loyaltyLedger.length === 0 ? (
               <p className="text-xs text-neutral-500 text-center py-8">Belum ada riwayat poin.</p>
             ) : (
               <div className="divide-y divide-neutral-100">

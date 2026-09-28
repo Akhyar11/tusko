@@ -21,6 +21,7 @@ import ConfirmationModal from './organisms/ConfirmationModal';
 
 export default function CartPage({
   cart = [],
+  isLoading = false,
   onUpdateQuantity = () => {},
   onRemoveItem = () => {},
   onClearCart = () => {},
@@ -121,6 +122,40 @@ export default function CartPage({
     });
     return Object.values(groups);
   }, [cart]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+        <div className="flex items-center justify-between border-b-2 border-black pb-4">
+          <div className="h-7 w-56 bg-neutral-200 animate-pulse" />
+          <div className="h-8 w-24 bg-neutral-200 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white border border-neutral-200 p-4 flex gap-4">
+                <div className="w-5 h-5 bg-neutral-200 animate-pulse shrink-0" />
+                <div className="w-20 h-20 bg-neutral-200 animate-pulse shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-2/3 bg-neutral-200 animate-pulse" />
+                  <div className="h-3 w-1/3 bg-neutral-200 animate-pulse" />
+                  <div className="h-3 w-1/4 bg-neutral-200 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white border border-neutral-200 p-5 space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-4 w-full bg-neutral-200 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-center text-xs font-sport font-black uppercase tracking-wider text-neutral-400">Memuat keranjang…</p>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (

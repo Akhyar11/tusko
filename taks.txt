@@ -432,6 +432,11 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
            `ProductDetail` punya state `isAdding` (tombol disabled + spinner
            "MENAMBAHKAN..."), baru tampil centang "MASUK KERANJANG". `handleBuyNow`
            menunggu sukses sebelum pindah ke keranjang. [OWNER:A1]
+    T05.8 [DONE] LOADING STATE STOREFRONT (anti empty-state palsu saat fetching):
+           `ProductGrid` (+`App.isLoadingProducts`) tampil skeleton kartu; `CartPage`
+           (+`App.isLoadingCart`, `refreshCart` set flag) tampil skeleton + "Memuat
+           keranjang"; `ProfilePage` (+`isLoadingData`) skeleton tab Voucher & Riwayat
+           Poin. Empty-state hanya muncul setelah fetch selesai. [OWNER:A1]
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.

@@ -5,6 +5,7 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 
 export default function ProductGrid({
   products = [],
+  isLoading = false,
   currentUser = null,
   sortBy = 'relevant',
   onSortChange = () => {},
@@ -185,7 +186,18 @@ export default function ProductGrid({
         )}
 
         {/* Responsive Product Grid: 2 Kolom di Mobile, 4 Kolom di Desktop, 5 Kolom di Layar Lebar */}
-        {products.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-6">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="bg-white border border-neutral-200 p-2.5 sm:p-4">
+                <div className="aspect-square bg-neutral-100 animate-pulse mb-2.5" />
+                <div className="h-3 w-3/4 bg-neutral-100 animate-pulse mb-2" />
+                <div className="h-3 w-1/2 bg-neutral-100 animate-pulse mb-3" />
+                <div className="h-8 w-full bg-neutral-100 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-6">
             {products.map((product) => (
               <ProductCard

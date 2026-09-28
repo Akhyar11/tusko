@@ -419,6 +419,7 @@ export default function App() {
   };
 
   const [products, setProducts] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [categories, setCategories] = useState([]);
 
   // Fetch categories from server on mount
@@ -434,13 +435,15 @@ export default function App() {
 
   // Fetch products from server on mount
   useEffect(() => {
+    setIsLoadingProducts(true);
     productService.fetchProducts({ include_inactive: true })
       .then(res => {
         if (res && res.data && res.data.length > 0) {
           setProducts(res.data);
         }
       })
-      .catch(err => console.warn('productService initial load:', err));
+      .catch(err => console.warn('productService initial load:', err))
+      .finally(() => setIsLoadingProducts(false));
   }, []);
 
   // Menu navigasi dari DB (T37.7): dimuat saat login, direset saat logout.
@@ -504,6 +507,7 @@ export default function App() {
 
   // Initial cart starts empty
   const [cart, setCart] = useState([]);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
   
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -532,11 +536,14 @@ export default function App() {
 
   // Muat ulang keranjang dari API (akun via token, guest via session_id).
   const refreshCart = async () => {
+    setIsLoadingCart(true);
     try {
       const cartData = await cartService.getCart();
       setCart(mapCartItems(cartData));
     } catch (err) {
       console.warn('Gagal memuat keranjang dari server:', err);
+    } finally {
+      setIsLoadingCart(false);
     }
   };
 
@@ -2119,6 +2126,7 @@ export default function App() {
         ) : currentView === 'cart' ? (
           <CartPage
             cart={cart}
+            isLoading={isLoadingCart}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveCartItem}
             onClearCart={handleClearCart}
@@ -2185,6 +2193,7 @@ export default function App() {
             {/* 6. Produk Unggulan & Etalase Varian (Benchmark: adidas.co.id Grid) */}
             <ProductGrid
               products={filteredProducts}
+              isLoading={isLoadingProducts}
               currentUser={currentUser}
               sortBy={sortBy}
               onSortChange={setSortBy}
