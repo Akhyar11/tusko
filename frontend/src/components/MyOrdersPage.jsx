@@ -46,12 +46,34 @@ export function orderDeadline(order) {
 
 export function isOrderPayable(order) {
   if (!order) return false;
+  // Flag server-authoritative dari OrderResource (T39.1: order.flags.*) bila tersedia.
+  const flags = order.flags || {};
+  if (typeof flags.can_pay === 'boolean') return flags.can_pay;
+  if (typeof order.can_pay === 'boolean') return order.can_pay;
+
+  // Fallback (kompatibilitas).
   if (order.payment_status === 'paid') return false;
   if (['cancelled', 'failed'].includes(order.status)) return false;
   if (!['pending'].includes(order.status)) return false;
   const deadline = orderDeadline(order);
   if (deadline && deadline.getTime() < Date.now()) return false;
   return true;
+}
+
+export function canCancelOrder(order) {
+  if (!order) return false;
+  const flags = order.flags || {};
+  if (typeof flags.can_cancel === 'boolean') return flags.can_cancel;
+  if (typeof order.can_cancel === 'boolean') return order.can_cancel;
+  return order.status === 'pending' && order.payment_status !== 'paid';
+}
+
+export function canCompleteOrder(order) {
+  if (!order) return false;
+  const flags = order.flags || {};
+  if (typeof flags.can_complete === 'boolean') return flags.can_complete;
+  if (typeof order.can_complete === 'boolean') return order.can_complete;
+  return ['shipped', 'delivered'].includes(order.status);
 }
 
 function formatDate(value) {

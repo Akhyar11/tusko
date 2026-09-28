@@ -502,6 +502,7 @@ class CheckoutController extends Controller
     /**
      * T39.3 — pastikan order masih boleh dibayar (belum lunas/batal/kedaluwarsa).
      * Menolak 422 dengan pesan jelas agar FE dapat memberi tahu pembeli.
+     * Memakai `Order::hasExpired()` (sumber tunggal batas bayar).
      */
     private function ensureOrderPayable(Order $order): void
     {
@@ -512,15 +513,13 @@ class CheckoutController extends Controller
             ]);
         }
 
-        if ($order->payment_status === 'paid') {
+        if (in_array((string) $order->payment_status, ['paid', 'settlement', 'capture'], true)) {
             throw ValidationException::withMessages([
                 'order' => ['Pesanan ini sudah dibayar.'],
             ]);
         }
 
-        $deadline = $order->payment_expires_at ?? $order->expires_at;
-
-        if ($deadline && Carbon::parse($deadline)->isPast()) {
+        if ($order->hasExpired()) {
             throw ValidationException::withMessages([
                 'order' => ['Batas waktu pembayaran telah lewat. Pesanan dibatalkan otomatis dan stok dikembalikan.'],
             ]);

@@ -19,7 +19,7 @@ import { formatRupiah } from '../utils/formatters';
 import { orderService } from '../services/orderService';
 import { checkoutService } from '../services/checkoutService';
 import { openSnapPayment } from '../utils/snapLoader';
-import { orderStatusMeta, orderDeadline, isOrderPayable } from './MyOrdersPage';
+import { orderStatusMeta, orderDeadline, isOrderPayable, canCancelOrder, canCompleteOrder } from './MyOrdersPage';
 
 function formatDateTime(value) {
   if (!value) return '-';
@@ -96,8 +96,8 @@ export default function MyOrderDetailPage({
   const remainingMs = deadline ? deadline.getTime() - now : null;
   const expiredByTime = remainingMs !== null && remainingMs <= 0;
   const isCancelled = ['cancelled', 'failed'].includes(order?.status);
-  const canCancel = order?.status === 'pending' && order?.payment_status !== 'paid';
-  const canComplete = ['shipped', 'delivered'].includes(order?.status);
+  const canCancel = canCancelOrder(order);
+  const canComplete = canCompleteOrder(order);
   const isManual = order?.payment_method === 'manual_transfer';
 
   const instructionData = useMemo(() => (order ? {
