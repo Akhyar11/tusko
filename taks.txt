@@ -1381,7 +1381,7 @@ T38. Master Users & Role Access (Admin) ............................ [DONE]  [OW
   - Satu kesatuan RBAC dengan T24.3 (Master Role) & T24.6 (Role -> Menu Mapping).
   - DILARANG menghidupkan kembali `permissions`/`role_permissions` (REVISI 6).
 
-T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [TODO]  [OWNER:A1+A2]
+T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [PARTIAL]  [OWNER:A1+A2]
   LATAR BELAKANG (permintaan 2026-09-28):
    - Pelanggan butuh halaman "Pesanan Saya" untuk MELANJUTKAN PEMBAYARAN bila belum
      sempat membayar di halaman checkout (mis. Snap belum dibuka / VA belum dibayar).
@@ -1411,20 +1411,19 @@ T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [TODO]  [OW
    (G5) Tidak ada test end-to-end siklus pesanan (checkout -> stok turun -> kedaluwarsa ->
         stok kembali; serta bayar-ulang -> diproses -> dikirim -> selesai).
   Minor:
-    T39.1 [TODO] BE — kontrak daftar pesanan pelanggan: `GET /api/orders` mengembalikan
-           per pesanan: `status`, `payment_status`, `expires_at`/`payment_expires_at`,
-           `paid_at`, `total`, plus flag aksi: `can_pay` (pending/belum bayar & belum
-           kedaluwarsa), `can_cancel`, `can_complete`, `can_track`; filter status +
-           pencarian nomor + paginasi SERVER-SIDE (aturan 19) + resource + test. [OWNER:A2]
-    T39.2 [TODO] BE(KRITIS) — SCHEDULER PRODUKSI: jalankan `php artisan schedule:work`
-           (proses latar) atau Render Cron/worker agar `orders:cancel-expired` benar-benar
-           berjalan tiap 10 menit; logging + health indikator jumlah order kedaluwarsa
-           yang dibatalkan; dokumentasi di `render.yaml`/entrypoint + test. [OWNER:A2]
-           (Tanpa ini, syarat "tidak bayar -> stok kembali" TIDAK terpenuhi di produksi.)
-    T39.3 [DONE] BE — resume pembayaran idempoten untuk pesanan pending lama:
-           `POST /orders/{id}/snap-token` & `/charge` menolak 422 bila order sudah
-           lunas/batal/kedaluwarsa (guard `ensureOrderPayable`), mengizinkan bila masih
-           pending & dalam batas waktu; test `OrderPayabilityTest` (5 skenario). [OWNER:A1]
+    T39.1 [DONE] BE — `OrderResource.flags` diperluas: `can_pay` (pending & belum lunas
+           & belum kedaluwarsa), `can_cancel`, `can_complete`, `can_track`,
+           `can_confirm_payment`, `is_completed`; filter status + pencarian + paginasi
+           server-side sudah ada. Test `OrderActionFlagsTest`. [commit 3fe943a] [OWNER:A2]
+    T39.2 [DONE] BE(KRITIS) — Scheduler produksi: `entrypoint.sh` menjalankan
+           `php artisan schedule:work &` (env `RUN_SCHEDULER`); Render free tidak
+           mendukung Cron Job/Worker (berbayar), alternatif Cron didokumentasikan di
+           `render.yaml`. Test idempotensi `CancelExpiredOrdersTest`. [commit d10a62b] [OWNER:A2]
+    T39.3 [DONE] BE — guard endpoint resume bayar `snap-token`/`charge` (`ensureOrderPayable`,
+           menolak 422 bila lunas/batal/kedaluwarsa) + test `OrderPayabilityTest` (A1);
+           batas bayar model `Order` `hasExpired()`/`canResumePayment()`/`canBeCancelled()`
+           + sinkron `payment_expires_at` + test `OrderPaymentWindowTest` (A2).
+           [commit dd55644 (A2)] [OWNER:A1+A2]
     T39.4 [DONE] FE — HALAMAN "PESANAN SAYA" (storefront, `MyOrdersPage.jsx`): daftar
            pesanan milik pelanggan (kartu storefront + badge status & status bayar,
            total, tanggal), filter status + pencarian nomor, paginasi; rute `/orders`
@@ -1440,10 +1439,10 @@ T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [TODO]  [OW
            Pembayaran Lewat" + "stok dikembalikan"; order cancelled -> banner
            "Pesanan Dibatalkan — stok dikembalikan"; auto-refresh 30 dtk saat
            pending/confirmed/processing. [OWNER:A1]
-    T39.7 [PARTIAL] TEST — uji browser Playwright A1 SELESAI (MyOrders/Detail/bayar/
-           batal, 0 console error) + `OrderPayabilityTest` (BE, guard bayar).
-           SISA (A2): `CustomerOrderLifecycleTest` (checkout -> stok turun ->
-           auto-cancel -> stok kembali -> bayar -> shipped -> completed). [OWNER:A1+A2]
+    T39.7 [DONE] TEST — uji browser Playwright A1 (MyOrders/Detail/bayar/batal, 0 console
+           error) + `OrderPayabilityTest` (A1) + `CustomerOrderLifecycleTest` (A2:
+           checkout -> stok turun -> auto-cancel -> stok kembali + idempoten -> bayar ->
+           shipped -> completed + histori). [commit c436621 (A2)] [OWNER:A1+A2]
   ACCEPTANCE (T39):
    (1) Pelanggan melihat SEMUA pesanannya + status bayar & status proses yang jelas.
    (2) Dari halaman Pesanan Saya bisa MELANJUTKAN pembayaran (Snap/VA) tanpa checkout ulang.
