@@ -43,6 +43,13 @@ class EnsureMenuAccess
             ], 403);
         }
 
+        // T38.6: hanya role bertanda `is_admin` yang boleh mengakses Panel Admin.
+        if (!$this->menus->isAdmin($user)) {
+            return response()->json([
+                'message' => 'Akses ditolak. Halaman ini tidak tersedia untuk peran Anda.',
+            ], 403);
+        }
+
         $targets = $required !== [] ? array_values($required) : [$this->pathFromRequest($request)];
 
         foreach ($this->menus->adminMenusFor($user) as $menu) {

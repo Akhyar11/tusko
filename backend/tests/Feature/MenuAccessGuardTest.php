@@ -107,10 +107,20 @@ class MenuAccessGuardTest extends TestCase
     public function test_pivot_role_menu_grants_access(): void
     {
         $this->menu([], ['warehouse_staff']);
+        $this->role('warehouse_staff')->update(['is_admin' => true]);
 
         Sanctum::actingAs($this->userWithPivotRole('warehouse_staff'));
 
         $this->getJson('/api/__menu-product')->assertStatus(200);
+    }
+
+    public function test_non_admin_role_with_menu_is_still_rejected(): void
+    {
+        $this->menu([], ['warehouse_staff']); // warehouse_staff is_admin = false
+
+        Sanctum::actingAs($this->userWithPivotRole('warehouse_staff'));
+
+        $this->getJson('/api/__menu-product')->assertStatus(403);
     }
 
     public function test_role_without_matching_menu_is_rejected(): void

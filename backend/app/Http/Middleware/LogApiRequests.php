@@ -23,14 +23,18 @@ class LogApiRequests
 
         $durationMs = round((microtime(true) - $startedAt) * 1000, 2);
 
-        Log::channel('api')->info('api.request', [
-            'method' => $request->method(),
-            'path' => '/' . ltrim($request->path(), '/'),
-            'status' => $response->getStatusCode(),
-            'duration_ms' => $durationMs,
-            'user_id' => optional($request->user())->id,
-            'ip' => $request->ip(),
-        ]);
+        try {
+            Log::channel('api')->info('api.request', [
+                'method' => $request->method(),
+                'path' => '/' . ltrim($request->path(), '/'),
+                'status' => $response->getStatusCode(),
+                'duration_ms' => $durationMs,
+                'user_id' => optional($request->user())->id,
+                'ip' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {
+            // Logging tidak boleh menggagalkan request.
+        }
 
         return $response;
     }

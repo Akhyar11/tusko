@@ -71,6 +71,23 @@ class MenuService
     }
 
     /**
+     * Apakah user boleh mengakses Panel Admin: minimal satu role-nya
+     * bertanda `is_admin` (T38.6). Independen dari cakupan menu.
+     */
+    public function isAdmin(User $user): bool
+    {
+        $roleIds = $this->roleIdsFor($user);
+
+        if ($roleIds->isNotEmpty()
+            && Role::query()->whereIn('id', $roleIds)->where('is_admin', true)->exists()) {
+            return true;
+        }
+
+        // Kompatibilitas: superadmin literal `admin` selalu dianggap admin.
+        return $user->role === 'admin';
+    }
+
+    /**
      * Seluruh role ID user: `users.role` + pivot `user_roles`.
      *
      * @return Collection<int, int>

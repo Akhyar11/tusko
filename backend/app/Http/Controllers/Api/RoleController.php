@@ -101,6 +101,7 @@ class RoleController extends Controller
             'display_name' => $validated['display_name'],
             'description' => $validated['description'] ?? null,
             'is_system' => false,
+            'is_admin' => (bool) ($validated['is_admin'] ?? false),
         ]);
 
         $this->activityLog->log('role.created', $role, ['name' => $role->name]);
@@ -129,6 +130,9 @@ class RoleController extends Controller
         $role->display_name = $validated['display_name'] ?? $role->display_name;
         if (array_key_exists('description', $validated)) {
             $role->description = $validated['description'];
+        }
+        if (array_key_exists('is_admin', $validated)) {
+            $role->is_admin = (bool) $validated['is_admin'];
         }
         $role->save();
 
@@ -243,6 +247,7 @@ class RoleController extends Controller
             ],
             'display_name' => [$required, 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
+            'is_admin' => ['sometimes', 'boolean'],
         ], [
             'name.required' => 'Nama role wajib diisi.',
             'name.regex' => 'Nama role hanya boleh berisi huruf, angka, dan garis bawah.',
@@ -262,6 +267,7 @@ class RoleController extends Controller
             'display_name' => $role->display_name,
             'description' => $role->description,
             'is_system' => (bool) $role->is_system,
+            'is_admin' => (bool) $role->is_admin,
             'users_count' => $role->users_count ?? $role->users()->count(),
             'menus_count' => $role->menus_count ?? $role->menus()->count(),
             'created_at' => $role->created_at,

@@ -14,10 +14,10 @@ class MasterReferenceSeeder extends Seeder
     {
         // 1. Seed Roles
         $roles = [
-            ['name' => 'admin', 'display_name' => 'Super Administrator', 'description' => 'Akses penuh ke seluruh operasional toko dan sistem', 'is_system' => true],
-            ['name' => 'customer', 'display_name' => 'Pelanggan / Member', 'description' => 'Pengguna storefront untuk belanja dan pelacakan pesanan', 'is_system' => true],
-            ['name' => 'warehouse_staff', 'display_name' => 'Staf Gudang', 'description' => 'Pengelolaan stok, penerimaan barang, dan pemrosesan kiriman', 'is_system' => false],
-            ['name' => 'finance_officer', 'display_name' => 'Staf Keuangan', 'description' => 'Pengelolaan buku kas, verifikasi transfer, dan rekonsiliasi', 'is_system' => false],
+            ['name' => 'admin', 'display_name' => 'Super Administrator', 'description' => 'Akses penuh ke seluruh operasional toko dan sistem', 'is_system' => true, 'is_admin' => true],
+            ['name' => 'customer', 'display_name' => 'Pelanggan / Member', 'description' => 'Pengguna storefront untuk belanja dan pelacakan pesanan', 'is_system' => true, 'is_admin' => false],
+            ['name' => 'warehouse_staff', 'display_name' => 'Staf Gudang', 'description' => 'Pengelolaan stok, penerimaan barang, dan pemrosesan kiriman', 'is_system' => false, 'is_admin' => false],
+            ['name' => 'finance_officer', 'display_name' => 'Staf Keuangan', 'description' => 'Pengelolaan buku kas, verifikasi transfer, dan rekonsiliasi', 'is_system' => false, 'is_admin' => false],
         ];
 
         foreach ($roles as $role) {

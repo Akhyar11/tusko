@@ -38,6 +38,7 @@ class MenuController extends Controller
         return response()->json([
             'data' => [
                 'admin' => $admin,
+                'is_admin' => $user ? $this->menus->isAdmin($user) : false,
                 'storefront' => $storefront,
             ],
         ]);

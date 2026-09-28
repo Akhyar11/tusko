@@ -31,7 +31,7 @@ class EnsureUserIsAdmin
             ], 403);
         }
 
-        if ($user->role !== 'admin') {
+        if (!app(\App\Services\MenuService::class)->isAdmin($user)) {
             return response()->json([
                 'message' => 'Akses ditolak. Endpoint ini khusus untuk administrator.',
             ], 403);
