@@ -1108,23 +1108,26 @@ T35. Hardening (Keamanan, Performa, Observabilitas, CI) ............ [PARTIAL]  
            KiriminAja, eager loading produk (vendor/variants). [commit 22f5d6b] [OWNER:A2]
     T35.5 [TODO] ANTI-BOT CLOUDFLARE TURNSTILE (rancangan 2026-09-28; prinsip gate-don't-replace,
            fail closed, siteverify server-side; 1 widget mode managed; tanpa CAPTCHA existing).
+           [OWNER:A1] (permukaan prioritas = alur akun & commerce milik A1; koordinasi A2
+           hanya untuk endpoint review).
       T35.5a [TODO] Setup widget (domain localhost,127.0.0.1,+produksi) + secret ke
              `backend/.env` (`TURNSTILE_SECRET`, gitignored) + sitekey ke `frontend/.env`
              (`VITE_TURNSTILE_SITEKEY`). BUTUH auth Cloudflare user (Account.Turnstile:Edit)
-             atau sitekey existing. [OWNER:A1+A2]
+             atau sitekey existing. [OWNER:A1]
       T35.5b [TODO] `TurnstileService::verify($token,$action,$ip)` (Laravel Http, timeout 10s;
              wajib success+action+hostname allowlist `TURNSTILE_HOSTNAMES`; fail closed) +
-             `config/services.php` + test. [OWNER:A1/BE]
+             `config/services.php` + test. [OWNER:A1]
       T35.5c [TODO] Komponen reusable `molecules/TurnstileWidget` (loader `api.js` +
-             `div.cf-turnstile` + `reset()` saat retry) — Atomic Design & storefront exception. [OWNER:A1/FE]
+             `div.cf-turnstile` + `reset()` saat retry) — Atomic Design & storefront exception. [OWNER:A1]
       T35.5d [TODO] Wire PRIORITAS TINGGI (guest, berdampak): register (`register`),
              login (`login`), forgot/reset (`password-reset`), checkout (`checkout`),
              voucher-validate (`voucher-validate`) — token `cf-turnstile-response` di body,
              guard 403 sebelum logika bisnis. [OWNER:A1]
       T35.5e [TODO] Wire PRIORITAS MENENGAH: cart-add (`cart-add`, guest), review (`review`,
-             auth), voucher-claim (`voucher-claim`, auth), email-resend (`email-resend`, auth). [OWNER:A1+A2]
+             auth, milik A2 — koordinasi), voucher-claim (`voucher-claim`, auth), email-resend
+             (`email-resend`, auth). [OWNER:A1+A2]
       T35.5f [TODO] Validasi end-to-end (token asli lolos 1x, replay ditolak, hostname salah
-             ditolak) + bukti Playwright + dokumentasi. [OWNER:A1+A2]
+             ditolak) + bukti Playwright + dokumentasi. [OWNER:A1]
 
 T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OWNER:A2]
   Fitur: satu halaman admin "Pengaturan Sistem" tempat Admin mengelola SELURUH
