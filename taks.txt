@@ -515,6 +515,13 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            hitung fee dari `integrations` (persen+fixed) saat webhook lunas + sinkron
            `transactions.fee_deducted`/`net_amount` + test. Jurnal fee via T34.5 (A2).
            [OWNER:A1]
+    T07.8 [DONE] FIX RESOLUSI KONFIG MIDTRANS (audit 2026-09-28): `MidtransService`
+           dulu membaca key legacy `midtrans.server_key` sehingga key yang diset Admin UI
+           (`payment.midtrans_server_key`, dst.) TIDAK terpakai. Kini resolusi kanonik:
+           registry `payment.*` -> legacy `midtrans.*` -> `config('midtrans.*')` (env).
+           Tambah `payment.snap_js_url` ke registry + `snap_js_url` ke `config/midtrans.php`
+           (default sandbox/produksi) agar Snap.js popup punya sumber konfigurasi.
+           Test `MidtransConfigTest` (4) + suite 708 PASSED. [OWNER:A1]
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)

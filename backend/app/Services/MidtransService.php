@@ -18,11 +18,22 @@ class MidtransService
 
     public function __construct(private readonly IntegrationService $integrations)
     {
-        $this->serverKey = (string) ($this->integrations->get('midtrans.server_key') ?? config('midtrans.server_key', ''));
-        $this->clientKey = (string) ($this->integrations->get('midtrans.client_key') ?? config('midtrans.client_key', ''));
-        $this->isProduction = (bool) ($this->integrations->get('midtrans.is_production') ?? config('midtrans.is_production', false));
-        $this->snapUrl = (string) ($this->integrations->get('midtrans.snap_url') ?? config('midtrans.snap_url', ''));
-        $this->refundUrl = (string) ($this->integrations->get('midtrans.refund_url') ?? config('midtrans.refund_url', ''));
+        $this->serverKey = (string) $this->resolve('payment.midtrans_server_key', 'midtrans.server_key', 'midtrans.server_key', '');
+        $this->clientKey = (string) $this->resolve('payment.midtrans_client_key', 'midtrans.client_key', 'midtrans.client_key', '');
+        $this->isProduction = filter_var($this->resolve('payment.is_production', 'midtrans.is_production', 'midtrans.is_production', false), FILTER_VALIDATE_BOOLEAN);
+        $this->snapUrl = (string) $this->resolve('payment.snap_url', 'midtrans.snap_url', 'midtrans.snap_url', '');
+        $this->refundUrl = (string) $this->resolve('payment.refund_url', 'midtrans.refund_url', 'midtrans.refund_url', '');
+    }
+
+    /**
+     * Resolusi konfigurasi Midtrans (G6): key registry kanonik `payment.*` (Admin UI,
+     * T36) → key legacy `midtrans.*` (DB) → `config('midtrans.*')` (env).
+     */
+    private function resolve(string $registryKey, string $legacyKey, string $configKey, mixed $default = null): mixed
+    {
+        return $this->integrations->get($registryKey)
+            ?? $this->integrations->get($legacyKey)
+            ?? config($configKey, $default);
     }
 
     /**
@@ -54,8 +65,7 @@ class MidtransService
      */
     public function snapJsUrl(): string
     {
-        return (string) ($this->integrations->get('midtrans.snap_js_url')
-            ?? config('midtrans.snap_js_url', ''));
+        return (string) $this->resolve('payment.snap_js_url', 'midtrans.snap_js_url', 'midtrans.snap_js_url', '');
     }
 
     /**
