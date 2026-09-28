@@ -980,14 +980,18 @@ export default function App() {
 
       const variantLabel = product.variant_name ? ` [${product.variant_name}]` : '';
       showToast(`"${product.name.slice(0, 18)}..."${variantLabel} (${quantity}x) masuk keranjang!`, { showCart: true });
+      return true;
     } catch (err) {
       showToast(err.message || 'Gagal menambahkan produk ke keranjang.', { type: 'error' });
+      return false;
     }
   };
 
-  const handleBuyNow = (product, quantity = 1, notes = '') => {
-    handleAddToCart(product, quantity, notes);
-    setCurrentView('cart');
+  const handleBuyNow = async (product, quantity = 1, notes = '') => {
+    const added = await handleAddToCart(product, quantity, notes);
+    if (added) {
+      setCurrentView('cart');
+    }
   };
 
   const handleUpdateQuantity = async (itemId, newQuantity) => {

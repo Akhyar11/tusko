@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, Heart, Check } from 'lucide-react';
+import { ShoppingBag, Heart, Check, Loader2 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 
 export default function ProductCard({ 
@@ -10,6 +10,7 @@ export default function ProductCard({
 }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   // Variant analysis
   const variants = product.variants || [];
@@ -84,52 +85,43 @@ export default function ProductCard({
     return 'Stok Siap Kirim';
   }, [hasVariants, inStockVariants, product.variant_levels, variants]);
 
-  const handleCartButtonClick = (e) => {
+  const handleCartButtonClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || isAdding) return;
 
-    // Jika belum login, tombol keranjang wajib meminta login terlebih dahulu
-    if (!currentUser) {
-      onAddToCart(product, 1);
-      return;
-    }
-
-    // Kasus 1: Produk memiliki variasi dan LEBIH DARI 1 variasi masih tersedia stok
-    // Harus masuk ke halaman detail product dulu agar pembeli dapat memilih variasi
-    if (hasMultipleVariantsInStock) {
+    // Pengguna login dengan BANYAK varian tersedia → pilih variasi di halaman detail.
+    if (currentUser && hasMultipleVariantsInStock) {
       onSelectProduct(product);
       return;
     }
 
-    // Kasus 2: Produk memiliki variasi, tetapi semua variasi kosong & HANYA 1 variasi yang masih ada stok
-    // Langsung masukkan produk dengan variasi tunggal yang tersisa ke keranjang
-    if (hasSingleVariantInStock) {
-      const singleVariant = inStockVariants[0];
-      const sizeName = singleVariant.size || singleVariant.name;
-      const colorName = singleVariant.color;
-      const variantParts = [colorName, sizeName ? `Ukuran ${sizeName}` : ''].filter(Boolean);
-      const variantLabel = variantParts.join(' - ') || sizeName || 'Standar';
+    setIsAdding(true);
+    try {
+      let productToAdd = product;
 
-      const productToAdd = {
-        ...product,
-        price: Number(singleVariant.price) || product.price,
-        selected_variant: singleVariant,
-        variant_name: variantLabel,
-        variant_sku: singleVariant.sku || product.sku
-      };
+      // Pengguna login dengan HANYA 1 variasi tersisa → pakai variasi itu.
+      if (currentUser && hasSingleVariantInStock) {
+        const singleVariant = inStockVariants[0];
+        const sizeName = singleVariant.size || singleVariant.name;
+        const colorName = singleVariant.color;
+        const variantParts = [colorName, sizeName ? `Ukuran ${sizeName}` : ''].filter(Boolean);
 
-      onAddToCart(productToAdd, 1);
+        productToAdd = {
+          ...product,
+          price: Number(singleVariant.price) || product.price,
+          selected_variant: singleVariant,
+          variant_name: variantParts.join(' - ') || sizeName || 'Standar',
+          variant_sku: singleVariant.sku || product.sku
+        };
+      }
+
+      await onAddToCart(productToAdd, 1);
       setIsAdded(true);
       setTimeout(() => setIsAdded(false), 2000);
-      return;
+    } finally {
+      setIsAdding(false);
     }
-
-    // Kasus 3: Produk tidak memiliki variasi sama sekali (produk tunggal standar)
-    // Langsung masukkan produk ke keranjang
-    onAddToCart(product, 1);
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
   };
 
   return (
@@ -214,14 +206,16 @@ export default function ProductCard({
       {/* Add to Cart Button */}
       <button
         type="button"
-        disabled={isOutOfStock}
+        disabled={isOutOfStock || isAdding}
         onClick={handleCartButtonClick}
         className={`mt-3 w-full font-sport font-bold text-[10px] sm:text-[11px] uppercase tracking-wider py-2 sm:py-2.5 px-2 flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
           isOutOfStock 
             ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-            : isAdded
-              ? 'bg-emerald-600 text-white'
-              : 'bg-black hover:bg-neutral-800 text-white active:scale-98'
+            : isAdding
+              ? 'bg-neutral-700 text-white cursor-wait'
+              : isAdded
+                ? 'bg-emerald-600 text-white'
+                : 'bg-black hover:bg-neutral-800 text-white active:scale-98'
         }`}
         title={
           isOutOfStock 
@@ -230,8 +224,14 @@ export default function ProductCard({
               ? 'Pilih variasi produk di halaman detail' 
               : 'Langsung masukkan ke keranjang'
         }
+        aria-busy={isAdding}
       >
-        {isAdded ? (
+        {isAdding ? (
+          <>
+            <Loader2 size={13} className="animate-spin" />
+            <span>MENAMBAHKAN...</span>
+          </>
+        ) : isAdded ? (
           <>
             <Check size={13} className="stroke-[3]" />
             <span>MASUK KERANJANG</span>

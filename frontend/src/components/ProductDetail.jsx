@@ -16,7 +16,8 @@ import {
   Info,
   X,
   Maximize2,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
 import ProductReviewsSection from './organisms/ProductReviewsSection';
@@ -64,6 +65,7 @@ export default function ProductDetail({
   const [copiedLink, setCopiedLink] = useState(false);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   // Initialize selectedOptions with first in-stock variant or default
   const [selectedOptions, setSelectedOptions] = useState(() => {
@@ -150,8 +152,8 @@ export default function ProductDetail({
   };
 
   // Add to cart click
-  const handleAddToCartClick = () => {
-    if (isOutOfStock) return;
+  const handleAddToCartClick = async () => {
+    if (isOutOfStock || isAddingToCart) return;
 
     const variantLabel = Object.values(selectedOptions).filter(Boolean).join(' / ');
     const itemPayload = {
@@ -164,7 +166,12 @@ export default function ProductDetail({
       notes: notes.trim()
     };
 
-    onAddToCart(itemPayload, quantity, notes.trim());
+    setIsAddingToCart(true);
+    try {
+      await onAddToCart(itemPayload, quantity, notes.trim());
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   // Buy now click
@@ -579,11 +586,11 @@ export default function ProductDetail({
               <button 
                 type="button"
                 onClick={handleAddToCartClick}
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isAddingToCart}
                 className="w-full bg-black hover:bg-neutral-800 disabled:bg-neutral-400 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider py-4 px-6 flex items-center justify-between transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
               >
-                <span>{isOutOfStock ? 'STOK SEDANG HABIS' : 'TAMBAH KE TAS BELANJA'}</span>
-                <span className="text-base">&rarr;</span>
+                <span>{isOutOfStock ? 'STOK SEDANG HABIS' : isAddingToCart ? 'MENAMBAHKAN KE KERANJANG...' : 'TAMBAH KE TAS BELANJA'}</span>
+                {isAddingToCart ? <Loader2 size={16} className="animate-spin" /> : <span className="text-base">&rarr;</span>}
               </button>
 
               <button 
@@ -824,11 +831,11 @@ export default function ProductDetail({
         <button 
           type="button"
           onClick={handleAddToCartClick}
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || isAddingToCart}
           className="bg-black hover:bg-neutral-800 disabled:bg-neutral-400 text-white font-sport font-bold text-xs uppercase tracking-wider py-2.5 px-4 flex items-center gap-1.5 transition-colors cursor-pointer"
         >
-          <ShoppingBag size={14} />
-          <span>+ KERANJANG</span>
+          {isAddingToCart ? <Loader2 size={14} className="animate-spin" /> : <ShoppingBag size={14} />}
+          <span>{isAddingToCart ? 'MENAMBAHKAN...' : '+ KERANJANG'}</span>
         </button>
       </div>
 

@@ -427,6 +427,11 @@ T05. Keranjang Belanja (API-backed + Validasi Stok + Kupon) ......... [DONE]  [O
            + uji browser (guest add-to-cart & buka keranjang). [OWNER:A1]
     T05.6 [DONE] TEST GUEST CHECKOUT: `GuestCheckoutTest` (guest tambah via `session_id`
            -> checkout tanpa auth -> order `guest_session_id`, stok berkurang). [OWNER:A1]
+    T05.7 [DONE] INDIKATOR LOADING TOMBOL TAMBAH-KERANJANG (anti klik berulang):
+           `handleAddToCart` mengembalikan status sukses/gagal; `ProductCard` &
+           `ProductDetail` punya state `isAdding` (tombol disabled + spinner
+           "MENAMBAHKAN..."), baru tampil centang "MASUK KERANJANG". `handleBuyNow`
+           menunggu sukses sebelum pindah ke keranjang. [OWNER:A1]
 
 T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [OWNER:A1]
   DB: orders, order_items, shipping_addresses, expeditions, expedition_services.
