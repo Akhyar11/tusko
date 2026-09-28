@@ -103,6 +103,43 @@ class Order extends Model
     protected static function booted(): void
     {
         static::observe(\App\Observers\OrderObserver::class);
+
+        // T39.3: sinkronkan batas waktu bayar — bila `expires_at` diisi tetapi
+        // `payment_expires_at` belum, samakan agar FE/validasi punya satu acuan.
+        static::saving(function (Order $order) {
+            if ($order->expires_at && ! $order->payment_expires_at) {
+                $order->payment_expires_at = $order->expires_at;
+            }
+        });
+    }
+
+    /**
+     * Apakah batas waktu pembayaran pesanan sudah lewat (T39.3).
+     */
+    public function hasExpired(): bool
+    {
+        $deadline = $this->payment_expires_at ?? $this->expires_at;
+
+        return $deadline !== null && $deadline->isPast();
+    }
+
+    /**
+     * Boleh melanjutkan pembayaran: masih pending, belum lunas, & belum kedaluwarsa.
+     */
+    public function canResumePayment(): bool
+    {
+        return $this->status === 'pending'
+            && ! in_array((string) $this->payment_status, ['paid', 'settlement', 'capture'], true)
+            && ! $this->hasExpired();
+    }
+
+    /**
+     * Boleh dibatalkan sendiri oleh pelanggan: masih pending & belum lunas.
+     */
+    public function canBeCancelled(): bool
+    {
+        return $this->status === 'pending'
+            && ! in_array((string) $this->payment_status, ['paid', 'settlement', 'capture'], true);
     }
 
     /**
