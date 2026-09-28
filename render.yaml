@@ -54,6 +54,8 @@ services:
         value: "*"
       - key: RUN_MIGRATIONS
         value: "true"
+      - key: RUN_SEEDERS
+        value: "true"
 
   # ==========================================
   # 2. Frontend Storefront (React Vite SPA)

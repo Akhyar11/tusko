@@ -23,6 +23,13 @@ if [ "${RUN_MIGRATIONS}" != "false" ]; then
     php artisan migrate --force || true
 fi
 
+# Automatic reference data seeding on startup (roles, menu admin, settings, template).
+# Default AKTIF; set RUN_SEEDERS=false untuk melewatinya.
+if [ "${RUN_SEEDERS}" != "false" ]; then
+    echo "Seeding reference data..."
+    php artisan db:seed --force --class='Database\Seeders\BootstrapSeeder' || true
+fi
+
 # Discover packages and optimize Laravel in production
 php artisan package:discover --ansi || true
 
