@@ -21,6 +21,7 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import { formatRupiah } from '../utils/formatters';
+import { transactionService } from '../services/transactionService';
 
 export default function FinancialTransactionCreatePage({
   financialAccounts = mockFinancialAccounts,
@@ -38,7 +39,7 @@ export default function FinancialTransactionCreatePage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const amountNum = Number(formAmount);
     if (!formAmount || isNaN(amountNum) || amountNum <= 0) {
@@ -50,27 +51,21 @@ export default function FinancialTransactionCreatePage({
     setErrorMessage('');
 
     try {
-      const matchedCat = transactionCategories.find((c) => c.id === formCategory);
-      const newTx = {
-        id: Date.now(),
-        transaction_number: `TRX/${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}/${formType === 'income' ? 'IN' : 'EX'}-${Math.floor(1000 + Math.random() * 9000)}`,
-        order_id: null,
-        order_number: null,
+      // T16.2: simpan ke API (server-authoritative, memicu jurnal T34.7).
+      const saved = await transactionService.createTransaction({
         type: formType,
         category: formCategory,
-        category_label: matchedCat?.label || 'Manual Record',
         amount: amountNum,
-        description: formDescription.trim() || `Catatan manual ${matchedCat?.label || ''}`,
+        description: formDescription.trim() || `Catatan manual ${formCategory}`,
         payment_method: formPaymentMethod,
         status: 'settled',
-        created_at: new Date().toISOString(),
-        customer_name: formType === 'income' ? 'Pelanggan Walk-In / Tunai' : 'Pengeluaran Toko'
-      };
+        customer_name: formType === 'income' ? 'Pelanggan Walk-In / Tunai' : 'Pengeluaran Toko',
+      });
 
       if (onAddTransaction) {
-        onAddTransaction(newTx);
+        onAddTransaction(saved);
       }
-      onShowToast(`Berhasil mencatat transaksi ${newTx.transaction_number}!`);
+      onShowToast(`Berhasil mencatat transaksi ${saved?.transaction_number || ''}!`);
       onNavigateBack();
     } catch (err) {
       setErrorMessage(err.message || 'Gagal menyimpan transaksi.');
@@ -120,7 +115,7 @@ export default function FinancialTransactionCreatePage({
 
           {/* Arah Aliran Kas */}
           <div>
-            <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-2">
+            <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
               Arah Aliran Kas <span className="text-rose-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-3">

@@ -725,9 +725,11 @@ T16. Buku Kas, Rekening & Mesin Jurnal ............................. [PARTIAL]  
        GET /api/transactions/{id}.
   Test: TransactionApiTest, AutomaticTransactionOnOrderStatusTest.
   Minor:
-    T16.1 [TODO] `transactionService.js` + FinancialTransactionsPage via
-           useTransactionTableStore.
-    T16.2 [TODO] FE FinancialTransactionCreatePage -> POST + Toast.
+    T16.1 [DONE] `transactionService.js` + FinancialTransactionsPage via
+           useTransactionTableStore (API-backed; mock hanya fallback prop).
+    T16.2 [DONE] FE FinancialTransactionCreatePage -> POST `transactionService.
+           createTransaction` + Toast + navigasi kembali (server-authoritative,
+           memicu jurnal T34.7) + bukti browser Playwright.
     T16.3 [TODO] FE kategori & ringkasan cashflow.
     T16.4 [DONE] MESIN JURNAL: `financial_accounts` (saldo rekening) +
            `chart_of_accounts` + `financial_ledger_entries` + JournalPostingService
