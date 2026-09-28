@@ -1298,6 +1298,11 @@ T38. Master Users & Role Access (Admin) ............................ [DONE]  [OW
             UserRoleAssignPage (assign role multi via pivot). [commit feb664c]
     T38.5 [DONE] Registrasi menu "Master Users" di master `menus`/`MenuSeeder`
             + akses role admin (G11) + uji browser E2E. [commit feb664c]
+    T38.6 [DONE] Indikator admin per-ROLE: kolom `roles.is_admin` (Master Role
+            checkbox "Akses Panel Admin"); gerbang akses Panel Admin (`EnsureMenuAccess`/
+            `EnsureUserIsAdmin` + guard FE) berbasis `is_admin`; `GET /api/auth/menus`
+            mengembalikan `is_admin`; dropdown storefront admin = 1 tombol "Panel Admin".
+            [commit e59211c (BE) + 0c2dc54 (FE)]
   Catatan desain:
   - Patuh aturan 22 (ikon modul header), 23/24/25 (halaman create/edit terpisah),
     26/27 (list kanonis + filter 100% kolom), 28 (komponen reusable), 15/20
