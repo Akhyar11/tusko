@@ -16,8 +16,9 @@ mkdir -p /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Optional automatic database migration on startup
-if [ "${RUN_MIGRATIONS}" = "true" ]; then
+# Automatic database migration on startup.
+# Default AKTIF; set RUN_MIGRATIONS=false untuk melewatinya.
+if [ "${RUN_MIGRATIONS}" != "false" ]; then
     echo "Running database migrations..."
     php artisan migrate --force || true
 fi
