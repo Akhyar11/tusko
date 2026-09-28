@@ -198,16 +198,6 @@ class MidtransWebhookController extends Controller
      */
     private function mapPaymentStatus(string $transactionStatus, string $fraudStatus): string
     {
-        return match (true) {
-            $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-            $transactionStatus === 'settlement' => 'paid',
-            $transactionStatus === 'capture' && $fraudStatus === 'challenge' => 'challenge',
-            $transactionStatus === 'pending' => 'pending',
-            $transactionStatus === 'deny' => 'failed',
-            $transactionStatus === 'expire' => 'expired',
-            $transactionStatus === 'cancel' => 'cancelled',
-            in_array($transactionStatus, ['refund', 'partial_refund'], true) => 'refunded',
-            default => 'pending',
-        };
+        return \App\Services\MidtransService::mapStatus($transactionStatus, $fraudStatus);
     }
 }

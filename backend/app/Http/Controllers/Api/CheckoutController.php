@@ -622,6 +622,65 @@ class CheckoutController extends Controller
     }
 
     /**
+     * T07.10: rekonsiliasi status pembayaran dari Midtrans (manual "Cek Status").
+     */
+    public function syncPayment(Request $request, string $idOrOrderNumber): JsonResponse
+    {
+        $order = Order::with('items')
+            ->where('id', $idOrOrderNumber)
+            ->orWhere('order_number', $idOrOrderNumber)
+            ->orWhere('midtrans_order_id', $idOrOrderNumber)
+            ->firstOrFail();
+
+        $this->ensureOrderAccess($request, $order);
+
+        $service = app(\App\Services\MidtransService::class);
+        $result = $service->getStatus($order);
+
+        if (! $result['success']) {
+            return response()->json([
+                'message' => $result['raw']['status_message'] ?? 'Gagal mengambil status pembayaran.',
+            ], 422);
+        }
+
+        $txStatus = strtolower((string) ($result['raw']['transaction_status'] ?? ''));
+        $fraud = (string) ($result['raw']['fraud_status'] ?? '');
+        $mapped = \App\Services\MidtransService::mapStatus($txStatus, $fraud);
+        $transactionId = (string) ($result['raw']['transaction_id'] ?? $order->midtrans_transaction_id);
+        $paymentType = (string) ($result['raw']['payment_type'] ?? $order->midtrans_payment_type);
+
+        if ($mapped === 'paid' && $order->payment_status !== 'paid') {
+            $order->markAsPaid($paymentType ?: 'midtrans', $transactionId ?: null);
+        } elseif (in_array($mapped, ['cancelled', 'expired', 'failed'], true)
+            && $order->payment_status !== $mapped
+            && $order->status !== 'cancelled') {
+            $order->update([
+                'status' => $mapped === 'failed' ? 'failed' : 'cancelled',
+                'payment_status' => $mapped,
+                'cancelled_at' => now(),
+            ]);
+        }
+
+        if ($transactionId) {
+            \App\Models\Payment::updateOrCreate(
+                ['order_id' => $order->id, 'reference' => $transactionId],
+                [
+                    'method' => 'midtrans',
+                    'channel' => $paymentType ?: $order->payment_channel,
+                    'amount' => (float) $order->grand_total,
+                    'status' => $mapped,
+                    'paid_at' => $mapped === 'paid' ? ($order->paid_at ?? now()) : null,
+                ]
+            );
+        }
+
+        return response()->json([
+            'message' => 'Status pembayaran disinkronkan.',
+            'data' => new \App\Http\Resources\OrderResource($order->fresh(['items'])),
+        ]);
+    }
+
+    /**
      * Send or re-send order confirmation email to customer.
      */
     public function sendConfirmationEmail(Request $request, string $idOrOrderNumber): JsonResponse

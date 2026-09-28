@@ -72,6 +72,55 @@ class MidtransService
     }
 
     /**
+     * Pemetaan status transaksi Midtrans -> status internal.
+     */
+    public static function mapStatus(string $transactionStatus, string $fraudStatus = ''): string
+    {
+        return match (true) {
+            $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
+            $transactionStatus === 'settlement' => 'paid',
+            $transactionStatus === 'capture' && $fraudStatus === 'challenge' => 'challenge',
+            $transactionStatus === 'pending' => 'pending',
+            $transactionStatus === 'deny' => 'failed',
+            $transactionStatus === 'expire' => 'expired',
+            $transactionStatus === 'cancel' => 'cancelled',
+            in_array($transactionStatus, ['refund', 'partial_refund'], true) => 'refunded',
+            default => 'pending',
+        };
+    }
+
+    /**
+     * Ambil status transaksi terkini dari Midtrans (untuk rekonsiliasi/manual sync).
+     *
+     * @return array{success: bool, http_status: int, raw: array<string, mixed>}
+     */
+    public function getStatus(Order $order): array
+    {
+        $reference = $order->midtrans_order_id ?: $order->order_number;
+
+        if ($this->apiUrl() === '' || $this->serverKey === '') {
+            return ['success' => false, 'http_status' => 503, 'raw' => ['message' => 'Midtrans Core API belum dikonfigurasi.']];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+            ])->timeout(15)->get($this->apiUrl() . '/v2/' . rawurlencode((string) $reference) . '/status');
+
+            return [
+                'success' => $response->successful(),
+                'http_status' => $response->status(),
+                'raw' => $response->json() ?? [],
+            ];
+        } catch (Exception $e) {
+            Log::error('Midtrans getStatus exception: ' . $e->getMessage());
+
+            return ['success' => false, 'http_status' => 500, 'raw' => ['message' => $e->getMessage()]];
+        }
+    }
+
+    /**
      * Base URL Midtrans Core API (tanpa hardcode).
      */
     public function apiUrl(): string

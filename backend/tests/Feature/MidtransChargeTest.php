@@ -212,4 +212,49 @@ class MidtransChargeTest extends TestCase
 
         $this->assertSame('paid', $order->fresh()->payment_status);
     }
+
+    public function test_sync_payment_marks_order_paid_from_settlement(): void
+    {
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $order = $this->order($user);
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.sandbox.midtrans.com/v2/*/status' => Http::response([
+                'transaction_status' => 'settlement',
+                'payment_type' => 'bank_transfer',
+                'fraud_status' => 'accept',
+                'transaction_id' => 'trx-sync-paid',
+                'order_id' => $order->order_number,
+            ], 200),
+        ]);
+
+        $this->postJson("/api/orders/{$order->id}/sync-payment")
+            ->assertStatus(200)
+            ->assertJsonPath('data.payment_status', 'paid');
+
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_sync_payment_cancels_order_on_expire(): void
+    {
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $order = $this->order($user);
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.sandbox.midtrans.com/v2/*/status' => Http::response([
+                'transaction_status' => 'expire',
+                'payment_type' => 'credit_card',
+                'transaction_id' => 'trx-sync-expire',
+                'order_id' => $order->order_number,
+            ], 200),
+        ]);
+
+        $this->postJson("/api/orders/{$order->id}/sync-payment")->assertStatus(200);
+
+        $fresh = $order->fresh();
+        $this->assertSame('cancelled', $fresh->status);
+        $this->assertSame('expired', $fresh->payment_status);
+    }
 }
