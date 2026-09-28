@@ -595,10 +595,17 @@ class CheckoutController extends Controller
         $result = $midtransService->createCharge($order, $validated['payment_method']);
 
         if (! $result['success']) {
+            $http = (int) $result['http_status'];
+            $message = (string) ($result['raw']['message'] ?? '');
+            // Konfigurasi belum lengkap / error validasi Midtrans -> 422 (tidak di-retry FE).
+            $status = (str_contains(strtolower($message), 'belum dikonfigurasi') || ($http >= 400 && $http < 500))
+                ? 422
+                : 502;
+
             return response()->json([
-                'message' => $result['raw']['message'] ?? 'Gagal membuat transaksi pembayaran.',
+                'message' => $message ?: 'Gagal membuat transaksi pembayaran.',
                 'errors' => ['payment_method' => [$result['raw']['status_message'] ?? 'Charge Midtrans gagal.']],
-            ], $result['http_status'] >= 400 ? min($result['http_status'], 502) : 422);
+            ], $status);
         }
 
         $order->refresh();
