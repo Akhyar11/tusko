@@ -517,6 +517,11 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            PATH (`/cart`, `/checkout`) via pushState (sebelumnya hash `#/...` membuat
            path tetap `/cart` sehingga reload salah resolve). Menggantikan load-dari-API
            di T06.14. [OWNER:A1]
+    T06.17 [DONE] LOGOUT BERSIHKAN STATE BELANJA: `handleLogout` kini menghapus
+           `tusko_checkout_items`, mengosongkan `checkoutItems` & `cart`, dan ikut
+           redirect bila sedang di view `checkout` (sebelumnya data checkout sesi login
+           terbawa ke sesi guest, sehingga halaman checkout masih tampak terisi).
+           [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.

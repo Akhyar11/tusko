@@ -613,9 +613,15 @@ export default function App() {
       // ignore
     }
     handleUpdateUser(null);
+
+    // Bersihkan state belanja milik sesi login agar tidak terbawa ke sesi guest.
+    writeStoredCheckoutItems([]);
+    setCheckoutItems([]);
+    setCart([]);
+
     showToast('Anda telah keluar dari akun (Logout).');
     const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
-    if (currentView === 'profile' || currentView === 'cart' || adminViews.includes(currentView)) {
+    if (['profile', 'cart', 'checkout'].includes(currentView) || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
     }
