@@ -1,0 +1,37 @@
+# =============================================================================
+# Tusko Backend — Akses Laravel dari subfolder Hostinger (shared hosting)
+# =============================================================================
+# Aplikasi Laravel berada di `public_html/backend`, sedangkan front controller
+# ada di `public/index.php`. Berkas ini mengarahkan SEMUA request publik
+# (mis. https://kagakspace.com/backend/api/health) ke folder `public/` tanpa
+# mengekspos berkas internal (vendor, .env, storage, database, dll).
+#
+# Tidak memakai `RewriteBase` agar tetap bekerja walau folder diubah namanya.
+# =============================================================================
+
+Options -MultiViews -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Teruskan header Authorization & XSRF ke PHP (wajib untuk Sanctum bearer token).
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Tolak akses langsung ke berkas/direktori internal Laravel (pertahanan berlapis).
+    RewriteRule ^(\.env.*|composer\.(json|lock)|artisan|phpunit\.xml|server\.php)$ - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|deploy|resources|routes|tests|vendor)/ - [F,L]
+
+    # Semua request selain yang sudah menuju `public/` diarahkan ke `public/`.
+    # Lookahead negatif mencegah rewrite ganda (`public/public/...`).
+    RewriteRule ^(?!public/)(.*)$ public/$1 [L]
+</IfModule>
+
+# Larang akses berkas sensitif walau mod_rewrite dimatikan.
+<FilesMatch "(^\.env|\.(sqlite|sqlite3|log|pem|key)$)">
+    Require all denied
+</FilesMatch>

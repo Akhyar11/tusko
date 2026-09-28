@@ -904,6 +904,13 @@ T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OW
     T23.3 [TODO] Deploy VPS/Nginx + supervisor queue worker + cron scheduler
            + `php artisan migrate --seed`.
     T23.4 [TODO] Smoke test produksi (storefront + admin).
+    T23.5 [PARTIAL] CI/CD Hostinger shared hosting (backend-only, master-only):
+           workflow `.github/workflows/deploy-hostinger.yml` (push `master`) ->
+           `scripts/deploy-hostinger.sh` (rsync) -> `backend/deploy/hostinger-deploy.sh`
+           (`composer install --no-dev`, `migrate --force`, seeder referensi
+           role/users/menu/settings). `.htaccess` subfolder `public_html/backend`
+           mengarahkan request ke `public/` (akses via kagakspace.com/backend).
+           Sisa: set secrets/vars GitHub + `.env` produksi + smoke test produksi.
 
 ==============================================================================
 MAJOR TAMBAHAN (menutup gap audit)

@@ -1,0 +1,45 @@
+name: Deploy Backend to Hostinger (Production)
+
+# =============================================================================
+# CI/CD backend Laravel -> Hostinger shared hosting.
+# HANYA berjalan saat push ke branch `master` (Production), atau manual
+# via workflow_dispatch.
+#
+# Setup sekali di GitHub > Settings > Secrets and variables > Actions:
+#   Secrets:
+#     HOSTINGER_SSH_KEY       private key deploy (rekomendasi)
+#     HOSTINGER_SSH_PASSWORD  alternatif bila memakai password SSH
+#   Variables:
+#     HOSTINGER_SSH_HOST      mis. 153.92.11.33
+#     HOSTINGER_SSH_PORT      mis. 65002
+#     HOSTINGER_SSH_USER      mis. u532838686
+#     HOSTINGER_DEPLOY_PATH   mis. /home/u532838686/domains/kagakspace.com/public_html/backend
+# =============================================================================
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hostinger-backend-master
+  cancel-in-progress: false
+
+jobs:
+  deploy-backend:
+    name: Deploy Laravel backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Rsync + composer install + migrate + seed
+        env:
+          SSH_HOST: ${{ vars.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ vars.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ vars.HOSTINGER_SSH_USER }}
+          DEPLOY_PATH: ${{ vars.HOSTINGER_DEPLOY_PATH }}
+          SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+        run: bash scripts/deploy-hostinger.sh
