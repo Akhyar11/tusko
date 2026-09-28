@@ -372,6 +372,31 @@ const getInitialView = () => {
 };
 
 // Normalisasi item keranjang dari API ke bentuk yang dipakai komponen storefront.
+// Persistensi pilihan checkout agar tahan refresh (sessionStorage, prefix tusko_).
+const CHECKOUT_STORAGE_KEY = 'tusko_checkout_items';
+
+const readStoredCheckoutItems = () => {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeStoredCheckoutItems = (items) => {
+  try {
+    if (Array.isArray(items) && items.length > 0) {
+      sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(items));
+    } else {
+      sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+    }
+  } catch {
+    // abaikan
+  }
+};
+
 const mapCartItems = (cartData) =>
   (cartData?.items || []).map((item) => ({
     id: item.id,
@@ -478,7 +503,6 @@ export default function App() {
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
-  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
@@ -552,29 +576,25 @@ export default function App() {
     refreshCart();
   }, [currentUser?.id]);
 
-  // Fallback checkout: bila masuk ke view checkout tanpa item terpilih (mis. reload/
-  // navigasi langsung), muat dari keranjang aktif agar checkout tidak "kosong" palsu.
+  // Checkout: simpan pilihan ke sessionStorage (tahan refresh). Bila benar-benar tidak
+  // ada data checkout, kembali ke keranjang agar tidak menampilkan halaman checkout kosong.
   useEffect(() => {
-    if (currentView !== 'checkout' || checkoutItems.length > 0) return undefined;
+    if (currentView !== 'checkout') return undefined;
 
-    let active = true;
-    (async () => {
-      setIsLoadingCheckout(true);
-      try {
-        const cartData = await cartService.getCart();
-        if (!active) return;
-        const items = mapCartItems(cartData);
-        if (items.length > 0) setCheckoutItems(items);
-      } catch (err) {
-        console.warn('Gagal memuat keranjang untuk checkout:', err);
-      } finally {
-        if (active) setIsLoadingCheckout(false);
-      }
-    })();
+    if (checkoutItems.length > 0) {
+      writeStoredCheckoutItems(checkoutItems);
+      return undefined;
+    }
 
-    return () => {
-      active = false;
-    };
+    const stored = readStoredCheckoutItems();
+    if (stored.length > 0) {
+      setCheckoutItems(stored);
+      return undefined;
+    }
+
+    showToast('Silakan pilih produk dari keranjang sebelum checkout.', { type: 'info' });
+    setCurrentView('cart');
+    return undefined;
   }, [currentView, checkoutItems.length]);
 
   const handleSwitchUser = (demoUser) => {
@@ -767,6 +787,14 @@ export default function App() {
     } else if (currentView === 'email-verified') {
       if (window.location.pathname !== '/email-verified') {
         window.history.pushState(null, '', '/email-verified' + window.location.search);
+      }
+    } else if (currentView === 'cart') {
+      if (window.location.pathname !== '/cart') {
+        window.history.pushState(null, '', '/cart');
+      }
+    } else if (currentView === 'checkout') {
+      if (window.location.pathname !== '/checkout') {
+        window.history.pushState(null, '', '/checkout');
       }
     } else if (currentView === 'catalog') {
       if (window.location.pathname !== '/' || window.location.hash) {
@@ -2075,11 +2103,12 @@ export default function App() {
         ) : currentView === 'checkout' ? (
           <CheckoutPage
             checkoutItems={checkoutItems}
-            isLoading={isLoadingCheckout}
             availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
             onShowToast={showToast}
             onFinishOrder={async (order) => {
+              // Order selesai dibuat → bersihkan persistensi checkout.
+              writeStoredCheckoutItems([]);
               // Hapus item yang sudah di-checkout dari keranjang server (mendukung checkout sebagian).
               try {
                 await Promise.all(
@@ -2160,6 +2189,7 @@ export default function App() {
             onBackToShopping={() => setCurrentView('catalog')}
             onProceedToCheckout={({ selectedItems }) => {
               setCheckoutItems(selectedItems);
+              writeStoredCheckoutItems(selectedItems);
               setCurrentView('checkout');
             }}
           />

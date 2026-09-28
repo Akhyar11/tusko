@@ -510,6 +510,13 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            (`AddressFormPage`: peta interaktif + GPS "Isi Otomatis" + wilayah
            provinsi->kota->kecamatan->kelurahan + kode wilayah). `handleSaveAddress`
            memuat ulang daftar dari `/api/addresses`. [OWNER:A1]
+    T06.16 [DONE] CHECKOUT TAHAN REFRESH + URL PATH: (a) pilihan checkout disimpan di
+           `sessionStorage` (`tusko_checkout_items`) sehingga refresh memulihkan item;
+           (b) bila benar-benar tak ada data, otomatis kembali ke `/cart` (+ toast),
+           tidak menampilkan checkout kosong; (c) view `cart`/`checkout` kini memakai
+           PATH (`/cart`, `/checkout`) via pushState (sebelumnya hash `#/...` membuat
+           path tetap `/cart` sehingga reload salah resolve). Menggantikan load-dari-API
+           di T06.14. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.
