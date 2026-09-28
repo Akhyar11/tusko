@@ -100,4 +100,47 @@ class CancelExpiredOrdersTest extends TestCase
 
         $this->assertSame('pending', $order->fresh()->status);
     }
+
+    public function test_expired_order_restores_decreased_stock_and_is_idempotent(): void
+    {
+        // Simulasi pasca-checkout (immediate decrease): stok fisik sudah turun 4.
+        $product = $this->productWithBalance(6);
+
+        $order = Order::factory()->create([
+            'status' => 'pending',
+            'payment_status' => 'pending',
+            'expires_at' => now()->subMinute(),
+        ]);
+
+        $order->items()->create([
+            'product_id' => $product->id,
+            'product_name' => 'Produk Expired',
+            'product_price' => 100000,
+            'quantity' => 4,
+            'subtotal' => 400000,
+        ]);
+
+        $this->artisan('orders:cancel-expired')->assertExitCode(0);
+
+        $order->refresh();
+        $this->assertSame('cancelled', $order->status);
+        // Stok KEMBALI (6 + 4).
+        $this->assertSame(10, (int) $product->fresh()->stock);
+        $this->assertSame(
+            1,
+            \App\Models\StockMutation::where('reference_type', 'order_cancelled')
+                ->where('reference_id', $order->order_number)
+                ->count()
+        );
+
+        // Idempoten: jalankan ulang tidak menggandakan pengembalian stok.
+        $this->artisan('orders:cancel-expired')->assertExitCode(0);
+        $this->assertSame(10, (int) $product->fresh()->stock);
+        $this->assertSame(
+            1,
+            \App\Models\StockMutation::where('reference_type', 'order_cancelled')
+                ->where('reference_id', $order->order_number)
+                ->count()
+        );
+    }
 }

@@ -40,4 +40,13 @@ if [ "${APP_ENV}" = "production" ] && [ -n "${APP_KEY}" ]; then
     php artisan view:cache || true
 fi
 
+# T39.2: Jalankan Laravel scheduler di background (task terjadwal seperti
+# `orders:cancel-expired` tiap 10 menit). Render free tidak mendukung Cron/Worker
+# berbayar, jadi scheduler berjalan di dalam web service. Log ke file + stdout
+# (terlihat di log Render). Set RUN_SCHEDULER=false untuk menonaktifkan.
+if [ "${RUN_SCHEDULER}" != "false" ]; then
+    echo "Starting Laravel scheduler (schedule:work) in background..."
+    php artisan schedule:work >> /var/www/html/storage/logs/scheduler.log 2>&1 &
+fi
+
 exec "$@"

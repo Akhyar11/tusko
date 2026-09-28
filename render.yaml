@@ -58,6 +58,11 @@ services:
         value: "true"
       - key: MIDTRANS_NOTIFICATION_URL
         value: "https://tusko.onrender.com/api/webhooks/midtrans"
+      # T39.2: scheduler berjalan di background web service (Render free tidak
+      # mendukung Cron Job/Background Worker berbayar). Set "false" bila kelak
+      # memakai Render Cron Job (lihat dokumentasi di bawah).
+      - key: RUN_SCHEDULER
+        value: "true"
 
   # ==========================================
   # 2. Frontend Storefront (React Vite SPA)
@@ -78,3 +83,28 @@ services:
           type: web
           name: tusko-api
           property: host
+
+# ==============================================================================
+# T39.2 — Scheduler Produksi (opsi)
+# ==============================================================================
+# Kondisi saat ini (Render FREE): scheduler dijalankan DI DALAM web service
+# backend oleh `docker/entrypoint.sh` (`php artisan schedule:work &`, env
+# RUN_SCHEDULER). Ini menjalankan `orders:cancel-expired` tiap 10 menit selama
+# instance hidup. Log: `storage/logs/scheduler.log` (juga stderr container).
+#
+# Jika kelak memakai plan BERBAYAR, lebih andal membuat Cron Job khusus (berjalan
+# terlepas dari web service). Contoh blok (hapus komentar untuk mengaktifkan),
+# lalu set RUN_SCHEDULER=false pada service web agar tidak dobel:
+#
+#   - type: cron
+#     name: tusko-scheduler
+#     runtime: docker
+#     dockerfilePath: backend/Dockerfile
+#     dockerContext: backend
+#     schedule: "* * * * *"        # tiap menit (Laravel schedule:run memfilter)
+#     dockerCommand: php artisan schedule:run
+#     region: singapore
+#     plan: 0.5c-512mb             # cron job tidak tersedia di plan free
+#     envVars:
+#       - fromGroup: tusko-api-env # (opsional) grup env yang sama
+# ==============================================================================
