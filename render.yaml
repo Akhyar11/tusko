@@ -56,6 +56,8 @@ services:
         value: "true"
       - key: RUN_SEEDERS
         value: "true"
+      - key: MIDTRANS_NOTIFICATION_URL
+        value: "https://tusko.onrender.com/api/webhooks/midtrans"
 
   # ==========================================
   # 2. Frontend Storefront (React Vite SPA)

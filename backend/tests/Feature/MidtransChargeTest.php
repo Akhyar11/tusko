@@ -213,6 +213,32 @@ class MidtransChargeTest extends TestCase
         $this->assertSame('paid', $order->fresh()->payment_status);
     }
 
+    public function test_charge_sends_notification_override_header(): void
+    {
+        app(IntegrationService::class)->set(
+            'payment.notification_url',
+            'https://tusko.onrender.com/api/webhooks/midtrans',
+            'payment'
+        );
+
+        $order = $this->order();
+        $this->fakeCharge([
+            'status_code' => '201',
+            'transaction_id' => 'trx-notif',
+            'payment_type' => 'qris',
+            'transaction_status' => 'pending',
+            'qr_string' => 'QR',
+            'actions' => [],
+        ]);
+
+        app(MidtransService::class)->createCharge($order, 'qris');
+
+        Http::assertSent(fn ($request) => $request->hasHeader(
+            'X-Override-Notification',
+            'https://tusko.onrender.com/api/webhooks/midtrans'
+        ));
+    }
+
     public function test_sync_payment_marks_order_paid_from_settlement(): void
     {
         $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);

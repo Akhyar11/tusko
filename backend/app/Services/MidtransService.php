@@ -17,6 +17,7 @@ class MidtransService
     protected string $snapUrl;
     protected string $refundUrl;
     protected string $apiUrl;
+    protected string $notificationUrl;
 
     public function __construct(private readonly IntegrationService $integrations)
     {
@@ -26,6 +27,7 @@ class MidtransService
         $this->snapUrl = (string) $this->resolve('payment.snap_url', 'midtrans.snap_url', 'midtrans.snap_url', '');
         $this->refundUrl = (string) $this->resolve('payment.refund_url', 'midtrans.refund_url', 'midtrans.refund_url', '');
         $this->apiUrl = (string) $this->resolve('payment.midtrans_api_url', 'midtrans.api_url', 'midtrans.api_url', '');
+        $this->notificationUrl = (string) $this->resolve('payment.notification_url', 'midtrans.notification_url', 'midtrans.notification_url', '');
     }
 
     /**
@@ -126,6 +128,34 @@ class MidtransService
     public function apiUrl(): string
     {
         return rtrim($this->apiUrl, '/');
+    }
+
+    /**
+     * URL webhook publik (X-Override-Notification). Kosong = ikut setting dashboard.
+     */
+    public function notificationUrl(): string
+    {
+        return trim($this->notificationUrl);
+    }
+
+    /**
+     * Header standar Midtrans (Basic auth + override notification bila diatur).
+     *
+     * @return array<string, string>
+     */
+    private function apiHeaders(): array
+    {
+        $headers = [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
+        ];
+
+        if ($this->notificationUrl() !== '') {
+            $headers['X-Override-Notification'] = $this->notificationUrl();
+        }
+
+        return $headers;
     }
 
     /**
@@ -259,11 +289,9 @@ class MidtransService
         }
 
         try {
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->timeout(15)->post($this->apiUrl() . '/v2/charge', $payload);
+            $response = Http::withHeaders($this->apiHeaders())
+                ->timeout(15)
+                ->post($this->apiUrl() . '/v2/charge', $payload);
 
             $body = $response->json() ?? [];
 
@@ -403,11 +431,9 @@ class MidtransService
         }
 
         try {
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Basic ' . base64_encode($this->serverKey . ':'),
-            ])->timeout(8)->post($this->snapUrl, $payload);
+            $response = Http::withHeaders($this->apiHeaders())
+                ->timeout(8)
+                ->post($this->snapUrl, $payload);
 
             if ($response->successful() && isset($response['token'])) {
                 $snapToken = $response['token'];
