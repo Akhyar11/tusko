@@ -548,6 +548,10 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            `POST /api/orders/{id}/charge` + webhook VA/QR + FE `checkoutService.chargeOrder` +
            `PaymentInstructionModal` Tusko (VA/biller/QR asli, countdown, Cek Status).
            Kartu kredit tetap via Snap. [commit 2c3dfd9 (BE) + 718c499 (FE)] (koordinasi lintas-owner A1)
+    T07.10 [DONE] REKONSILIASI STATUS MIDTRANS: `MidtransService::getStatus`+`mapStatus` +
+           endpoint `POST /api/orders/{id}/sync-payment` (lookup id/order_number/midtrans_order_id);
+           tombol "Cek Status Pembayaran" FE memanggil sync. Uji NYATA sandbox: bayar Mandiri
+           via Simulator -> paid; cancel via API -> cancelled. [commit 0fd5567 (BE) + 255a44f (FE)]
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
