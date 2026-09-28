@@ -147,7 +147,7 @@ export default function PaymentInstructionModal({
   const handleCheckStatus = async () => {
     setStatusChecking(true);
     try {
-      const fresh = await checkoutService.getOrder(invoiceNumber);
+      const fresh = await checkoutService.syncPaymentStatus(invoiceNumber);
       const status = fresh?.payment_status;
       if (status === 'paid') {
         setPaymentSuccess(true);

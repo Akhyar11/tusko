@@ -114,6 +114,14 @@ export const checkoutService = {
   },
 
   /**
+   * T07.10: rekonsiliasi status pembayaran dari Midtrans (Cek Status).
+   */
+  async syncPaymentStatus(idOrOrderNumber) {
+    const response = await apiClient.post(`/api/orders/${encodeURIComponent(idOrOrderNumber)}/sync-payment`);
+    return response.data;
+  },
+
+  /**
    * Ambil detail pesanan berdasarkan ID atau nomor pesanan.
    */
   async getOrder(idOrOrderNumber) {
