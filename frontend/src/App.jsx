@@ -8,6 +8,8 @@ import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
 import OrderSuccessPage from './components/OrderSuccessPage';
 import OrderListPage from './components/OrderListPage';
+import MyOrdersPage from './components/MyOrdersPage';
+import MyOrderDetailPage from './components/MyOrderDetailPage';
 import OrderDetailPage from './components/OrderDetailPage';
 import FinancialTransactionsPage from './components/FinancialTransactionsPage';
 import StockManagementPage from './components/StockManagementPage';
@@ -103,6 +105,8 @@ const VALID_VIEWS = [
   'order-success',
   'orders',
   'order-detail',
+  'my-orders',
+  'my-order-detail',
   'procurement',
   'procurement-pos',
   'procurement-grn',
@@ -262,6 +266,8 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/vouchers/create' || rawPath === '/admin/voucher/create') return 'voucher-create';
     if (rawPath === '/admin/stock' || rawPath === '/admin/stocks' || rawPath === '/admin/inventory') return 'stock';
     if (rawPath === '/admin/orders' || rawPath === '/admin/order') return 'orders';
+    if (rawPath === '/orders') return 'my-orders';
+    if (rawPath === '/orders/detail') return 'my-order-detail';
     if (rawPath === '/admin/procurement') return 'procurement-pos';
     if (rawPath === '/admin/procurement/pos' || rawPath === '/admin/procurement/po') return 'procurement-pos';
     if (rawPath === '/admin/procurement/grn') return 'procurement-grn';
@@ -503,6 +509,9 @@ export default function App() {
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
+  const [myOrderRef, setMyOrderRef] = useState(null);
+  const [myOrderInitial, setMyOrderInitial] = useState(null);
+  const [myOrderAutoPay, setMyOrderAutoPay] = useState(false);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
@@ -801,6 +810,14 @@ export default function App() {
     } else if (currentView === 'checkout') {
       if (window.location.pathname !== '/checkout') {
         window.history.pushState(null, '', '/checkout');
+      }
+    } else if (currentView === 'my-orders') {
+      if (window.location.pathname !== '/orders') {
+        window.history.pushState(null, '', '/orders');
+      }
+    } else if (currentView === 'my-order-detail') {
+      if (window.location.pathname !== '/orders/detail') {
+        window.history.pushState(null, '', '/orders/detail');
       }
     } else if (currentView === 'catalog') {
       if (window.location.pathname !== '/' || window.location.hash) {
@@ -1399,7 +1416,7 @@ export default function App() {
           onSelectProduct={handleSelectProduct}
           onResetHome={handleResetHome}
           onOpenCart={handleOpenCart}
-          onOpenOrders={() => setCurrentView('orders')}
+          onOpenOrders={() => setCurrentView(currentUser?.role === 'admin' ? 'orders' : 'my-orders')}
           onOpenTransactions={() => setCurrentView('transactions')}
           onOpenProductsAdmin={() => setCurrentView('products-admin')}
           onOpenStock={() => setCurrentView('stock')}
@@ -1623,6 +1640,26 @@ export default function App() {
               setToastMessage(`Pesanan ${order.order_number || order.invoice_number} telah diselesaikan.`);
             }}
             onUpdateStatus={handleUpdateOrderStatus}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'my-orders' ? (
+          <MyOrdersPage
+            currentUser={currentUser}
+            onOpenDetail={(order, opts = {}) => {
+              setMyOrderRef(order?.order_number || order?.id || null);
+              setMyOrderInitial(order || null);
+              setMyOrderAutoPay(Boolean(opts.autoPay));
+              setCurrentView('my-order-detail');
+            }}
+            onNavigateCatalog={() => setCurrentView('catalog')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'my-order-detail' ? (
+          <MyOrderDetailPage
+            orderRef={myOrderRef}
+            initialOrder={myOrderInitial}
+            autoPay={myOrderAutoPay}
+            onBack={() => setCurrentView('my-orders')}
             onShowToast={showToast}
           />
         ) : currentView === 'orders' ? (
@@ -2298,7 +2335,7 @@ export default function App() {
             const el = document.getElementById('product-catalog');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
-          onOpenOrders={() => setCurrentView('orders')}
+          onOpenOrders={() => setCurrentView(currentUser?.role === 'admin' ? 'orders' : 'my-orders')}
         />
       )}
     </div>

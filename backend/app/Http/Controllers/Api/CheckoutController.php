@@ -500,6 +500,34 @@ class CheckoutController extends Controller
     }
 
     /**
+     * T39.3 — pastikan order masih boleh dibayar (belum lunas/batal/kedaluwarsa).
+     * Menolak 422 dengan pesan jelas agar FE dapat memberi tahu pembeli.
+     */
+    private function ensureOrderPayable(Order $order): void
+    {
+        if (in_array($order->status, ['cancelled', 'failed'], true)
+            || in_array($order->payment_status, ['cancelled', 'failed'], true)) {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan sudah dibatalkan dan tidak dapat dibayar lagi.'],
+            ]);
+        }
+
+        if ($order->payment_status === 'paid') {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan ini sudah dibayar.'],
+            ]);
+        }
+
+        $deadline = $order->payment_expires_at ?? $order->expires_at;
+
+        if ($deadline && Carbon::parse($deadline)->isPast()) {
+            throw ValidationException::withMessages([
+                'order' => ['Batas waktu pembayaran telah lewat. Pesanan dibatalkan otomatis dan stok dikembalikan.'],
+            ]);
+        }
+    }
+
+    /**
      * Show single order details by ID or order_number.
      */
     public function show(string $idOrOrderNumber): JsonResponse
@@ -556,6 +584,9 @@ class CheckoutController extends Controller
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
         $this->ensureOrderAccess($request, $order);
 
+        // T39.3: hanya order yang masih boleh dibayar (belum lunas/batal/kedaluwarsa).
+        $this->ensureOrderPayable($order);
+
         $midtransService = app(\App\Services\MidtransService::class);
         $result = $midtransService->createSnapToken($order);
 
@@ -587,6 +618,9 @@ class CheckoutController extends Controller
 
         // T27.1: anti-IDOR — hanya pemilik/admin/guest sesi terkait.
         $this->ensureOrderAccess($request, $order);
+
+        // T39.3: hanya order yang masih boleh dibayar (belum lunas/batal/kedaluwarsa).
+        $this->ensureOrderPayable($order);
 
         $midtransService = app(\App\Services\MidtransService::class);
         $result = $midtransService->createCharge($order, $validated['payment_method']);

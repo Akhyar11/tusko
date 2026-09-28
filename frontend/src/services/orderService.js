@@ -2,7 +2,8 @@
  * Service: Order Management API Client
  * Handles fetching, filtering, pagination, and status management for orders.
  */
-import { apiClient } from './apiClient';
+import { apiClient, getStoredToken } from './apiClient';
+import { getCartSessionId } from './cartService';
 import { mockOrders } from '../data/mockOrders';
 
 const STORAGE_KEY = 'tusko_orders_cache';
@@ -101,6 +102,41 @@ export const orderService = {
   async getOrder(idOrOrderNumber) {
     const res = await apiClient.get(`/api/orders/${idOrOrderNumber}`);
     return res.data || res;
+  },
+
+  /**
+   * T39.4 — daftar pesanan MILIK pelanggan (user login / sesi tamu).
+   * Tanpa fallback data mock; error diteruskan ke pemanggil agar dapat ditampilkan.
+   */
+  async fetchMyOrders(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status && params.status !== 'all') searchParams.append('status', params.status);
+    if (params.search) searchParams.append('search', params.search);
+    if (params.page) searchParams.append('page', params.page);
+    if (params.per_page) searchParams.append('per_page', params.per_page);
+
+    // session_id HANYA untuk tamu. Bila login, biarkan backend scope by user_id
+    // (mengirim session_id saat login membuat backend memakai scoping guest).
+    if (!getStoredToken()) {
+      const sessionId = getCartSessionId();
+      if (sessionId) searchParams.append('session_id', sessionId);
+    }
+
+    const qs = searchParams.toString();
+    const res = await apiClient.get(`/api/orders${qs ? `?${qs}` : ''}`);
+
+    const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+
+    return {
+      data: list,
+      status_counts: res.status_counts || null,
+      meta: res.meta || {
+        current_page: 1,
+        last_page: 1,
+        per_page: list.length,
+        total: list.length,
+      },
+    };
   },
 
   async updateOrderStatus(idOrOrderNumber, statusOrPayload) {

@@ -1421,31 +1421,29 @@ T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [TODO]  [OW
            berjalan tiap 10 menit; logging + health indikator jumlah order kedaluwarsa
            yang dibatalkan; dokumentasi di `render.yaml`/entrypoint + test. [OWNER:A2]
            (Tanpa ini, syarat "tidak bayar -> stok kembali" TIDAK terpenuhi di produksi.)
-    T39.3 [TODO] BE — resume pembayaran idempoten untuk pesanan pending lama:
-           `POST /orders/{id}/snap-token` & `/charge` menolak bila order sudah
-           kedaluwarsa/dibayar (422 jelas), mengizinkan bila masih dalam batas waktu;
-           sinkron `payment_expires_at`; test (termasuk dobel klik). [OWNER:A2]
-    T39.4 [TODO] FE — HALAMAN "PESANAN SAYA" (storefront, `MyOrdersPage.jsx`): daftar
+    T39.3 [DONE] BE — resume pembayaran idempoten untuk pesanan pending lama:
+           `POST /orders/{id}/snap-token` & `/charge` menolak 422 bila order sudah
+           lunas/batal/kedaluwarsa (guard `ensureOrderPayable`), mengizinkan bila masih
+           pending & dalam batas waktu; test `OrderPayabilityTest` (5 skenario). [OWNER:A1]
+    T39.4 [DONE] FE — HALAMAN "PESANAN SAYA" (storefront, `MyOrdersPage.jsx`): daftar
            pesanan milik pelanggan (kartu storefront + badge status & status bayar,
-           total, tanggal, sisa waktu bayar), filter status + pencarian nomor
-           (server-side), paginasi; rute `/orders` + menu storefront (Navbar/
-           UserMenuDropdown) + daftarkan di `VALID_VIEWS`/`getViewFromPathOrHash` +
-           cabang render `App.jsx`; patuh storefront exception (rounded-none, reusable
-           components, Toast). [OWNER:A1]
-    T39.5 [TODO] FE — DETAIL + AKSI BAYAR-ULANG: `MyOrderDetailPage.jsx` (atau reuse
-           `OrderDetailPage` mode pelanggan) dengan: countdown batas bayar, tombol
-           **BAYAR SEKARANG** (Snap popup via `snap-token` untuk Midtrans, atau
-           instruksi VA transfer manual + unggah bukti via `confirm-payment`),
-           polling status, "Lacak", "Batalkan" (bila `can_cancel`), "Pesanan Diterima"
-           (bila shipped/delivered). [OWNER:A1]
-    T39.6 [TODO] FE — STATUS KEDALUWARSA: saat sisa waktu habis -> tampilkan
-           "Dibatalkan (kedaluwarsa)" + keterangan "stok dikembalikan"; refresh status
-           otomatis (polling ringan / on-focus). [OWNER:A1]
-    T39.7 [TODO] TEST — `CustomerOrderLifecycleTest` (BE): checkout -> stok turun ->
-           (waktu dipercepat) `orders:cancel-expired` -> order cancelled + stok KEMBALI
-           + idempoten; lalu bayar -> confirmed/processing -> shipped -> completed.
-           + uji browser Playwright: alur bayar-ulang dari halaman Pesanan Saya
-           (0 console error) + verifikasi stok via API. [OWNER:A1+A2]
+           total, tanggal), filter status + pencarian nomor, paginasi; rute `/orders`
+           + menu storefront (via `onOpenOrders` customer-aware) + `VALID_VIEWS`/
+           `getViewFromPathOrHash`/render `App.jsx`; `orderService.fetchMyOrders`
+           (tanpa fallback mock; `session_id` HANYA untuk tamu). [OWNER:A1]
+    T39.5 [DONE] FE — DETAIL + AKSI BAYAR-ULANG: `MyOrderDetailPage.jsx`: countdown
+           batas bayar, tombol **BAYAR SEKARANG** (Snap popup via `snap-token` untuk
+           Midtrans; instruksi VA/manual via `PaymentInstructionModal`), Lacak,
+           Batalkan (ConfirmationModal), Pesanan Diterima; util bersama
+           `utils/snapLoader.js` (dipakai juga oleh CheckoutPage). [OWNER:A1]
+    T39.6 [DONE] FE — STATUS KEDALUWARSA: countdown habis -> banner "Batas Waktu
+           Pembayaran Lewat" + "stok dikembalikan"; order cancelled -> banner
+           "Pesanan Dibatalkan — stok dikembalikan"; auto-refresh 30 dtk saat
+           pending/confirmed/processing. [OWNER:A1]
+    T39.7 [PARTIAL] TEST — uji browser Playwright A1 SELESAI (MyOrders/Detail/bayar/
+           batal, 0 console error) + `OrderPayabilityTest` (BE, guard bayar).
+           SISA (A2): `CustomerOrderLifecycleTest` (checkout -> stok turun ->
+           auto-cancel -> stok kembali -> bayar -> shipped -> completed). [OWNER:A1+A2]
   ACCEPTANCE (T39):
    (1) Pelanggan melihat SEMUA pesanannya + status bayar & status proses yang jelas.
    (2) Dari halaman Pesanan Saya bisa MELANJUTKAN pembayaran (Snap/VA) tanpa checkout ulang.

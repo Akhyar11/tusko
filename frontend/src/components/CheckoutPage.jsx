@@ -25,6 +25,7 @@ import {
 import { formatRupiah } from '../utils/formatters';
 import { mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import { checkoutService } from '../services/checkoutService';
+import { loadSnapScript } from '../utils/snapLoader';
 import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
@@ -432,25 +433,6 @@ export default function CheckoutPage({
   const [orderSuccessData, setOrderSuccessData] = useState(null);
   const [copiedVa, setCopiedVa] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
-
-  // Muat Snap.js dari URL yang dikonfigurasi admin (G6 — tanpa hardcode).
-  const loadSnapScript = (clientKey, snapUrl) => new Promise((resolve, reject) => {
-    if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
-      resolve(true);
-      return;
-    }
-    if (!snapUrl) {
-      reject(new Error('Snap URL tidak dikonfigurasi.'));
-      return;
-    }
-    const script = document.createElement('script');
-    script.id = 'midtrans-snap-script';
-    script.src = snapUrl;
-    script.setAttribute('data-client-key', clientKey);
-    script.onload = () => resolve(true);
-    script.onerror = () => reject(new Error('Gagal memuat Snap.js.'));
-    document.body.appendChild(script);
-  });
 
   // Polling status pembayaran sampai terminal (paid/expired/cancelled/failed).
   const pollPaymentStatus = async (orderNumber) => {
