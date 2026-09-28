@@ -6,6 +6,20 @@
 import { apiClient } from './apiClient';
 import { getCartSessionId } from './cartService';
 
+/**
+ * Bangun path order TANPA meng-encode '/' menjadi %2F (Apache menolak encoded slash
+ * -> 404). Setiap segmen di-encode, garis miring tetap sebagai pemisah path
+ * sehingga route `/{idOrOrderNumber}` dengan `.*` tetap cocok (mendukung id maupun
+ * order_number seperti INV/20260928/TK/123).
+ */
+function orderPath(ref) {
+  return String(ref ?? '')
+    .split('/')
+    .filter((segment) => segment !== '')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+}
+
 export const checkoutService = {
   /**
    * Buat pesanan dari item yang dipilih / keranjang aktif.
@@ -62,7 +76,7 @@ export const checkoutService = {
    * Kirim konfirmasi transfer manual + bukti (multipart) — T07.2.
    */
   async confirmManualPayment(orderRef, formData) {
-    return await apiClient.post(`/api/orders/${encodeURIComponent(orderRef)}/confirm-payment`, formData);
+    return await apiClient.post(`/api/orders/${orderPath(orderRef)}/confirm-payment`, formData);
   },
 
   /**
@@ -98,7 +112,7 @@ export const checkoutService = {
    * Ambil/regenerate Midtrans Snap token untuk sebuah pesanan.
    */
   async getSnapToken(idOrOrderNumber) {
-    const response = await apiClient.post(`/api/orders/${encodeURIComponent(idOrOrderNumber)}/snap-token`);
+    const response = await apiClient.post(`/api/orders/${orderPath(idOrOrderNumber)}/snap-token`);
     return response.data;
   },
 
@@ -107,7 +121,7 @@ export const checkoutService = {
    */
   async chargeOrder(idOrOrderNumber, paymentMethod) {
     const response = await apiClient.post(
-      `/api/orders/${encodeURIComponent(idOrOrderNumber)}/charge`,
+      `/api/orders/${orderPath(idOrOrderNumber)}/charge`,
       { payment_method: paymentMethod }
     );
     return response.data;
@@ -117,7 +131,7 @@ export const checkoutService = {
    * T07.10: rekonsiliasi status pembayaran dari Midtrans (Cek Status).
    */
   async syncPaymentStatus(idOrOrderNumber) {
-    const response = await apiClient.post(`/api/orders/${encodeURIComponent(idOrOrderNumber)}/sync-payment`);
+    const response = await apiClient.post(`/api/orders/${orderPath(idOrOrderNumber)}/sync-payment`);
     return response.data;
   },
 
