@@ -1,0 +1,27 @@
+name: Tusko Keep-Alive (Render Free Backend)
+
+# Menjaga backend Render Free tetap "hangat" agar tidak spin-down (Render tidur
+# setelah 15 menit tanpa traffic, bangun ~1 menit). Ping `/api/health` tiap 14 menit
+# pada jam operasional 06:00-24:00 WIB (23:00-17:00 UTC) agar tetap di bawah jatah
+# 750 jam instance/bulan (≈540-560 jam/bulan).
+
+on:
+  schedule:
+    - cron: "*/14 0-16,23 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: |
+          set -e
+          URL="${{ vars.TUSKO_HEALTH_URL || 'https://tusko.onrender.com/api/health' }}"
+          echo "Pinging $URL"
+          curl -fsS --max-time 90 --retry 2 --retry-delay 10 -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" "$URL"
