@@ -499,6 +499,11 @@ T06. Checkout & Pengiriman (Multi-kurir KiriminAja/api.co.id) ....... [DONE]  [O
            (skeleton saat memuat) + empty-state asli ("Belum ada alamat pengiriman
            tersimpan" + tombol Tambah Alamat); `handlePayNow` menolak tanpa alamat
            (buka modal alamat). Impor `mockAddresses` dihapus. [OWNER:A1]
+    T06.14 [DONE] CHECKOUT FALLBACK DARI KERANJANG: `checkoutItems` hanya state FE,
+           sehingga reload/navigasi langsung ke `/checkout` menampilkan "tidak ada barang"
+           palsu. Kini App memuat keranjang aktif (`GET /api/cart`) saat masuk view
+           checkout tanpa item (`isLoadingCheckout` -> skeleton "Memuat data checkout…"),
+           lalu mengisi `checkoutItems`. [OWNER:A1]
 
 T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL]  [OWNER:A1]
   DB: orders(midtrans_*, payment_*). [NEW] payments/midtrans_transactions.

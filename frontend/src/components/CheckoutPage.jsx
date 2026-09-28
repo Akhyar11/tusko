@@ -36,6 +36,7 @@ import PaymentInstructionModal from './PaymentInstructionModal';
 
 export default function CheckoutPage({
   checkoutItems = [],
+  isLoading = false,
   onBackToCart = () => {},
   onFinishOrder = () => {},
   availableExpeditions = null,
@@ -584,6 +585,22 @@ export default function CheckoutPage({
       setIsProcessing(false);
     }
   };
+
+  if (isLoading && checkoutItems.length === 0) {
+    return (
+      <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+        <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 space-y-3">
+          <div className="h-5 w-40 bg-neutral-100 animate-pulse" />
+          <div className="h-16 w-full bg-neutral-100 animate-pulse" />
+        </div>
+        <div className="bg-white rounded-none border border-neutral-300 p-5 sm:p-6 space-y-3">
+          <div className="h-4 w-32 bg-neutral-100 animate-pulse" />
+          <div className="h-24 w-full bg-neutral-100 animate-pulse" />
+        </div>
+        <p className="text-center text-xs font-sport font-black uppercase tracking-wider text-neutral-400">Memuat data checkout…</p>
+      </div>
+    );
+  }
 
   if (checkoutItems.length === 0) {
     return (

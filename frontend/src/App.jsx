@@ -478,6 +478,7 @@ export default function App() {
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   const [checkoutItems, setCheckoutItems] = useState([]);
+  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const [lastCompletedOrder, setLastCompletedOrder] = useState(null);
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState(null);
   const [selectedPoForDetail, setSelectedPoForDetail] = useState(null);
@@ -550,6 +551,31 @@ export default function App() {
   useEffect(() => {
     refreshCart();
   }, [currentUser?.id]);
+
+  // Fallback checkout: bila masuk ke view checkout tanpa item terpilih (mis. reload/
+  // navigasi langsung), muat dari keranjang aktif agar checkout tidak "kosong" palsu.
+  useEffect(() => {
+    if (currentView !== 'checkout' || checkoutItems.length > 0) return undefined;
+
+    let active = true;
+    (async () => {
+      setIsLoadingCheckout(true);
+      try {
+        const cartData = await cartService.getCart();
+        if (!active) return;
+        const items = mapCartItems(cartData);
+        if (items.length > 0) setCheckoutItems(items);
+      } catch (err) {
+        console.warn('Gagal memuat keranjang untuk checkout:', err);
+      } finally {
+        if (active) setIsLoadingCheckout(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [currentView, checkoutItems.length]);
 
   const handleSwitchUser = (demoUser) => {
     handleUpdateUser(demoUser);
@@ -2049,6 +2075,7 @@ export default function App() {
         ) : currentView === 'checkout' ? (
           <CheckoutPage
             checkoutItems={checkoutItems}
+            isLoading={isLoadingCheckout}
             availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
             onShowToast={showToast}
