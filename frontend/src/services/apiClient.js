@@ -8,6 +8,26 @@ if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('h
 }
 const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
+/**
+ * Bangun URL absolut menuju backend berdasarkan base URL API (VITE_API_URL).
+ * Dipakai untuk URL yang harus menunjuk backend (mis. webhook Biteship) agar
+ * tetap benar saat backend berada di subfolder (mis. /backend) atau origin lain.
+ * Fallback ke origin browser bila VITE_API_URL tidak diset.
+ */
+export function resolveBackendUrl(path = '') {
+  const normalized = path ? (path.startsWith('/') ? path : `/${path}`) : '';
+
+  if (API_BASE_URL) {
+    return `${API_BASE_URL}${normalized}`;
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}${normalized}`;
+  }
+
+  return normalized;
+}
+
 export const TOKEN_STORAGE_KEY = 'tusko_auth_token';
 export const USER_STORAGE_KEY = 'tusko_auth_user';
 

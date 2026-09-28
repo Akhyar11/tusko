@@ -17,6 +17,7 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { settingsService } from '../services/settingsService';
 import { expeditionService } from '../services/expeditionService';
+import { resolveBackendUrl } from '../services/apiClient';
 
 const TESTABLE_GROUPS = ['shipping', 'payment', 'storage', 'notification'];
 
@@ -258,7 +259,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
                       URL Webhook Biteship
                     </p>
                     <code className="block text-[11px] font-mono text-neutral-700 break-all select-all">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/biteship` : '/api/webhooks/biteship'}
+                      {resolveBackendUrl('/api/webhooks/biteship')}
                     </code>
                     <p className="text-[10px] text-neutral-500 mt-1">
                       Daftarkan URL ini di dashboard Biteship → Integrations → Webhook (event order.status/order.waybill_id/order.price).

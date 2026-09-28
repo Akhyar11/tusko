@@ -1586,6 +1586,11 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [PARTIAL]  
             checkout tarif, booking, lacak, webhook diterima) + bukti `.agent-test-proofs/`
             + catatan konfigurasi (API key & webhook secret via Settings Hub, bukan file).
             [OWNER:A1+A2]
+    T40.13 [DONE] URL WEBHOOK SUBFOLDER (menutup GAP CI/CD A2): `resolveBackendUrl()`
+            di `services/apiClient.js` membentuk URL backend dari `VITE_API_URL`
+            (fallback origin browser); `SystemSettingsHub` menampilkan URL webhook dari
+            helper tsb sehingga benar saat backend di subfolder `/backend` (Hostinger).
+            Bukti browser Playwright (VITE_API_URL=/backend). [OWNER:A1]
   ACCEPTANCE (T40):
    (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
        secret via Settings Hub, lalu menyinkronkan kurir/layanan.
