@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Loader2, MailCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2, MailCheck } from 'lucide-react';
 import { authService } from '../../services/authService';
 
 /**
  * Organism: EmailVerificationBanner
- * Menampilkan peringatan + aksi kirim ulang verifikasi untuk akun yang
- * belum memverifikasi email (email_verified_at null). Tidak tampil jika terverifikasi.
+ * Peringatan ramping + aksi kirim ulang verifikasi untuk akun yang belum
+ * memverifikasi email (email_verified_at null). Tidak tampil jika terverifikasi.
  */
 export default function EmailVerificationBanner({ user, onShowToast = () => {} }) {
   const [isSending, setIsSending] = useState(false);
@@ -30,46 +30,43 @@ export default function EmailVerificationBanner({ user, onShowToast = () => {} }
 
   if (isSent) {
     return (
-      <div className="mb-6 p-4 sm:p-5 bg-emerald-50 border-l-4 border-emerald-600 rounded-none flex items-start gap-3">
-        <MailCheck size={20} className="text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-sport font-black uppercase tracking-wider text-emerald-800">
-            Tautan Verifikasi Terkirim
-          </p>
-          <p className="text-xs text-emerald-800 mt-1">
-            Silakan periksa kotak masuk email <strong>{user.email}</strong> dan klik tautan verifikasi.
-          </p>
-        </div>
+      <div className="mb-6 flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 border-l-2 border-l-emerald-600 rounded-none px-4 py-3">
+        <MailCheck size={16} className="text-emerald-600 shrink-0" />
+        <p className="text-[11px] sm:text-xs text-emerald-800">
+          <span className="font-sport font-black uppercase tracking-wider">Tautan verifikasi terkirim</span>
+          <span className="mx-1.5 text-emerald-300">•</span>
+          Cek kotak masuk <strong>{user.email}</strong>.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="mb-6 p-4 sm:p-5 bg-amber-50 border-l-4 border-amber-500 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div className="flex items-start gap-3">
-        <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-sport font-black uppercase tracking-wider text-amber-900">
-            Email Belum Diverifikasi
-          </p>
-          <p className="text-xs text-amber-800 mt-1">
-            Verifikasi email <strong>{user.email}</strong> untuk mengamankan akun dan menerima notifikasi pesanan.
-          </p>
-        </div>
+    <div className="mb-6 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4 bg-white border border-neutral-300 border-l-2 border-l-amber-500 rounded-none px-4 py-3">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <AlertCircle size={16} className="text-amber-500 shrink-0" />
+        <p className="text-[11px] sm:text-xs text-neutral-700 truncate">
+          <span className="font-sport font-black uppercase tracking-wider text-neutral-950">Email belum diverifikasi</span>
+          <span className="mx-1.5 text-neutral-300">•</span>
+          <span className="text-neutral-600">{user.email}</span>
+        </p>
       </div>
       <button
         type="button"
         onClick={handleResend}
         disabled={isSending}
-        className="shrink-0 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+        className="sm:ml-auto shrink-0 inline-flex items-center gap-1 text-[11px] font-sport font-black uppercase tracking-wider text-neutral-950 hover:text-amber-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSending ? (
           <>
-            <Loader2 size={14} className="animate-spin" />
-            <span>Mengirim...</span>
+            <Loader2 size={13} className="animate-spin" />
+            <span>Mengirim…</span>
           </>
         ) : (
-          <span>Kirim Ulang Verifikasi</span>
+          <>
+            <span>Kirim ulang verifikasi</span>
+            <ArrowRight size={13} />
+          </>
         )}
       </button>
     </div>

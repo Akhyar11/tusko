@@ -924,6 +924,11 @@ T26. Auth Pelanggan ................................................ [DONE]  [OW
     T26.2 [DONE] Backend verifikasi email (signed URL) + resend + test.
     T26.3 [DONE] FE Forgot/Reset password pages + wiring (StorefrontAuthLayout, form reusable).
     T26.4 [DONE] FE verifikasi email (banner global + kirim ulang) + halaman /email-verified.
+    T26.6 [DONE] REDESAIN BANNER VERIFIKASI EMAIL: dari blok amber penuh + tombol amber
+           besar menjadi kartu putih ramping (`border-l-2 border-l-amber-500`) satu baris
+           (ikon + label + email) dengan aksi link-style "Kirim ulang verifikasi ->",
+           plus state mengirim (spinner) & state terkirim (emerald ramping).
+           [OWNER:A1]
     T26.5 [DONE] Merge keranjang guest (session_id) -> user saat login + test (CartService).
 
 T27. Pesanan Sisi Pelanggan ........................................ [DONE]  [OWNER:A2]
