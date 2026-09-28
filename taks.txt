@@ -1056,15 +1056,20 @@ T29. Retur & Refund ................................................ [DONE]  [OW
            ReturnRequestPage (dari OrderDetail), ReturnListPage+FilterDrawer,
            ReturnDetailPage (approve/reject/refund) + menu + E2E.
 
-T30. Scheduler & Queue ............................................. [TODO]  [OWNER:A2]
+T30. Scheduler & Queue ............................................. [PARTIAL]  [OWNER:A2]
   DB: jobs (infra), orders.expires_at, stock_reservations.expires_at,
       loyalty_points_ledger.expires_at.
   API: -.
-  Test: [NEW] SchedulerJobTest.
+  Test: [NEW] SchedulerJobTest + SchedulerConfigurationTest.
   Minor:
     T30.1 [DONE] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
     T30.2 [DONE] Scheduled: auto-cancel order expired + release reservasi (T13.3).
     T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
+    T30.4 [DONE] SCHEDULER SHARED HOSTING (Hostinger, tanpa Supervisor): `routes/console.php`
+           menjalankan `queue:work database --stop-when-empty --max-time=50 --memory=128
+           --tries=3` tiap menit (`withoutOverlapping(10)` + `runInBackground`), prune
+           failed/batches, `orders:cancel-expired`, `expeditions:sync`; logging ringkas
+           onSuccess/onFailure via `Log`; test `SchedulerConfigurationTest`. [OWNER:A2]
 
 T31. Loyalitas Lengkap (TANPA TIER — semua member flat) ........... [PARTIAL]  [OWNER:A1]
   DB: loyalty_points_ledger, users.points, orders.loyalty_points_*,
