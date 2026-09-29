@@ -43,4 +43,12 @@ return [
         'enabled' => env('TURNSTILE_ENABLED', false),
     ],
 
+    // T41: Login Google (OAuth 2.0). Nilai produksi diambil dari Settings Hub
+    // (integrations) saat runtime; blok ini hanya fallback env untuk dev.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URL'),
+    ],
+
 ];

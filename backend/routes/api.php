@@ -29,6 +29,11 @@ Route::prefix('auth')->group(function () {
         ->middleware('signed')
         ->name('verification.verify');
     Route::get('/menus', [MenuController::class, 'forUser'])->middleware('auth.optional');
+    // T41: login sosial Google (OAuth 2.0) — publik.
+    Route::get('/config', [\App\Http\Controllers\Api\GoogleAuthController::class, 'config']);
+    Route::get('/google/redirect', [\App\Http\Controllers\Api\GoogleAuthController::class, 'redirect'])->middleware('throttle:20,1');
+    Route::get('/google/callback', [\App\Http\Controllers\Api\GoogleAuthController::class, 'callback'])->middleware('throttle:30,1');
+    Route::post('/google/exchange', [\App\Http\Controllers\Api\GoogleAuthController::class, 'exchange'])->middleware('throttle:20,1');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/email/resend', [AuthController::class, 'resendVerificationEmail']);
         Route::post('/logout', [AuthController::class, 'logout']);

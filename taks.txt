@@ -1635,7 +1635,7 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
     T40.6 -> T06.5 ; T40.7 -> T10.1 ; T40.8 -> T10.4/T30.3 ; T40.9 -> T07.5 (pola webhook);
      T40.2 -> T12.1d/T06.5.
 
-T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [TODO]  [OWNER:A1]
+T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [PARTIAL]  [OWNER:A1]
   LATAR BELAKANG (permintaan user 2026-09-29):
    - Tombol "Masuk dengan Google" di `LoginPage.jsx` saat ini MOCK: `handleSocialLogin`
      login memakai password demo hardcoded. Belum ada OAuth nyata, tanpa route/controller
@@ -1677,19 +1677,19 @@ T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [TODO]  [OW
    - Playwright Python: tombol Google menuju endpoint redirect backend; callback tukar code
      (di-mock) -> login berhasil; 0 console error.
   Minor:
-    T41.1 [TODO] SETTINGS: grup `auth` di `SettingsRegistry` (google_enabled/client_id/secret/
+    T41.1 [DONE] SETTINGS: grup `auth` di `SettingsRegistry` (google_enabled/client_id/secret/
            redirect_url/allowed_redirect_origins) + endpoint publik `GET /api/auth/config`;
            secret terenkripsi; test SettingsRegistry/SettingsApi. [OWNER:A1]
-    T41.2 [TODO] DEPENDENSI & CONFIG: `composer require laravel/socialite`; blok `services.google`
+    T41.2 [DONE] DEPENDENSI & CONFIG: `composer require laravel/socialite`; blok `services.google`
            (fallback env dev); `GoogleAuthService` menyuntik config dari `SettingsService` saat
            runtime (G6). [OWNER:A1]
-    T41.3 [TODO] MIGRASI & MODEL: tabel `social_accounts` + relasi `User::socialAccounts()` +
+    T41.3 [DONE] MIGRASI & MODEL: tabel `social_accounts` + relasi `User::socialAccounts()` +
            `SocialAccount` model; migrasi up/down + test. [OWNER:A1]
-    T41.4 [TODO] ENDPOINT REDIRECT & CALLBACK: `GoogleAuthController@redirect` (whitelist
+    T41.4 [DONE] ENDPOINT REDIRECT & CALLBACK: `GoogleAuthController@redirect` (whitelist
            `redirect_uri` + state/PKCE) & `@callback` (findOrCreate user via email verified;
            isi `email_verified_at`; link `social_accounts`; tolak akun nonaktif 403; audit log G9;
            merge guest cart via `CartService`) -> 302 dengan one-time code. [OWNER:A1]
-    T41.5 [TODO] ONE-TIME CODE & EXCHANGE: simpan code di cache (`CACHE_STORE=database`, TTL 60 dtk,
+    T41.5 [DONE] ONE-TIME CODE & EXCHANGE: simpan code di cache (`CACHE_STORE=database`, TTL 60 dtk,
            sekali pakai) + `POST /api/auth/google/exchange` mengembalikan Sanctum token (pola
            `AuthController::login` + `formatUserResponse`). [OWNER:A1]
     T41.6 [TODO] FE: `authService` (googleRedirectUrl/exchangeGoogleCode), `LoginPage`/`RegisterPage`
