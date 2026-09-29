@@ -505,10 +505,9 @@ export default function App() {
   const authIsAdmin = useMenuStore((state) => state.isAdmin);
 
   useEffect(() => {
-    // Storefront menu bersifat PUBLIK (T37.4/T37.8): muat juga untuk tamu.
-    if (!currentUser) {
-      resetAuthMenus();
-    }
+    // Reset dulu agar guard tidak memakai menu lama (mis. status tamu) sebelum
+    // menu user terbaru selesai dimuat — mencegah "Akses ditolak" palsu saat login admin.
+    resetAuthMenus();
     fetchAuthMenus();
   }, [currentUser?.id, fetchAuthMenus, resetAuthMenus]);
 
@@ -601,7 +600,11 @@ export default function App() {
   useEffect(() => {
     if (!currentUser || !authMenusLoaded) return;
     if (!ADMIN_CORE_VIEWS.includes(currentView)) return;
-    if (authIsAdmin && isViewAllowedByMenus(currentView, authAdminMenus)) return;
+
+    // Superadmin (role 'admin') selalu boleh masuk (konsisten dgn backend isAdmin()
+    // yang fallback ke role==='admin'); role admin lain mengikuti cakupan menu.
+    const isSuperAdmin = currentUser?.role === 'admin';
+    if (isSuperAdmin || (authIsAdmin && isViewAllowedByMenus(currentView, authAdminMenus))) return;
 
     showToast('Akses ditolak. Halaman ini tidak tersedia untuk peran Anda.', { type: 'error' });
     setCurrentView('catalog');
@@ -1330,10 +1333,10 @@ export default function App() {
       }
     }
 
-    // Jika akun adalah admin, alihkan langsung ke /admin/dashboard
+    // Jika akun adalah admin, alihkan langsung ke dashboard admin.
     if (user?.role === 'admin') {
       setPendingCartAction(null);
-      setCurrentView('products-admin');
+      setCurrentView('admin-dashboard');
       window.history.pushState(null, '', '/admin/dashboard');
       return;
     }
