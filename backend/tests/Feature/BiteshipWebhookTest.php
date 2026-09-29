@@ -132,16 +132,28 @@ class BiteshipWebhookTest extends TestCase
         $this->assertSame(1, ShippingWebhookEvent::count());
     }
 
-    public function test_unknown_event_rejected_with_422(): void
+    public function test_unknown_event_acknowledged_and_ignored(): void
     {
         $this->configureBiteship();
 
         $this->postJson('/api/webhooks/biteship', ['event' => 'order.unknown', 'order_id' => 'bsh_order_123'])
-            ->assertStatus(422);
+            ->assertStatus(200)
+            ->assertJsonPath('ignored', true);
 
         $this->assertDatabaseHas('shipping_webhook_events', [
             'event' => 'order.unknown',
             'status' => 'ignored',
         ]);
+    }
+
+    public function test_installation_handshake_returns_ok_despite_signature(): void
+    {
+        // Saat pemasangan webhook, Biteship mengirim request uji body kosong
+        // (tanpa signature) dan menuntut balasan 2xx.
+        $this->configureBiteship(true);
+
+        $this->postJson('/api/webhooks/biteship', [])
+            ->assertStatus(200)
+            ->assertJsonPath('status', 'ok');
     }
 }

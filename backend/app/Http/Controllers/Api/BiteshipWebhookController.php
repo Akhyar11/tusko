@@ -22,17 +22,28 @@ class BiteshipWebhookController extends Controller
         BiteshipClient $client,
         BiteshipWebhookService $service
     ): JsonResponse {
+        $payload = $request->all();
+
+        // Handshake pemasangan webhook dari dashboard Biteship mengirim body
+        // kosong (tanpa `event`) dan menuntut balasan 2xx. Verifikasi signature
+        // tidak berlaku untuk handshake ini; event asli selalu menyertakan `event`.
+        if (! isset($payload['event']) || $payload['event'] === '') {
+            return response()->json(['status' => 'ok']);
+        }
+
         if (! $this->signatureValid($request, $client)) {
             return response()->json(['message' => 'Signature webhook tidak valid.'], 403);
         }
 
-        $result = $service->handle($request->all(), true);
+        $result = $service->handle($payload, true);
 
         return match ($result['status']) {
+            // Event tak dikenal tetap dibalas 2xx agar Biteship tidak menganggap
+            // pengiriman gagal/berulang; tetap dicatat sebagai `ignored`.
             'unknown' => response()->json([
-                'status' => 'ignored',
-                'message' => 'Event webhook tidak dikenal.',
-            ], 422),
+                'status' => 'ok',
+                'ignored' => true,
+            ]),
             'duplicate' => response()->json([
                 'status' => 'ok',
                 'duplicate' => true,
