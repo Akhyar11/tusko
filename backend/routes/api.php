@@ -98,6 +98,7 @@ Route::prefix('expeditions')->group(function () {
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware(['auth.optional', 'throttle:checkout']);
 Route::get('/checkout/config', [\App\Http\Controllers\Api\CheckoutController::class, 'config'])->middleware('auth.optional');
 Route::get('/store/profile', [\App\Http\Controllers\Api\StoreProfileController::class, 'show']);
+Route::get('/storefront/navbar', [\App\Http\Controllers\Api\StorefrontController::class, 'navbar']);
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
 Route::get('/shipping/services', [\App\Http\Controllers\Api\ShippingRateController::class, 'localServices'])->middleware('auth.optional');
 Route::get('/shipping/areas', [\App\Http\Controllers\Api\ShippingRateController::class, 'areas'])->middleware('auth.optional');

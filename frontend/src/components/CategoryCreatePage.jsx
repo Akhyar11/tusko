@@ -22,6 +22,7 @@ import FormTipsPanel from './organisms/FormTipsPanel';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
+import Checkbox from './molecules/Checkbox';
 import IconButton from './atoms/IconButton';
 
 export default function CategoryCreatePage({
@@ -33,6 +34,10 @@ export default function CategoryCreatePage({
   const [slug, setSlug] = useState('');
   const [icon, setIcon] = useState('Shirt');
   const [description, setDescription] = useState('');
+  const [parentId, setParentId] = useState('');
+  const [sortOrder, setSortOrder] = useState('0');
+  const [isNavbar, setIsNavbar] = useState(true);
+  const [isActive, setIsActive] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -60,7 +65,11 @@ export default function CategoryCreatePage({
         name: name.trim(),
         slug: slug.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         icon: icon || 'Tag',
-        description: description.trim()
+        description: description.trim(),
+        parent_id: parentId || null,
+        sort_order: Number(sortOrder) || 0,
+        is_navbar: isNavbar,
+        is_active: isActive,
       };
 
       const created = await categoryService.createCategory(payload);
@@ -96,7 +105,7 @@ export default function CategoryCreatePage({
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
       {/* Form Card */}
-      <div className="bg-white border border-neutral-300 rounded-none shadow-xs p-6 sm:p-8 lg:col-span-3">
+      <div className="bg-white border border-neutral-300 rounded-none shadow-2xs p-5 sm:p-6 lg:col-span-3">
         <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
           {errorMessage && (
             <div className="p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 rounded-none flex items-center justify-between animate-in fade-in duration-150">
@@ -174,6 +183,47 @@ export default function CategoryCreatePage({
               onChange={setDescription}
               placeholder="Penjelasan ringkas jenis produk dan perlengkapan dalam kategori ini..."
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+              Kategori Induk (Opsional)
+            </label>
+            <ServerSideSelect
+              value={parentId}
+              onChange={(val) => setParentId(val || '')}
+              loadOptions={(search, page) => categoryService.loadOptions(search, page)}
+              placeholder="Pilih kategori induk (kosong = kategori utama)..."
+              isClearable
+            />
+            <span className="text-[11px] text-neutral-500 mt-1 block">
+              Pilih induk agar kategori ini menjadi submenu navbar (mis. Sepatu → Sepatu Lari).
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                Urutan Tampil
+              </label>
+              <TextInput
+                type="number"
+                value={sortOrder}
+                onChange={setSortOrder}
+                placeholder="0"
+                weight="mono"
+              />
+            </div>
+            <div className="sm:col-span-2 flex items-end gap-3">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <Checkbox checked={isNavbar} onChange={setIsNavbar} ariaLabel="Tampilkan di navbar" />
+                <span className="text-xs font-bold text-neutral-800">Tampilkan di navbar</span>
+              </label>
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <Checkbox checked={isActive} onChange={setIsActive} ariaLabel="Kategori aktif" />
+                <span className="text-xs font-bold text-neutral-800">Aktif</span>
+              </label>
+            </div>
           </div>
 
           {/* Action Buttons */}

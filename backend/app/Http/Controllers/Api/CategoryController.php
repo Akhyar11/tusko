@@ -68,6 +68,9 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
+            'sort_order' => 'nullable|integer|min:0',
+            'is_active' => 'nullable|boolean',
+            'is_navbar' => 'nullable|boolean',
         ]);
 
         if (empty($validated['slug'])) {
@@ -129,7 +132,16 @@ class CategoryController extends Controller
             ],
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
+            'sort_order' => 'nullable|integer|min:0',
+            'is_active' => 'nullable|boolean',
+            'is_navbar' => 'nullable|boolean',
         ]);
+
+        if (array_key_exists('parent_id', $validated) && $this->wouldCreateCycle($category, $validated['parent_id'] ? (int) $validated['parent_id'] : null)) {
+            return response()->json([
+                'message' => 'Kategori induk tidak valid (membentuk siklus).',
+            ], 422);
+        }
 
         if (isset($validated['name']) && empty($validated['slug'])) {
             $baseSlug = Str::slug($validated['name']);
@@ -176,5 +188,28 @@ class CategoryController extends Controller
         return response()->json([
             'message' => 'Kategori berhasil dihapus.',
         ]);
+    }
+
+    /**
+     * Cegah siklus hierarki: parent tidak boleh dirinya sendiri atau turunannya.
+     */
+    private function wouldCreateCycle(Category $category, ?int $parentId): bool
+    {
+        if (! $parentId) {
+            return false;
+        }
+
+        $current = Category::find($parentId);
+        $guard = 0;
+
+        while ($current && $guard < 50) {
+            if ((int) $current->id === (int) $category->id) {
+                return true;
+            }
+            $current = $current->parent_id ? Category::find($current->parent_id) : null;
+            $guard++;
+        }
+
+        return false;
     }
 }

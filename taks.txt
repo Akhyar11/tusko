@@ -1790,6 +1790,65 @@ T42. Kepatuhan Storefront & Onboarding Midtrans .................... [PARTIAL]  
   DEPENDENSI: T42.1 -> T36/T21.1 (settings) ; T42.2 -> T42.1 ; T42.3 -> T42.1/T42.2 ;
     T42.4 -> T07/T28 (checkout) ; T42.6 -> T22 (QA).
 
+T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [PARTIAL]  [OWNER:A1]
+  LATAR BELAKANG (permintaan user 2026-09-29):
+   - Seluruh halaman depan (header→footer) masih hardcode: navbar (Koleksi/Outlet/mini-menu),
+     HeroCampaignBanner, PopularChipsBar, SportCategoriesSection, TuskoClubBanner,
+     ProductGrid headings, Footer categories.
+   - Navbar WAJIB berupa DAFTAR KATEGORI berjenjang (mega-menu spt adidas.co.id) yang
+     dapat diatur admin (kategori + subkategori), BUKAN konten statis storefront.
+   - Semua konten lain 100% dinamis dari Settings Hub; gambar di-upload ke R2 (D7).
+  DB:
+   - categories [NEW col]: sort_order(int default 0), is_active(bool default 1),
+     is_navbar(bool default 1). parent_id sudah ada.
+   - [NEW settings grup `storefront`]: announcement_enabled/text, search_placeholder,
+     hero_enabled/badge/title/subtitle/cta_primary/cta_secondary/image_url/image_alt/price_badge,
+     popular_enabled/heading/chips(json), sports_enabled/heading/subheading/cards(json),
+     promo_enabled/banners(json), club_enabled/badge/title/subtitle/cta,
+     catalog_heading, footer_categories(csv slug).
+  API:
+   - [NEW] GET /api/storefront/navbar (publik) -> pohon kategori (induk+anak, is_navbar & is_active, urut sort_order).
+   - [NEW] GET /api/storefront/content (publik) -> seluruh nilai grup `storefront` (parse JSON, tanpa secret).
+   - [NEW admin] POST /api/admin/storefront/image (upload gambar -> Storage/R2 publik, simpan URL) + DELETE.
+   - CategoryController index/store/update: dukung sort_order, is_active, is_navbar, parent_id
+     (validasi anti-cycle/self-parent).
+  FE:
+   - `Navbar.jsx` dirender dari `/api/storefront/navbar`: item induk + mega dropdown anak
+     (mirip adidas), klik -> filter katalog; hapus hardcode Koleksi/Outlet/mini-menu; announcement
+     dari storefront content; placeholder search dinamis.
+   - `storefrontService` (navbar + content) + upload gambar admin.
+   - Hero/Popular/Sports/Promo/Club/ProductGrid headings/Footer categories dirender dari API
+     (fallback default bila setting kosong).
+   - Halaman admin `StorefrontContentPage.jsx` (aturan 23/24/25: halaman terpisah + FormTipsPanel,
+     repeater list & upload gambar R2) + menu master `menus` + rute `App.jsx` + feature flag.
+   - Master Kategori (Create/Edit): tambah Induk Kategori (ServerSideSelect), sort_order,
+     is_navbar, is_active.
+  Test: [NEW] StorefrontNavbarApiTest, StorefrontContentApiTest, StorefrontImageUploadTest,
+        CategoryHierarchyTest + Playwright Python (ubah setting/navbar -> halaman depan berubah).
+  Minor:
+    T43.1 [DONE] DB & MASTER KATEGORI: migrasi kolom categories + form Create/Edit (parent,
+           sort_order, is_navbar, is_active) + validasi anti-cycle + test. [OWNER:A1]
+    T43.2 [PARTIAL] API NAVBAR & CONTENT: `GET /api/storefront/navbar` DONE;
+           `GET /api/storefront/content` + upload gambar admin MASIH TODO. [OWNER:A1]
+    T43.3 [DONE] FE NAVBAR MEGA-MENU: render pohon kategori + dropdown + announcement/search
+           dinamis; hapus hardcode. [OWNER:A1]
+    T43.4 [TODO] HALAMAN ADMIN STOREFRONT CONTENT + repeater + upload R2 + menu + rute. [OWNER:A1]
+    T43.5 [TODO] FE KONTEN: Hero/Popular/Sports/Promo/Club/ProductGrid headings/Footer categories
+           dinamis (fallback default). [OWNER:A1]
+    T43.6 [TODO] BERSIHKAN KODE MATI: hapus PromoBanner/CategoryBar bila tak dipakai. [OWNER:A1]
+    T43.7 [TODO] TEST & BUKTI: suite backend + Playwright Python + `npm run build`. [OWNER:A1]
+  ACCEPTANCE (T43):
+   (1) Navbar = pohon kategori yang bisa diatur admin (induk/sub, urutan, aktif, tampil).
+   (2) Seluruh teks/gambar halaman depan diubah dari Settings Hub tanpa deploy.
+   (3) Gambar di-upload ke Storage (R2), bukan URL hardcode.
+   (4) Tanpa hardcode konten di komponen; fallback default aman bila setting kosong.
+   (5) Test 100% + build + bukti Playwright.
+  KEPUTUSAN DIBUTUHKAN:
+   - Klik kategori: filter katalog di home (default) vs halaman `/kategori/{slug}`.
+   - Link kustom navbar (Outlet/Promo) opsional.
+  DEPENDENSI: T43.1 -> T04 ; T43.2 -> T43.1/T42.1 ; T43.3 -> T43.2/T37 ; T43.4 -> T36/T21.3(D7) ;
+    T43.5 -> T42.1/T43.2.
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================

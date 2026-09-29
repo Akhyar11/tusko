@@ -18,6 +18,15 @@ class Category extends Model
         'parent_id',
         'icon',
         'description',
+        'sort_order',
+        'is_active',
+        'is_navbar',
+    ];
+
+    protected $casts = [
+        'sort_order' => 'integer',
+        'is_active' => 'boolean',
+        'is_navbar' => 'boolean',
     ];
 
     public function parent(): BelongsTo

@@ -52,12 +52,15 @@ export default function Navbar({
   onLogout = () => {},
   onSwitchUser = () => {},
   storefrontMenus = [],
-  onNavigateStorefrontMenu = () => {}
+  onNavigateStorefrontMenu = () => {},
+  navCategories = [],
+  onNavigateCategory = () => {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategoryTab, setActiveCategoryTab] = useState('Semua');
+  const [openNavId, setOpenNavId] = useState(null);
   const [freeShippingMin, setFreeShippingMin] = useState(0);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
@@ -152,6 +155,14 @@ export default function Navbar({
       const el = document.getElementById('product-catalog');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleNavCategorySelect = (cat) => {
+    setActiveCategoryTab(cat?.name || 'Semua');
+    setOpenNavId(null);
+    onNavigateCategory(cat);
+    const el = document.getElementById('product-catalog');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   const renderSuggestionsDropdown = () => {
@@ -295,70 +306,43 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* Center: Desktop Navigation Categories (Desktop Only) */}
+          {/* Center: Desktop Navigation Categories (dinamis dari kategori) */}
           <nav className="hidden lg:flex items-center gap-7 xl:gap-9 font-sport font-black text-sm uppercase tracking-wider">
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Pria')}
-              className={`pb-1 transition-all cursor-pointer ${
-                activeCategoryTab === 'Pria' 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
-              }`}
-            >
-              Pria
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Wanita')}
-              className={`pb-1 transition-all cursor-pointer ${
-                activeCategoryTab === 'Wanita' 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
-              }`}
-            >
-              Wanita
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Anak')}
-              className={`pb-1 transition-all cursor-pointer ${
-                activeCategoryTab === 'Anak' 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
-              }`}
-            >
-              Anak
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Olahraga')}
-              className={`pb-1 transition-all cursor-pointer ${
-                activeCategoryTab === 'Olahraga' 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
-              }`}
-            >
-              Olahraga
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Koleksi')}
-              className={`pb-1 transition-all cursor-pointer ${
-                activeCategoryTab === 'Koleksi' 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
-              }`}
-            >
-              Koleksi
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavCategoryClick('Sale')}
-              className="text-red-600 hover:text-red-700 border-b-2 border-transparent hover:border-red-600 pb-1 transition-all cursor-pointer"
-            >
-              Outlet / Sale
-            </button>
+            {navCategories.map((cat) => (
+              <div
+                key={cat.id}
+                className="relative"
+                onMouseEnter={() => setOpenNavId(cat.id)}
+                onMouseLeave={() => setOpenNavId((prev) => (prev === cat.id ? null : prev))}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleNavCategorySelect(cat)}
+                  className={`pb-1 transition-all cursor-pointer ${
+                    activeCategoryTab === cat.name
+                      ? 'text-black border-b-2 border-black'
+                      : 'text-neutral-700 hover:text-black border-b-2 border-transparent hover:border-black'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+
+                {openNavId === cat.id && Array.isArray(cat.children) && cat.children.length > 0 && (
+                  <div className="absolute left-0 top-full mt-2 min-w-[220px] bg-white border border-neutral-200 shadow-2xl z-50 py-2">
+                    {cat.children.map((child) => (
+                      <button
+                        key={child.id}
+                        type="button"
+                        onClick={() => handleNavCategorySelect(child)}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-100 hover:text-black transition-colors cursor-pointer"
+                      >
+                        {child.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </nav>
 
           {/* Right: Header Actions */}
@@ -628,38 +612,51 @@ export default function Navbar({
                     KATEGORI PRODUK
                   </span>
                   <div className="space-y-1">
-                    {[
-                      { name: 'Semua Produk', actionName: 'Semua', isSale: false },
-                      { name: 'Pria', actionName: 'Pria', isSale: false },
-                      { name: 'Wanita', actionName: 'Wanita', isSale: false },
-                      { name: 'Anak', actionName: 'Anak', isSale: false },
-                      { name: 'Sepatu Olahraga', actionName: 'Sepatu', isSale: false },
-                      { name: 'Jersey & Apparel', actionName: 'Jersey', isSale: false },
-                      { name: 'Peralatan & Gym', actionName: 'Gym', isSale: false },
-                      { name: 'Outlet & Sale', actionName: 'Sale', isSale: true, badge: 'HEMAT 50%' }
-                    ].map((item) => (
-                      <button
-                        key={item.name}
-                        type="button"
-                        onClick={() => {
-                          handleNavCategoryClick(item.actionName);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer ${
-                          item.isSale 
-                            ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                            : 'hover:bg-neutral-100 text-neutral-900'
-                        }`}
-                      >
-                        <span>{item.name}</span>
-                        {item.badge ? (
-                          <span className="text-[9px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded-none">
-                            {item.badge}
-                          </span>
-                        ) : (
+                    <button
+                      key="all-products"
+                      type="button"
+                      onClick={() => {
+                        onSelectCategory(null);
+                        onSearchChange('');
+                        setIsMobileMenuOpen(false);
+                        setActiveCategoryTab('Semua');
+                      }}
+                      className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer hover:bg-neutral-100 text-neutral-900"
+                    >
+                      <span>Semua Produk</span>
+                      <ChevronRight size={15} className="text-neutral-400" />
+                    </button>
+                    {navCategories.map((cat) => (
+                      <div key={cat.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleNavCategorySelect(cat);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between py-2.5 px-3 rounded-none text-left font-sport font-black text-xs uppercase tracking-wide transition-colors cursor-pointer hover:bg-neutral-100 text-neutral-900"
+                        >
+                          <span>{cat.name}</span>
                           <ChevronRight size={15} className="text-neutral-400" />
+                        </button>
+                        {Array.isArray(cat.children) && cat.children.length > 0 && (
+                          <div className="pl-4">
+                            {cat.children.map((child) => (
+                              <button
+                                key={child.id}
+                                type="button"
+                                onClick={() => {
+                                  handleNavCategorySelect(child);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full flex items-center py-2 px-3 rounded-none text-left text-xs font-bold text-neutral-600 hover:bg-neutral-100 hover:text-black transition-colors cursor-pointer"
+                              >
+                                <span>{child.name}</span>
+                              </button>
+                            ))}
+                          </div>
                         )}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>

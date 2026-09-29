@@ -20,6 +20,7 @@ import LoginPage from './components/LoginPage';
 import AuthCallbackPage from './components/AuthCallbackPage';
 import LegalPage from './components/LegalPage';
 import { storeService } from './services/storeService';
+import { storefrontService } from './services/storefrontService';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
@@ -529,11 +530,16 @@ export default function App() {
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   // T42: profil toko dinamis (dari Settings Hub) untuk footer & halaman legal.
   const [storeProfile, setStoreProfile] = useState({});
+  // T43: pohon kategori navbar (dinamis, diatur admin).
+  const [navCategories, setNavCategories] = useState([]);
 
   useEffect(() => {
     let active = true;
     storeService.getStoreProfile()
       .then((profile) => { if (active) setStoreProfile(profile || {}); })
+      .catch(() => {});
+    storefrontService.getNavbar()
+      .then((tree) => { if (active) setNavCategories(Array.isArray(tree) ? tree : []); })
       .catch(() => {});
     return () => { active = false; };
   }, []);
@@ -1463,6 +1469,11 @@ export default function App() {
           onSearchChange={handleSearchChange}
           selectedCategory={selectedCategoryId}
           onSelectCategory={handleSelectCategory}
+          navCategories={navCategories}
+          onNavigateCategory={(cat) => {
+            setSearchQuery('');
+            setSelectedCategoryId(cat?.id ?? null);
+          }}
           products={products}
           onSelectProduct={handleSelectProduct}
           onResetHome={handleResetHome}
