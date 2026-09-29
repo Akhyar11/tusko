@@ -21,6 +21,16 @@ import { resolveBackendUrl } from '../services/apiClient';
 
 const TESTABLE_GROUPS = ['shipping', 'payment', 'storage', 'notification'];
 
+// Field khusus tiap provider logistik: form hanya menampilkan field yang relevan
+// dengan provider yang dipilih agar tidak membingungkan pengguna (T40 UI/UX).
+const SHIPPING_GENERIC_KEYS = new Set([
+  'shipping.base_url',
+  'shipping.api_key',
+  'shipping.origin',
+  'shipping.origin_district_code',
+]);
+const SHIPPING_BITESHIP_PREFIX = 'shipping.biteship_';
+
 /**
  * SystemSettingsHub — Pengaturan Sistem Terpusat (T36.9).
  * Satu entitas, navigasi SECTION vertikal (bukan tab), form kanonis 3/4 + panel tips.
@@ -176,6 +186,17 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
     );
   };
 
+  // Saring field Pengiriman sesuai provider terpilih (T40 UI/UX).
+  const selectedProvider = values['shipping.provider'];
+  const visibleFields = activeGroup === 'shipping'
+    ? fields.filter((field) => {
+        const isBiteshipField = field.key.startsWith(SHIPPING_BITESHIP_PREFIX);
+        return selectedProvider === 'biteship'
+          ? !SHIPPING_GENERIC_KEYS.has(field.key)
+          : !isBiteshipField;
+      })
+    : fields;
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Header form kanonis (Aturan 25) */}
@@ -232,11 +253,11 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
 
             {loading ? (
               <p className="text-xs text-neutral-500">Memuat pengaturan...</p>
-            ) : fields.length === 0 ? (
+            ) : visibleFields.length === 0 ? (
               <p className="text-xs text-neutral-500">Tidak ada field pada grup ini.</p>
             ) : (
               <div className="space-y-5">
-                {fields.map((field) => (
+                {visibleFields.map((field) => (
                   <div key={field.key}>
                     <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                       {field.label}
