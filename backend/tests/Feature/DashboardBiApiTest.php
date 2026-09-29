@@ -6,7 +6,6 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\MasterReferenceSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
@@ -21,7 +20,6 @@ class DashboardBiApiTest extends TestCase
         parent::setUp();
         Cache::flush();
         $this->seed(MasterReferenceSeeder::class);
-        $this->seed(SettingsSeeder::class);
     }
 
     public function test_admin_gets_bi_summary(): void

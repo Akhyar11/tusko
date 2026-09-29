@@ -62,12 +62,11 @@ mkdir -p storage/framework/cache/data storage/framework/sessions storage/framewo
 echo "==> php artisan migrate --force"
 "$PHP_BIN" artisan migrate --force
 
-# --- Seeder referensi idempotent: role, users, menu, settings ---
-echo "==> php artisan db:seed (role, users, menu, settings)"
+# --- Seeder referensi idempotent: role, users, menu ---
+echo "==> php artisan db:seed (role, users, menu)"
 "$PHP_BIN" artisan db:seed --force --class='Database\Seeders\MasterReferenceSeeder'
 "$PHP_BIN" artisan db:seed --force --class='Database\Seeders\UserSeeder'
 "$PHP_BIN" artisan db:seed --force --class='Database\Seeders\MenuSeeder'
-"$PHP_BIN" artisan db:seed --force --class='Database\Seeders\SettingsSeeder'
 
 # --- Optimasi cache produksi ---
 echo "==> optimize cache"

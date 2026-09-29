@@ -26,8 +26,10 @@ fi
 # Automatic reference data seeding on startup (roles, menu admin, settings, template).
 # Default AKTIF; set RUN_SEEDERS=false untuk melewatinya.
 if [ "${RUN_SEEDERS}" != "false" ]; then
-    echo "Seeding reference data..."
-    php artisan db:seed --force --class='Database\Seeders\BootstrapSeeder' || true
+    echo "Seeding reference data (role, users, menu)..."
+    php artisan db:seed --force --class='Database\Seeders\MasterReferenceSeeder' || true
+    php artisan db:seed --force --class='Database\Seeders\UserSeeder' || true
+    php artisan db:seed --force --class='Database\Seeders\MenuSeeder' || true
 fi
 
 # Discover packages and optimize Laravel in production

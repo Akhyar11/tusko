@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -11,17 +10,16 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Seed data referensi inti saja: role (+ master referensi), users, menu.
+     *
+     * Seeder lain (product, voucher, expedition, settings, receipt template)
+     * sengaja dihapus; data tersebut dikelola lewat UI/CRUD atau dibuat otomatis
+     * oleh aplikasi saat dibutuhkan.
      */
     public function run(): void
     {
-        $this->call(UserSeeder::class);
-        $this->call(ProductSeeder::class);
-        $this->call(ExpeditionSeeder::class);
-        $this->call(VoucherSeeder::class);
         $this->call(MasterReferenceSeeder::class);
+        $this->call(UserSeeder::class);
         $this->call(MenuSeeder::class);
-        $this->call(ReceiptTemplateSeeder::class);
-        $this->call(SettingsSeeder::class);
     }
 }

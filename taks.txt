@@ -1111,6 +1111,12 @@ T33. Audit Log & Seeder Referensi (SISA) ........................... [DONE]  [OW
     T33.2 [REPLACED -> T37] Seeder `permissions` DIBATALKAN; diganti seeder
            `menus` + `role_menus` (T37.3).
     T33.3 [DONE] Seeder `receipt_templates` default.
+    T33.4 [DONE] KURASI SEEDER (permintaan user 2026-09-29): hanya sisakan
+           `MasterReferenceSeeder` (role + master referensi), `UserSeeder`, `MenuSeeder`.
+           Dihapus: ProductSeeder, VoucherSeeder, ExpeditionSeeder, SettingsSeeder,
+           ReceiptTemplateSeeder, BootstrapSeeder, + command SyncSettingsDefaults.
+           `DatabaseSeeder` + deploy Hostinger + `docker/entrypoint.sh` kini menjalankan
+           ketiga seeder tsb. Test 766 lolos (test seeder terhapus disesuaikan/factory).
 
 T34. Auto-Journal & Laporan Keuangan ............................... [PARTIAL]  [OWNER:A2]
   DB: transactions, financial_ledger_entries, chart_of_accounts, vendor_bills, returns.

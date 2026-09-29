@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use Database\Seeders\MasterReferenceSeeder;
 use Database\Seeders\MenuSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -22,7 +21,6 @@ class SettingsMenuGuardTest extends TestCase
     public function test_admin_without_settings_menu_is_forbidden(): void
     {
         $this->seed(MasterReferenceSeeder::class);
-        $this->seed(SettingsSeeder::class);
 
         Sanctum::actingAs($this->admin());
 
@@ -35,7 +33,6 @@ class SettingsMenuGuardTest extends TestCase
     {
         $this->seed(MasterReferenceSeeder::class);
         $this->seed(MenuSeeder::class);
-        $this->seed(SettingsSeeder::class);
 
         Sanctum::actingAs($this->admin());
 

@@ -62,7 +62,7 @@ class MasterDatabaseArchitectureTest extends TestCase
 
     public function test_nested_variant_matrix_with_custom_pricing_and_sku(): void
     {
-        $product = Product::first();
+        $product = Product::factory()->create();
         $this->assertNotNull($product);
 
         $colorAttr = Attribute::where('code', 'color')->first();
@@ -109,7 +109,7 @@ class MasterDatabaseArchitectureTest extends TestCase
             'zone' => 'APPAREL',
         ]);
 
-        $product = Product::first();
+        $product = Product::factory()->create();
         $variant = ProductVariant::create([
             'product_id' => $product->id,
             'sku' => 'TSK-TEST-WH-01',
@@ -217,7 +217,7 @@ class MasterDatabaseArchitectureTest extends TestCase
         $this->assertNotNull($finAccount);
         $this->assertGreaterThan(0, $finAccount->current_balance);
 
-        $product = Product::first();
+        $product = Product::factory()->create();
         $cogs = CogsHistory::create([
             'product_id' => $product->id,
             'source_type' => 'grn_receiving',
@@ -234,7 +234,7 @@ class MasterDatabaseArchitectureTest extends TestCase
 
     public function test_logistics_services_and_lifetime_loyalty_points(): void
     {
-        $expedition = Expedition::first();
+        $expedition = Expedition::factory()->create();
         $service = ExpeditionService::create([
             'expedition_id' => $expedition->id,
             'service_code' => 'REG',

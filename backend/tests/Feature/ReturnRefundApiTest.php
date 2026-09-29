@@ -11,7 +11,6 @@ use App\Models\ReturnItem;
 use App\Models\User;
 use App\Models\Warehouse;
 use Database\Seeders\MasterReferenceSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
@@ -25,7 +24,6 @@ class ReturnRefundApiTest extends TestCase
     {
         parent::setUp();
         $this->seed(MasterReferenceSeeder::class);
-        $this->seed(SettingsSeeder::class);
     }
 
     private function actingAsAdmin(): User

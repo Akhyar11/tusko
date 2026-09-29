@@ -6,7 +6,6 @@ use App\Models\Expedition;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
 use Database\Seeders\MasterReferenceSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
@@ -20,7 +19,6 @@ class ExpeditionSyncApiTest extends TestCase
     {
         parent::setUp();
         $this->seed(MasterReferenceSeeder::class);
-        $this->seed(SettingsSeeder::class);
     }
 
     private function actingAsAdmin(): User

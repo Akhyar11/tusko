@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Services\Settings\SettingsService;
 use Database\Seeders\MasterReferenceSeeder;
 use Database\Seeders\MenuSeeder;
-use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -20,7 +19,6 @@ class SettingsApiTest extends TestCase
         parent::setUp();
         $this->seed(MasterReferenceSeeder::class);
         $this->seed(MenuSeeder::class);
-        $this->seed(SettingsSeeder::class);
     }
 
     private function admin(): User
