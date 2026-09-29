@@ -82,7 +82,7 @@ return new class extends Migration
                 $table->text('notes')->nullable();
                 $table->timestamps();
 
-                $table->index(['transaction_id', 'chart_of_account_id']);
+                $table->index(['transaction_id', 'chart_of_account_id'], 'fin_ledger_tx_coa_index');
             });
         }
     }

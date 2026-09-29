@@ -910,6 +910,10 @@ T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OW
            (`composer install --no-dev`, `migrate --force`, seeder referensi
            role/users/menu/settings). `.htaccess` subfolder `public_html/backend`
            mengarahkan request ke `public/` (akses via kagakspace.com/backend).
+           Fix kompat MySQL (terbukti dari deploy nyata): 000023 `order_items`
+           `unit_cogs after product_price` + guard per-kolom (DB partial);
+           000026 nama index `fin_ledger_tx_coa_index` (batas 64 char MySQL).
+           Terverifikasi `migrate:fresh` + 4 seeder di MySQL 8.0 & MariaDB 10.11.
            Sisa: set secrets/vars GitHub + `.env` produksi + smoke test produksi.
 
 ==============================================================================

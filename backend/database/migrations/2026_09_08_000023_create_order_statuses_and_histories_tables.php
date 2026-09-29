@@ -74,10 +74,14 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('order_items') && !Schema::hasColumn('order_items', 'product_variant_id')) {
+        if (Schema::hasTable('order_items')) {
             Schema::table('order_items', function (Blueprint $table) {
-                $table->foreignId('product_variant_id')->nullable()->after('product_id')->constrained('product_variants')->nullOnDelete();
-                $table->decimal('unit_cogs', 14, 2)->default(0.00)->after('unit_price');
+                if (!Schema::hasColumn('order_items', 'product_variant_id')) {
+                    $table->foreignId('product_variant_id')->nullable()->after('product_id')->constrained('product_variants')->nullOnDelete();
+                }
+                if (!Schema::hasColumn('order_items', 'unit_cogs')) {
+                    $table->decimal('unit_cogs', 14, 2)->default(0.00)->after('product_price');
+                }
             });
         }
 
