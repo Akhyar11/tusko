@@ -197,6 +197,62 @@ class SettingsRegistry
     ];
 
     /**
+     * Pengelompokan field menjadi SECTION di dalam tiap grup (untuk UI compact).
+     * Key yang tidak terdaftar otomatis masuk section "Lainnya".
+     *
+     * @var array<string, array<int, array{title: string, keys: array<int, string>}>>
+     */
+    private const SECTIONS = [
+        'store' => [
+            ['title' => 'Identitas Toko', 'keys' => ['store.name', 'store.legal_name', 'store.business_type', 'store.npwp', 'store.nib']],
+            ['title' => 'Kontak & Sosial', 'keys' => ['store.email', 'store.phone', 'store.cs_email', 'store.cs_phone', 'store.whatsapp', 'store.operating_hours', 'store.social_instagram', 'store.social_tiktok', 'store.social_facebook']],
+            ['title' => 'Domisili Bisnis', 'keys' => ['store.city', 'store.province']],
+            ['title' => 'Kebijakan Retur', 'keys' => ['store.return_window_days']],
+            ['title' => 'Asal Pengiriman', 'keys' => ['store.address', 'store.origin_city', 'store.origin_postal_code', 'store.origin_district_code', 'store.origin_subdistrict_code']],
+            ['title' => 'Halaman Dinamis (Legal)', 'keys' => ['store.about_text', 'store.terms_text', 'store.privacy_text', 'store.refund_text', 'store.shipping_text', 'store.faq_text', 'store.contact_text']],
+        ],
+        'shipping' => [
+            ['title' => 'Provider Aktif', 'keys' => ['shipping.provider']],
+            ['title' => 'Tarif & Cache', 'keys' => ['shipping.rate_cache_ttl', 'shipping.free_shipping_min_purchase']],
+            ['title' => 'KiriminAja / api.co.id', 'keys' => ['shipping.base_url', 'shipping.api_key', 'shipping.origin', 'shipping.origin_district_code']],
+            ['title' => 'Biteship', 'keys' => ['shipping.biteship_base_url', 'shipping.biteship_api_key', 'shipping.biteship_origin_area_id', 'shipping.biteship_origin_postal_code', 'shipping.biteship_default_delivery_type', 'shipping.biteship_couriers', 'shipping.biteship_webhook_signature_key', 'shipping.biteship_webhook_signature_secret']],
+        ],
+        'payment' => [
+            ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.snap_url', 'payment.midtrans_api_url', 'payment.snap_js_url', 'payment.notification_url']],
+            ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
+        ],
+        'storage' => [
+            ['title' => 'Disk & Bucket', 'keys' => ['storage.disk', 'storage.public_bucket', 'storage.private_bucket', 'storage.base_url']],
+        ],
+        'loyalty' => [
+            ['title' => 'Poin Loyalitas', 'keys' => ['loyalty.points_expiry_months', 'loyalty.points_earn_rate']],
+        ],
+        'notification' => [
+            ['title' => 'Identitas Pengirim', 'keys' => ['notification.from_name', 'notification.mail_from_address', 'notification.reply_to']],
+            ['title' => 'SMTP / Mailer', 'keys' => ['notification.mailer', 'notification.mail_host', 'notification.mail_port', 'notification.mail_username', 'notification.mail_password']],
+        ],
+        'feature_flags' => [
+            ['title' => 'Menu Operasional', 'keys' => ['feature_flags.orders_menu', 'feature_flags.stock_menu', 'feature_flags.finance_menu', 'feature_flags.procurement_menu', 'feature_flags.templates_menu', 'feature_flags.expeditions_menu', 'feature_flags.settings_menu']],
+        ],
+        'security' => [
+            ['title' => 'Sesi & Token', 'keys' => ['security.sanctum_token_expiry_days', 'security.session_lifetime_minutes', 'security.rate_limit_enabled']],
+        ],
+        'auth' => [
+            ['title' => 'Login Google (OAuth)', 'keys' => ['auth.google_enabled', 'auth.google_client_id', 'auth.google_client_secret', 'auth.google_redirect_url', 'auth.allowed_redirect_origins']],
+        ],
+        'storefront' => [
+            ['title' => 'Announcement Bar', 'keys' => ['storefront.announcement_enabled', 'storefront.announcement_text']],
+            ['title' => 'Hero Banner', 'keys' => ['storefront.hero_enabled', 'storefront.hero_badge', 'storefront.hero_title', 'storefront.hero_subtitle', 'storefront.hero_cta_primary', 'storefront.hero_cta_secondary', 'storefront.hero_price_badge', 'storefront.hero_image_url']],
+            ['title' => 'Populer & Pencarian', 'keys' => ['storefront.popular_enabled', 'storefront.popular_heading', 'storefront.popular_chips', 'storefront.search_placeholder', 'storefront.search_suggest_heading']],
+            ['title' => 'Section Olahraga', 'keys' => ['storefront.sports_enabled', 'storefront.sports_heading', 'storefront.sports_subheading', 'storefront.sports_cards']],
+            ['title' => 'Club Banner', 'keys' => ['storefront.club_enabled', 'storefront.club_badge', 'storefront.club_title', 'storefront.club_subtitle', 'storefront.club_cta']],
+            ['title' => 'Katalog', 'keys' => ['storefront.catalog_heading', 'storefront.footer_categories']],
+            ['title' => 'Promo Carousel', 'keys' => ['storefront.promo_enabled', 'storefront.promo_banners']],
+            ['title' => 'Navbar & Utility', 'keys' => ['storefront.brand_name', 'storefront.brand_tagline', 'storefront.utility_track_label', 'storefront.utility_help_label', 'storefront.locale_label', 'storefront.member_cta_label', 'storefront.member_badge_label']],
+        ],
+    ];
+
+    /**
      * @return array<string, array{label: string, description: string, keys: array<string, array<string, mixed>>}>
      */
     public static function groups(): array
@@ -220,6 +276,44 @@ class SettingsRegistry
     public static function groupDescription(string $group): ?string
     {
         return self::GROUPS[$group]['description'] ?? null;
+    }
+
+    /**
+     * Section (pengelompokan field) untuk sebuah grup. Key yang belum terdaftar
+     * otomatis dikumpulkan ke section "Lainnya".
+     *
+     * @return array<int, array{title: string, keys: array<int, string>}>
+     */
+    public static function sectionsForGroup(string $group): array
+    {
+        $groupKeys = array_keys(self::keys($group));
+        if ($groupKeys === []) {
+            return [];
+        }
+
+        $sections = [];
+        $listed = [];
+
+        foreach (self::SECTIONS[$group] ?? [] as $section) {
+            $keys = array_values(array_filter(
+                $section['keys'],
+                fn ($k) => in_array($k, $groupKeys, true)
+            ));
+
+            if ($keys === []) {
+                continue;
+            }
+
+            $listed = array_merge($listed, $keys);
+            $sections[] = ['title' => $section['title'], 'keys' => $keys];
+        }
+
+        $remaining = array_values(array_diff($groupKeys, $listed));
+        if ($remaining !== []) {
+            $sections[] = ['title' => 'Lainnya', 'keys' => $remaining];
+        }
+
+        return $sections;
     }
 
     /**

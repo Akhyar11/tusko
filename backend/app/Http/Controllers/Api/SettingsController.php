@@ -32,6 +32,8 @@ class SettingsController extends Controller
                 'label' => SettingsRegistry::groupLabel($group),
                 'description' => SettingsRegistry::groupDescription($group),
                 'values' => $this->settings->maskedGroup($group),
+                'fields' => $this->fieldMetadata($group),
+                'sections' => SettingsRegistry::sectionsForGroup($group),
             ];
         }
 
@@ -53,18 +55,6 @@ class SettingsController extends Controller
             ], 404);
         }
 
-        $fields = [];
-        foreach (SettingsRegistry::keys($group) as $key => $config) {
-            $fields[] = [
-                'key' => $key,
-                'type' => $config['type'],
-                'is_secret' => $config['is_secret'],
-                'label' => $config['label'],
-                'description' => $config['description'],
-                'options' => $config['options'] ?? [],
-            ];
-        }
-
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -72,9 +62,31 @@ class SettingsController extends Controller
                 'label' => SettingsRegistry::groupLabel($group),
                 'description' => SettingsRegistry::groupDescription($group),
                 'values' => $this->settings->maskedGroup($group),
-                'fields' => $fields,
+                'fields' => $this->fieldMetadata($group),
+                'sections' => SettingsRegistry::sectionsForGroup($group),
             ],
         ]);
+    }
+
+    /**
+     * Metadata field (tanpa nilai) untuk sebuah grup pengaturan.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function fieldMetadata(string $group): array
+    {
+        return array_map(
+            static fn (string $key, array $config): array => [
+                'key' => $key,
+                'type' => $config['type'],
+                'is_secret' => $config['is_secret'],
+                'label' => $config['label'],
+                'description' => $config['description'],
+                'options' => $config['options'] ?? [],
+            ],
+            array_keys(SettingsRegistry::keys($group)),
+            SettingsRegistry::keys($group)
+        );
     }
 
     /**
