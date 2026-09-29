@@ -9,7 +9,8 @@ import {
   setStoredToken, 
   getStoredUser, 
   setStoredUser, 
-  clearStoredAuth 
+  clearStoredAuth,
+  resolveBackendUrl
 } from './apiClient';
 import { getCartSessionId } from './cartService';
 import { mockDemoUsers } from '../data/mockAuthData';
@@ -94,10 +95,47 @@ export const authService = {
   },
 
   /**
+   * T41: konfigurasi login sosial (Google) dari backend.
+   */
+  async getAuthConfig() {
+    try {
+      const response = await apiClient.get('/api/auth/config');
+      return response.data || {};
+    } catch {
+      return { google_enabled: false };
+    }
+  },
+
+  /**
+   * T41: URL (backend) untuk memulai OAuth Google.
+   */
+  googleRedirectUrl(redirectUri, sessionId = null) {
+    const params = new URLSearchParams({ redirect_uri: redirectUri });
+    if (sessionId) params.set('session_id', sessionId);
+    return `${resolveBackendUrl('/api/auth/google/redirect')}?${params.toString()}`;
+  },
+
+  /**
+   * T41: tukar one-time code hasil callback menjadi token Sanctum.
+   */
+  async exchangeGoogleCode(code) {
+    const response = await apiClient.post('/api/auth/google/exchange', { code });
+
+    if (response.token) setStoredToken(response.token);
+    if (response.user) setStoredUser(response.user);
+
+    return {
+      success: true,
+      user: response.user,
+      token: response.token,
+      message: response.message || 'Login berhasil.',
+    };
+  },
+
+  /**
    * Pendaftaran akun pengguna baru.
    */
-  async register(userData, turnstileToken = null) {
-    try {
+  async register(userData, turnstileToken = null) {    try {
       const payload = {
         name: userData.name,
         email: userData.email,

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -8,8 +8,8 @@ import {
   CheckCircle2, 
   Loader2 
 } from 'lucide-react';
-import { mockDemoUsers } from '../data/mockAuthData';
 import { authService } from '../services/authService';
+import { getCartSessionId } from '../services/cartService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
 import TurnstileWidget from './molecules/TurnstileWidget';
@@ -29,32 +29,22 @@ export default function LoginPage({
   const [successMessage, setSuccessMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState(null);
   const turnstileRef = useRef(null);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
 
-  const handleSocialLogin = async (socialEmail, provider) => {
-    setIsLoading(true);
+  useEffect(() => {
+    let active = true;
+    authService.getAuthConfig()
+      .then((cfg) => { if (active) setGoogleEnabled(Boolean(cfg?.google_enabled)); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  // T41: login Google nyata (redirect ke backend OAuth, bukan mock).
+  const handleGoogleLogin = () => {
     setErrorMessage('');
-    setEmail(socialEmail);
-    setSuccessMessage(`✓ Berhasil terautentikasi melalui ${provider}! Mengalihkan...`);
-
-    try {
-      const pwd = socialEmail.includes('apple') ? 'password123' : 'TuskoSport2026!';
-      const res = await authService.login(socialEmail, pwd);
-      setTimeout(() => {
-        onLoginSuccess(res.user);
-      }, 500);
-    } catch {
-      const matchedUser = mockDemoUsers.find(
-        (u) => u.email.toLowerCase() === socialEmail.toLowerCase()
-      ) || mockDemoUsers[0];
-      setTimeout(() => {
-        onLoginSuccess({
-          ...matchedUser,
-          email: socialEmail
-        });
-      }, 500);
-    } finally {
-      setIsLoading(false);
-    }
+    setSuccessMessage('');
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    window.location.href = authService.googleRedirectUrl(redirectUri, getCartSessionId());
   };
 
   const handleSubmit = async (e) => {
@@ -150,32 +140,24 @@ export default function LoginPage({
             </p>
           </div>
 
-          {/* Social Logins (Google & Apple SSO) */}
-          <div className="space-y-2.5 mb-5">
-            <button 
-              type="button"
-              onClick={() => handleSocialLogin('budi.pratama@gmail.com', 'Google SSO')}
-              className="w-full bg-white hover:bg-neutral-50 border border-neutral-300 text-neutral-800 font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5c1.54 0 2.93.56 4.02 1.48l3.01-3.01C17.21 1.77 14.77 1 12 1 7.39 1 3.52 3.82 1.83 7.85l3.66 2.84C6.38 7.39 8.94 5 12 5z" />
-                <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.68 2.86c2.15-1.99 3.74-4.92 3.74-8.68z" />
-                <path fill="#FBBC05" d="M5.49 14.69c-.24-.73-.38-1.5-.38-2.31 0-.81.14-1.58.38-2.31L1.83 7.23C.66 9.57 0 12.19 0 15c0 2.81.66 5.43 1.83 7.77l3.66-2.84z" />
-                <path fill="#34A853" d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.68-2.86c-1.08.73-2.46 1.16-4.25 1.16-3.06 0-5.62-2.39-6.51-5.69L1.83 15.54C3.52 19.57 7.39 23 12 23z" />
-              </svg>
-              <span>Masuk dengan Google</span>
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleSocialLogin('budi.apple@icloud.com', 'Apple ID')}
-              className="w-full bg-black hover:bg-neutral-800 text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.96.04-2.12.64-2.79 1.42-.58.68-1.1 1.75-.96 2.79 1.07.08 2.12-.59 2.74-1.34z" />
-              </svg>
-              <span>Masuk dengan Apple</span>
-            </button>
-          </div>
+          {/* T41: Login Google (hanya bila diaktifkan admin) */}
+          {googleEnabled && (
+            <div className="space-y-2.5 mb-5">
+              <button 
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full bg-white hover:bg-neutral-50 border border-neutral-300 text-neutral-800 font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#EA4335" d="M12 5c1.54 0 2.93.56 4.02 1.48l3.01-3.01C17.21 1.77 14.77 1 12 1 7.39 1 3.52 3.82 1.83 7.85l3.66 2.84C6.38 7.39 8.94 5 12 5z" />
+                  <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.68 2.86c2.15-1.99 3.74-4.92 3.74-8.68z" />
+                  <path fill="#FBBC05" d="M5.49 14.69c-.24-.73-.38-1.5-.38-2.31 0-.81.14-1.58.38-2.31L1.83 7.23C.66 9.57 0 12.19 0 15c0 2.81.66 5.43 1.83 7.77l3.66-2.84z" />
+                  <path fill="#34A853" d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.68-2.86c-1.08.73-2.46 1.16-4.25 1.16-3.06 0-5.62-2.39-6.51-5.69L1.83 15.54C3.52 19.57 7.39 23 12 23z" />
+                </svg>
+                <span>Masuk dengan Google</span>
+              </button>
+            </div>
+          )}
 
           {/* Divider */}
           <div className="relative flex items-center justify-center my-6">

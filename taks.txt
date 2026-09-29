@@ -1702,10 +1702,10 @@ T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [PARTIAL]  
     T41.5 [DONE] ONE-TIME CODE & EXCHANGE: simpan code di cache (`CACHE_STORE=database`, TTL 60 dtk,
            sekali pakai) + `POST /api/auth/google/exchange` mengembalikan Sanctum token (pola
            `AuthController::login` + `formatUserResponse`). [OWNER:A1]
-    T41.6 [TODO] FE: `authService` (googleRedirectUrl/exchangeGoogleCode), `LoginPage`/`RegisterPage`
+    T41.6 [DONE] FE: `authService` (googleRedirectUrl/exchangeGoogleCode), `LoginPage`/`RegisterPage`
            tombol nyata + gate `google_enabled`, `AuthCallbackPage` + rute `/auth/callback`
            (VALID_VIEWS/getViewFromPathOrHash/render `App.jsx`) + Toast error. [OWNER:A1]
-    T41.7 [TODO] TEST: suite PHPUnit (skenario di atas) + bukti browser Playwright Python;
+    T41.7 [DONE] TEST: suite PHPUnit (skenario di atas) + bukti browser Playwright Python;
            `php artisan test` 100% + `npm run build`. [OWNER:A1]
     T41.8 [TODO] DOKUMENTASI DEPLOY: panduan Google Cloud Console (OAuth consent screen,
            Authorized redirect URI `https://<domain>/api/auth/google/callback`, JS origins),

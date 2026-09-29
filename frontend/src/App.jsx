@@ -17,6 +17,7 @@ import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import SystemSettingsHub from './components/SystemSettingsHub';
 import LoginPage from './components/LoginPage';
+import AuthCallbackPage from './components/AuthCallbackPage';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
@@ -166,6 +167,7 @@ const VALID_VIEWS = [
   'return-request',
   'settings',
   'login',
+  'auth-callback',
   'register',
   'forgot-password',
   'reset-password',
@@ -290,6 +292,7 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement/pos/create') return 'procurement-po-create';
     if (rawPath.startsWith('/admin/procurement/pos/')) return 'procurement-po-detail';
     if (rawPath === '/login') return 'login';
+    if (rawPath === '/auth/callback') return 'auth-callback';
     if (rawPath === '/register') return 'register';
     if (rawPath === '/forgot-password') return 'forgot-password';
     if (rawPath === '/reset-password') return 'reset-password';
@@ -1313,6 +1316,15 @@ export default function App() {
           setPendingCartAction(null);
           setCurrentView(returnView);
         }}
+      />
+    );
+  }
+
+  if (currentView === 'auth-callback') {
+    return (
+      <AuthCallbackPage
+        onLoginSuccess={(user) => handleAuthSuccess(user, 'Berhasil masuk dengan Google')}
+        onNavigateLogin={() => setCurrentView('login')}
       />
     );
   }
