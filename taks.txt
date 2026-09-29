@@ -1643,7 +1643,88 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
      (COD tetap OUT-OF-SCOPE — kolom `cod_support` tidak diaktifkan.)
   DEPENDENSI: T40.1 -> T21.1/T36 ; T40.4 -> T06.2/T06.7/T06.8 ; T40.5 -> T06.7 ;
     T40.6 -> T06.5 ; T40.7 -> T10.1 ; T40.8 -> T10.4/T30.3 ; T40.9 -> T07.5 (pola webhook);
-    T40.2 -> T12.1d/T06.5.
+     T40.2 -> T12.1d/T06.5.
+
+T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [TODO]  [OWNER:A1]
+  LATAR BELAKANG (permintaan user 2026-09-29):
+   - Tombol "Masuk dengan Google" di `LoginPage.jsx` saat ini MOCK: `handleSocialLogin`
+     login memakai password demo hardcoded. Belum ada OAuth nyata, tanpa route/controller
+     Google, dan `laravel/socialite` belum terpasang.
+   - Tujuan: pelanggan login/daftar satu klik dengan Google (akun Google terverifikasi),
+     aman (tanpa token di URL), tanpa hardcode kredensial (G6).
+  RUANG LINGKUP:
+   - OAuth 2.0 Authorization Code (+ verifikasi state/PKCE) driver Google via
+     `laravel/socialite`.
+   - Account linking by email (Google `verified_email`), merge keranjang guest (T26.5).
+   - Token handoff SPA aman via ONE-TIME CODE (sekali pakai, TTL 60 dtk) — bukan token di URL.
+   - Kredensial via Settings Hub (integrations terenkripsi). Apple/Microsoft SSO DI LUAR SCOPE
+     (skema `social_accounts` disiapkan agar mudah ditambah nanti).
+  DB:
+   - [NEW] social_accounts: id, user_id(FK users cascadeOnDelete), provider(default 'google'),
+     provider_user_id, email, name, avatar, token_expires_at(NULL), created_at, updated_at;
+     unique(provider, provider_user_id); index(user_id).
+   - users: TIDAK diubah (reuse kolom; kolom `google_id` DITOLAK agar multi-provider).
+   - [NEW settings grup `auth`] auth.google_enabled(bool), auth.google_client_id(secret),
+     auth.google_client_secret(secret), auth.google_redirect_url(url),
+     auth.allowed_redirect_origins(string CSV whitelist asal FE).
+  API:
+   - GET  /api/auth/config (publik) -> { google_enabled } (FE gate tombol).
+   - GET  /api/auth/google/redirect?redirect_uri=... -> 302 ke Google (state+PKCE; whitelist).
+   - GET  /api/auth/google/callback?code&state -> verifikasi; buat/link user; audit (G9);
+     merge guest cart; lalu 302 balik `{redirect_uri}?code=<one_time_code>`.
+   - POST /api/auth/google/exchange { code } -> { token, token_type, user } (pola `login`).
+   - Endpoint social: TIDAK Turnstile (OAuth bot-resistant) TAPI wajib whitelist redirect_uri
+     (anti open-redirect) + `throttle` khusus.
+  FE:
+   - `authService.googleRedirectUrl(redirectUri)` + `exchangeGoogleCode(code)`.
+   - `LoginPage`/`RegisterPage`: tombol Google nyata (hapus mock) + tampil hanya bila enabled.
+   - View baru `AuthCallbackPage` (`/auth/callback`): tukar code -> simpan token -> redirect tujuan.
+   - Error handling: state invalid / akun nonaktif / redirect tak diizinkan -> toast + kembali login.
+  Test:
+   - PHPUnit (mock `Socialite`/`Http::fake`): user baru dibuat (+email_verified_at), user existing
+     login, email belum verified ditolak, redirect_uri tak di-whitelist ditolak, google_enabled=false
+     ditolak, one-time code sekali pakai + kedaluwarsa, guest cart merge.
+   - Playwright Python: tombol Google menuju endpoint redirect backend; callback tukar code
+     (di-mock) -> login berhasil; 0 console error.
+  Minor:
+    T41.1 [TODO] SETTINGS: grup `auth` di `SettingsRegistry` (google_enabled/client_id/secret/
+           redirect_url/allowed_redirect_origins) + endpoint publik `GET /api/auth/config`;
+           secret terenkripsi; test SettingsRegistry/SettingsApi. [OWNER:A1]
+    T41.2 [TODO] DEPENDENSI & CONFIG: `composer require laravel/socialite`; blok `services.google`
+           (fallback env dev); `GoogleAuthService` menyuntik config dari `SettingsService` saat
+           runtime (G6). [OWNER:A1]
+    T41.3 [TODO] MIGRASI & MODEL: tabel `social_accounts` + relasi `User::socialAccounts()` +
+           `SocialAccount` model; migrasi up/down + test. [OWNER:A1]
+    T41.4 [TODO] ENDPOINT REDIRECT & CALLBACK: `GoogleAuthController@redirect` (whitelist
+           `redirect_uri` + state/PKCE) & `@callback` (findOrCreate user via email verified;
+           isi `email_verified_at`; link `social_accounts`; tolak akun nonaktif 403; audit log G9;
+           merge guest cart via `CartService`) -> 302 dengan one-time code. [OWNER:A1]
+    T41.5 [TODO] ONE-TIME CODE & EXCHANGE: simpan code di cache (`CACHE_STORE=database`, TTL 60 dtk,
+           sekali pakai) + `POST /api/auth/google/exchange` mengembalikan Sanctum token (pola
+           `AuthController::login` + `formatUserResponse`). [OWNER:A1]
+    T41.6 [TODO] FE: `authService` (googleRedirectUrl/exchangeGoogleCode), `LoginPage`/`RegisterPage`
+           tombol nyata + gate `google_enabled`, `AuthCallbackPage` + rute `/auth/callback`
+           (VALID_VIEWS/getViewFromPathOrHash/render `App.jsx`) + Toast error. [OWNER:A1]
+    T41.7 [TODO] TEST: suite PHPUnit (skenario di atas) + bukti browser Playwright Python;
+           `php artisan test` 100% + `npm run build`. [OWNER:A1]
+    T41.8 [TODO] DOKUMENTASI DEPLOY: panduan Google Cloud Console (OAuth consent screen,
+           Authorized redirect URI `https://<domain>/api/auth/google/callback`, JS origins),
+           isi Settings Hub, catatan Hostinger (HTTPS + `.htaccess` root `/api`). [OWNER:A1]
+  ACCEPTANCE (T41):
+   (1) Pelanggan dapat login/daftar via Google tanpa password; email Google terverifikasi.
+   (2) Akun existing (email sama) otomatis ter-link; tidak ada duplikasi user.
+   (3) Token TIDAK pernah muncul di URL/history (handoff via one-time code sekali pakai).
+   (4) Kredensial Google dari Settings Hub (terenkripsi), bukan hardcode; `google_enabled=false`
+       menyembunyikan tombol & menolak endpoint.
+   (5) Guest cart tetap terbawa setelah login (merge), konsisten dengan login biasa.
+   (6) Lolos 13 auditor pre-commit; `php artisan test` 100%; `npm run build` sukses; bukti browser.
+  KEPUTUSAN DIBUTUHKAN:
+   - Account linking: auto-link bila email sama (RECOMMENDED, Google verified) vs wajib verifikasi.
+   - Provider tambahan (Apple/Microsoft) sekarang atau nanti.
+   - `redirect_uri` default (domain produksi) & apakah tombol tampil di Register juga.
+   - Kebijakan akun email sama namun `is_active=false` (usulan: tolak 403).
+  DEPENDENSI: T41.1 -> T36/T21.1 ; T41.3 -> T26 (users) ; T41.4 -> T26.5 (merge cart) ;
+    T41.5 -> T30.1/T30.4 (cache/queue) ; T41.6 -> T26/T35.5 (pola auth & config publik).
 
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
@@ -1690,6 +1771,8 @@ MATRIKS DEPENDENSI (BEBAS SIKLUS; "->" = bergantung pada)
 - T37 -> T24 (roles/user_roles) ; T37.5 -> T24.2 ; T37.7 -> T36.16 (feature flag) ; T37.8 -> Navbar (A1)
 - T40 -> T21.1/T36 (settings) ; T40.4 -> T06.2/T06.7/T06.8 ; T40.5 -> T06.7 ;
   T40.6 -> T06.5 ; T40.7 -> T10.1 ; T40.8 -> T10.4/T30.3 ; T40.9 -> T07.5 (pola webhook)
+- T41 -> T36/T21.1 (settings) ; T41.3 -> T26 (users) ; T41.4 -> T26.5 (merge cart) ;
+  T41.5 -> T30.1/T30.4 (cache/queue)
 CATATAN: Tidak ada siklus. T16.4 (mesin) TIDAK bergantung pada T34.1; sebaliknya
 T34.1 dan task event (T07/T14/T25/T29) memakai mesin T16.4 + mapping T34.1.
 
@@ -2032,4 +2115,26 @@ Perubahan task:
   happy-hour, kuota harian, referral, stacking group) [A1].
 Catatan: `voucher_claims` (T08.5) sudah menyimpan klaim per (user, voucher);
 T15.6 menambah penegakan jendela & kuota pada klaim tsb.
+==============================================================================
+
+==============================================================================
+REVISI 12 — MAJOR BARU: T41 Login Sosial Google (permintaan user 2026-09-29)
+==============================================================================
+Temuan:
+1. Tombol "Masuk dengan Google" di `LoginPage.jsx` MOCK (`handleSocialLogin` login
+   dengan password demo hardcoded) — bukan OAuth.
+2. Tidak ada route/controller Google; `laravel/socialite` belum ada di composer.json;
+   `config/services.php` tanpa blok `google`.
+3. T26 (Auth Pelanggan) [DONE] tidak mencakup social login.
+
+Perubahan task:
+- MAJOR BARU T41 "Login Sosial Google (OAuth 2.0 via Laravel Socialite)" [OWNER:A1],
+  minor T41.1–T41.8 (settings grup `auth`, socialite, tabel `social_accounts`,
+  redirect+callback, one-time code exchange, FE tombol+halaman callback, test, dokumen deploy).
+- Tabel baru `social_accounts` (multi-provider ready); users TIDAK diubah.
+- Kredensial Google via Settings Hub (terenkripsi) — G6 tanpa hardcode.
+- Token handoff SPA via one-time code (bukan token di URL).
+- Dependency matrix ditambah: T41 -> T36/T21.1, T26, T26.5, T30.1/T30.4.
+- Keputusan dibutuhkan: kebijakan account-linking, provider tambahan (Apple/Microsoft),
+  redirect_uri default, dan perlakuan akun `is_active=false`.
 ==============================================================================
