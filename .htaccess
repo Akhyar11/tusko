@@ -1,0 +1,43 @@
+# =============================================================================
+# Tusko — .htaccess root domain
+# =============================================================================
+# Berkas ini setara dengan folder `backend/` dan `frontend/` di root project.
+# Di Hostinger, berkas ini berada di `public_html/.htaccess`.
+#
+# Aplikasi Laravel ada di `backend/`; folder `public/`-nya disembunyikan sehingga:
+#   - API     -> https://<domain>/api/...
+#   - Storage -> https://<domain>/storage/...
+#
+# Berkas internal backend (`.env`, `vendor`, `database`, log, dll) tetap ditolak.
+# =============================================================================
+
+Options -MultiViews -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Teruskan header Authorization & XSRF ke PHP (wajib untuk Sanctum bearer token).
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Tolak akses langsung ke berkas/direktori internal backend (pertahanan berlapis).
+    RewriteRule ^backend/(\.env.*|composer\.(json|lock)|artisan|phpunit\.xml|server\.php)$ - [F,L]
+    RewriteRule ^backend/(app|bootstrap|config|database|deploy|resources|routes|storage|tests|vendor)/ - [F,L]
+
+    # Sajikan aset publik dari `backend/public/` bila berkasnya ada
+    # (favicon, robots, `storage` symlink, dsb).
+    RewriteCond %{DOCUMENT_ROOT}/backend/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ backend/public/$1 [L]
+
+    # Sisanya -> front controller Laravel. Request URI publik tetap `/api/...`
+    # sehingga routing Laravel tepat (base URL root, tanpa `/public`).
+    RewriteRule ^ backend/public/index.php [L]
+</IfModule>
+
+# Larang akses berkas sensitif walau mod_rewrite dimatikan.
+<FilesMatch "(^\.env|\.(sqlite|sqlite3|log|pem|key)$)">
+    Require all denied
+</FilesMatch>

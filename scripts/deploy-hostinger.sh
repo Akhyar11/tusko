@@ -58,6 +58,14 @@ rsync -az --delete \
     --exclude='*.log' \
     "$SRC_DIR/" "$REMOTE:$DEPLOY_PATH/"
 
+# `.htaccess` root project -> root domain (`public_html/.htaccess`), yaitu
+# direktori induk dari DEPLOY_PATH (mis. `.../public_html/backend`).
+WEB_ROOT="$(dirname "$DEPLOY_PATH")"
+if [ -f "$REPO_ROOT/.htaccess" ]; then
+    echo "==> Sinkronisasi .htaccess root -> $REMOTE:$WEB_ROOT/.htaccess"
+    rsync -az -e "$SSH_CMD" "$REPO_ROOT/.htaccess" "$REMOTE:$WEB_ROOT/.htaccess"
+fi
+
 echo "==> Menjalankan composer install + migrate + seed di server"
 $SSH_CMD "$REMOTE" "cd '$DEPLOY_PATH' && bash deploy/hostinger-deploy.sh"
 

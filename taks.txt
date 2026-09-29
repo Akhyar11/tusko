@@ -910,13 +910,14 @@ T23. Deployment & Rilis (main -> master, VPS/Nginx) ................ [TODO]  [OW
            `backend/deploy/hostinger-deploy.sh` (`composer install --no-dev
            --no-scripts` karena `proc_open` nonaktif, `package:discover`,
            `migrate --force`, seeder referensi role/users/menu/settings,
-           `storage:link`, cache produksi). Routing subfolder via `backend/index.php`
-           + `backend/.htaccess` (akses `kagakspace.com/backend/api/...`).
+           `storage:link`, cache produksi). Routing via `.htaccess` di ROOT
+           project (server: `public_html/.htaccess`, setara `backend/`) sehingga
+           API diakses di `kagakspace.com/api/...` & storage `kagakspace.com/storage/...`.
            Fix kompat MySQL (terbukti dari deploy nyata): 000023 `order_items`
            `unit_cogs after product_price` + guard per-kolom (DB partial);
            000026 nama index `fin_ledger_tx_coa_index` (batas 64 char MySQL).
            Terverifikasi: `migrate:fresh` + 4 seeder di MySQL 8.0 & MariaDB 10.11;
-           deploy sukses GitHub Actions; live `GET /backend/api/health` = 200
+           deploy sukses GitHub Actions; live `GET /api/health` = 200
            (`database:mysql, cache:database, queue:sync, storage:public`).
            Smoke test storefront + admin lanjutan dicatat di T23.4.
 
