@@ -1493,6 +1493,9 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
   `['kiriminaja','apicoid','biteship']` + field `shipping.biteship_*`.
   Sisa operasional (bukan kode): isi `shipping.biteship_api_key` + origin area,
   set provider `biteship`, daftarkan webhook `https://kagakspace.com/api/webhooks/biteship`.
+  UI/UX REFINEMENT (2026-09-29): halaman Pengaturan → Pengiriman kini menyembunyikan
+  field provider lain (hanya tampil field sesuai `shipping.provider` terpilih);
+  bukti browser Playwright Python 5/5 passed. [commit 042941d]
   LATAR BELAKANG (permintaan 2026-09-29):
    - Menambah OPSI jasa pihak ketiga Biteship di samping provider yang ada
      (KiriminAja/api.co.id) untuk tarif, pembuatan order/resi, label, & lacak.
