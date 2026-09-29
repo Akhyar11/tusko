@@ -1726,6 +1726,70 @@ T41. Login Sosial Google (OAuth 2.0 via Laravel Socialite) ......... [PARTIAL]  
   DEPENDENSI: T41.1 -> T36/T21.1 ; T41.3 -> T26 (users) ; T41.4 -> T26.5 (merge cart) ;
     T41.5 -> T30.1/T30.4 (cache/queue) ; T41.6 -> T26/T35.5 (pola auth & config publik).
 
+T42. Kepatuhan Storefront & Onboarding Midtrans .................... [PARTIAL]  [OWNER:A1]
+  LATAR BELAKANG (permintaan user 2026-09-29):
+   - Pengajuan/aktivasi akun Midtrans mensyaratkan situs aktif, katalog + harga IDR,
+     identitas & kontak bisnis, serta halaman legal (T&C, Privasi, Refund, Pengiriman).
+   - Kondisi saat ini: link legal di Footer/Login/Register masih `alert()` (melanggar
+     AGENTS rule 20), Footer memakai WhatsApp & nama PT HARDCODE, dan data store belum
+     diekspos ke storefront.
+   - PRINSIP WAJIB: SELURUH nilai (identitas bisnis + ISI kebijakan) DINAMIS dari
+     Settings Hub (integrations) — DILARANG hardcode di frontend (G6).
+  DB/Settings (grup `store`, semua non-secret & editable admin):
+   - Identitas: store.legal_name, store.business_type, store.npwp, store.nib,
+     store.address (existing), store.city, store.province.
+   - Kontak: store.cs_email, store.cs_phone, store.whatsapp, store.operating_hours.
+   - Sosial: store.social_instagram, store.social_tiktok, store.social_facebook.
+   - Kebijakan: store.return_window_days(int), store.about_text, store.terms_text,
+     store.privacy_text, store.refund_text, store.shipping_text, store.faq_text,
+     store.contact_text.
+  API:
+   - [NEW] GET /api/store/profile (publik) -> seluruh nilai grup `store` (tanpa secret)
+     untuk footer, halaman legal, kontak, invoice.
+  FE:
+   - `storeService.getStoreProfile()` (apiClient).
+   - Halaman storefront: Tentang Kami (`/tentang`), Kontak (`/kontak`),
+     Syarat & Ketentuan (`/syarat-ketentuan`), Kebijakan Privasi (`/kebijakan-privasi`),
+     Kebijakan Pengembalian (`/kebijakan-pengembalian`), Kebijakan Pengiriman
+     (`/kebijakan-pengiriman`), FAQ (`/faq`) — konten dari API (fallback bila kosong).
+   - Footer dinamis (nama legal, alamat, email, telepon/WA, sosial) + tautan kebijakan.
+   - Ganti SEMUA `alert()` (Login/Register) dengan navigasi ke halaman legal.
+   - Checkout: tautan Kebijakan Refund & Pengiriman + identitas merchant.
+   - Pendaftaran rute: VALID_VIEWS + getViewFromPathOrHash + cabang render App.jsx.
+  Test: [NEW] StoreProfileApiTest (endpoint publik, tanpa secret) +
+        SettingsRegistry/Seeder menyesuaikan + Playwright Python (halaman legal terbuka,
+        footer dinamis, tidak ada `alert`).
+  Minor:
+    T42.1 [DONE] SETTINGS & API: tambah key store.* (identitas/kontak/sosial/kebijakan)
+           di `SettingsRegistry` + endpoint publik `GET /api/store/profile` + test. (G6)
+           [OWNER:A1]
+    T42.2 [DONE] HALAMAN LEGAL: komponen `LegalPage` generik + `data/legalDocs` (judul/section
+           dari store profile) + rute storefront; konten 100% dari Settings Hub. [OWNER:A1]
+    T42.3 [DONE] FOOTER DINAMIS + KONTAK: konsumsi store profile, hapus hardcode WA/nama PT,
+           tautan kebijakan; halaman Kontak (WA/email/jam/sosial). [OWNER:A1]
+    T42.4 [DONE] COMPLIANCE CHECKOUT/INVOICE: tampilkan identitas merchant + tautan
+           refund/pengiriman + rincian biaya IDR. [OWNER:A1]
+    T42.5 [DONE] HAPUS BROWSER DIALOG: ganti `alert()` di Login/Register/Footer dengan
+           navigasi halaman legal (aturan 20). [OWNER:A1]
+    T42.6 [DONE] TEST & BUKTI: PHPUnit + Playwright Python (halaman legal, footer dinamis,
+           0 alert, 0 console error) + `npm run build`. [OWNER:A1]
+    T42.7 [DONE] CHECKLIST ONBOARDING: dokumen legal per entitas (Individu/PT/CV/Yayasan),
+           email bisnis berdomain, telepon, NIB/NPWP, bank, kategori terlarang; dicatat di
+           `taks.txt` (tanpa file rahasia). [OWNER:A1]
+  ACCEPTANCE (T42):
+   (1) Seluruh identitas bisnis & isi kebijakan dapat diubah admin via Settings Hub (dinamis).
+   (2) Halaman Tentang/Kontak/T&C/Privasi/Refund/Pengiriman/FAQ dapat diakses publik.
+   (3) Footer menampilkan identitas & kontak dari API (tanpa hardcode).
+   (4) Tidak ada lagi `window.alert` di storefront (aturan 20).
+   (5) `GET /api/store/profile` tidak membocorkan nilai secret.
+   (6) Test 100% + `npm run build` + bukti Playwright.
+  KEPUTUSAN DIBUTUHKAN:
+   - Entitas bisnis (Individu/PT/CV/Yayasan) & nama legal final.
+   - Email bisnis berdomain + nomor telepon/WA bisnis.
+   - Lama jendela retur (default 14 hari).
+  DEPENDENSI: T42.1 -> T36/T21.1 (settings) ; T42.2 -> T42.1 ; T42.3 -> T42.1/T42.2 ;
+    T42.4 -> T07/T28 (checkout) ; T42.6 -> T22 (QA).
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================

@@ -2,8 +2,15 @@ import React from 'react';
 
 export default function Footer({
   onSelectCategory = () => {},
-  onOpenOrders = () => {}
+  onOpenOrders = () => {},
+  onNavigateLegal = () => {},
+  storeProfile = {}
 }) {
+  const brandName = storeProfile?.legal_name || storeProfile?.name || 'Toko';
+  const whatsapp = String(storeProfile?.whatsapp || '').replace(/\D/g, '');
+  const aboutExcerpt = String(storeProfile?.about_text || '').trim().split(/\n{2,}/)[0] || '';
+  const returnDays = storeProfile?.return_window_days;
+
   return (
     <footer className="bg-black text-white pt-12 sm:pt-16 pb-12 border-t border-neutral-800 w-full">
       <div className="w-full px-4 sm:px-8 lg:px-12">
@@ -111,44 +118,81 @@ export default function Footer({
                 </button>
               </li>
               <li>
-                <span className="hover:text-white transition-colors cursor-pointer">
-                  Tarif Pengiriman
-                </span>
-              </li>
-              <li>
-                <span className="hover:text-white transition-colors cursor-pointer">
-                  Kebijakan Retur 14 Hari
-                </span>
-              </li>
-              <li>
-                <a 
-                  href="https://wa.me/628123456789" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="hover:text-white transition-colors"
+                <button
+                  type="button"
+                  onClick={() => onNavigateLegal('shipping')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
                 >
-                  WhatsApp CS
-                </a>
+                  Kebijakan Pengiriman
+                </button>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onNavigateLegal('refund')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Kebijakan Retur{returnDays ? ` ${returnDays} Hari` : ''}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onNavigateLegal('faq')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  FAQ
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onNavigateLegal('contact')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Hubungi Kami
+                </button>
+              </li>
+              {whatsapp && (
+                <li>
+                  <a 
+                    href={`https://wa.me/${whatsapp}`}
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="hover:text-white transition-colors"
+                  >
+                    WhatsApp CS
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
 
           <div>
             <h4 className="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-white">
-              TENTANG TUSKO
+              TENTANG {String(brandName).toUpperCase()}
             </h4>
-            <p className="text-neutral-400 leading-relaxed mb-3">
-              Brand olahraga performa tinggi buatan Indonesia dengan standar kelas dunia.
-            </p>
+            {aboutExcerpt ? (
+              <p className="text-neutral-400 leading-relaxed mb-3">{aboutExcerpt}</p>
+            ) : (
+              <p className="text-neutral-400 leading-relaxed mb-3">Profil toko belum diatur.</p>
+            )}
+            <button
+              type="button"
+              onClick={() => onNavigateLegal('about')}
+              className="text-amber-400 hover:text-amber-300 font-sport font-black uppercase tracking-wider text-[11px] cursor-pointer"
+            >
+              Selengkapnya
+            </button>
           </div>
         </div>
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-neutral-500 gap-4 text-center sm:text-left">
-          <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+          <div>&copy; {new Date().getFullYear()} {brandName}. Seluruh hak cipta dilindungi.</div>
           <div className="flex gap-4">
-            <span className="hover:underline cursor-pointer">Privasi</span>
-            <span className="hover:underline cursor-pointer">Syarat &amp; Ketentuan</span>
-            <span className="hover:underline cursor-pointer">Panduan Ukuran</span>
+            <button type="button" onClick={() => onNavigateLegal('privacy')} className="hover:underline cursor-pointer">Privasi</button>
+            <button type="button" onClick={() => onNavigateLegal('terms')} className="hover:underline cursor-pointer">Syarat &amp; Ketentuan</button>
+            <button type="button" onClick={() => onNavigateLegal('shipping')} className="hover:underline cursor-pointer">Pengiriman</button>
           </div>
         </div>
       </div>

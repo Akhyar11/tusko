@@ -42,7 +42,8 @@ export default function CheckoutPage({
   onBackToCart = () => {},
   onFinishOrder = () => {},
   availableExpeditions = null,
-  onShowToast = () => {}
+  onShowToast = () => {},
+  onNavigateLegal = () => {}
 }) {
   const [addresses, setAddresses] = useState([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
@@ -1243,6 +1244,15 @@ export default function CheckoutPage({
             </>
           )}
         </button>
+      </div>
+
+      {/* T42.4: tautan kebijakan (kepatuhan Midtrans) */}
+      <div className="mt-4 text-[11px] text-neutral-500 text-center leading-relaxed">
+        Dengan menyelesaikan pesanan, Anda menyetujui{' '}
+        <button type="button" onClick={() => onNavigateLegal('terms')} className="underline hover:text-neutral-800 cursor-pointer">Syarat &amp; Ketentuan</button>,{' '}
+        <button type="button" onClick={() => onNavigateLegal('privacy')} className="underline hover:text-neutral-800 cursor-pointer">Kebijakan Privasi</button>,{' '}
+        <button type="button" onClick={() => onNavigateLegal('refund')} className="underline hover:text-neutral-800 cursor-pointer">Kebijakan Pengembalian</button>, dan{' '}
+        <button type="button" onClick={() => onNavigateLegal('shipping')} className="underline hover:text-neutral-800 cursor-pointer">Kebijakan Pengiriman</button>.
       </div>
 
       {/* Address Selection Modal */}

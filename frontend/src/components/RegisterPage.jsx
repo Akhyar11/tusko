@@ -17,6 +17,7 @@ import Checkbox from './molecules/Checkbox';
 export default function RegisterPage({
   onRegisterSuccess = () => {},
   onNavigateLogin = () => {},
+  onNavigateLegal = () => {},
   onBackToHome = () => {}
 }) {
   const [name, setName] = useState('');
@@ -456,7 +457,7 @@ export default function RegisterPage({
                   Saya berusia di atas 17 tahun dan setuju dengan{' '}
                   <button 
                     type="button" 
-                    onClick={() => alert('Syarat & Ketentuan Tusko Performance')}
+                    onClick={() => onNavigateLegal('terms')}
                     className="underline text-black font-bold cursor-pointer"
                   >
                     Syarat &amp; Ketentuan
@@ -464,7 +465,7 @@ export default function RegisterPage({
                   serta{' '}
                   <button 
                     type="button" 
-                    onClick={() => alert('Kebijakan Privasi Tusko Performance')}
+                    onClick={() => onNavigateLegal('privacy')}
                     className="underline text-black font-bold cursor-pointer"
                   >
                     Kebijakan Privasi
@@ -544,25 +545,25 @@ export default function RegisterPage({
       {/* 4. Minimal Footer */}
       <footer className="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-          <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+          <div>&copy; {new Date().getFullYear()} Tusko. Seluruh hak cipta dilindungi.</div>
           <div className="flex gap-4">
             <button 
               type="button" 
-              onClick={() => alert('Kebijakan Privasi PT Tusko Performance Indonesia')} 
+              onClick={() => onNavigateLegal('privacy')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Kebijakan Privasi
             </button>
             <button 
               type="button" 
-              onClick={() => alert('Syarat & Ketentuan Akun Member Tusko Club')} 
+              onClick={() => onNavigateLegal('terms')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Syarat Ketentuan
             </button>
             <button 
               type="button" 
-              onClick={() => alert('Pusat Bantuan CS Tusko: support@tusko.id')} 
+              onClick={() => onNavigateLegal('contact')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Bantuan CS

@@ -19,6 +19,7 @@ export default function LoginPage({
   onNavigateRegister = () => {},
   onNavigateForgotPassword = () => {},
   onBackToHome = () => {},
+  onNavigateLegal = () => {},
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -306,25 +307,25 @@ export default function LoginPage({
       {/* 4. Minimal Footer */}
       <footer className="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-          <div>&copy; 2026 PT Tusko Performance Indonesia. Seluruh hak cipta dilindungi.</div>
+          <div>&copy; {new Date().getFullYear()} Tusko. Seluruh hak cipta dilindungi.</div>
           <div className="flex gap-4">
             <button 
               type="button" 
-              onClick={() => alert('Kebijakan Privasi PT Tusko Performance Indonesia')} 
+              onClick={() => onNavigateLegal('privacy')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Kebijakan Privasi
             </button>
             <button 
               type="button" 
-              onClick={() => alert('Syarat & Ketentuan Akun Member Tusko Club')} 
+              onClick={() => onNavigateLegal('terms')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Syarat Ketentuan Akun
             </button>
             <button 
               type="button" 
-              onClick={() => alert('Pusat Bantuan Tusko Support: support@tusko.id')} 
+              onClick={() => onNavigateLegal('contact')} 
               className="hover:underline text-neutral-500 hover:text-black cursor-pointer"
             >
               Bantuan

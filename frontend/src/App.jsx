@@ -18,6 +18,8 @@ import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import SystemSettingsHub from './components/SystemSettingsHub';
 import LoginPage from './components/LoginPage';
 import AuthCallbackPage from './components/AuthCallbackPage';
+import LegalPage from './components/LegalPage';
+import { storeService } from './services/storeService';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
@@ -168,6 +170,13 @@ const VALID_VIEWS = [
   'settings',
   'login',
   'auth-callback',
+  'about',
+  'contact',
+  'terms',
+  'privacy',
+  'refund',
+  'shipping',
+  'faq',
   'register',
   'forgot-password',
   'reset-password',
@@ -293,6 +302,13 @@ const getViewFromPathOrHash = () => {
     if (rawPath.startsWith('/admin/procurement/pos/')) return 'procurement-po-detail';
     if (rawPath === '/login') return 'login';
     if (rawPath === '/auth/callback') return 'auth-callback';
+    if (rawPath === '/tentang') return 'about';
+    if (rawPath === '/kontak') return 'contact';
+    if (rawPath === '/syarat-ketentuan') return 'terms';
+    if (rawPath === '/kebijakan-privasi') return 'privacy';
+    if (rawPath === '/kebijakan-pengembalian') return 'refund';
+    if (rawPath === '/kebijakan-pengiriman') return 'shipping';
+    if (rawPath === '/faq') return 'faq';
     if (rawPath === '/register') return 'register';
     if (rawPath === '/forgot-password') return 'forgot-password';
     if (rawPath === '/reset-password') return 'reset-password';
@@ -511,6 +527,16 @@ export default function App() {
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
+  // T42: profil toko dinamis (dari Settings Hub) untuk footer & halaman legal.
+  const [storeProfile, setStoreProfile] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    storeService.getStoreProfile()
+      .then((profile) => { if (active) setStoreProfile(profile || {}); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [myOrderRef, setMyOrderRef] = useState(null);
   const [myOrderInitial, setMyOrderInitial] = useState(null);
@@ -1311,6 +1337,7 @@ export default function App() {
         onLoginSuccess={(user) => handleAuthSuccess(user, 'Berhasil masuk')}
         onNavigateRegister={() => setCurrentView('register')}
         onNavigateForgotPassword={() => setCurrentView('forgot-password')}
+        onNavigateLegal={(key) => setCurrentView(key)}
         onBackToHome={() => {
           const returnView = pendingCartAction?.returnView || 'catalog';
           setPendingCartAction(null);
@@ -1329,11 +1356,23 @@ export default function App() {
     );
   }
 
+  // T42: halaman legal/informasi storefront (konten dinamis dari Settings Hub).
+  if (['about', 'contact', 'terms', 'privacy', 'refund', 'shipping', 'faq'].includes(currentView)) {
+    return (
+      <LegalPage
+        docKey={currentView}
+        storeProfile={storeProfile}
+        onBackToHome={() => setCurrentView('catalog')}
+      />
+    );
+  }
+
   if (currentView === 'register') {
     return (
       <RegisterPage
         onRegisterSuccess={(user) => handleAuthSuccess(user, 'Selamat datang')}
         onNavigateLogin={() => setCurrentView('login')}
+        onNavigateLegal={(key) => setCurrentView(key)}
         onBackToHome={() => {
           const returnView = pendingCartAction?.returnView || 'catalog';
           setPendingCartAction(null);
@@ -2161,6 +2200,7 @@ export default function App() {
             availableExpeditions={expeditions}
             onBackToCart={() => setCurrentView('cart')}
             onShowToast={showToast}
+            onNavigateLegal={(key) => setCurrentView(key)}
             onFinishOrder={async (order) => {
               // Order selesai dibuat → bersihkan persistensi checkout.
               writeStoredCheckoutItems([]);
@@ -2348,6 +2388,8 @@ export default function App() {
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
           onOpenOrders={() => setCurrentView(currentUser?.role === 'admin' ? 'orders' : 'my-orders')}
+          onNavigateLegal={(key) => setCurrentView(key)}
+          storeProfile={storeProfile}
         />
       )}
     </div>
