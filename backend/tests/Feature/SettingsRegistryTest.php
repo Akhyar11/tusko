@@ -10,7 +10,7 @@ class SettingsRegistryTest extends TestCase
     public function test_registry_contains_expected_groups(): void
     {
         $this->assertSame(
-            ['store', 'shipping', 'payment', 'storage', 'loyalty', 'notification', 'feature_flags', 'security'],
+            ['store', 'shipping', 'payment', 'storage', 'loyalty', 'notification', 'feature_flags', 'security', 'auth'],
             SettingsRegistry::groupNames()
         );
 

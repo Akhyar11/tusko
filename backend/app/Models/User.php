@@ -171,4 +171,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Role::class, 'user_roles');
     }
+
+    /**
+     * T41.3 — Akun sosial (OAuth) milik user.
+     */
+    public function socialAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
 }

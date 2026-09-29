@@ -35,7 +35,7 @@ class SettingsApiTest extends TestCase
         $response = $this->getJson('/api/admin/settings');
 
         $response->assertStatus(200)->assertJsonPath('status', 'success');
-        $this->assertCount(8, $response->json('data.groups'));
+        $this->assertCount(count(\App\Services\Settings\SettingsRegistry::groupNames()), $response->json('data.groups'));
 
         $shipping = collect($response->json('data.groups'))->firstWhere('group', 'shipping');
         $this->assertSame('********', $shipping['values']['shipping.api_key']);

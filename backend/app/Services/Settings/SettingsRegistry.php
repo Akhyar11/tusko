@@ -121,6 +121,17 @@ class SettingsRegistry
                 'security.rate_limit_enabled' => ['type' => 'boolean', 'default' => true, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Aktifkan Rate Limit', 'description' => 'Batasi laju request endpoint sensitif.'],
             ],
         ],
+        'auth' => [
+            'label' => 'Autentikasi',
+            'description' => 'Login sosial (Google OAuth) dan kebijakan autentikasi pelanggan.',
+            'keys' => [
+                'auth.google_enabled' => ['type' => 'boolean', 'default' => false, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Aktifkan Login Google', 'description' => 'Tampilkan tombol "Masuk dengan Google" dan aktifkan endpoint OAuth Google.'],
+                'auth.google_client_id' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:255', 'is_secret' => false, 'label' => 'Google Client ID', 'description' => 'OAuth 2.0 Client ID dari Google Cloud Console.'],
+                'auth.google_client_secret' => ['type' => 'secret', 'default' => null, 'rule' => 'nullable|string|max:255', 'is_secret' => true, 'label' => 'Google Client Secret', 'description' => 'OAuth 2.0 Client Secret Google (disimpan terenkripsi).'],
+                'auth.google_redirect_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Google Redirect URL', 'description' => 'URL callback backend, mis. https://domain.com/api/auth/google/callback. Wajib sama dengan Authorized redirect URI di Google Cloud Console.'],
+                'auth.allowed_redirect_origins' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:1000', 'is_secret' => false, 'label' => 'Origin FE Diizinkan', 'description' => 'Daftar origin frontend dipisah koma yang boleh menjadi tujuan balik setelah login (mis. https://toko.com). Kosong = hanya origin yang sama dengan APP_URL.'],
+            ],
+        ],
     ];
 
     /**
