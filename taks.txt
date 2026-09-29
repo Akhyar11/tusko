@@ -1484,7 +1484,15 @@ T39. Halaman "Pesanan Saya" (Pelanggan) & Siklus Stok Pesanan ...... [PARTIAL]  
    KOORDINASI: BE (order/scheduler) = [OWNER:A2]; FE halaman storefront = [OWNER:A1];
     kontrak data T39.1 disepakati lebih dulu sebelum FE T39.4/T39.5 dikerjakan.
 
-T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [PARTIAL]  [OWNER:A1+A2]
+T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OWNER:A1+A2]
+  STATUS DEPLOY (2026-09-29): branch `feat/biteship-integration` di-rebase ke `main`
+  terbaru (di atas fix MySQL + `.htaccess` root), test backend 774 lolos, `npm run
+  build` sukses, migrasi Biteship terverifikasi di MySQL 8.0 & MariaDB 10.11, lalu
+  di-merge `main` -> `master` dan ter-deploy ke Hostinger. Verifikasi live:
+  `GET /api/admin/settings/shipping` mengembalikan opsi provider
+  `['kiriminaja','apicoid','biteship']` + field `shipping.biteship_*`.
+  Sisa operasional (bukan kode): isi `shipping.biteship_api_key` + origin area,
+  set provider `biteship`, daftarkan webhook `https://kagakspace.com/api/webhooks/biteship`.
   LATAR BELAKANG (permintaan 2026-09-29):
    - Menambah OPSI jasa pihak ketiga Biteship di samping provider yang ada
      (KiriminAja/api.co.id) untuk tarif, pembuatan order/resi, label, & lacak.
