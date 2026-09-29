@@ -1838,6 +1838,10 @@ T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [DONE
            dinamis (fallback default). [OWNER:A1]
     T43.6 [DONE] BERSIHKAN KODE MATI: hapus PromoBanner/CategoryBar bila tak dipakai. [OWNER:A1]
     T43.7 [DONE] TEST & BUKTI: suite backend + Playwright Python + `npm run build`. [OWNER:A1]
+    T43.8 [DONE] SISA HARDCODE NAVBAR + PROMO: brand/tagline navbar, label utilitas
+           (lacak/bantuan/locale/CTA member/badge member), judul saran pencarian, dan
+           carousel Promo dinamis (`storefront.promo_enabled`/`promo_banners`) — dirender
+           dari Settings Hub; bukti Playwright (ubah brand + simpan → storefront berubah). [OWNER:A1]
   ACCEPTANCE (T43):
    (1) Navbar = pohon kategori yang bisa diatur admin (induk/sub, urutan, aktif, tampil).
    (2) Seluruh teks/gambar halaman depan diubah dari Settings Hub tanpa deploy.

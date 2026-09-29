@@ -65,6 +65,7 @@ import VendorAgingPage from './components/VendorAgingPage';
 import ProfitReportPage from './components/ProfitReportPage';
 import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
+import PromoBanner from './components/PromoBanner';
 import PopularChipsBar from './components/PopularChipsBar';
 import SportCategoriesSection from './components/SportCategoriesSection';
 import TuskoClubBanner from './components/TuskoClubBanner';
@@ -2359,6 +2360,16 @@ export default function App() {
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
             />
+
+            <div className="px-4 sm:px-8 lg:px-12">
+              <PromoBanner
+                content={storefrontContent}
+                onActionClick={() => {
+                  const el = document.getElementById('product-catalog');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              />
+            </div>
 
             {/* 6. Produk Unggulan & Etalase Varian (Benchmark: adidas.co.id Grid) */}
             <ProductGrid

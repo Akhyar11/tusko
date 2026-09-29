@@ -57,6 +57,16 @@ export default function Navbar({
   onNavigateCategory = () => {},
   storefrontContent = {}
 }) {
+  // T43.5: teks navbar dinamis dari Settings Hub (fallback default).
+  const brandName = storefrontContent.brand_name || 'TUSKO';
+  const brandTagline = storefrontContent.brand_tagline || 'Performance';
+  const searchSuggestHeading = storefrontContent.search_suggest_heading || 'Saran Produk Tusko';
+  const trackLabel = storefrontContent.utility_track_label || 'Lacak Pesanan';
+  const helpLabel = storefrontContent.utility_help_label || 'Bantuan & FAQ';
+  const localeLabel = storefrontContent.locale_label || 'ID | IDR';
+  const memberCta = storefrontContent.member_cta_label || 'Gabung Tusko Club';
+  const memberBadge = storefrontContent.member_badge_label || 'TUSKO CLUB MEMBER';
+
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -194,7 +204,7 @@ export default function Navbar({
             {liveSuggestions.length > 0 ? (
               <div className="divide-y divide-neutral-100">
                 <div className="px-3.5 py-2 bg-neutral-50 text-neutral-500 font-bold flex items-center justify-between text-[11px] uppercase tracking-wider">
-                  <span>Saran Produk Tusko</span>
+                  <span>{searchSuggestHeading}</span>
                   <span className="text-[10px] text-neutral-400">Tekan untuk melihat detail</span>
                 </div>
                 {liveSuggestions.map((product) => (
@@ -262,18 +272,18 @@ export default function Navbar({
               className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
             >
               <MapPin size={12} />
-              <span>Lacak Pesanan</span>
+              <span>{trackLabel}</span>
             </button>
             <span className="hover:text-white cursor-pointer transition-colors">
-              Bantuan &amp; FAQ
+              {helpLabel}
             </span>
             <button 
               onClick={currentUser ? onOpenProfile : onOpenRegister}
               className="text-amber-400 font-extrabold hover:underline cursor-pointer"
             >
-              {currentUser ? `Halo, ${currentUser.name}` : 'Gabung Tusko Club'}
+              {currentUser ? `Halo, ${currentUser.name}` : memberCta}
             </button>
-            <span className="text-neutral-500 font-bold">ID | IDR</span>
+            <span className="text-neutral-500 font-bold">{localeLabel}</span>
           </div>
         </div>
       </div>
@@ -306,10 +316,10 @@ export default function Navbar({
               </div>
               <div className="leading-none">
                 <span className="font-sport font-black text-xl sm:text-3xl tracking-tight uppercase">
-                  TUSKO<span className="text-amber-500">.</span>
+                  {brandName}<span className="text-amber-500">.</span>
                 </span>
                 <span className="hidden sm:block text-[9px] sm:text-[10px] font-bold tracking-widest text-neutral-400 uppercase mt-0.5">
-                  Performance
+                  {brandTagline}
                 </span>
               </div>
             </div>
@@ -480,10 +490,10 @@ export default function Navbar({
                 </div>
                 <div className="leading-none">
                   <span className="font-sport font-black text-lg tracking-tight uppercase">
-                    TUSKO<span className="text-amber-500">.</span>
+                    {brandName}<span className="text-amber-500">.</span>
                   </span>
                   <span className="block text-[8px] font-bold tracking-widest text-neutral-400 uppercase">
-                    Performance
+                    {brandTagline}
                   </span>
                 </div>
               </div>
@@ -551,7 +561,7 @@ export default function Navbar({
                 ) : (
                   <div className="space-y-3">
                     <div className="text-xs">
-                      <span className="font-extrabold text-amber-400 uppercase tracking-wide block text-[10px]">TUSKO CLUB MEMBER</span>
+                      <span className="font-extrabold text-amber-400 uppercase tracking-wide block text-[10px]">{memberBadge}</span>
                       <span className="text-neutral-300 text-[11px] leading-tight block mt-0.5">
                         Masuk untuk cek status pesanan &amp; peroleh diskon member seumur hidup.
                       </span>
