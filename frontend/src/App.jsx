@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Navbar from './components/Navbar';
-import PromoBanner from './components/PromoBanner';
-import CategoryBar from './components/CategoryBar';
 import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/ProductDetail';
 import CartPage from './components/CartPage';
@@ -532,6 +530,8 @@ export default function App() {
   const [storeProfile, setStoreProfile] = useState({});
   // T43: pohon kategori navbar (dinamis, diatur admin).
   const [navCategories, setNavCategories] = useState([]);
+  // T43: konten halaman depan (hero/section/club) dinamis dari Settings Hub.
+  const [storefrontContent, setStorefrontContent] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -540,6 +540,9 @@ export default function App() {
       .catch(() => {});
     storefrontService.getNavbar()
       .then((tree) => { if (active) setNavCategories(Array.isArray(tree) ? tree : []); })
+      .catch(() => {});
+    storefrontService.getContent()
+      .then((content) => { if (active) setStorefrontContent(content || {}); })
       .catch(() => {});
     return () => { active = false; };
   }, []);
@@ -1474,6 +1477,7 @@ export default function App() {
             setSearchQuery('');
             setSelectedCategoryId(cat?.id ?? null);
           }}
+          storefrontContent={storefrontContent}
           products={products}
           onSelectProduct={handleSelectProduct}
           onResetHome={handleResetHome}
@@ -2314,6 +2318,7 @@ export default function App() {
           <>
             {/* 3. Hero Campaign Banner (Benchmark: adidas Editorial Campaign) */}
             <HeroCampaignBanner
+              content={storefrontContent}
               onBuyNowClick={() => {
                 const el = document.getElementById('product-catalog');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -2326,6 +2331,7 @@ export default function App() {
 
             {/* 4. Populer Sekarang (Horizontal Chips Slider) */}
             <PopularChipsBar
+              content={storefrontContent}
               onSelectChip={(query) => {
                 setSearchQuery(query);
                 setSelectedCategoryId(null);
@@ -2336,6 +2342,7 @@ export default function App() {
 
             {/* 5. Kategori Pilihan Olahraga (Swipeable di Mobile, 4-Kolom di Desktop) */}
             <SportCategoriesSection
+              content={storefrontContent}
               onSelectSport={(sport) => {
                 if (sport.categoryId) {
                   setSelectedCategoryId(sport.categoryId);
@@ -2363,6 +2370,7 @@ export default function App() {
               onAddToCart={handleAddToCart}
               onSelectProduct={handleSelectProduct}
               categoryTitle={activeCategory ? activeCategory.name : null}
+              heading={storefrontContent.catalog_heading}
               searchQuery={searchQuery}
               onClearSearch={() => setSearchQuery('')}
               activeFilters={{
@@ -2381,6 +2389,7 @@ export default function App() {
 
             {/* 7. Tusko Club Loyalty Banner */}
             <TuskoClubBanner
+              content={storefrontContent}
               onJoinClick={() => setCurrentView('register')}
             />
           </>
@@ -2401,6 +2410,14 @@ export default function App() {
           onOpenOrders={() => setCurrentView(currentUser?.role === 'admin' ? 'orders' : 'my-orders')}
           onNavigateLegal={(key) => setCurrentView(key)}
           storeProfile={storeProfile}
+          navCategories={navCategories}
+          onNavigateCategory={(cat) => {
+            setSearchQuery('');
+            setSelectedCategoryId(cat?.id ?? null);
+            setCurrentView('catalog');
+            const el = document.getElementById('product-catalog');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
       )}
     </div>

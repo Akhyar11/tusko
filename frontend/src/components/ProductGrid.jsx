@@ -12,6 +12,7 @@ export default function ProductGrid({
   onAddToCart = () => {},
   onSelectProduct = () => {},
   categoryTitle = null,
+  heading = null,
   searchQuery = '',
   onClearSearch = () => {},
   activeFilters = {},
@@ -55,7 +56,7 @@ export default function ProductGrid({
                 ? `PENCARIAN: "${searchQuery}"`
                 : categoryTitle 
                   ? categoryTitle.toUpperCase()
-                  : 'RILIS TERBARU TUSKO'}
+                  : (heading || 'RILIS TERBARU TUSKO')}
             </h2>
           </div>
 

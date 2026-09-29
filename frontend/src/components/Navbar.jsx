@@ -54,7 +54,8 @@ export default function Navbar({
   storefrontMenus = [],
   onNavigateStorefrontMenu = () => {},
   navCategories = [],
-  onNavigateCategory = () => {}
+  onNavigateCategory = () => {},
+  storefrontContent = {}
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -231,20 +232,27 @@ export default function Navbar({
   return (
     <>
       {/* 1. Top Announcement Utility Bar */}
+      {storefrontContent.announcement_enabled !== false && (
       <div className="bg-black text-white font-bold tracking-wider uppercase w-full max-w-full overflow-hidden">
         <div className="relative w-full px-4 sm:px-8 lg:px-12 h-9 flex items-center">
           {/* Center: Promo text — absolutely centered so it's always symmetrical */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="flex items-center gap-2.5 text-[11px]">
               <Truck size={13} className="text-amber-400 shrink-0" />
-              <span className="sm:hidden">
-                GRATIS ONGKIR{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ' SELURUH INDONESIA'} • GARANSI 14 HARI
-              </span>
-              <span className="hidden sm:inline">
-                GRATIS ONGKIR SELURUH INDONESIA{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ''}
-              </span>
-              <span className="hidden md:inline text-neutral-500">|</span>
-              <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
+              {storefrontContent.announcement_text ? (
+                <span>{storefrontContent.announcement_text}</span>
+              ) : (
+                <>
+                  <span className="sm:hidden">
+                    GRATIS ONGKIR{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ' SELURUH INDONESIA'} • GARANSI 14 HARI
+                  </span>
+                  <span className="hidden sm:inline">
+                    GRATIS ONGKIR SELURUH INDONESIA{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ''}
+                  </span>
+                  <span className="hidden md:inline text-neutral-500">|</span>
+                  <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
+                </>
+              )}
             </div>
           </div>
           {/* Right: Utility links — pushed to the right */}
@@ -269,6 +277,7 @@ export default function Navbar({
           </div>
         </div>
       </div>
+      )}
 
       {/* 2. Main Navigation Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 w-full max-w-full">
@@ -354,7 +363,7 @@ export default function Navbar({
                 onChange={onSearchChange}
                 onReset={() => onSearchChange('')}
                 onFocus={() => setIsFocused(true)}
-                placeholder="Cari produk..."
+                placeholder={storefrontContent.search_placeholder || "Cari produk..."}
                 inputClassName="w-full bg-neutral-100 border border-neutral-200 px-4 py-2 pl-10 pr-8 text-sm focus:outline-none focus:border-black font-medium"
                 iconClassName="left-3"
                 resetClassName="right-2.5"
@@ -433,7 +442,7 @@ export default function Navbar({
               onChange={onSearchChange}
               onReset={() => onSearchChange('')}
               onFocus={() => setIsFocused(true)}
-              placeholder="Cari sepatu, jersey..."
+              placeholder={storefrontContent.search_placeholder || "Cari sepatu, jersey..."}
               inputClassName="w-full bg-neutral-100 border border-neutral-300 py-2 pl-9 pr-8 text-xs focus:outline-none focus:border-black font-medium"
               iconClassName="left-3"
               iconSize={15}

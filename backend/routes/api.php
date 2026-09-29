@@ -99,6 +99,7 @@ Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, '
 Route::get('/checkout/config', [\App\Http\Controllers\Api\CheckoutController::class, 'config'])->middleware('auth.optional');
 Route::get('/store/profile', [\App\Http\Controllers\Api\StoreProfileController::class, 'show']);
 Route::get('/storefront/navbar', [\App\Http\Controllers\Api\StorefrontController::class, 'navbar']);
+Route::get('/storefront/content', [\App\Http\Controllers\Api\StorefrontController::class, 'content']);
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
 Route::get('/shipping/services', [\App\Http\Controllers\Api\ShippingRateController::class, 'localServices'])->middleware('auth.optional');
 Route::get('/shipping/areas', [\App\Http\Controllers\Api\ShippingRateController::class, 'areas'])->middleware('auth.optional');
@@ -171,6 +172,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
 
     Route::post('/admin/expeditions/sync', [\App\Http\Controllers\Api\ExpeditionController::class, 'sync']);
+
+    Route::post('/admin/storefront/image', [\App\Http\Controllers\Api\StorefrontController::class, 'uploadImage']);
 
     Route::post('/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'store'])->where('idOrOrderNumber', '.*');
 

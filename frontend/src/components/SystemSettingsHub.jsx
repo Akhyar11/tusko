@@ -14,6 +14,7 @@ import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
+import ImageUploadField from './molecules/ImageUploadField';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { settingsService } from '../services/settingsService';
 import { expeditionService } from '../services/expeditionService';
@@ -151,6 +152,16 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
           onChange={(val) => setValue(field.key, val)}
           options={field.options.map((opt) => ({ value: opt, label: opt }))}
           placeholder={`Pilih ${field.label.toLowerCase()}...`}
+        />
+      );
+    }
+
+    if (field.type === 'image') {
+      return (
+        <ImageUploadField
+          value={value ?? ''}
+          onChange={(url) => setValue(field.key, url)}
+          placeholder={`Unggah ${field.label.toLowerCase()}...`}
         />
       );
     }

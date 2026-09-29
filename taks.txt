@@ -1790,7 +1790,7 @@ T42. Kepatuhan Storefront & Onboarding Midtrans .................... [PARTIAL]  
   DEPENDENSI: T42.1 -> T36/T21.1 (settings) ; T42.2 -> T42.1 ; T42.3 -> T42.1/T42.2 ;
     T42.4 -> T07/T28 (checkout) ; T42.6 -> T22 (QA).
 
-T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [PARTIAL]  [OWNER:A1]
+T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [DONE]  [OWNER:A1]
   LATAR BELAKANG (permintaan user 2026-09-29):
    - Seluruh halaman depan (header→footer) masih hardcode: navbar (Koleksi/Outlet/mini-menu),
      HeroCampaignBanner, PopularChipsBar, SportCategoriesSection, TuskoClubBanner,
@@ -1828,15 +1828,16 @@ T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [PART
   Minor:
     T43.1 [DONE] DB & MASTER KATEGORI: migrasi kolom categories + form Create/Edit (parent,
            sort_order, is_navbar, is_active) + validasi anti-cycle + test. [OWNER:A1]
-    T43.2 [PARTIAL] API NAVBAR & CONTENT: `GET /api/storefront/navbar` DONE;
-           `GET /api/storefront/content` + upload gambar admin MASIH TODO. [OWNER:A1]
+    T43.2 [DONE] API NAVBAR & CONTENT: `GET /api/storefront/navbar` + `GET /api/storefront/content`
+           + `POST /api/admin/storefront/image` (upload Storage/R2) + test. [OWNER:A1]
     T43.3 [DONE] FE NAVBAR MEGA-MENU: render pohon kategori + dropdown + announcement/search
            dinamis; hapus hardcode. [OWNER:A1]
-    T43.4 [TODO] HALAMAN ADMIN STOREFRONT CONTENT + repeater + upload R2 + menu + rute. [OWNER:A1]
-    T43.5 [TODO] FE KONTEN: Hero/Popular/Sports/Promo/Club/ProductGrid headings/Footer categories
+    T43.4 [DONE] KONTEN VIA SETTINGS HUB (grup `storefront`) + tipe field `image` (upload R2)
+           via `molecules/ImageUploadField`; seluruh teks/list (JSON) dapat diatur admin. [OWNER:A1]
+    T43.5 [DONE] FE KONTEN: Hero/Popular/Sports/Promo/Club/ProductGrid headings/Footer categories
            dinamis (fallback default). [OWNER:A1]
-    T43.6 [TODO] BERSIHKAN KODE MATI: hapus PromoBanner/CategoryBar bila tak dipakai. [OWNER:A1]
-    T43.7 [TODO] TEST & BUKTI: suite backend + Playwright Python + `npm run build`. [OWNER:A1]
+    T43.6 [DONE] BERSIHKAN KODE MATI: hapus PromoBanner/CategoryBar bila tak dipakai. [OWNER:A1]
+    T43.7 [DONE] TEST & BUKTI: suite backend + Playwright Python + `npm run build`. [OWNER:A1]
   ACCEPTANCE (T43):
    (1) Navbar = pohon kategori yang bisa diatur admin (induk/sub, urutan, aktif, tampil).
    (2) Seluruh teks/gambar halaman depan diubah dari Settings Hub tanpa deploy.

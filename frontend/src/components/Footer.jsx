@@ -4,12 +4,26 @@ export default function Footer({
   onSelectCategory = () => {},
   onOpenOrders = () => {},
   onNavigateLegal = () => {},
-  storeProfile = {}
+  storeProfile = {},
+  navCategories = [],
+  onNavigateCategory = null
 }) {
   const brandName = storeProfile?.legal_name || storeProfile?.name || 'Toko';
   const whatsapp = String(storeProfile?.whatsapp || '').replace(/\D/g, '');
   const aboutExcerpt = String(storeProfile?.about_text || '').trim().split(/\n{2,}/)[0] || '';
   const returnDays = storeProfile?.return_window_days;
+
+  const FALLBACK_PRIMARY = ['Sepatu Lari', 'Jersey Timnas', 'Celana Kompresi', 'Aksesoris Olahraga'];
+  const FALLBACK_SECONDARY = ['Running', 'Football', 'Training & Gym', 'Basketball'];
+  const categories = Array.isArray(navCategories) ? navCategories.filter((c) => c?.name) : [];
+  const half = Math.ceil(categories.length / 2);
+  const primaryCats = categories.length > 0 ? categories.slice(0, half) : null;
+  const secondaryCats = categories.length > 0 ? categories.slice(half) : null;
+
+  const goCategory = (cat) => {
+    if (onNavigateCategory) onNavigateCategory(cat);
+    else onSelectCategory(cat.name);
+  };
 
   return (
     <footer className="bg-black text-white pt-12 sm:pt-16 pb-12 border-t border-neutral-800 w-full">
@@ -20,42 +34,17 @@ export default function Footer({
               PRODUK
             </h4>
             <ul className="space-y-2 text-neutral-400">
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Sepatu')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Sepatu Lari
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Jersey')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Jersey Timnas
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Celana')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Celana Kompresi
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Aksesoris')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Aksesoris Olahraga
-                </button>
-              </li>
+              {(primaryCats || FALLBACK_PRIMARY).map((item, idx) => (
+                <li key={primaryCats ? (item.id ?? idx) : idx}>
+                  <button
+                    type="button"
+                    onClick={() => (primaryCats ? goCategory(item) : onSelectCategory(item))}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    {primaryCats ? item.name : item}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -64,42 +53,17 @@ export default function Footer({
               OLAHRAGA
             </h4>
             <ul className="space-y-2 text-neutral-400">
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Running')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Running
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Football')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Football
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Training')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Training &amp; Gym
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => onSelectCategory('Basketball')} 
-                  className="hover:text-white transition-colors cursor-pointer text-left"
-                >
-                  Basketball
-                </button>
-              </li>
+              {(secondaryCats || FALLBACK_SECONDARY).map((item, idx) => (
+                <li key={secondaryCats ? (item.id ?? idx) : idx}>
+                  <button
+                    type="button"
+                    onClick={() => (secondaryCats ? goCategory(item) : onSelectCategory(item))}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    {secondaryCats ? item.name : item}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
