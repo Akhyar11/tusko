@@ -38,8 +38,15 @@ else
 fi
 
 echo "==> composer install --no-dev"
+# `--no-scripts`: Hostinger menonaktifkan `proc_open`, sehingga script Composer
+# (mis. `@php artisan package:discover`) gagal karena Symfony Process. Script
+# dijalankan manual setelah ini.
 # shellcheck disable=SC2086
-$COMPOSER install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+$COMPOSER install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress --no-scripts
+
+# --- Post-install Laravel (pengganti script composer) ---
+echo "==> php artisan package:discover"
+"$PHP_BIN" artisan package:discover --ansi || true
 
 # --- APP_KEY (generate sekali bila masih kosong) ---
 if ! grep -qE '^APP_KEY=base64:' .env; then
