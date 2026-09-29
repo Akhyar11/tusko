@@ -6,12 +6,10 @@ import {
   UserPlus, 
   ShieldCheck, 
   ShoppingBag, 
-  Wallet, 
   ChevronDown, 
   Sparkles
 } from 'lucide-react';
 import { resolveMenuIcon } from '../utils/menuIcons';
-import { SHOW_OPERATIONAL_MODULES } from '../config/features';
 
 export default function UserMenuDropdown({
   currentUser = null,
@@ -19,7 +17,6 @@ export default function UserMenuDropdown({
   onOpenRegister = () => {},
   onOpenProfile = () => {},
   onOpenOrders = () => {},
-  onOpenTransactions = () => {},
   onOpenProductsAdmin = () => {},
   onOpenStock = () => {},
   onOpenTemplates = () => {},
@@ -194,19 +191,8 @@ export default function UserMenuDropdown({
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
                 >
                   <ShoppingBag size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
-                  <span>Daftar Pesanan Toko</span>
+                  <span>Pesanan Saya</span>
                 </button>
-
-                {SHOW_OPERATIONAL_MODULES && (
-                  <button
-                    type="button"
-                    onClick={() => handleAction(onOpenTransactions)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-none transition-colors cursor-pointer text-left font-bold text-xs uppercase group"
-                  >
-                    <Wallet size={15} className="text-neutral-500 group-hover:text-black transition-colors shrink-0" />
-                    <span>Catatan Transaksi &amp; Kas</span>
-                  </button>
-                )}
               </div>
 
               {/* Panel Admin (If role is_admin) */}
