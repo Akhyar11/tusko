@@ -585,33 +585,6 @@ export default function Navbar({
                         Daftar
                       </button>
                     </div>
-
-                    {/* Demo Switcher shortcut */}
-                    <div className="pt-2 border-t border-neutral-800 flex items-center justify-between text-[11px]">
-                      <span className="text-neutral-400">Akun Demo Cepat:</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSwitchUser({ id: 1, name: 'Akhyar Admin', role: 'admin', email: 'admin@tusko.id' });
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="px-2 py-0.5 bg-neutral-800 text-amber-300 rounded-none font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
-                        >
-                          Admin
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSwitchUser({ id: 2, name: 'Budi Pembeli', role: 'customer', email: 'budi@gmail.com' });
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="px-2 py-0.5 bg-neutral-800 text-neutral-300 rounded-none font-bold hover:bg-neutral-700 cursor-pointer text-[10px]"
-                        >
-                          Member
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>

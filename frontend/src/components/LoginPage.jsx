@@ -4,7 +4,6 @@ import {
   ShieldCheck, 
   Eye, 
   EyeOff, 
-  Info, 
   AlertCircle, 
   CheckCircle2, 
   Loader2 
@@ -21,8 +20,8 @@ export default function LoginPage({
   onNavigateForgotPassword = () => {},
   onBackToHome = () => {},
 }) {
-  const [email, setEmail] = useState('budi.pratama@gmail.com');
-  const [password, setPassword] = useState('TuskoSport2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,18 +29,6 @@ export default function LoginPage({
   const [successMessage, setSuccessMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState(null);
   const turnstileRef = useRef(null);
-
-  const handleQuickFill = (userType) => {
-    if (userType === 'customer') {
-      setEmail('budi.pratama@gmail.com');
-      setPassword('TuskoSport2026!');
-      setErrorMessage('');
-    } else if (userType === 'admin') {
-      setEmail('admin@tusko.com');
-      setPassword('admin123');
-      setErrorMessage('');
-    }
-  };
 
   const handleSocialLogin = async (socialEmail, provider) => {
     setIsLoading(true);
@@ -309,33 +296,6 @@ export default function LoginPage({
               )}
             </button>
           </form>
-
-          {/* Quick Demo Login Helper Badge */}
-          <div className="mt-5 p-3 bg-amber-50 border border-amber-200 text-xs text-amber-900">
-            <div className="font-bold flex items-center gap-1.5 mb-1">
-              <Info size={14} className="text-amber-600 shrink-0" />
-              <span>Mode Uji Coba Prototipe:</span>
-            </div>
-            <p className="text-[11px] text-amber-800 leading-relaxed mb-2">
-              Klik tombol <em>Masuk Sekarang</em> di atas untuk simulasi login instan dengan akun demo member.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1 border-t border-amber-200/60">
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('customer')} 
-                className="px-2 py-1 bg-white border border-amber-300 hover:bg-amber-100 text-amber-950 font-bold text-[10px] uppercase rounded-none cursor-pointer"
-              >
-                Isi Akun Pembeli (Budi)
-              </button>
-              <button 
-                type="button" 
-                onClick={() => handleQuickFill('admin')} 
-                className="px-2 py-1 bg-white border border-amber-300 hover:bg-amber-100 text-amber-950 font-bold text-[10px] uppercase rounded-none cursor-pointer"
-              >
-                Isi Akun Admin (Akhyar)
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Registration CTA Box */}
