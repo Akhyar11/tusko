@@ -1294,9 +1294,15 @@ T36. Pengaturan Sistem Terpusat (Admin Settings Hub) ............... [DONE]  [OW
            guard admin (T24) + feature flag; rute `/admin/settings`.
            WAJIB patuh G11: daftarkan `settings` di VALID_VIEWS, getViewFromPathOrHash
            (`/admin/settings`), cabang render App.jsx, dan `adminCoreViews`.
-    T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
-           tersimpan & dipakai modul (`GET /api/shipping/rates`) + secret tetap dimask
-           + konsol 0 error.
+     T36.19 [DONE] Uji browser end-to-end: ubah `shipping.base_url`/TTL -> verifikasi
+            tersimpan & dipakai modul (`GET /api/shipping/rates`) + secret tetap dimask
+            + konsol 0 error.
+     T36.20 [DONE] WIRE SMTP KE RUNTIME: `MailConfigService` menimpa `config('mail.*')`
+            dari key `notification.*` (host/port/username/password/from) saat request
+            HTTP (guard `runningInConsole` + cek tabel `integrations`); tambah field
+            `notification.mail_from_address`. Mendukung SMTP Hostinger
+            (`smtp.hostinger.com:465`) tanpa kode transport kustom. Test 778 lolos.
+
   Catatan desain:
   - Patuh aturan 14 (1 halaman 1 entitas: "Pengaturan Sistem" sebagai satu entitas,
     SECTION bukan tab multi-modul), 22 (ikon modul di header), 24/25 (form kanonis

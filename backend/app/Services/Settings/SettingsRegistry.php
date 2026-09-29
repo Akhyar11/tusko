@@ -90,6 +90,7 @@ class SettingsRegistry
             'description' => 'Identitas pengirim dan kredensial mailer.',
             'keys' => [
                 'notification.from_name' => ['type' => 'string', 'default' => 'Tusko Official Store', 'rule' => 'nullable|string|max:150', 'is_secret' => false, 'label' => 'Nama Pengirim', 'description' => 'Nama pengirim pada email notifikasi.'],
+                'notification.mail_from_address' => ['type' => 'email', 'default' => null, 'rule' => 'nullable|email|max:150', 'is_secret' => false, 'label' => 'Alamat Pengirim (From)', 'description' => 'Alamat email pengirim notifikasi (mis. no-reply@kagakspace.com).'],
                 'notification.reply_to' => ['type' => 'email', 'default' => null, 'rule' => 'nullable|email|max:150', 'is_secret' => false, 'label' => 'Reply-To', 'description' => 'Alamat balasan email notifikasi.'],
                 'notification.mailer' => ['type' => 'string', 'default' => 'smtp', 'rule' => 'nullable|string|in:smtp,log,array,ses,mailgun,postmark', 'is_secret' => false, 'label' => 'Mailer', 'description' => 'Driver pengiriman email.', 'options' => ['smtp', 'log', 'array', 'ses', 'mailgun', 'postmark']],
                 'notification.mail_host' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:150', 'is_secret' => false, 'label' => 'SMTP Host', 'description' => 'Host server SMTP.'],

@@ -28,6 +28,31 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\User::observe(\App\Observers\UserObserver::class);
 
         $this->configureRateLimiting();
+        $this->applyMailSettings();
+    }
+
+    /**
+     * Terapkan konfigurasi SMTP dari Settings Hub (T36) pada request HTTP.
+     *
+     * Hanya dijalankan di luar console agar tidak mengganggu `migrate`/`config:cache`
+     * dan tidak membocorkan nilai ke cache config. Bila DB belum siap (instalasi
+     * awal), dilewati tanpa error.
+     */
+    protected function applyMailSettings(): void
+    {
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('integrations')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        app(\App\Services\MailConfigService::class)->apply();
     }
 
     /**
