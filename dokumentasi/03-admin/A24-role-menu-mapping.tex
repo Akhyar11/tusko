@@ -1,0 +1,43 @@
+% ============================================================
+% A24 — Role-Menu Mapping
+% ============================================================
+\flowmeta{A24}{Role-Menu Mapping}{Admin}
+
+\begin{flowsection}{Tujuan}
+Memetakan menu yang dapat diakses tiap peran (matriks centang).
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Role → Menu Mapping (/admin/role-menu).
+  \item Pilih peran.
+  \item Centang menu yang diizinkan.
+  \item Simpan; sidebar peran tersebut langsung menyesuaikan.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a24-1.png}{Halaman Role-Menu Mapping pada Panel Admin}{fig:a24-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Hak akses menu per peran tersimpan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Peran tanpa menu → sidebar kosong & URL admin ditolak.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{RoleMenuPage.jsx}
+  \item \texttt{MenuController}
+  \item \texttt{/api/role-menus}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
