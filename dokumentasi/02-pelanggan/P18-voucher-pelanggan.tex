@@ -1,0 +1,43 @@
+% ============================================================
+% P18 — Voucher Pelanggan
+% ============================================================
+\flowmeta{P18}{Voucher Pelanggan}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Melihat dan mengklaim voucher promo, serta memakainya saat checkout.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login sebagai pelanggan.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengelola Voucher}
+\begin{enumerate}
+  \item Buka \texttt{/profile} lalu tab \textbf{Voucher Diskon}.
+  \item Lihat daftar voucher yang tersedia/aktif.
+  \item Klik \textbf{Klaim} untuk menyimpan voucher ke akun.
+  \item Voucher yang dimiliki dapat dimasukkan sebagai kode kupon di keranjang/checkout.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p18-1.png}{Tab Voucher Diskon pada halaman profil pelanggan}{fig:p18-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Voucher tersimpan pada akun dan dapat diterapkan pada transaksi yang memenuhi
+syarat (minimal belanja/kategori).
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kuota voucher habis $\rightarrow$ klaim ditolak.
+  \item Tidak memenuhi syarat $\rightarrow$ muncul pesan kesalahan kupon.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProfilePage.jsx} (tab voucher), \texttt{authService.claimVoucher}. BE
+\texttt{VoucherController}. Rute \texttt{GET /api/vouchers}, \texttt{POST /api/vouchers/claim},
+\texttt{POST /api/vouchers/validate}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

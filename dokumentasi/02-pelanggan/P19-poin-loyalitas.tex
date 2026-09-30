@@ -1,0 +1,42 @@
+% ============================================================
+% P19 — Poin Loyalitas
+% ============================================================
+\flowmeta{P19}{Poin Loyalitas}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Memantau saldo dan riwayat poin loyalitas (Tusko Club) serta menukarkannya
+sebagai potongan pembayaran.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login sebagai pelanggan.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengelola Poin}
+\begin{enumerate}
+  \item Buka \texttt{/profile} lalu tab \textbf{Poin Loyalitas}.
+  \item Lihat saldo poin dan riwayat perolehan/penggunaan.
+  \item Saat checkout, tukarkan poin sebagai potongan (lihat P11).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p19-1.png}{Tab Poin Loyalitas (saldo dan riwayat poin)}{fig:p19-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Saldo poin bertambah setiap transaksi selesai dan berkurang saat ditukarkan;
+riwayat tercatat (ledger).
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Poin tidak cukup $\rightarrow$ penukaran dinonaktifkan.
+  \item Poin kedaluwarsa $\rightarrow$ dikurangi otomatis sesuai kebijakan.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProfilePage.jsx} (tab poin). BE \texttt{LoyaltyController}. Rute
+\texttt{GET /api/loyalty/ledger}. Tabel \texttt{loyalty\_point\_transactions}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
