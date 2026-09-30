@@ -1,0 +1,44 @@
+% ============================================================
+% A07 — Stock Opname
+% ============================================================
+\flowmeta{A07}{Stock Opname}{Admin}
+
+\begin{flowsection}{Tujuan}
+Melakukan sesi hitung fisik stok dan mencatat penyesuaian selisih.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Stock Opname (/admin/stock-opname).
+  \item Buat sesi opname baru (pilih gudang).
+  \item Isi jumlah fisik per produk; sistem menghitung selisih.
+  \item Setujui sesi untuk menerapkan penyesuaian stok.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a07-1.png}{Halaman Stock Opname pada Panel Admin}{fig:a07-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Selisih opname diterapkan sebagai penyesuaian stok.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Sesi harus disetujui agar penyesuaian berlaku.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{StockOpnameListPage.jsx}
+  \item \texttt{StockOpnameCreatePage.jsx}
+  \item \texttt{InventoryController}
+  \item \texttt{/api/stock-opnames}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

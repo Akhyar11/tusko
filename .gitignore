@@ -18,3 +18,10 @@ INVOICE_*.pdf
 __pycache__/
 *.pyc
 
+# LaTeX build artifacts
+dokumentasi/*.aux
+dokumentasi/*.log
+dokumentasi/*.out
+dokumentasi/*.toc
+dokumentasi/build.log
+
