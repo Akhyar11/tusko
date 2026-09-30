@@ -1,0 +1,644 @@
+{
+  "keterangan": "Manifest verifikasi screenshot dokumentasi TUSKO (auditor 14). Isi `expect_text` dengan teks penanda halaman agar auditor memastikan alur benar-benar ada. Kosongkan `url` untuk alur non-halaman (email/ops).",
+  "base_url_default": "http://localhost:5173",
+  "flows": [
+    {
+      "kode": "P01",
+      "nama": "Registrasi Akun",
+      "aktor": "Pelanggan",
+      "url": "/register",
+      "expect_text": "Daftar",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p01-1.png"
+      ]
+    },
+    {
+      "kode": "P02",
+      "nama": "Login Email",
+      "aktor": "Pelanggan",
+      "url": "/login",
+      "expect_text": "Masuk",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p02-1.png"
+      ]
+    },
+    {
+      "kode": "P03",
+      "nama": "Login dengan Google",
+      "aktor": "Pelanggan",
+      "url": "/login",
+      "expect_text": "Google",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p03-1.png"
+      ]
+    },
+    {
+      "kode": "P04",
+      "nama": "Lupa dan Reset Password",
+      "aktor": "Pelanggan",
+      "url": "/forgot-password",
+      "expect_text": "Lupa",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p04-1.png"
+      ]
+    },
+    {
+      "kode": "P05",
+      "nama": "Verifikasi Email",
+      "aktor": "Pelanggan",
+      "url": "/email-verified",
+      "expect_text": "verifikasi",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p05-1.png"
+      ]
+    },
+    {
+      "kode": "P06",
+      "nama": "Profil dan Keamanan",
+      "aktor": "Pelanggan",
+      "url": "/profile",
+      "expect_text": "Profil",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p06-1.png"
+      ]
+    },
+    {
+      "kode": "P07",
+      "nama": "Buku Alamat dan GPS",
+      "aktor": "Pelanggan",
+      "url": "/profile",
+      "expect_text": "Alamat",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p07-1.png"
+      ]
+    },
+    {
+      "kode": "P08",
+      "nama": "Katalog: Filter, Pencarian dan Urutan",
+      "aktor": "Pelanggan/Tamu",
+      "url": "/",
+      "expect_text": "Produk",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p08-1.png"
+      ]
+    },
+    {
+      "kode": "P09",
+      "nama": "Detail Produk dan Varian",
+      "aktor": "Pelanggan/Tamu",
+      "url": "/",
+      "expect_text": "Produk",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p09-1.png"
+      ]
+    },
+    {
+      "kode": "P10",
+      "nama": "Keranjang Belanja",
+      "aktor": "Pelanggan/Tamu",
+      "url": "/cart",
+      "expect_text": "Keranjang",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p10-1.png"
+      ]
+    },
+    {
+      "kode": "P11",
+      "nama": "Checkout dan Ongkos Kirim",
+      "aktor": "Pelanggan",
+      "url": "/checkout",
+      "expect_text": "Checkout",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p11-1.png"
+      ]
+    },
+    {
+      "kode": "P12",
+      "nama": "Pembayaran Midtrans Snap",
+      "aktor": "Pelanggan",
+      "url": "/checkout",
+      "expect_text": "Pembayaran",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p12-1.png"
+      ]
+    },
+    {
+      "kode": "P13",
+      "nama": "Transfer Bank Manual",
+      "aktor": "Pelanggan",
+      "url": "/checkout",
+      "expect_text": "Transfer",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p13-1.png"
+      ]
+    },
+    {
+      "kode": "P14",
+      "nama": "Pesanan Saya",
+      "aktor": "Pelanggan",
+      "url": "/orders",
+      "expect_text": "Pesanan",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p14-1.png"
+      ]
+    },
+    {
+      "kode": "P15",
+      "nama": "Pelacakan Pengiriman",
+      "aktor": "Pelanggan",
+      "url": "/orders/detail",
+      "expect_text": "Lacak",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p15-1.png"
+      ]
+    },
+    {
+      "kode": "P16",
+      "nama": "Retur dan Refund",
+      "aktor": "Pelanggan",
+      "url": "/returns/request",
+      "expect_text": "Retur",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p16-1.png"
+      ]
+    },
+    {
+      "kode": "P17",
+      "nama": "Ulasan Produk",
+      "aktor": "Pelanggan",
+      "url": "/reviews/create",
+      "expect_text": "Ulasan",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p17-1.png"
+      ]
+    },
+    {
+      "kode": "P18",
+      "nama": "Voucher Pelanggan",
+      "aktor": "Pelanggan",
+      "url": "/profile",
+      "expect_text": "Voucher",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p18-1.png"
+      ]
+    },
+    {
+      "kode": "P19",
+      "nama": "Poin Loyalitas",
+      "aktor": "Pelanggan",
+      "url": "/profile",
+      "expect_text": "Poin",
+      "login": "customer",
+      "gambar": [
+        "gambar/pelanggan/p19-1.png"
+      ]
+    },
+    {
+      "kode": "P20",
+      "nama": "Halaman Legal dan Informasi",
+      "aktor": "Pelanggan/Tamu",
+      "url": "/tentang",
+      "expect_text": "Tentang",
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p20-1.png"
+      ]
+    },
+    {
+      "kode": "P21",
+      "nama": "Notifikasi Email",
+      "aktor": "Pelanggan",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/pelanggan/p21-1.png"
+      ]
+    },
+    {
+      "kode": "A01",
+      "nama": "Login Admin dan Dashboard",
+      "aktor": "Admin",
+      "url": "/admin/dashboard",
+      "expect_text": "Dashboard",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a01-1.png"
+      ]
+    },
+    {
+      "kode": "A02",
+      "nama": "Dashboard BI",
+      "aktor": "Admin",
+      "url": "/admin/dashboard",
+      "expect_text": "Dashboard",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a02-1.png"
+      ]
+    },
+    {
+      "kode": "A03",
+      "nama": "Produk: Daftar, Tambah, Edit",
+      "aktor": "Admin",
+      "url": "/admin/products",
+      "expect_text": "Produk",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a03-1.png"
+      ]
+    },
+    {
+      "kode": "A04",
+      "nama": "Kategori dan Konfigurasi Navbar",
+      "aktor": "Admin",
+      "url": "/admin/categories",
+      "expect_text": "Kategori",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a04-1.png"
+      ]
+    },
+    {
+      "kode": "A05",
+      "nama": "Stok dan Mutasi",
+      "aktor": "Admin",
+      "url": "/admin/stock",
+      "expect_text": "Stok",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a05-1.png"
+      ]
+    },
+    {
+      "kode": "A06",
+      "nama": "Smart Inventory Multi-Gudang",
+      "aktor": "Admin",
+      "url": "/admin/stock",
+      "expect_text": "Gudang",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a06-1.png"
+      ]
+    },
+    {
+      "kode": "A07",
+      "nama": "Stock Opname",
+      "aktor": "Admin",
+      "url": "/admin/stock-opname",
+      "expect_text": "Opname",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a07-1.png"
+      ]
+    },
+    {
+      "kode": "A08",
+      "nama": "Master Gudang dan Lokasi",
+      "aktor": "Admin",
+      "url": "/admin/warehouses",
+      "expect_text": "Gudang",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a08-1.png"
+      ]
+    },
+    {
+      "kode": "A09",
+      "nama": "Antrean Pesanan",
+      "aktor": "Admin",
+      "url": "/admin/orders",
+      "expect_text": "Pesanan",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a09-1.png"
+      ]
+    },
+    {
+      "kode": "A10",
+      "nama": "Fulfillment: Pickup, Resi dan Label",
+      "aktor": "Admin",
+      "url": "/admin/orders",
+      "expect_text": "Pengiriman",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a10-1.png"
+      ]
+    },
+    {
+      "kode": "A11",
+      "nama": "Verifikasi Pembayaran Manual",
+      "aktor": "Admin",
+      "url": "/admin/orders",
+      "expect_text": "Pembayaran",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a11-1.png"
+      ]
+    },
+    {
+      "kode": "A12",
+      "nama": "Procurement: Vendor, PO, GRN dan Bills",
+      "aktor": "Admin",
+      "url": "/admin/procurement/pos",
+      "expect_text": "Purchase",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a12-1.png"
+      ]
+    },
+    {
+      "kode": "A13",
+      "nama": "Buku Kas, Rekening dan Jurnal",
+      "aktor": "Admin",
+      "url": "/admin/transactions",
+      "expect_text": "Transaksi",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a13-1.png"
+      ]
+    },
+    {
+      "kode": "A14",
+      "nama": "Laporan Keuangan dan HPP",
+      "aktor": "Admin",
+      "url": "/admin/reports/income-statement",
+      "expect_text": "Laba",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a14-1.png"
+      ]
+    },
+    {
+      "kode": "A15",
+      "nama": "Retur dan Refund Admin",
+      "aktor": "Admin",
+      "url": "/admin/returns",
+      "expect_text": "Retur",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a15-1.png"
+      ]
+    },
+    {
+      "kode": "A16",
+      "nama": "Voucher dan Promo Admin",
+      "aktor": "Admin",
+      "url": "/admin/vouchers",
+      "expect_text": "Voucher",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a16-1.png"
+      ]
+    },
+    {
+      "kode": "A17",
+      "nama": "Moderasi Ulasan",
+      "aktor": "Admin",
+      "url": "/admin/reviews",
+      "expect_text": "Ulasan",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a17-1.png"
+      ]
+    },
+    {
+      "kode": "A18",
+      "nama": "Template Dokumen dan Resi",
+      "aktor": "Admin",
+      "url": "/admin/templates",
+      "expect_text": "Template",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a18-1.png"
+      ]
+    },
+    {
+      "kode": "A19",
+      "nama": "Integrasi Ekspedisi dan Pembayaran",
+      "aktor": "Admin",
+      "url": "/admin/expeditions",
+      "expect_text": "Ekspedisi",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a19-1.png"
+      ]
+    },
+    {
+      "kode": "A20",
+      "nama": "Pengaturan Sistem Terpusat",
+      "aktor": "Admin",
+      "url": "/admin/settings",
+      "expect_text": "Pengaturan",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a20-1.png"
+      ]
+    },
+    {
+      "kode": "A21",
+      "nama": "Menu dan Role Access",
+      "aktor": "Admin",
+      "url": "/admin/menus",
+      "expect_text": "Menu",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a21-1.png"
+      ]
+    },
+    {
+      "kode": "A22",
+      "nama": "Master Users",
+      "aktor": "Admin",
+      "url": "/admin/users",
+      "expect_text": "Pengguna",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a22-1.png"
+      ]
+    },
+    {
+      "kode": "A23",
+      "nama": "Master Role",
+      "aktor": "Admin",
+      "url": "/admin/roles",
+      "expect_text": "Peran",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a23-1.png"
+      ]
+    },
+    {
+      "kode": "A24",
+      "nama": "Role-Menu Mapping",
+      "aktor": "Admin",
+      "url": "/admin/role-menu",
+      "expect_text": "Menu",
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a24-1.png"
+      ]
+    },
+    {
+      "kode": "A25",
+      "nama": "Audit Log",
+      "aktor": "Admin",
+      "url": null,
+      "expect_text": null,
+      "login": "admin",
+      "gambar": [
+        "gambar/admin/a25-1.png"
+      ]
+    },
+    {
+      "kode": "A26",
+      "nama": "Scheduler dan Queue",
+      "aktor": "Admin/Ops",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/admin/a26-1.png"
+      ]
+    },
+    {
+      "kode": "A27",
+      "nama": "Deployment dan Operasional",
+      "aktor": "Admin/Ops",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/admin/a27-1.png"
+      ]
+    },
+    {
+      "kode": "D01",
+      "nama": "Cover dan Lembar Pengesahan",
+      "aktor": "Umum",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/umum/d01-1.png"
+      ]
+    },
+    {
+      "kode": "D02",
+      "nama": "Gambaran Sistem",
+      "aktor": "Umum",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/umum/d02-1.png"
+      ]
+    },
+    {
+      "kode": "D03",
+      "nama": "Arsitektur dan Aktor",
+      "aktor": "Umum",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/umum/d03-1.png"
+      ]
+    },
+    {
+      "kode": "D04",
+      "nama": "Hak Akses dan Menu",
+      "aktor": "Umum",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/umum/d04-1.png"
+      ]
+    },
+    {
+      "kode": "D05",
+      "nama": "Cara Login dan Navigasi",
+      "aktor": "Umum",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/umum/d05-1.png"
+      ]
+    },
+    {
+      "kode": "L01",
+      "nama": "Skema Database",
+      "aktor": "Lampiran",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/lampiran/l01-1.png"
+      ]
+    },
+    {
+      "kode": "L02",
+      "nama": "Daftar Status dan Kode",
+      "aktor": "Lampiran",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/lampiran/l02-1.png"
+      ]
+    },
+    {
+      "kode": "L03",
+      "nama": "Referensi API",
+      "aktor": "Lampiran",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/lampiran/l03-1.png"
+      ]
+    },
+    {
+      "kode": "L04",
+      "nama": "Troubleshooting",
+      "aktor": "Lampiran",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/lampiran/l04-1.png"
+      ]
+    },
+    {
+      "kode": "L05",
+      "nama": "Glosarium",
+      "aktor": "Lampiran",
+      "url": null,
+      "expect_text": null,
+      "login": null,
+      "gambar": [
+        "gambar/lampiran/l05-1.png"
+      ]
+    }
+  ]
+}

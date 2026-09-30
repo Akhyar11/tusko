@@ -1,0 +1,382 @@
+================================================================================
+TAKS_DOKUMENTASI.TXT — RENCANA & BREAKDOWN DOKUMENTASI SISTEM TUSKO
+Acuan kanonis : taks.txt (T00–T46) + PRD_DAN_DESAIN_SISTEM_TUSKO.md
+Output akhir  : PDF (Bahasa Indonesia) — Panduan Pengguna TUSKO (Admin & Pelanggan)
+Pemilik       : Agent Dokumentasi (dikerjakan 1 flow = 1 berkas .tex = 1 commit)
+Status per item: [TODO] / [PARTIAL] / [DONE]
+================================================================================
+
+KONTEKS:
+Development dianggap SELESAI. Dokumentasi diturunkan LANGSUNG dari taks.txt agar
+TIDAK ADA fitur/flow yang terlewat. Pengguna sistem = 2 aktor:
+  - PELANGGAN (storefront)
+  - ADMIN (Panel Admin ERP)
+
+--------------------------------------------------------------------------------
+ATURAN GLOBAL DOKUMENTASI (WD = Writing/Docs Rules)
+--------------------------------------------------------------------------------
+WD1. FORMAT AKHIR = PDF. Kompilasi terpisah di folder `dokumentasi/` (main.tex +
+     preamble.tex + config.tex). Toolchain: pdflatex/xelatex (tersedia) via
+     `dokumentasi/build.sh`. DILARANG menaruh seluruh isi dalam 1 berkas .tex besar.
+WD2. SATU FLOW/FITUR = SATU BERKAS `.tex` (mis. `02-pelanggan/P10-keranjang.tex`).
+     `main.tex` HANYA berisi `\input{...}` (daftar isi terurut). 
+WD3. WAJIB ADA GAMBAR untuk setiap alur/fitur (minimal 1 screenshot per flow;
+     flow kompleks >1 gambar: tiap langkah penting). Bila gambar belum ada,
+     kompilasi memakai PLACEHOLDER otomatis (kotak abu + caption) via makro `\shot{}`.
+     Path gambar: `dokumentasi/gambar/<bagian>/<KODE>-<slug>.png`.
+WD4. STRUKTUR WAJIB tiap flow (urutan baku):
+       1) Judul flow + kode (mis. P10) + Aktor (Pelanggan/Admin/Tamu)
+       2) Tujuan (1-2 kalimat)
+       3) Prasyarat
+       4) Langkah-langkah (bernomor, presisi 1 aksi = 1 langkah)
+       5) Gambar (screenshot + caption + label `\label{fig:p10-langkah-1}`)
+       6) Hasil yang diharapkan (state/DOM/DB yang berubah)
+       7) Penanganan error / kasus khusus
+       8) Kaitan modul (file FE/BE + endpoint) — untuk jejak teknis
+WD5. BAHASA INDONESIA baku, istilah konsisten dengan GLOSARIUM (L05). Singkatan
+     dijelaskan saat pertama muncul.
+WD6. TIDAK BOLEH ADA FLOW yang ada di taks.txt namun tidak terdokumentasi.
+     Dicek lewat MATRIKS TRACEABILITY (bagian akhir berkas ini).
+WD7. Setiap flow menyertakan VERSI & TANGGAL di akhir (mis. "Dok. v1.0 — Sep 2026").
+WD8. Gambar: resolusi >= 1280px lebar, terang, tanpa data sensitif (mask API key,
+     password, data pribadi). Anotasi (panah/lingkaran) bila memperjelas.
+WD9. 1 flow = 1 commit (chore(docs): ...). Tidak mengubah kode aplikasi.
+WD10. `build.sh` WAJIB exit sukses tanpa error dan tanpa "??" (referensi gambar rusak).
+WD11. AUDITOR DOKUMENTASI (`.githooks/audits/14-documentation-consistency-auditor.sh`):
+      3 lapis: (a) deterministik `dokumentasi/verifikasi/validate_docs.py` — cek
+      \input punya berkas, tidak ada flow yatim, gambar ADA & ASLI (PNG/JPEG, dimensi
+      wajar, tidak polos), tidak ada "(TODO)" pada flow yang diubah; (b) Playwright
+      `dokumentasi/verifikasi/verify_screenshots.py` (+ manifest `flows.json`) —
+      re-capture tiap flow untuk buktikan halaman ADA & gambar = screenshot asli
+      (bukti `.agent-test-proofs/docs-verify/`); (c) OpenCode AI — dokumentasi vs
+      rute/endpoint aktual. Kegagalan melaporkan `path:baris`.
+WD12. MODE PASCA-DEVELOPMENT: `pre-commit` DEFAULT hanya menjalankan auditor 14
+      (`AUDIT_MODE=docs`). Aktifkan seluruh auditor 01–14: `AUDIT_MODE=full git commit`.
+      Gambar non-halaman (email/ops) boleh kosong `url` di `flows.json` (dilewati
+      Playwright) tetapi tetap divalidasi keasliannya secara deterministik.
+
+--------------------------------------------------------------------------------
+STRUKTUR PROYEK LaTeX (DIBUAT DI FOLDER `dokumentasi/`)
+--------------------------------------------------------------------------------
+dokumentasi/
+├── main.tex                     # root: \input preamble+config+semua flow
+├── preamble.tex                 # paket, gaya, makro (\shot, \flowmeta, dll.)
+├── config.tex                   # metadata (judul, versi, tanggal, aktor)
+├── build.sh                     # kompilasi PDF (xelatex 2x / pdflatex)
+├── README.md                    # cara mengisi gambar & build
+├── 01-pendahuluan/
+│   ├── D01-cover-pengesahan.tex
+│   ├── D02-gambaran-sistem.tex
+│   ├── D03-arsitektur-dan-aktor.tex
+│   ├── D04-hak-akses-dan-menu.tex
+│   └── D05-cara-login-dan-navigasi.tex
+├── 02-pelanggan/                # 21 flow pelanggan (storefront)
+│   ├── P01-registrasi-akun.tex
+│   ├── P02-login-email.tex
+│   ├── P03-login-google.tex
+│   ├── P04-lupa-reset-password.tex
+│   ├── P05-verifikasi-email.tex
+│   ├── P06-profil-dan-keamanan.tex
+│   ├── P07-buku-alamat-gps.tex
+│   ├── P08-katalog-filter-search.tex
+│   ├── P09-detail-produk-varian.tex
+│   ├── P10-keranjang-belanja.tex
+│   ├── P11-checkout-dan-ongkir.tex
+│   ├── P12-pembayaran-midtrans.tex
+│   ├── P13-transfer-manual.tex
+│   ├── P14-pesanan-saya.tex
+│   ├── P15-pelacakan-pengiriman.tex
+│   ├── P16-retur-refund-pelanggan.tex
+│   ├── P17-ulasan-produk.tex
+│   ├── P18-voucher-pelanggan.tex
+│   ├── P19-poin-loyalitas.tex
+│   ├── P20-halaman-legal-informasi.tex
+│   └── P21-notifikasi-email.tex
+├── 03-admin/                    # 27 flow admin (ERP)
+│   ├── A01-login-dashboard.tex
+│   ├── A02-dashboard-bi.tex
+│   ├── A03-produk-katalog.tex
+│   ├── A04-kategori-dan-navbar.tex
+│   ├── A05-stok-dan-mutasi.tex
+│   ├── A06-inventory-multigudang.tex
+│   ├── A07-stock-opname.tex
+│   ├── A08-gudang-dan-lokasi.tex
+│   ├── A09-antrean-pesanan.tex
+│   ├── A10-fulfillment-resi-dan-label.tex
+│   ├── A11-pembayaran-manual.tex
+│   ├── A12-procurement-vendor-po-grn-bill.tex
+│   ├── A13-buku-kas-dan-jurnal.tex
+│   ├── A14-laporan-keuangan.tex
+│   ├── A15-retur-refund-admin.tex
+│   ├── A16-voucher-dan-promo.tex
+│   ├── A17-moderasi-ulasan.tex
+│   ├── A18-template-dokumen-dan-resi.tex
+│   ├── A19-integrasi-ekspedisi-payment.tex
+│   ├── A20-pengaturan-sistem.tex
+│   ├── A21-menu-dan-role-access.tex
+│   ├── A22-master-users.tex
+│   ├── A23-master-role.tex
+│   ├── A24-role-menu-mapping.tex
+│   ├── A25-audit-log.tex
+│   ├── A26-scheduler-dan-queue.tex
+│   └── A27-deployment-dan-operasional.tex
+├── 04-lampiran/
+│   ├── L01-skema-database.tex
+│   ├── L02-daftar-status-dan-kode.tex
+│   ├── L03-referensi-api.tex
+│   ├── L04-troubleshooting.tex
+│   └── L05-glosarium.tex
+└── gambar/
+    ├── umum/                    # cover, arsitektur, diagram alur
+    ├── pelanggan/               # screenshot flow P01..P21
+    ├── admin/                   # screenshot flow A01..A27
+    └── lampiran/
+
+--------------------------------------------------------------------------------
+SPESIMEN KANONIS SATU BERKAS FLOW (template; dipakai konsisten)
+--------------------------------------------------------------------------------
+  \flowmeta{P10}{Keranjang Belanja}{Pelanggan / Tamu}
+  \begin{flowsection}{Tujuan}
+    Pelanggan mengelola item di keranjang sebelum checkout.
+  \end{flowsection}
+  \begin{flowsection}{Prasyarat}
+    Tidak wajib login (tamu boleh); produk aktif & stok tersedia.
+  \end{flowsection}
+  \begin{flowsection}{Langkah-langkah}
+    \begin{enumerate}
+      \item Buka halaman Keranjang (\texttt{/cart}).
+      \item Ubah jumlah item (+/-), lalu sistem memvalidasi stok live.
+      \item (Opsional) pilih item tertentu; klik \textbf{Lanjut ke Pembayaran}.
+    \end{enumerate}
+  \end{flowsection}
+  \shot{gambar/pelanggan/P10-1-halaman-keranjang.png}{Halaman Keranjang Belanja}{fig:p10-1}
+  \shot{gambar/pelanggan/P10-2-validasi-stok.png}{Validasi stok live saat ubah jumlah}{fig:p10-2}
+  \begin{flowsection}{Hasil yang Diharapkan}
+    Subtotal terbarui; stok tervalidasi; tombol checkout aktif bila ada item dipilih.
+  \end{flowsection}
+  \begin{flowsection}{Penanganan Error}
+    Stok tidak cukup → pesan "Stok produk tidak mencukupi (tersisa N)".
+  \end{flowsection}
+  \begin{flowsection}{Kaitan Modul}
+    FE \texttt{CartPage.jsx}; BE \texttt{CartController}; \texttt{cartService.js}.
+  \end{flowsection}
+  \docver{v1.0}{Sep 2026}
+
+--------------------------------------------------------------------------------
+DAFTAR TASK DOKUMENTASI
+--------------------------------------------------------------------------------
+D00. [TODO] SETUP PROYEK LaTeX & BUILD
+  - Buat `dokumentasi/` (main/preamble/config/build.sh/README), makro `\shot`,
+    `\flowmeta`, `\flowsection`, `\docver`; folder `gambar/*`.
+  - `build.sh` mengompilasi ke `dokumentasi/Tusko-Panduan-Pengguna.pdf` (xelatex 2x).
+  - Acceptance: `bash dokumentasi/build.sh` sukses; placeholder gambar tampil.
+
+D01. [TODO] PENDAHULUAN
+  - D01 Cover + lembar pengesahan; D02 Gambaran sistem & tujuan;
+    D03 Arsitektur (React/Laravel/MySQL/R2) + diagram aktor;
+    D04 Hak akses & menu (matrix Admin vs Pelanggan);
+    D05 Cara login & navigasi umum.
+  - Gambar: diagram arsitektur, diagram aktor/use-case, peta navigasi menu.
+
+D02. [TODO] FLOW PELANGGAN (P01–P10)
+  P01 Registrasi Akun .............. [TODO]
+  P02 Login Email/Nomor ............ [TODO]
+  P03 Login dengan Google .......... [TODO]
+  P04 Lupa & Reset Password ........ [TODO]
+  P05 Verifikasi Email ............. [TODO]
+  P06 Profil & Keamanan ............ [TODO]
+  P07 Buku Alamat + GPS Leaflet .... [TODO]
+  P08 Katalog: Filter/Search/Sort .. [TODO]
+  P09 Detail Produk & Varian ....... [TODO]
+  P10 Keranjang Belanja ............ [TODO]
+
+D03. [TODO] FLOW PELANGGAN (P11–P21)
+  P11 Checkout & Ongkir (multi-kurir) [TODO]
+  P12 Pembayaran Midtrans Snap ...... [TODO]
+  P13 Transfer Bank Manual .......... [TODO]
+  P14 Pesanan Saya (+bayar ulang) ... [TODO]
+  P15 Pelacakan Pengiriman .......... [TODO]
+  P16 Retur & Refund (pengajuan) .... [TODO]
+  P17 Ulasan Produk (Review) ........ [TODO]
+  P18 Voucher Pelanggan ............. [TODO]
+  P19 Poin Loyalitas ................ [TODO]
+  P20 Halaman Legal & Informasi ..... [TODO]
+  P21 Notifikasi Email .............. [TODO]
+
+D04. [TODO] FLOW ADMIN — KATALOG & INVENTORI (A01–A08)
+  A01 Login Admin & Dashboard ....... [TODO]
+  A02 Dashboard BI .................. [TODO]
+  A03 Produk: List/Create/Edit ...... [TODO]
+  A04 Kategori & Konfigurasi Navbar . [TODO]
+  A05 Stok & Mutasi ................. [TODO]
+  A06 Smart Inventory Multi-Gudang .. [TODO]
+  A07 Stock Opname .................. [TODO]
+  A08 Master Gudang & Lokasi ........ [TODO]
+
+D05. [TODO] FLOW ADMIN — PESANAN & FULFILLMENT (A09–A11)
+  A09 Antrean Pesanan (list/detail) . [TODO]
+  A10 Fulfillment (pickup/resi/label/tracking) [TODO]
+  A11 Pembayaran Manual (approve/reject) [TODO]
+
+D06. [TODO] FLOW ADMIN — PROCUREMENT (A12)
+  A12 Vendor, PO, GRN, Vendor Bills & Pembayaran [TODO]
+
+D07. [TODO] FLOW ADMIN — KEUANGAN & LAPORAN (A13–A14)
+  A13 Buku Kas, Rekening & Jurnal .... [TODO]
+  A14 Laporan: Laba Rugi, Neraca, Aging, Profit/HPP [TODO]
+
+D08. [TODO] FLOW ADMIN — PROMO, ULASAN, TEMPLATE (A15–A18)
+  A15 Retur & Refund (admin) ......... [TODO]
+  A16 Voucher & Promo (admin) ........ [TODO]
+  A17 Moderasi Ulasan ................ [TODO]
+  A18 Template Dokumen & Resi (email/resi + log) [TODO]
+
+D09. [TODO] FLOW ADMIN — INTEGRASI & PENGATURAN (A19–A20)
+  A19 Integrasi Ekspedisi (Biteship/KiriminAja) + Payment (Midtrans) + Storage (R2) [TODO]
+  A20 Pengaturan Sistem Terpusat (store/legal/storefront/shipping/payment/
+      notification/auth-Google/security/feature flag) [TODO]
+
+D10. [TODO] FLOW ADMIN — RBAC, USERS, AUDIT (A21–A25)
+  A21 Dynamic Menu & Role-Menu Access . [TODO]
+  A22 Master Users .................... [TODO]
+  A23 Master Role ..................... [TODO]
+  A24 Role -> Menu Mapping ............ [TODO]
+  A25 Audit Log (activity_logs) ....... [TODO]
+
+D11. [TODO] OPERASIONAL & OPS (A26–A27)
+  A26 Scheduler & Queue (orders:cancel-expired, loyalty:expire-points,
+      shipments:sync-tracking, expeditions:sync, queue:work) [TODO]
+  A27 Deployment & Operasional (Hostinger/VPS, cron schedule:run, .env, backup) [TODO]
+
+D12. [TODO] LAMPIRAN (L01–L05)
+  L01 Skema Database (ringkas per kelompok tabel) [TODO]
+  L02 Daftar Status & Kode (order/payment/mutasi) [TODO]
+  L03 Referensi API (endpoint publik & admin) [TODO]
+  L04 Troubleshooting (error umum + solusi) [TODO]
+  L05 Glosarium (istilah teknis & bisnis) [TODO]
+
+D13. [TODO] QA DOKUMENTASI
+  - Kompilasi PDF tanpa error; semua `\ref`/`\label` valid (tidak ada "??").
+  - Cek MATRIKS TRACEABILITY: 0 fitur taks.txt tanpa flow.
+  - Cek setiap flow punya >=1 gambar (placeholder dihitung "belum ada gambar").
+  - Review istilah (WD5) & konsistensi format (WD4).
+
+--------------------------------------------------------------------------------
+DAFTAR GAMBAR YANG WAJIB DIAMBIL (screenshot) — RINGKAS PER FLOW
+--------------------------------------------------------------------------------
+[PELANGGAN]
+P01: form registrasi; validasi; toast sukses; email verifikasi terkirim.
+P02: form login; error kredensial; sukses masuk.
+P03: tombol "Masuk dengan Google"; layar izin Google; kembali login sukses.
+P04: form lupa sandi; email reset; form reset sandi; sukses.
+P05: banner belum verifikasi; halaman email-verified.
+P06: tab Biodata; ubah biodata sukses; tab Keamanan (ganti sandi + daftar sesi).
+P07: daftar alamat; form alamat + peta Leaflet + "Isi Otomatis GPS"; hasil tersimpan.
+P08: grid katalog; sidebar filter (harga/rating/kategori); hasil pencarian; sorting.
+P09: galeri produk; pemilih varian bertingkat; SKU & harga per varian; tombol beli.
+P10: halaman keranjang; ubah jumlah + validasi stok; tombol lanjut bayar.
+P11: pilih alamat; pilih layanan kurir + tarif live; ringkasan total; kupon/poin.
+P12: pilih metode Midtrans; popup Snap; instruksi VA/QRIS; status lunas.
+P13: instruksi transfer manual; unggah bukti; menunggu verifikasi.
+P14: daftar "Pesanan Saya"; detail + countdown; tombol Bayar Sekarang; batal.
+P15: tombol Lacak; timeline pelacakan dari kurir.
+P16: form pengajuan retur; detail retur; status refund.
+P17: form ulasan + rating bintang; ulasan tampil di produk.
+P18: daftar voucher; klaim voucher; kupon diterapkan di checkout.
+P19: saldo poin; riwayat poin (ledger); tukar poin di checkout.
+P20: halaman Tentang/Kontak/T&C/Privasi/Refund/Pengiriman/FAQ.
+P21: contoh email (verifikasi, status pesanan) — bisa dari log/preview template.
+
+[ADMIN]
+A01: halaman login admin; dashboard utama.
+A02: KPI (produk/restok/revenue/saldo); grafik bulanan vs mingguan; fast/slow moving.
+A03: daftar produk (tabel + filter drawer); form Tambah; form Edit; matriks varian.
+A04: daftar kategori; form kategori (induk/urutan/navbar/aktif); efek di navbar storefront.
+A05: manajemen stok; form mutasi (restok/kurangi/penyesuaian); kartu stok.
+A06: multi-gudang; reservasi/alokasi; bin lokasi; low-stock alert.
+A07: daftar sesi opname; form opname; approval + penyesuaian selisih.
+A08: daftar gudang; form gudang (kode/alamat/koordinat/prioritas).
+A09: antrean pesanan (tabel, tab status); detail pesanan; ubah status.
+A10: booking pickup; label termal 100x150 + barcode; tracking; generate resi.
+A11: daftar pembayaran manual; approve; reject + alasan.
+A12: vendor (list/create/edit); PO (list/detail/create); GRN (terima barang); Bills (bayar).
+A13: buku kas; form transaksi (jenis/kategori/rekening/nominal); jurnal umum.
+A14: laporan Laba Rugi; Neraca Saldo; Aging Hutang Vendor; Profit & HPP per produk.
+A15: daftar retur; detail; proses refund (Midtrans/manual) + stok kembali.
+A16: daftar voucher; form voucher (syarat/kuota/jendela/cakupan/stacking).
+A17: moderasi ulasan (setujui/tolak).
+A18: editor template email (WYSIWYG) + preview; format resi thermal; log notifikasi.
+A19: pengaturan ekspedisi (sinkron kurir Biteship/KiriminAja); Midtrans; storage R2.
+A20: Settings Hub (semua grup + field; upload gambar storefront; test koneksi).
+A21: kelola menu (list/create/edit) + role-menu mapping.
+A22: master users (list/create/edit/toggle/assign role).
+A23: master role (list/create/edit; is_admin).
+A24: role -> menu matrix.
+A25: audit log (filter aksi/user/tanggal).
+A26: daftar jadwal (schedule:list) + catatan cron/queue (ops).
+A27: diagram lingkungan (cron, deploy, backup) + bukti smoke test rilis.
+
+--------------------------------------------------------------------------------
+MATRIKS TRACEABILITY (taks.txt -> Dokumentasi) — JANGAN ADA YANG KOSONG
+--------------------------------------------------------------------------------
+T00 Fondasi/Design System ............ D01 (D03/D04)
+T01 Katalog publik .................. P08, P09
+T02 Detail produk & varian .......... P09
+T03 Manajemen produk admin .......... A03
+T04 Master kategori ................. A04
+T05 Keranjang ....................... P10
+T06 Checkout & pengiriman .......... P11
+T07 Pembayaran (Snap/manual/webhook) P12, P13, A11
+T08 Voucher pelanggan & loyalitas ... P18, P19
+T09 Manajemen pesanan admin ......... A09
+T10 Fulfillment (pickup/label/track) A10
+T11 Akun member & alamat GPS ........ P06, P07, P19
+T12 Manajemen stok & mutasi ......... A05
+T13 Smart inventory multi-gudang .... A06
+T14 Procurement (vendor/PO/GRN/bill) A12
+T15 Voucher schema + admin + kupon .. A16, P18
+T16 Buku kas, rekening, jurnal ...... A13
+T17 E-Invoice & cetak ............... A10, A18, P14
+T18 Analisis profit & HPP/COGS ...... A14
+T19 Dashboard BI .................... A02
+T20 Template notifikasi (email/resi) A18, P21
+T21 Integrasi pihak ketiga & storage A19, A20
+T22 QA & quality gate ............... D13 (internal, tidak untuk klien)
+T23 Deployment & rilis .............. A27
+T24 RBAC admin (roles/menu access) .. A21, A23, A24
+T25 Stock opname .................... A07
+T26 Auth pelanggan .................. P01, P02, P03, P04, P05
+T27 Pesanan sisi pelanggan .......... P14, P15
+T28 Checkout server-authoritative ... P11 (catatan teknis)
+T29 Retur & refund .................. P16, A15
+T30 Scheduler & queue ............... A26
+T31 Loyalitas (flat) ................ P19
+T32 Ulasan produk ................... P17, A17
+T33 Audit log & seeder referensi .... A25
+T34 Auto-journal & laporan keuangan . A13, A14
+T35 Hardening (keamanan/performa) ... A20 (security), A27
+T36 Settings Hub .................... A20
+T37 Dynamic menu & role-menu access . A21
+T38 Master users & role access ...... A22, A23, A24
+T39 Pesanan Saya & siklus stok ...... P14, P21
+T40 Integrasi Biteship .............. P11, P15, A10, A19
+T41 Login Google .................... P03, A20
+T42 Kepatuhan storefront & Midtrans . P20, A20
+T43 Storefront dinamis (navbar/konten) A04, A20
+T44 Pembersihan data demo ........... — (operasional, catatan A27)
+T45 Hapus mock admin ................ — (internal, catatan A27)
+T46 Dashboard BI dinamis ........... A02
+
+CATATAN: T22/T44/T45 bersifat internal/operasional → cukup dicatat sebagai catatan
+di A27 (tanpa flow pengguna terpisah) agar matriks tetap lengkap tanpa flow palsu.
+
+--------------------------------------------------------------------------------
+KRITERIA SELESAI (DOKUMENTASI)
+--------------------------------------------------------------------------------
+1. `dokumentasi/main.tex` + semua berkas flow ada (Pxx/Axx/Dxx/Lxx) — 0 hilang.
+2. `bash dokumentasi/build.sh` menghasilkan PDF tanpa error, 0 referensi "??".
+3. Setiap flow memuat minimal 1 gambar (placeholder boleh sementara; screenshot
+   asli menggantikan placeholder sebelum serah terima final ke klien).
+4. Tidak ada data sensitif terlihat pada gambar (API key/password/data pribadi).
+5. Matriks traceability terisi penuh (0 fitur tak terpetakan).
+================================================================================

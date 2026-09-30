@@ -13,3 +13,8 @@ INVOICE_*.pdf
 
 # Agent Testing Evidence & Proofs (Temporary files created before commit, deleted after audit pass)
 .agent-test-proofs/
+
+# Python cache
+__pycache__/
+*.pyc
+

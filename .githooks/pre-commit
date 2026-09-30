@@ -36,9 +36,23 @@ if [ "$CURRENT_BRANCH" = "master" ] || [ "$CURRENT_BRANCH" = "main" ]; then
     fi
 fi
 
-# 2. PHP Syntax Lint (Fail-Fast untuk Backend)
+# ==============================================================================
+# MODE SELECTOR (PASCA-DEVELOPMENT: DEFAULT HANYA AUDITOR DOKUMENTASI)
+# Development selesai → seluruh auditor kode (01–13) DIMATIKAN. HANYA Auditor
+# Dokumentasi (14) yang bekerja, baik ketika berkas dokumentasi berubah MAUPUN
+# ketika kode backend/frontend berubah (memastikan dokumentasi tetap sinkron).
+# Aktifkan kembali seluruh auditor: AUDIT_MODE=full git commit -m "..."
+# ==============================================================================
+AUDIT_MODE="${AUDIT_MODE:-docs}"
+if [ "$AUDIT_MODE" = "full" ]; then
+    echo "🧪 [Mode Audit] FULL — seluruh modul audit (01–14) aktif."
+else
+    echo "📘 [Mode Audit] DOCS — hanya Auditor Dokumentasi (14) yang aktif (auditor kode dimatikan)."
+fi
+
+# 2. PHP Syntax Lint (Fail-Fast untuk Backend) — hanya di mode FULL
 STAGED_PHP=$(git diff --cached --name-only -- "backend/**/*.php" 2>/dev/null)
-if [ -n "$STAGED_PHP" ]; then
+if [ "$AUDIT_MODE" = "full" ] && [ -n "$STAGED_PHP" ]; then
     for file in $STAGED_PHP; do
         if [ -f "$REPO_ROOT/$file" ]; then
             LINT_OUTPUT=$(php -l "$REPO_ROOT/$file" 2>&1)
@@ -58,7 +72,7 @@ fi
 
 # 3. Frontend Build & JSX Integrity (Fail-Fast untuk Frontend)
 STAGED_FE=$(git diff --cached --name-only -- "frontend/src/**" "frontend/package.json" "frontend/vite.config.js" 2>/dev/null)
-if [ -n "$STAGED_FE" ]; then
+if [ "$AUDIT_MODE" = "full" ] && [ -n "$STAGED_FE" ]; then
     echo "🔍 [Fail-Fast Frontend] Menguji bundling & kompilasi JSX (npm run build)..."
     BUILD_OUTPUT=$(cd "$REPO_ROOT/frontend" && npm run build 2>&1)
     BUILD_EXIT=$?
@@ -76,7 +90,11 @@ if [ -n "$STAGED_FE" ]; then
     fi
 fi
 
-echo "✅ [Fase 1: Fail-Fast] Lolos! Sintaks & build lokal valid."
+if [ "$AUDIT_MODE" = "full" ]; then
+    echo "✅ [Fase 1: Fail-Fast] Lolos! Sintaks & build lokal valid."
+else
+    echo "⏭️  [Fase 1: Fail-Fast] Mode DOCS — lint PHP & build frontend dilewati."
+fi
 
 # ==============================================================================
 # FASE 2: PARALLEL AI AUDITS (~30 - 45 Detik)
@@ -99,10 +117,16 @@ declare -a AUDIT_PIDS
 declare -a AUDIT_NAMES
 declare -a AUDIT_LOGS
 
-echo "⚡ [Fase 2: Parallel AI Audits] Menjalankan seluruh modul audit AI secara paralel..."
+echo "⚡ [Fase 2: Parallel AI Audits] Menjalankan modul audit sesuai mode ($AUDIT_MODE)..."
 
 idx=0
-for script in "$HOOKS_DIR"/*.sh; do
+if [ "$AUDIT_MODE" = "full" ]; then
+    declare -a AUDIT_SCRIPTS=("$HOOKS_DIR"/*.sh)
+else
+    declare -a AUDIT_SCRIPTS=("$HOOKS_DIR/14-documentation-consistency-auditor.sh")
+fi
+
+for script in "${AUDIT_SCRIPTS[@]}"; do
     if [ -x "$script" ]; then
         audit_name=$(basename "$script")
         log_file="$TMP_AUDIT_DIR/${audit_name}.log"

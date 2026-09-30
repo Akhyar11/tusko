@@ -1,0 +1,82 @@
+% ============================================================
+% preamble.tex — paket, gaya, dan makro dokumentasi TUSKO
+% ============================================================
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.5cm,includefoot]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tcolorbox}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{ifthen}
+
+\definecolor{tuskoamber}{HTML}{D97706}
+\definecolor{tuskodark}{HTML}{171717}
+\definecolor{tuskogray}{HTML}{737373}
+\definecolor{tuskolight}{HTML}{F5F5F5}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=tuskodark,
+  urlcolor=tuskoamber,
+  citecolor=tuskodark,
+  pdftitle={Panduan Pengguna TUSKO},
+  pdfauthor={Tim TUSKO}
+}
+
+% --- Judul otomatis Bahasa Indonesia
+\renewcommand{\contentsname}{Daftar Isi}
+\renewcommand{\figurename}{Gambar}
+\renewcommand{\tablename}{Tabel}
+\renewcommand{\refname}{Referensi}
+
+% --- Header / footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{tuskogray}TUSKO --- Panduan Pengguna}
+\fancyhead[R]{\footnotesize\color{tuskogray}\leftmark}
+\fancyfoot[C]{\footnotesize\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Gaya judul
+\titleformat{\section}{\Large\bfseries\color{tuskodark}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{tuskodark}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+% --- \flowmeta{KODE}{Judul}{Aktor}
+\newcommand{\flowmeta}[3]{%
+  \section{#2}\label{flow:#1}%
+  \noindent\textbf{Kode Alur:} \texttt{#1}\quad\textbar\quad\textbf{Aktor:} #3\\[0.2em]
+  \noindent{\color{tuskoamber}\rule{\linewidth}{1.2pt}}\vspace{0.4em}%
+}
+
+% --- Lingkungan seksi flow
+\newenvironment{flowsection}[1]{\subsection{#1}}{\par\vspace{0.3em}}
+
+% --- \shot{path}{caption}{label} : gambar bila ada, else placeholder
+\newcommand{\shot}[3]{%
+  \begin{figure}[H]\centering%
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.95\linewidth]{#1}%
+    }{%
+      \fbox{\begin{minipage}[c][0.30\textheight][c]{0.90\linewidth}\centering%
+        \color{tuskogray}\textbf{[GAMBAR BELUM TERSEDIA]}\\[0.6em]%
+        {\ttfamily\small #1}\\[0.6em]%
+        {\itshape\small #2}\end{minipage}}%
+    }%
+    \caption{#2}\label{#3}%
+  \end{figure}%
+}
+
+% --- \docver{versi}{tanggal}
+\newcommand{\docver}[2]{\par\vspace{0.5em}\noindent{\footnotesize\itshape Dokumen #1 --- #2}\par\vspace{0.5em}}
