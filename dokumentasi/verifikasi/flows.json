@@ -153,10 +153,11 @@
       "nama": "Transfer Bank Manual",
       "aktor": "Pelanggan",
       "url": "/checkout",
-      "expect_text": "Transfer",
+      "expect_text": "TUSKO",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p13-1.png"
+        "gambar/pelanggan/p13-1.png",
+        "gambar/pelanggan/p13-2.png"
       ]
     },
     {

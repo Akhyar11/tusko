@@ -1,0 +1,61 @@
+% ============================================================
+% P13 — Transfer Bank Manual
+% ============================================================
+\flowmeta{P13}{Transfer Bank Manual}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Membayar pesanan dengan transfer ke rekening bank resmi toko, lalu mengunggah
+bukti transfer untuk diverifikasi admin.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Checkout telah lengkap (alamat \& pengiriman). Admin telah mengisi daftar
+\textbf{rekening bank manual} pada pengaturan pembayaran.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Transfer Manual}
+\begin{enumerate}
+  \item Pada checkout, pilih metode \textbf{Transfer Bank Manual}
+        (mis. \textbf{Transfer BCA Manual}).
+  \item Klik \textbf{Bayar Sekarang}; muncul instruksi berisi rekening tujuan
+        (nama bank, nomor rekening, atas nama).
+  \item Lakukan transfer sesuai nominal melalui m-banking/ATM.
+  \item Unggah \textbf{bukti transfer} lalu kirim konfirmasi.
+  \item Tunggu admin memverifikasi. Setelah disetujui, pesanan menjadi terbayar.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p13-1.png}{Metode Transfer Bank Manual dipilih pada checkout}{fig:p13-1}
+
+\begin{flowsection}{Alur Verifikasi}
+\begin{enumerate}
+  \item Pelanggan memilih Transfer Bank Manual.
+  \item Sistem menampilkan rekening bank resmi toko.
+  \item Pelanggan mentransfer dan mengunggah bukti.
+  \item Admin memverifikasi bukti pembayaran.
+  \item Disetujui $\rightarrow$ pesanan terbayar; ditolak $\rightarrow$ pembayaran dibatalkan.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p13-2.png}{Diagram alur transfer bank manual dan verifikasi admin}{fig:p13-2}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pesanan tercatat dengan status menunggu verifikasi; setelah admin menyetujui,
+status pembayaran berubah menjadi terbayar.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Nominal tidak sesuai $\rightarrow$ admin dapat menolak konfirmasi.
+  \item Bukti tidak diunggah $\rightarrow$ konfirmasi tidak dapat dikirim.
+  \item Alamat belum diisi $\rightarrow$ checkout menahan proses; lengkapi alamat dahulu.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{CheckoutPage.jsx}, \texttt{PaymentInstructionModal.jsx}. BE
+\texttt{ManualPaymentController}, \texttt{OrderController}. Rute
+\texttt{GET /api/payment-methods/manual-banks}, \texttt{POST /api/orders/\{id\}/manual-payment}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
