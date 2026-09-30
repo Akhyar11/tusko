@@ -1,0 +1,50 @@
+% ============================================================
+% P05 — Verifikasi Email
+% ============================================================
+\flowmeta{P05}{Verifikasi Email}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Memverifikasi alamat email akun agar status akun menjadi terverifikasi dan
+pelanggan dapat menerima notifikasi penting.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah mendaftar (P01) dan menerima email verifikasi.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Verifikasi}
+\begin{enumerate}
+  \item Buka email verifikasi, klik tautan verifikasi.
+  \item Sistem membuka halaman \texttt{/email-verified} dan menandai email
+        sebagai terverifikasi.
+  \item Bila belum menerima email, buka beranda/akun saat masuk $\rightarrow$
+        klik \textbf{Kirim Ulang Verifikasi} pada banner.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p05-1.png}{Halaman hasil verifikasi email}{fig:p05-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Email ditandai terverifikasi; banner \textbf{Email Belum Diverifikasi} hilang dan
+pengguna dapat menerima notifikasi pesanan.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p05-2.png}{Banner ``Email Belum Diverifikasi'' saat masuk dengan akun yang belum terverifikasi}{fig:p05-2}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Tautan kedaluwarsa/tidak valid $\rightarrow$ minta kirim ulang.
+  \item Email verifikasi tidak sampai (mis. email masuk spam) $\rightarrow$
+        gunakan tombol kirim ulang.
+  \item Pengiriman email gagal di sisi server $\rightarrow$ dicatat di log;
+        pengguna tetap dapat mencoba kirim ulang.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{EmailVerifiedPage.jsx}, banner verifikasi di \texttt{App.jsx}. BE
+\texttt{AuthController@verifyEmail}, \texttt{@resendVerificationEmail}. Rute
+\texttt{GET /api/auth/email/verify/\{id\}/\{hash\}}, \texttt{POST /api/auth/email/resend}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
