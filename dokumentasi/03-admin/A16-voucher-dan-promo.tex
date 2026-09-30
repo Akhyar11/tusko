@@ -1,0 +1,43 @@
+% ============================================================
+% A16 — Voucher dan Promo Admin
+% ============================================================
+\flowmeta{A16}{Voucher dan Promo Admin}{Admin}
+
+\begin{flowsection}{Tujuan}
+Membuat dan mengelola voucher promo: syarat, kuota, masa berlaku, cakupan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Voucher & Promo (/admin/vouchers).
+  \item Tambah voucher: kode, tipe diskon, nilai, min belanja, kuota, jendela berlaku, cakupan.
+  \item Aktifkan/nonaktifkan voucher dari menu baris.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a16-1.png}{Halaman Voucher dan Promo Admin pada Panel Admin}{fig:a16-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Voucher aktif dapat diklaim/dipakai pelanggan sesuai syarat.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kode voucher unik.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{VoucherListPage.jsx}
+  \item \texttt{VoucherCreatePage.jsx}
+  \item \texttt{VoucherController}
+  \item \texttt{/api/vouchers}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
