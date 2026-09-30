@@ -1,0 +1,67 @@
+% ============================================================
+% D02 — Gambaran Sistem
+% ============================================================
+\flowmeta{D02}{Gambaran Sistem}{Umum}
+
+\begin{flowsection}{Tentang Sistem}
+TUSKO adalah toko online perlengkapan olahraga (\emph{sportswear}) yang
+menggabungkan etalase jualan (\emph{storefront}) untuk pelanggan dengan sistem
+manajemen toko terpadu (ERP) untuk admin. Pelanggan berbelanja melalui situs,
+sedangkan admin mengelola produk, stok, pesanan, pengiriman, keuangan, dan
+laporan melalui satu panel admin.
+\end{flowsection}
+
+\begin{flowsection}{Dua Antarmuka Pengguna}
+\begin{itemize}
+  \item \textbf{Storefront (Pelanggan)} --- katalog produk, detail varian,
+        keranjang, checkout, pembayaran, pelacakan pesanan, akun, voucher,
+        dan poin loyalitas.
+  \item \textbf{Panel Admin (ERP)} --- manajemen produk \& kategori, stok
+        multi-gudang, pesanan \& pengiriman, pengadaan (PO/GRN/tagihan),
+        buku kas \& laporan keuangan, pengaturan sistem, serta hak akses menu.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kemampuan Utama}
+\begin{itemize}
+  \item \textbf{Katalog \& Varian} --- produk dengan varian bertingkat
+        (warna, ukuran, dll.) dan SKU unik per kombinasi.
+  \item \textbf{Belanja \& Checkout} --- keranjang, kupon/voucher, penukaran
+        poin loyalitas, dan ongkos kirim otomatis dari agen logistik.
+  \item \textbf{Pembayaran} --- gerbang pembayaran daring (Virtual Account,
+        e-Wallet, QRIS) dan transfer bank manual dengan verifikasi admin.
+  \item \textbf{Pengiriman} --- pemilihan kurir, pembuatan pengiriman,
+        label resi, dan pelacakan status paket.
+  \item \textbf{Inventori} --- stok per gudang, mutasi, reservasi otomatis saat
+        pesanan, stok opname, dan peringatan stok menipis.
+  \item \textbf{Pengadaan} --- pemasok, Purchase Order, penerimaan barang (GRN),
+        dan tagihan vendor beserta pembayarannya.
+  \item \textbf{Keuangan} --- buku kas, rekening, jurnal, laporan laba rugi,
+        neraca saldo, dan analisis HPP/laba kotor.
+  \item \textbf{Analitik (BI)} --- ringkasan penjualan, tren, produk cepat/lambat
+        laku, dan liabilitas poin loyalitas.
+  \item \textbf{Loyalitas \& Promosi} --- poin belanja, voucher promo, dan
+        ulasan produk.
+\end{itemize}
+\end{flowsection}
+
+\shot{gambar/umum/d02-1.png}{Tampilan beranda storefront TUSKO sebagai pintu masuk pelanggan}{fig:d02-1}
+
+\begin{flowsection}{Alur Singkat End-to-End}
+\textbf{Pelanggan:} buka situs $\rightarrow$ cari produk $\rightarrow$ pilih varian
+$\rightarrow$ keranjang $\rightarrow$ checkout $\rightarrow$ pilih pengiriman \&
+pembayaran $\rightarrow$ bayar $\rightarrow$ terima \& lacak paket $\rightarrow$
+beri ulasan.
+
+\textbf{Admin:} pantau dashboard $\rightarrow$ proses pesanan $\rightarrow$ siapkan
+barang \& cetak resi $\rightarrow$ kirim $\rightarrow$ kelola stok/pengadaan bila
+perlu $\rightarrow$ periksa laporan keuangan.
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+Storefront (\texttt{frontend/src/App.jsx} jalur pelanggan) dan Panel Admin
+(jalur \texttt{/admin}); API di \texttt{backend/routes/api.php}; data pada basis
+data relasional (MySQL).
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

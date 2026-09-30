@@ -545,8 +545,8 @@
       "kode": "D02",
       "nama": "Gambaran Sistem",
       "aktor": "Umum",
-      "url": null,
-      "expect_text": null,
+      "url": "/",
+      "expect_text": "TUSKO",
       "login": null,
       "gambar": [
         "gambar/umum/d02-1.png"
