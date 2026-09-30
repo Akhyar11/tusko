@@ -3,7 +3,6 @@
  * Manages logistics courier partners, tariffs, and default delivery channels.
  */
 import { apiClient } from './apiClient';
-import { initialExpeditions } from '../data/mockExpeditionSettings';
 
 const STORAGE_KEY = 'tusko_expeditions_cache';
 
@@ -14,7 +13,7 @@ function getStoredExpeditions() {
   } catch {
     // ignore
   }
-  return initialExpeditions;
+  return [];
 }
 
 function setStoredExpeditions(expeditions) {

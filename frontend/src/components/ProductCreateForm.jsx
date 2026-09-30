@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import FormTipsPanel from './organisms/FormTipsPanel';
-import { createMockProduct, generateProductSku, generateVariantSku } from '../data/mockProducts';
+import { generateProductSku, generateVariantSku } from '../utils/productSku';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
@@ -551,48 +551,6 @@ export default function ProductCreateForm({
     setGalleryUrls(galleryUrls.filter((_, i) => i !== index));
   };
 
-  // Fill Quick Demo Data
-  const handleFillDemoData = () => {
-    setName('Tusko AirSprint Lightweight Carbon Marathon Singlet');
-    setCategoryIds([6, 2]); // Running & Marathon (6) and Jersey & Apparel (2)
-    setSku('TSK-RUN-SGL-2026');
-    setWeightValue('95');
-    setWeightUnit('g');
-    setFreeShipping(true);
-    setIsOfficial(true);
-    setStatus('active');
-    setDescription('Singlet lari ultra-ringan dengan panel ventilasi micro-mesh laser cut di area dada dan punggung. Didesain khusus untuk pelari half dan full marathon yang membutuhkan sirkulasi udara maksimal dan jahitan tanpa gesekan.');
-    setPrice(229000);
-    setOriginalPrice(299000);
-    setCostPrice(115000);
-    setPointType('percentage');
-    setPointValue(2.5);
-    setStock(60);
-    setStockMinimum(10);
-    setImageUrl('https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80');
-    setGalleryUrls([
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
-    ]);
-    setSpecList([
-      { key: 'Bahan', value: '100% Micro-Aero Polypropylene Ultra-Dry' },
-      { key: 'Bobot', value: '68 gram (Ukuran L)' },
-      { key: 'Jahitan', value: 'Thermal Ultrasonic Bonded Seams (Anti Lecet)' },
-      { key: 'Reflektor', value: '3M Scotchlite Reflective Logo Depan & Belakang' }
-    ]);
-    setHasVariants(true);
-    setVariantAttributes([
-      { id: 'attr_1', name: 'Warna', values: 'Neon Volt, Arctic White, Shadow Black' },
-      { id: 'attr_2', name: 'Ukuran', values: 'S, M, L, XL' }
-    ]);
-    setVariantMatrix([
-      { id: 'vm_1', sku: 'TSK-RUN-SGL-VOLT-S', name: 'Neon Volt / S', color: 'Neon Volt', size: 'S', price: 229000, stock: 15, attribute_values: { color: 'Neon Volt', size: 'S' } },
-      { id: 'vm_2', sku: 'TSK-RUN-SGL-VOLT-M', name: 'Neon Volt / M', color: 'Neon Volt', size: 'M', price: 229000, stock: 20, attribute_values: { color: 'Neon Volt', size: 'M' } },
-      { id: 'vm_3', sku: 'TSK-RUN-SGL-WHT-L', name: 'Arctic White / L', color: 'Arctic White', size: 'L', price: 229000, stock: 15, attribute_values: { color: 'Arctic White', size: 'L' } },
-      { id: 'vm_4', sku: 'TSK-RUN-SGL-BLK-XL', name: 'Shadow Black / XL', color: 'Shadow Black', size: 'XL', price: 239000, stock: 10, attribute_values: { color: 'Shadow Black', size: 'XL' } }
-    ]);
-  };
-
   // Submit Handler with inline validation
   const handleSubmit = (targetStatus = status) => {
     if (!name.trim()) {
@@ -679,7 +637,7 @@ export default function ProductCreateForm({
 
     const selectedCat = (categories || []).find(c => c.id === Number(categoryId)) || (categoryList || []).find(c => c.id === Number(categoryId));
     const selectedVendor = (vendorList || []).find(v => v.id === Number(vendorId));
-    const newProduct = createMockProduct({
+    const newProduct = {
       name: name.trim(),
       category_id: Number(categoryIds[0] || categoryId),
       category_ids: categoryIds.map(id => Number(id)),
@@ -704,7 +662,7 @@ export default function ProductCreateForm({
       specifications: specificationsObj,
       variant_levels: variantLevels,
       variants
-    });
+    };
 
     onSaveProduct(newProduct);
   };
@@ -729,14 +687,6 @@ export default function ProductCreateForm({
 
         {/* Header Action Buttons (Icon-Only with Tooltip) */}
         <div className="flex items-center gap-2">
-          <IconButton
-            icon={Sparkles}
-            onClick={handleFillDemoData}
-            title="Isi Data Demo Singlet"
-            variant="outline"
-            className="text-amber-600 border-amber-300 hover:bg-amber-50"
-          />
-
           {onNavigateToCategories && (
             <IconButton
               icon={FolderKanban}

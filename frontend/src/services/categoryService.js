@@ -3,7 +3,6 @@
  * Manages server-side category CRUD and options loader for ServerSideSelect.
  */
 import { apiClient } from './apiClient';
-import { categories as fallbackCategories } from '../data/mockProducts';
 
 const STORAGE_KEY = 'tusko_categories_cache';
 
@@ -15,7 +14,7 @@ function getCachedCategories() {
   } catch {
     // ignore
   }
-  return fallbackCategories;
+  return [];
 }
 
 function setCachedCategories(data) {

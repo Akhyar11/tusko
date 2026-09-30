@@ -24,12 +24,7 @@ import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
-import {
-  initialEmailTemplates,
-  initialReceiptTemplate,
-  availablePlaceholders,
-  mockNotificationLogs,
-} from '../data/mockTemplates';
+import { availablePlaceholders } from '../data/referenceData';
 
 const SECTIONS = [
   { id: 'email', label: 'Template Email', icon: Mail, desc: 'Formulir notifikasi email pembeli' },
@@ -62,7 +57,7 @@ export default function TemplateManagementPage({
   const [activeSection, setActiveSection] = useState('email');
 
   // Email template state
-  const [emailTemplates, setEmailTemplates] = useState(initialEmailTemplates);
+  const [emailTemplates, setEmailTemplates] = useState([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('order_shipped');
   const [previewDevice, setPreviewDevice] = useState('desktop');
   const [testEmailAddress, setTestEmailAddress] = useState('');
@@ -70,10 +65,21 @@ export default function TemplateManagementPage({
   const [isSendingTest, setIsSendingTest] = useState(false);
 
   // Receipt template state
-  const [receiptConfig, setReceiptConfig] = useState(initialReceiptTemplate);
+  const [receiptConfig, setReceiptConfig] = useState({});
+  const notificationLogs = [];
 
   const currentEmailTemplate =
-    emailTemplates.find((t) => t.id === selectedTemplateId) || emailTemplates[0];
+    emailTemplates.find((t) => t.id === selectedTemplateId) || emailTemplates[0] || {
+      id: selectedTemplateId,
+      name: 'Template',
+      fromName: '',
+      subject: '',
+      preheader: '',
+      headline: '',
+      body: '',
+      buttonText: '',
+      buttonLink: '',
+    };
 
   const paperSizeCss =
     receiptConfig.paperSize === 'a4'
@@ -116,13 +122,7 @@ export default function TemplateManagementPage({
   };
 
   const handleResetEmailTemplate = () => {
-    const defaultTemplate = initialEmailTemplates.find((t) => t.id === selectedTemplateId);
-    if (defaultTemplate) {
-      setEmailTemplates((prev) =>
-        prev.map((t) => (t.id === selectedTemplateId ? { ...defaultTemplate } : t))
-      );
-      onShowToast('Template dikembalikan ke pengaturan awal.');
-    }
+    onShowToast('Template mengikuti data tersimpan dari server.');
   };
 
   const handleSaveReceiptTemplate = () => {
@@ -130,7 +130,7 @@ export default function TemplateManagementPage({
   };
 
   const handleResetReceiptTemplate = () => {
-    setReceiptConfig({ ...initialReceiptTemplate });
+    setReceiptConfig({});
     onShowToast('Format label resi dikembalikan ke pengaturan default.');
   };
 
@@ -799,7 +799,7 @@ export default function TemplateManagementPage({
                   <p className="text-xs text-neutral-500 mt-0.5">Pencatatan email notifikasi otomatis yang dikirim ke pembeli.</p>
                 </div>
                 <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-none border border-emerald-200 shrink-0">
-                  {mockNotificationLogs.length} Terkirim
+                  {notificationLogs.length} Terkirim
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -815,7 +815,7 @@ export default function TemplateManagementPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
-                    {mockNotificationLogs.map((log) => (
+                    {notificationLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-neutral-50 transition-colors">
                         <td className="px-4 py-3.5 font-mono text-neutral-500 font-bold text-[11px]">{log.id}</td>
                         <td className="px-4 py-3.5 text-neutral-600 whitespace-nowrap">{log.sentAt}</td>

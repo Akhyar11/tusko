@@ -23,7 +23,6 @@ import {
   Scale
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { mockExpeditions, mockPaymentMethods, mockPaymentCategories } from '../data/mockCheckoutData';
 import { checkoutService } from '../services/checkoutService';
 import { loadSnapScript } from '../utils/snapLoader';
 import { authService } from '../services/authService';
@@ -200,7 +199,7 @@ export default function CheckoutPage({
           ? localServices
           : ((availableExpeditions && availableExpeditions.length > 0)
               ? availableExpeditions.filter(e => e.isActive)
-              : mockExpeditions));
+              : []));
 
     return rawList.map(e => {
       const isFree = e.is_free !== undefined ? e.is_free : (e.cost === 0 || e.baseRate === 0);
@@ -229,7 +228,7 @@ export default function CheckoutPage({
         };
       }
     }
-    return mockExpeditions[0];
+    return { id: 'none', name: 'Pilih Kurir', service: 'Pilih layanan pengiriman', cost: 0, baseCost: 0, is_free: false };
   });
 
   const [isExpeditionModalOpen, setIsExpeditionModalOpen] = useState(false);
@@ -309,11 +308,9 @@ export default function CheckoutPage({
 
   // Payment Selection State
   const [selectedPaymentCategory, setSelectedPaymentCategory] = useState('Semua');
-  const [selectedPayment, setSelectedPayment] = useState(() => {
-    return mockPaymentMethods[0].methods[0];
-  });
-  const [paymentCategories, setPaymentCategories] = useState(mockPaymentCategories);
-  const [paymentMethods, setPaymentMethods] = useState(mockPaymentMethods);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [paymentCategories, setPaymentCategories] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
 
   // Katalog metode pembayaran dinamis (T07.6) — fallback mock bila API kosong.
   useEffect(() => {
@@ -876,7 +873,7 @@ export default function CheckoutPage({
                 {/* Quick Selection Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-0.5 text-xs no-scrollbar">
                   <span className="text-[10px] font-sport font-bold uppercase text-neutral-400 shrink-0">Pilihan Cepat:</span>
-                  {mockExpeditions.slice(0, 4).map(exp => (
+                  {activeExpeditions.slice(0, 4).map(exp => (
                     <button
                       key={exp.id}
                       type="button"
@@ -934,7 +931,7 @@ export default function CheckoutPage({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {cat.methods.map((method) => {
-                      const isSelected = selectedPayment.id === method.id;
+                      const isSelected = selectedPayment?.id === method.id;
                       return (
                         <div
                           key={method.id}
@@ -1168,7 +1165,7 @@ export default function CheckoutPage({
             <div className="space-y-2">
               <div className="text-[11px] font-sport font-bold uppercase text-neutral-500 flex items-center justify-between">
                 <span>Metode:</span>
-                <strong className="text-black truncate max-w-[180px]">{selectedPayment.name}</strong>
+                <strong className="text-black truncate max-w-[180px]">{selectedPayment?.name || 'Pilih metode pembayaran'}</strong>
               </div>
 
               {checkoutError && (

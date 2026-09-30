@@ -18,14 +18,14 @@ import ServerSideTable from './ServerSideTable';
 import ExpeditionFilterDrawer from './organisms/ExpeditionFilterDrawer';
 import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
-import { initialExpeditions, expeditionCategoriesList } from '../data/mockExpeditionSettings';
+import { expeditionCategoriesList } from '../data/referenceData';
 import { useExpeditionTableStore } from '../stores/useExpeditionTableStore';
 import { expeditionService } from '../services/expeditionService';
 import { settingsService } from '../services/settingsService';
 import RowActionMenu from './molecules/RowActionMenu';
 
 export default function ExpeditionSettingsPage({
-  expeditions = initialExpeditions,
+  expeditions = [],
   onBack = () => {},
   onAddExpedition = () => {},
   onDeleteExpedition = () => {},

@@ -3,7 +3,6 @@
  * Manages financial transactions, cashbook reporting, and cashflow summary.
  */
 import { apiClient } from './apiClient';
-import { mockTransactions } from '../data/mockTransactions';
 
 const STORAGE_KEY = 'tusko_transactions_cache';
 
@@ -14,7 +13,7 @@ function getStoredTransactions() {
   } catch {
     // ignore
   }
-  return mockTransactions;
+  return [];
 }
 
 function setStoredTransactions(txs) {

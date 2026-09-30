@@ -3,7 +3,6 @@
  * Manages vendor CRUD operations with server-side API integration and persistent localStorage caching.
  */
 import { apiClient } from './apiClient';
-import { initialVendors } from '../data/mockProcurementData';
 
 const STORAGE_KEY = 'tusko_vendors';
 
@@ -17,7 +16,7 @@ function getStoredVendors() {
   } catch {
     // ignore
   }
-  return initialVendors;
+  return [];
 }
 
 function setStoredVendors(vendors) {

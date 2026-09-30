@@ -15,15 +15,8 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
 import { formatRupiah } from '../utils/formatters';
+import { vendorService } from '../services/vendorService';
 import FormTipsPanel from './organisms/FormTipsPanel';
-
-const mockSuppliers = [
-  'PT AeroTech Industri Garment (Bandung)',
-  'Tusko Manufacturing Hub (Jakarta)',
-  'NitroFoam Athletic Shoes Distributor (Surabaya)',
-  'Apex Gear & Hardware Supplier (Tangerang)',
-  'Distributor Utama Perlengkapan Olahraga Nasional'
-];
 
 const reductionReasons = [
   { id: 'damage', label: 'Barang Rusak / Afkir / Cacat Produksi', defaultDesc: 'Ditemukan cacat jahitan/material saat QC packing' },
@@ -57,13 +50,13 @@ export default function StockMutationPage({
 
   // Mode IN fields
   const [costPrice, setCostPrice] = useState(defaultProduct ? defaultProduct.cost_price || '' : '');
-  const [supplier, setSupplier] = useState(mockSuppliers[0]);
+  const [supplier, setSupplier] = useState('');
   const [poNumber, setPoNumber] = useState(
     `PO/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, '0')}/${Math.floor(1000 + Math.random() * 9000)}`
   );
   const [warehouseBin, setWarehouseBin] = useState(defaultProduct ? defaultProduct.warehouse_bin || '' : '');
   const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().slice(0, 10));
-  const [operator, setOperator] = useState('Budi Santoso (Kepala Gudang)');
+  const [operator, setOperator] = useState('');
   const [notes, setNotes] = useState('');
   const [syncToCashflow, setSyncToCashflow] = useState(true);
 
@@ -330,7 +323,7 @@ export default function StockMutationPage({
                   <ServerSideSelect
                     value={supplier}
                     onChange={(val) => setSupplier(val)}
-                    options={mockSuppliers.map((s) => ({ value: s, label: s }))}
+                    loadOptions={(search, page) => vendorService.loadOptions(search, page)}
                     placeholder="Pilih supplier/vendor..."
                   />
                 </div>

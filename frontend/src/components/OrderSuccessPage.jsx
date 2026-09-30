@@ -87,8 +87,6 @@ export default function OrderSuccessPage({
     minute: '2-digit'
   });
 
-  const mockResiNumber = `TKP${Math.floor(1000000000 + Math.random() * 9000000000)}`;
-
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 space-y-6">
       
@@ -153,9 +151,11 @@ export default function OrderSuccessPage({
               </div>
 
               <div>
-                <span className="text-neutral-400 block text-[11px]">No. Resi (Dummy)</span>
-                <span className="font-mono font-bold text-emerald-700">{mockResiNumber}</span>
-                <span className="text-[10px] text-emerald-600 block mt-0.5">Dapat dilacak otomatis</span>
+                <span className="text-neutral-400 block text-[11px]">No. Resi</span>
+                <span className="font-mono font-bold text-emerald-700">{expedition.tracking_number || '-'}</span>
+                {expedition.tracking_number && (
+                  <span className="text-[10px] text-emerald-600 block mt-0.5">Dapat dilacak otomatis</span>
+                )}
               </div>
             </div>
 

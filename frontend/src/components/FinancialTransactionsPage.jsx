@@ -20,15 +20,11 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import FinancialFilterDrawer from './organisms/FinancialFilterDrawer';
 import { formatRupiah } from '../utils/formatters';
-import { 
-  mockTransactions, 
-  transactionCategories,
-  mockFinancialAccounts 
-} from '../data/mockTransactions';
+import { transactionCategories } from '../data/referenceData';
 import { useTransactionTableStore } from '../stores/useTransactionTableStore';
 
 export default function FinancialTransactionsPage({
-  transactions: initialTransactions = mockTransactions,
+  transactions: initialTransactions = [],
   onBackToShopping = () => {},
   onViewOrders = () => {},
   onViewOrderDetail = () => {},
@@ -36,7 +32,7 @@ export default function FinancialTransactionsPage({
   onNavigateToCreate = () => {}
 }) {
   const [transactions, setTransactions] = useState(initialTransactions);
-  const [financialAccounts, setFinancialAccounts] = useState(mockFinancialAccounts);
+  const [financialAccounts, setFinancialAccounts] = useState([]);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {

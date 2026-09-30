@@ -25,7 +25,7 @@ import PrintReceiptModal from './PrintReceiptModal';
 import PrintInvoiceModal from './PrintInvoiceModal';
 import ConfirmationModal from './ConfirmationModal';
 import { formatRupiah } from '../utils/formatters';
-import { orderStatuses } from '../data/mockOrders';
+import { orderStatuses } from '../data/referenceData';
 import { useOrderTableStore } from '../stores/useOrderTableStore';
 
 export default function OrderListPage({

@@ -17,16 +17,11 @@ import ServerSideTable from './ServerSideTable';
 import StockFilterDrawer from './organisms/StockFilterDrawer';
 import StockMutationPage from './StockMutationPage';
 import { formatRupiah } from '../utils/formatters';
-import { 
-  initialInventory, 
-  initialStockLogs, 
-  initialWarehouses 
-} from '../data/mockStockData';
 import { useInventoryTableStore } from '../stores/useInventoryTableStore';
 
 export default function StockManagementPage({
-  inventory: propInventory = initialInventory,
-  stockLogs: propStockLogs = initialStockLogs,
+  inventory: propInventory = [],
+  stockLogs: propStockLogs = [],
   onBackToShopping = () => {},
   onViewOrders = () => {},
   onViewTransactions = () => {},
@@ -35,7 +30,7 @@ export default function StockManagementPage({
 }) {
   const [inventory, setInventory] = useState(propInventory);
   const [stockLogs, setStockLogs] = useState(propStockLogs);
-  const [warehouses] = useState(initialWarehouses);
+  const [warehouses] = useState([]);
 
   // Centralized Zustand Table Store (100% Server-Side Data Operations)
   const {

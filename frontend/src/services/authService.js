@@ -13,7 +13,6 @@ import {
   resolveBackendUrl
 } from './apiClient';
 import { getCartSessionId } from './cartService';
-import { mockDemoUsers } from '../data/mockAuthData';
 
 export const authService = {
   /**
@@ -46,50 +45,8 @@ export const authService = {
         isLiveApi: true,
       };
     } catch (error) {
-      // Jika error validasi kredensial (401/403/422), langsung lempar error agar pesan spesifik tampil
-      if (error.status === 401 || error.status === 403 || error.status === 422) {
-        throw error;
-      }
-
-      // Jika jaringan gagal / backend offline, gunakan mode fallback demo agar UX tetap lancar
-      if (error.isNetworkError) {
-        console.warn('Backend server offline. Menggunakan mode simulasi lokal.');
-
-        const matchedUser = mockDemoUsers.find(
-          (u) => u.email.toLowerCase() === cleanIdentifier.toLowerCase()
-        ) || (cleanIdentifier.toLowerCase() === 'budi.pratama@gmail.com' ? mockDemoUsers[0] : null) || {
-          id: Date.now(),
-          name: cleanIdentifier.split('@')[0].replace('.', ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          email: cleanIdentifier,
-          role: cleanIdentifier.includes('admin') ? 'admin' : 'customer',
-          phone: '0812-3456-7890',
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-          joinedDate: 'Maret 2026',
-          membershipTier: cleanIdentifier.includes('admin') ? 'Super Admin' : 'Gold Member',
-          points: 1250,
-          defaultAddress: {
-            recipient_name: cleanIdentifier.split('@')[0],
-            phone: '0812-3456-7890',
-            full_address: 'Jl. Kemang Raya No. 45',
-            city: 'Jakarta Selatan',
-            province: 'DKI Jakarta',
-            postal_code: '12730'
-          }
-        };
-
-        const simulatedToken = `demo_token_${Date.now()}`;
-        setStoredToken(simulatedToken);
-        setStoredUser(matchedUser);
-
-        return {
-          success: true,
-          user: matchedUser,
-          token: simulatedToken,
-          message: `Login berhasil (Mode Demo). Selamat datang, ${matchedUser.name}!`,
-          isLiveApi: false,
-        };
-      }
-
+      // Error validasi (401/403/422) langsung dilempar agar pesan spesifik tampil.
+      // Tanpa fallback demo/mock: login palsu DILARANG; error jaringan diteruskan.
       throw error;
     }
   },

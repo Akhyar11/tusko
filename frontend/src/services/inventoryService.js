@@ -3,7 +3,6 @@
  * Manages fetching, adjusting, and tracking product stock on the server.
  */
 import { apiClient } from './apiClient';
-import { initialInventory } from '../data/mockStockData';
 
 const STORAGE_KEY = 'tusko_inventory_cache';
 
@@ -14,7 +13,7 @@ function getStoredInventory() {
   } catch {
     // ignore
   }
-  return initialInventory;
+  return [];
 }
 
 function setStoredInventory(items) {

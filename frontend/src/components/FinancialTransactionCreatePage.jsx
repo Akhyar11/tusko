@@ -12,10 +12,7 @@ import {
   FileText
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
-import { 
-  transactionCategories, 
-  mockFinancialAccounts 
-} from '../data/mockTransactions';
+import { transactionCategories } from '../data/referenceData';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
@@ -24,7 +21,7 @@ import { formatRupiah } from '../utils/formatters';
 import { transactionService } from '../services/transactionService';
 
 export default function FinancialTransactionCreatePage({
-  financialAccounts = mockFinancialAccounts,
+  financialAccounts = [],
   onAddTransaction = () => {},
   onNavigateBack = () => {},
   onShowToast = () => {}

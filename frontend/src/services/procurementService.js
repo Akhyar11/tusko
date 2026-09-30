@@ -4,11 +4,6 @@
  * melalui REST API backend (Laravel) dengan fallback cache localStorage (mode offline).
  */
 import { apiClient } from './apiClient';
-import {
-  initialPurchaseOrders,
-  initialGoodsReceivingNotes,
-  initialVendorBills
-} from '../data/mockProcurementData';
 
 const STORAGE_KEYS = {
   POS: 'tusko_procurement_pos',
@@ -92,15 +87,15 @@ export const procurementService = {
   // SYNC CACHE GETTERS (fallback offline & data KPI lokal)
   // ==========================================================================
   getPurchaseOrders() {
-    return readCache(STORAGE_KEYS.POS, initialPurchaseOrders);
+    return readCache(STORAGE_KEYS.POS, []);
   },
 
   getGoodsReceivingNotes() {
-    return readCache(STORAGE_KEYS.GRNS, initialGoodsReceivingNotes);
+    return readCache(STORAGE_KEYS.GRNS, []);
   },
 
   getVendorBills() {
-    return readCache(STORAGE_KEYS.BILLS, initialVendorBills);
+    return readCache(STORAGE_KEYS.BILLS, []);
   },
 
   // ==========================================================================

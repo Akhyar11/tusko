@@ -82,10 +82,6 @@ import SupplierListPage from './components/SupplierListPage';
 import VoucherListPage from './components/VoucherListPage';
 import VoucherCreatePage from './components/VoucherCreatePage';
 import VoucherEditPage from './components/VoucherEditPage';
-import { mockTransactions } from './data/mockTransactions';
-import { initialInventory, initialStockLogs } from './data/mockStockData';
-import { initialExpeditions } from './data/mockExpeditionSettings';
-import { mockDemoUsers } from './data/mockAuthData';
 import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
@@ -557,10 +553,10 @@ export default function App() {
   const [selectedBillForDetail, setSelectedBillForDetail] = useState(null);
   const [billPayMode, setBillPayMode] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [transactions, setTransactions] = useState(mockTransactions);
-  const [inventory, setInventory] = useState(initialInventory);
-  const [stockLogs, setStockLogs] = useState(initialStockLogs);
-  const [expeditions, setExpeditions] = useState(initialExpeditions);
+  const [transactions, setTransactions] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [stockLogs, setStockLogs] = useState([]);
+  const [expeditions, setExpeditions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [sortBy, setSortBy] = useState('relevant');
@@ -1666,7 +1662,7 @@ export default function App() {
           />
         ) : currentView === 'profile' ? (
           <ProfilePage
-            currentUser={currentUser || mockDemoUsers[0]}
+            currentUser={currentUser}
             onUpdateProfile={(updatedUser) => {
               handleUpdateUser(updatedUser);
               showToast('Profil akun berhasil diperbarui!');

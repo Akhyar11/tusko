@@ -34,7 +34,6 @@ import {
   Navigation,
   LocateFixed
 } from 'lucide-react';
-import { mockDemoUsers } from '../data/mockAuthData';
 import { authService } from '../services/authService';
 import { formatRupiah } from '../utils/formatters';
 import AddressFormPage from './AddressFormPage';
@@ -48,8 +47,8 @@ export default function ProfilePage({
   onBack = () => {},
   onShowToast = () => {}
 }) {
-  // Gunakan user yang sedang login atau fallback ke demo user
-  const [userProfile, setUserProfile] = useState(currentUser || mockDemoUsers[0]);
+  // Gunakan user yang sedang login.
+  const [userProfile, setUserProfile] = useState(currentUser);
   const user = userProfile;
 
   // Tab navigasi aktif: 'biodata' | 'address' | 'security' | 'vouchers'
@@ -202,9 +201,9 @@ export default function ProfilePage({
   useEffect(() => {
     if (currentUser) {
       setUserProfile(currentUser);
-      setName(currentUser.name || 'Budi Pratama');
-      setEmail(currentUser.email || 'budi.pratama@gmail.com');
-      setPhone(currentUser.phone || '0812-3456-7890');
+      setName(currentUser.name || '');
+      setEmail(currentUser.email || '');
+      setPhone(currentUser.phone || '');
       if (currentUser.avatar) setAvatar(currentUser.avatar);
       if (currentUser.gender) setGender(currentUser.gender);
       if (currentUser.birth_date || currentUser.birthDate) {

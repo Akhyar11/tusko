@@ -4,17 +4,10 @@
  * dan dukungan penyimpanan lokal persisten (localStorage) sebagai fallback.
  */
 import { apiClient } from './apiClient';
-import { initialWarehouses } from '../data/mockStockData';
 
 const STORAGE_KEY = 'tusko_warehouses';
 
-const defaultWarehouses = initialWarehouses.map((w, idx) => ({
-  ...w,
-  city: w.city || (idx === 0 ? 'Jakarta Timur' : idx === 1 ? 'Surabaya' : 'Medan'),
-  province: w.province || (idx === 0 ? 'DKI Jakarta' : idx === 1 ? 'Jawa Timur' : 'Sumatera Utara'),
-  postal_code: w.postal_code || (idx === 0 ? '13930' : idx === 1 ? '60293' : '20241'),
-  is_active: w.is_active !== undefined ? w.is_active : true,
-}));
+const defaultWarehouses = [];
 
 function getStoredWarehouses() {
   try {

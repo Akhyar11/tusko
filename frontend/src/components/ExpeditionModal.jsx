@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Truck, Clock, Check, X, Sparkles, Scale, Info } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
-import { mockExpeditionCategories } from '../data/mockCheckoutData';
+import { expeditionCategoryTabs } from '../data/referenceData';
 
 export default function ExpeditionModal({
   isOpen = false,
@@ -80,7 +80,7 @@ export default function ExpeditionModal({
         {/* Categories Tabs */}
         <div className="pt-3 pb-1 shrink-0">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {mockExpeditionCategories.map(cat => (
+            {expeditionCategoryTabs.map(cat => (
               <button
                 key={cat}
                 type="button"

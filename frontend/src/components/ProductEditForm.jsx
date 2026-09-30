@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import FormTipsPanel from './organisms/FormTipsPanel';
-import { generateProductSku, generateVariantSku } from '../data/mockProducts';
+import { generateProductSku, generateVariantSku } from '../utils/productSku';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
