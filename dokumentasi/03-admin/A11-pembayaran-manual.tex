@@ -1,0 +1,42 @@
+% ============================================================
+% A11 — Verifikasi Pembayaran Manual
+% ============================================================
+\flowmeta{A11}{Verifikasi Pembayaran Manual}{Admin}
+
+\begin{flowsection}{Tujuan}
+Meninjau dan menyetujui/menolak konfirmasi transfer bank manual.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka detail pesanan dengan pembayaran manual.
+  \item Periksa bukti transfer yang diunggah pelanggan.
+  \item Setujui → pesanan terbayar; Tolak → pembayaran dibatalkan beserta alasan.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a11-1.png}{Halaman Verifikasi Pembayaran Manual pada Panel Admin}{fig:a11-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Status pembayaran manual terverifikasi.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Nominal tidak sesuai ditolak.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{OrderDetailPage.jsx}
+  \item \texttt{ManualPaymentController}
+  \item \texttt{OrderController}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
