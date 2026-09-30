@@ -578,8 +578,8 @@
       "kode": "D05",
       "nama": "Cara Login dan Navigasi",
       "aktor": "Umum",
-      "url": null,
-      "expect_text": null,
+      "url": "/login",
+      "expect_text": "MASUK",
       "login": null,
       "gambar": [
         "gambar/umum/d05-1.png"

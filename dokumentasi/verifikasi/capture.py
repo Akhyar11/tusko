@@ -80,7 +80,7 @@ def main():
                 need = entry.get("login")
                 if need and not logged.get(need):
                     logged[need] = login(page, base, need)
-                page.goto(url, wait_until="networkidle", timeout=30000)
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(1200)
                 expect = entry.get("expect_text")
                 body = page.inner_text("body")

@@ -1,0 +1,57 @@
+% ============================================================
+% D05 — Cara Login dan Navigasi
+% ============================================================
+\flowmeta{D05}{Cara Login dan Navigasi}{Umum}
+
+\begin{flowsection}{Tujuan}
+Memandu pengguna untuk masuk (\emph{login}) ke akun serta memahami navigasi dasar
+storefront dan panel admin.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah memiliki akun (lihat alur P01 untuk mendaftar). Untuk panel admin, akun
+harus memiliki peran admin/operasional.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Login}
+\begin{enumerate}
+  \item Buka halaman \texttt{/login}.
+  \item Isi \textbf{Alamat Email / No. WhatsApp} dan \textbf{Kata Sandi}.
+  \item (Opsional) centang \textbf{Ingat saya di perangkat ini}.
+  \item Klik \textbf{Masuk Sekarang}.
+  \item Alternatif: klik \textbf{Masuk dengan Google} untuk login tanpa kata sandi.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/umum/d05-1.png}{Halaman login TUSKO (email/WhatsApp, kata sandi, dan login Google)}{fig:d05-1}
+
+\begin{flowsection}{Navigasi Storefront}
+Setelah login sebagai pelanggan, navbar menampilkan menu akun (Profil, Pesanan
+Saya, Voucher, Poin) dan ikon keranjang. Pelanggan dapat menjelajah katalog,
+menambah ke keranjang, dan melanjutkan ke checkout.
+\end{flowsection}
+
+\begin{flowsection}{Navigasi Panel Admin}
+Setelah login sebagai admin, buka \texttt{/admin/dashboard}. Sidebar kiri
+menampilkan modul sesuai peran (lihat D04). Tombol \textbf{Lihat Etalase Toko}
+membuka storefront, dan \textbf{Keluar Sesi Admin} mengakhiri sesi.
+\end{flowsection}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pengguna berhasil masuk dan diarahkan ke halaman yang sesuai; menu tampil sesuai
+peran.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error}
+\begin{itemize}
+  \item Kredensial salah $\rightarrow$ muncul pesan ``Email atau kata sandi ... tidak valid''.
+  \item Terlalu banyak percobaan $\rightarrow$ muncul pesan batas percobaan (coba lagi nanti).
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{LoginPage.jsx}, \texttt{Navbar.jsx}, \texttt{AdminSidebar.jsx}. BE
+\texttt{AuthController@login}. Rute \texttt{POST /api/auth/login}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
