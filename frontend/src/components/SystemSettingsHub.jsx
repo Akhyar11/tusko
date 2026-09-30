@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -17,6 +17,8 @@ import {
   KeyRound,
   LayoutTemplate,
   ChevronDown,
+  Eye,
+  EyeOff,
   Info,
   RotateCcw,
   Search as SearchIcon,
@@ -28,9 +30,12 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import ToggleSwitch from './molecules/ToggleSwitch';
 import ImageUploadField from './molecules/ImageUploadField';
 import SearchBar from './molecules/SearchBar';
-import RichTextEditor from './molecules/RichTextEditor';
 import RepeaterField from './molecules/RepeaterField';
 import TagsInput from './molecules/TagsInput';
+import StorefrontPreview from './organisms/StorefrontPreview';
+
+// Code-split editor WYSIWYG (Tiptap) agar tak membebani bundle awal.
+const RichTextEditor = lazy(() => import('./molecules/RichTextEditor'));
 import FormTipsPanel from './organisms/FormTipsPanel';
 import ConfirmationModal from './organisms/ConfirmationModal';
 import { settingsService } from '../services/settingsService';
@@ -81,6 +86,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
   const [collapsed, setCollapsed] = useState({});
   const [pendingNav, setPendingNav] = useState(null);
   const [isSyncingCouriers, setIsSyncingCouriers] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -301,12 +307,20 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
 
     if (field.type === 'richtext') {
       return (
-        <RichTextEditor
-          key={`${activeGroup}-${field.key}`}
-          value={value ?? ''}
-          onChange={(html) => setValue(field.key, html)}
-          placeholder={`Tulis ${field.label.toLowerCase()}...`}
-        />
+        <Suspense
+          fallback={(
+            <div className="border border-neutral-300 rounded-none bg-neutral-50 h-[200px] flex items-center justify-center text-[11px] text-neutral-500">
+              Memuat editor...
+            </div>
+          )}
+        >
+          <RichTextEditor
+            key={`${activeGroup}-${field.key}`}
+            value={value ?? ''}
+            onChange={(html) => setValue(field.key, html)}
+            placeholder={`Tulis ${field.label.toLowerCase()}...`}
+          />
+        </Suspense>
       );
     }
 
@@ -483,13 +497,29 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
           ) : active ? (
             <>
               <div className="bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs">
-                <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
+                <div className="flex items-center gap-2 border-b border-neutral-200 pb-3">
                   <ServerCog size={16} className="text-amber-500" />
-                  <span>{active.label}</span>
-                  <span className="ml-auto text-[10px] font-mono text-neutral-400 normal-case">{totalFields} field</span>
-                </h2>
+                  <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider">{active.label}</h2>
+                  <span className="text-[10px] font-mono text-neutral-400 normal-case">{totalFields} field</span>
+                  {activeGroup === 'storefront' && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewOpen((o) => !o)}
+                      className={`ml-auto px-2.5 py-1.5 text-[11px] font-sport font-black uppercase tracking-wider rounded-none border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                        previewOpen ? 'bg-neutral-950 text-white border-neutral-950' : 'bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />}
+                      <span>{previewOpen ? 'Sembunyikan' : 'Pratinjau'}</span>
+                    </button>
+                  )}
+                </div>
                 {active.description && <p className="text-[11px] text-neutral-500 mt-2">{active.description}</p>}
               </div>
+
+              {activeGroup === 'storefront' && previewOpen && (
+                <StorefrontPreview values={draft} />
+              )}
 
               {sections.map((section) => {
                 const isCollapsed = Boolean(collapsed[section.title]);
