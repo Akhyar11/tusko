@@ -97,6 +97,8 @@ echo "🧠 [3/3] Audit OpenCode AI: kesesuaian dokumentasi vs kode/flow aktual..
 PROMPT_FILE=$(mktemp)
 cat << 'EOF' > "$PROMPT_FILE"
 Kamu adalah Auditor Dokumentasi untuk sistem TUSKO (E-Commerce Olahraga + ERP).
+PENTING: DILARANG memanggil alat (file/shell/git). Jawab LANGSUNG berdasarkan
+informasi di bawah. Baris pertama jawaban WAJIB berisi "PASSED" atau "REJECTED".
 Tugasmu menilai apakah DOKUMENTASI PENGGUNA (LaTeX) SESUAI dengan KODE/FLOW AKTUAL,
 tidak mengarang fitur, dan gambarnya adalah screenshot asli aplikasi.
 
@@ -110,6 +112,10 @@ ATURAN AUDIT:
 4. Jika ada kode backend/frontend yang BERUBAH namun dokumentasi alur terkait TIDAK
    diperbarui sehingga menjadi tidak sinkron → TOLAK.
 5. DILARANG ada penanda "(TODO)" pada alur yang dinyatakan selesai.
+6. Jika perubahan kode backend/frontend TIDAK mengubah perilaku alur/fitur yang
+   sudah didokumentasikan (perbaikan internal, penanganan error, refactor, dsb.),
+   dokumentasi dianggap tetap SINKRON -> jawab PASSED. Hanya TOLAK bila perubahan
+   kode mengubah perilaku alur terdokumentasi namun dokumentasi tidak diperbarui.
 
 JAWAB dengan format:
 - Jika dokumentasi sesuai & gambar asli:
@@ -135,6 +141,14 @@ ENDPOINT API AKTUAL (backend/routes/api.php):
 =====================================================================
 EOF
 grep -oE "Route::(get|post|put|patch|delete)\('[^']+'" backend/routes/api.php 2>/dev/null | sort -u | head -n 300 >> "$PROMPT_FILE" || true
+
+cat << 'EOF' >> "$PROMPT_FILE"
+
+=====================================================================
+PERUBAHAN KODE backend/frontend (untuk menilai apakah dokumentasi terpengaruh):
+=====================================================================
+EOF
+{ git diff -- backend frontend 2>/dev/null; git diff --cached -- backend frontend 2>/dev/null; } | head -c 20000 >> "$PROMPT_FILE" || true
 
 cat << 'EOF' >> "$PROMPT_FILE"
 
@@ -174,11 +188,20 @@ if [ -z "$DOC_CHANGED" ]; then
 fi
 
 AUDITOR_RESULT=""
-if command -v agy &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 60s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
-elif command -v opencode &> /dev/null; then
-    AUDITOR_RESULT=$(timeout 90s opencode run -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
-fi
+AUDIT_BLANK_DIR=$(mktemp -d)
+for attempt in 1 2 3; do
+    if command -v agy &> /dev/null; then
+        AUDITOR_RESULT=$(cd "$AUDIT_BLANK_DIR" && timeout 90s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
+    elif command -v opencode &> /dev/null; then
+        AUDITOR_RESULT=$(cd "$AUDIT_BLANK_DIR" && timeout 150s opencode run --pure -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
+    fi
+    if grep -Eq "(PASSED|REJECTED|DITOLAK)" <<< "$AUDITOR_RESULT"; then
+        break
+    fi
+    echo "⚠️ [Audit Dokumentasi] Percobaan $attempt tidak menghasilkan verdict; mengulang..."
+    sleep 2
+done
+rm -rf "$AUDIT_BLANK_DIR"
 rm -f "$PROMPT_FILE"
 
 echo ""
