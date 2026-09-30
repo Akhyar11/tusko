@@ -1,0 +1,52 @@
+% ============================================================
+% P01 — Registrasi Akun
+% ============================================================
+\flowmeta{P01}{Registrasi Akun}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Membuat akun pelanggan baru agar dapat berbelanja, mengumpulkan poin loyalitas,
+dan melacak pesanan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Berusia minimal 17 tahun, memiliki email aktif, dan nomor HP/WhatsApp aktif.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Registrasi}
+\begin{enumerate}
+  \item Buka halaman \texttt{/register}.
+  \item Isi \textbf{Nama Lengkap}, \textbf{Alamat Email}, \textbf{Nomor HP/WhatsApp},
+        dan \textbf{Kata Sandi} (minimal 8 karakter, kombinasi huruf \& angka).
+  \item Pilih \textbf{preferensi koleksi belanja} (Pria/Wanita/Semua).
+  \item Centang persetujuan \textbf{Syarat \& Ketentuan} dan \textbf{Kebijakan Privasi}.
+  \item Klik \textbf{Buat Akun Tusko Club}.
+  \item Alternatif: gunakan \textbf{Daftar Cepat dengan Google/Apple} (lihat alur P03).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p01-1.png}{Formulir registrasi akun TUSKO Club yang telah diisi}{fig:p01-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Akun berhasil dibuat, pelanggan otomatis masuk (login), dan diarahkan ke beranda
+dengan salam selamat datang. Selama email belum diverifikasi, muncul banner
+\textbf{Email Belum Diverifikasi} beserta tombol \textbf{Kirim Ulang Verifikasi}.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p01-2.png}{Registrasi berhasil: salam selamat datang dan banner verifikasi email}{fig:p01-2}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Email sudah terdaftar $\rightarrow$ pesan ``Alamat email sudah terdaftar''.
+  \item Kata sandi tidak cocok/kurang $\rightarrow$ pesan validasi pada field.
+  \item Verifikasi keamanan (anti-bot) belum selesai $\rightarrow$ tombol daftar menahan proses.
+  \item Bila pengiriman email verifikasi gagal (mis. masalah server email), akun
+        TETAP dibuat; pengguna dapat memakai \textbf{Kirim Ulang Verifikasi}.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{RegisterPage.jsx}. BE \texttt{AuthController@register}. Rute
+\texttt{POST /api/auth/register}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

@@ -10,7 +10,8 @@
       "expect_text": "Daftar",
       "login": null,
       "gambar": [
-        "gambar/pelanggan/p01-1.png"
+        "gambar/pelanggan/p01-1.png",
+        "gambar/pelanggan/p01-2.png"
       ]
     },
     {
