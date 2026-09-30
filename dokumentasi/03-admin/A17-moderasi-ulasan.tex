@@ -1,0 +1,42 @@
+% ============================================================
+% A17 — Moderasi Ulasan
+% ============================================================
+\flowmeta{A17}{Moderasi Ulasan}{Admin}
+
+\begin{flowsection}{Tujuan}
+Meninjau ulasan/rating pelanggan dan menyetujui atau menolaknya.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Moderasi Ulasan (/admin/reviews).
+  \item Periksa isi ulasan & rating.
+  \item Setujui agar tampil di produk, atau tolak.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a17-1.png}{Halaman Moderasi Ulasan pada Panel Admin}{fig:a17-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Ulasan yang disetujui tampil pada halaman produk.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Ulasan menunggu moderasi belum tampil.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{ReviewsManagementPage.jsx}
+  \item \texttt{ProductReviewController}
+  \item \texttt{/api/reviews}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
