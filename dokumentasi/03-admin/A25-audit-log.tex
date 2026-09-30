@@ -1,0 +1,39 @@
+% ============================================================
+% A25 — Audit Log
+% ============================================================
+\flowmeta{A25}{Audit Log}{Admin}
+
+\begin{flowsection}{Tujuan}
+Menelusuri jejak aktivitas (audit trail) atas perubahan data dan aksi penting di
+sistem.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin.
+\end{flowsection}
+
+\begin{flowsection}{Cara Meninjau Audit Log}
+\begin{enumerate}
+  \item Akses modul laporan audit pada Panel Admin.
+  \item Filter berdasarkan pengguna, jenis aksi, atau rentang tanggal.
+  \item Tinjau entri: waktu, pelaku, aksi, dan objek yang terpengaruh.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a25-1.png}{Diagram jejak audit (activity log) pada sistem}{fig:a25-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Admin dapat melacak siapa mengubah apa dan kapan, untuk akuntabilitas.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Entri tidak muncul bila aksi tidak melalui jalur terekam.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+Tabel \texttt{activity\_logs}; \texttt{AuditLogService}. FE: komponen tinjauan audit.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

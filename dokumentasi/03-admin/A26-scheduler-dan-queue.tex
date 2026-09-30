@@ -1,0 +1,44 @@
+% ============================================================
+% A26 — Scheduler dan Queue
+% ============================================================
+\flowmeta{A26}{Scheduler dan Queue}{Admin/Ops}
+
+\begin{flowsection}{Tujuan}
+Menjalankan tugas otomatis terjadwal dan antrean (queue) agar proses latar
+berjalan tanpa intervensi manual.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Cron server aktif memanggil \texttt{schedule:run} dan worker queue berjalan.
+\end{flowsection}
+
+\begin{flowsection}{Tugas Terjadwal}
+\begin{itemize}
+  \item \texttt{orders:cancel-expired} --- membatalkan pesanan kedaluwarsa.
+  \item \texttt{loyalty:expire-points} --- memproses poin kedaluwarsa.
+  \item \texttt{shipments:sync-tracking} --- menyinkronkan status pelacakan.
+  \item \texttt{expeditions:sync} --- menyinkronkan data ekspedisi/kurir.
+  \item \texttt{queue:work} --- memproses antrean (mis. pengiriman email).
+  \item \texttt{model:prune} --- membersihkan data sementara.
+\end{itemize}
+\end{flowsection}
+
+\shot{gambar/admin/a26-1.png}{Diagram penjadwalan tugas otomatis (scheduler) dan antrean (queue)}{fig:a26-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Tugas berjalan terjadwal; antrean email/webhook terproses tanpa memblokir permintaan pengguna.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Cron tidak berjalan $\rightarrow$ tugas tidak dieksekusi (cek crontab server).
+  \item Queue menumpuk $\rightarrow$ pastikan worker aktif; gunakan \texttt{withoutOverlapping}.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\texttt{backend/routes/console.php}, \texttt{backend/app/Console/Commands/*},
+cron \texttt{schedule:run}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

@@ -1,0 +1,50 @@
+% ============================================================
+% A27 — Deployment dan Operasional
+% ============================================================
+\flowmeta{A27}{Deployment dan Operasional}{Admin/Ops}
+
+\begin{flowsection}{Tujuan}
+Menggambarkan topologi rilis (deployment) dan operasional sistem: frontend,
+backend, basis data, penyimpanan berkas, cron, serta backup.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Akses server/CI dan kredensial lingkungan.
+\end{flowsection}
+
+\begin{flowsection}{Alur Rilis}
+\begin{enumerate}
+  \item Pengembangan pada branch fitur $\rightarrow$ merge ke \texttt{main} (development).
+  \item Validasi (test backend, build frontend) $\rightarrow$ merge ke \texttt{master} (produksi).
+  \item Deploy otomatis (CI/CD) membangun frontend \& menarik migrasi backend.
+  \item Verifikasi smoke test setelah rilis.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a27-1.png}{Topologi deployment dan operasional TUSKO}{fig:a27-1}
+
+\begin{flowsection}{Operasional Rutin}
+\begin{itemize}
+  \item Pastikan cron \texttt{schedule:run} aktif.
+  \item Pantau antrean (queue) dan log aplikasi.
+  \item Lakukan backup basis data berkala.
+  \item Perhatikan catatan internal: pembersihan data demo (T44) dan penghapusan mock/fallback (T45).
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Sistem rilis stabil dan operasional berjalan otomatis dengan pemantauan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Build gagal $\rightarrow$ perbaiki sebelum merge.
+  \item Migrasi gagal $\rightarrow$ tinjau log deploy dan ulangi.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\texttt{backend/deploy/hostinger-deploy.sh}, \texttt{.github/workflows/}, \texttt{.env}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

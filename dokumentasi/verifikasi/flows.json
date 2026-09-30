@@ -520,7 +520,7 @@
       "aktor": "Admin",
       "url": null,
       "expect_text": null,
-      "login": "admin",
+      "login": null,
       "gambar": [
         "gambar/admin/a25-1.png"
       ]
