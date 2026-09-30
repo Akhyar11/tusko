@@ -1,0 +1,62 @@
+% ============================================================
+% P12 — Pembayaran Midtrans Snap
+% ============================================================
+\flowmeta{P12}{Pembayaran Midtrans Snap}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Membayar pesanan secara daring melalui gerbang pembayaran Midtrans Snap:
+Virtual Account, QRIS, e-Wallet, atau Kartu Kredit/Debit.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Checkout telah lengkap (alamat, pengiriman, metode pembayaran). Kredensial
+Midtrans telah diisi admin pada Pengaturan Sistem.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Pembayaran}
+\begin{enumerate}
+  \item Pada checkout, pilih metode pembayaran (mis. \textbf{BCA Virtual Account},
+        \textbf{QRIS \& E-Wallet}, atau \textbf{Kartu Kredit/Debit}).
+  \item Klik \textbf{Bayar Sekarang}.
+  \item Popup \textbf{Midtrans Snap} muncul; ikuti instruksi sesuai metode.
+  \item Setelah pembayaran berhasil, Midtrans mengirim notifikasi (webhook) ke
+        backend dan status pesanan berubah menjadi \textbf{PAID}.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p12-1.png}{Pemilihan metode pembayaran Midtrans pada halaman checkout}{fig:p12-1}
+
+\begin{flowsection}{Alur Teknis}
+\begin{enumerate}
+  \item Pelanggan menekan Bayar Sekarang.
+  \item Backend membuat order dan meminta Snap token ke Midtrans.
+  \item Popup Snap tampil untuk memilih kanal pembayaran.
+  \item Pelanggan menyelesaikan pembayaran.
+  \item Midtrans mengirim webhook ke backend.
+  \item Backend memverifikasi \texttt{signature\_key} (SHA-512), lalu menandai
+        order \textbf{PAID} (idempoten agar tidak dobel).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p12-2.png}{Diagram alur pembayaran Midtrans Snap beserta verifikasi webhook}{fig:p12-2}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Order tercatat dan berstatus menunggu/terbayar sesuai hasil; pelanggan dapat
+memantau status di \textbf{Pesanan Saya} (P14).
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Popup tidak muncul $\rightarrow$ pastikan kredensial Midtrans & Snap URL benar.
+  \item Pembayaran kedaluwarsa $\rightarrow$ order tetap belum terbayar; dapat dibuat ulang.
+  \item Webhook gagal diverifikasi $\rightarrow$ status tidak berubah (aman).
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{CheckoutPage.jsx} (Snap), \texttt{checkoutService.js}. BE
+\texttt{PaymentController}, \texttt{MidtransWebhookController}. Tabel
+\texttt{payments}, \texttt{midtrans\_transactions}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

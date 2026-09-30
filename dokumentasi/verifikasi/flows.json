@@ -144,7 +144,8 @@
       "expect_text": "Pembayaran",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p12-1.png"
+        "gambar/pelanggan/p12-1.png",
+        "gambar/pelanggan/p12-2.png"
       ]
     },
     {
