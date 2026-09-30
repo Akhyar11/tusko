@@ -1640,6 +1640,10 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
             (b) Retur barang tidak memanggil API Biteship (retur dibuat sebagai order baru
                 bila perlu); alur stok/refund ditangani internal (T29/T13).
             (c) Aktivasi API Biteship butuh 2 order uji sandbox (status Delivered + Cancelled).
+    T40.16 [DONE] GAP AUDIT BITESHIP — UPDATE ORDER: `BiteshipOrderService::updateForOrder()`
+            memanggil `POST /v1/orders/{id}` (partial body, field allow-list) untuk ubah
+            alamat/kurir selama status belum dijemput; endpoint `PUT /api/admin/orders/{id}/shipment`.
+            Test `BiteshipUpdateOrderTest`.
   ACCEPTANCE (T40):
    (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
        secret via Settings Hub, lalu menyinkronkan kurir/layanan.
