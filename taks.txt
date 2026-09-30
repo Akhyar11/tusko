@@ -1854,6 +1854,20 @@ T43. Storefront 100% Dinamis (Navbar Kategori + Konten Header→Footer) .. [DONE
   DEPENDENSI: T43.1 -> T04 ; T43.2 -> T43.1/T42.1 ; T43.3 -> T43.2/T37 ; T43.4 -> T36/T21.3(D7) ;
     T43.5 -> T42.1/T43.2.
 
+T44. Pembersihan Data Demo (ops) ................................... [DONE]  [OWNER:A1]
+  LATAR BELAKANG (permintaan user 2026-09-29):
+   - Daftar "Antrean Pesanan" berisi pesanan demo/uji yang harus dibersihkan.
+     Tidak ada seeder pesanan aktif (seeder produk/ekspedisi sudah dihapus di `92026b0`);
+     data lama masih tersimpan di DB -> perlu alat pembersihan yang aman & reusable.
+  Implementasi:
+   - T44.1 [DONE] Command `demo:purge-orders [--force]` menghapus `orders` + data terkait
+           (`order_items`, `order_status_histories`, `shipments`/`shipment_trackings`,
+           `payments`, `transactions`, `returns`/`return_items`, `stock_reservations`,
+           `voucher_usages`, `product_reviews`, `email_logs`) dalam transaksi + konfirmasi.
+           Test `PurgeDemoOrdersTest` (2). Dijalankan di dev: 24 pesanan demo terhapus. [OWNER:A1]
+  CATATAN PRODUKSI: jalankan `php artisan demo:purge-orders --force` via SSH di server
+    (tidak disertakan di deploy otomatis agar tidak menghapus data tanpa sengaja).
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================
