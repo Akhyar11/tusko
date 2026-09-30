@@ -1,0 +1,67 @@
+% ============================================================
+% P03 — Login dengan Google
+% ============================================================
+\flowmeta{P03}{Login dengan Google}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Masuk atau mendaftar akun dengan cepat menggunakan akun Google (OAuth 2.0) tanpa
+mengetik kata sandi.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Tombol \textbf{Masuk dengan Google} hanya tampil/aktif bila admin telah mengisi
+kredensial OAuth (Client ID \& Secret) pada pengaturan AUTH/Google di Pengaturan
+Sistem, dan alamat \emph{redirect} telah didaftarkan pada Google Cloud Console.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Login Google}
+\begin{enumerate}
+  \item Buka halaman \texttt{/login}.
+  \item Klik \textbf{Masuk dengan Google}.
+  \item Pilih akun Google dan setujui permintaan izin (\emph{consent}).
+  \item Sistem mengembalikan pengguna ke aplikasi dalam keadaan masuk.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p03-1.png}{Tombol ``Masuk dengan Google'' pada halaman login}{fig:p03-1}
+
+\begin{flowsection}{Alur Teknis OAuth}
+Langkah 1--7 di bawah menggambarkan pertukaran antara frontend, backend, dan
+Google.
+\begin{enumerate}
+  \item Pelanggan menekan tombol Masuk dengan Google.
+  \item Frontend meminta \texttt{/api/auth/google/redirect}.
+  \item Backend mengarahkan peramban ke halaman persetujuan Google.
+  \item Pelanggan menyetujui akses.
+  \item Google mengirim \emph{callback} berisi kode ke backend.
+  \item Backend menukar kode menjadi data profil, membuat/menyambungkan akun,
+        lalu menerbitkan token login.
+  \item Frontend menerima sesi dan mengarahkan pengguna kembali dalam keadaan masuk.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p03-2.png}{Diagram alur login Google (OAuth 2.0)}{fig:p03-2}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pengguna masuk tanpa kata sandi; akun otomatis dibuat bila belum ada (email Google
+terverifikasi).
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item ``Tujuan balik tidak diizinkan'' $\rightarrow$ alamat \emph{redirect}
+        aplikasi tidak terdaftar pada konfigurasi Google.
+  \item ``redirect\_uri\_mismatch'' (dari Google) $\rightarrow$ alamat redirect
+        belum ditambahkan di Google Cloud Console.
+  \item Kredensial OAuth kosong $\rightarrow$ tombol Google tidak berfungsi;
+        isi pada Pengaturan Sistem.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{LoginPage.jsx}, \texttt{AuthCallbackPage}. BE
+\texttt{GoogleAuthController}, \texttt{GoogleAuthService}. Rute
+\texttt{/api/auth/google/redirect}, \texttt{/api/auth/google/callback}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
