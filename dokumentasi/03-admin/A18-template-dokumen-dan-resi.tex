@@ -1,0 +1,44 @@
+% ============================================================
+% A18 — Template Dokumen dan Resi
+% ============================================================
+\flowmeta{A18}{Template Dokumen dan Resi}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengelola template email dan format cetak resi serta meninjau log notifikasi.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Template Dokumen & Resi (/admin/templates).
+  \item Sunting template email (editor) dan pratinjau.
+  \item Atur format resi/label.
+  \item Tinjau log notifikasi email.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a18-1.png}{Halaman Template Dokumen dan Resi pada Panel Admin}{fig:a18-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Template tersimpan dan dipakai sistem saat mengirim notifikasi.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Perubahan template langsung berlaku untuk pengiriman berikutnya.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{TemplateManagementPage.jsx}
+  \item \texttt{templateService.js}
+  \item \texttt{EmailLogController}
+  \item \texttt{/api/admin/email-logs}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
