@@ -580,6 +580,9 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            endpoint `POST /api/orders/{id}/sync-payment` (lookup id/order_number/midtrans_order_id);
            tombol "Cek Status Pembayaran" FE memanggil sync. Uji NYATA sandbox: bayar Mandiri
            via Simulator -> paid; cancel via API -> cancelled. [commit 0fd5567 (BE) + 255a44f (FE)]
+    T07.11 [DONE] GAP AUDIT MIDTRANS — pemetaan `chargeback`/`partial_chargeback` -> `refunded`
+           dan `failure` -> `failed` (sebelumnya jatuh ke default `pending`). Test
+           `MidtransStatusMappingTest` (12 status resmi).
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
