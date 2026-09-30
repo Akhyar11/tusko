@@ -1,0 +1,42 @@
+% ============================================================
+% A06 — Smart Inventory Multi-Gudang
+% ============================================================
+\flowmeta{A06}{Smart Inventory Multi-Gudang}{Admin}
+
+\begin{flowsection}{Tujuan}
+Pemantauan stok per gudang, reservasi otomatis, dan peringatan stok menipis.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Manajemen Stok; perhatikan KPI total on-hand/tersedia/terpesan.
+  \item Lihat peringatan stok kritis (low-stock alert).
+  \item Alokasi/reservasi stok terjadi otomatis saat pesanan dibuat.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a06-1.png}{Halaman Smart Inventory Multi-Gudang pada Panel Admin}{fig:a06-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Admin memantau ketersediaan stok lintas gudang dan mencegah overselling.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Stok menipis ditandai dan disarankan restok.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{StockManagementPage.jsx}
+  \item \texttt{LowStockAlertWidget.jsx}
+  \item \texttt{InventoryService}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
