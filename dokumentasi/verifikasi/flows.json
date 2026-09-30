@@ -266,7 +266,7 @@
       "nama": "Dashboard BI",
       "aktor": "Admin",
       "url": "/admin/dashboard",
-      "expect_text": "Dashboard",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a02-1.png"
@@ -277,7 +277,7 @@
       "nama": "Produk: Daftar, Tambah, Edit",
       "aktor": "Admin",
       "url": "/admin/products",
-      "expect_text": "Produk",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a03-1.png"
@@ -288,7 +288,7 @@
       "nama": "Kategori dan Konfigurasi Navbar",
       "aktor": "Admin",
       "url": "/admin/categories",
-      "expect_text": "Kategori",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a04-1.png"
@@ -299,7 +299,7 @@
       "nama": "Stok dan Mutasi",
       "aktor": "Admin",
       "url": "/admin/stock",
-      "expect_text": "Stok",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a05-1.png"
@@ -310,7 +310,7 @@
       "nama": "Smart Inventory Multi-Gudang",
       "aktor": "Admin",
       "url": "/admin/stock",
-      "expect_text": "Gudang",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a06-1.png"
@@ -321,7 +321,7 @@
       "nama": "Stock Opname",
       "aktor": "Admin",
       "url": "/admin/stock-opname",
-      "expect_text": "Opname",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a07-1.png"
@@ -332,7 +332,7 @@
       "nama": "Master Gudang dan Lokasi",
       "aktor": "Admin",
       "url": "/admin/warehouses",
-      "expect_text": "Gudang",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a08-1.png"
@@ -343,7 +343,7 @@
       "nama": "Antrean Pesanan",
       "aktor": "Admin",
       "url": "/admin/orders",
-      "expect_text": "Pesanan",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a09-1.png"
@@ -354,7 +354,7 @@
       "nama": "Fulfillment: Pickup, Resi dan Label",
       "aktor": "Admin",
       "url": "/admin/orders",
-      "expect_text": "Pengiriman",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a10-1.png"
@@ -365,7 +365,7 @@
       "nama": "Verifikasi Pembayaran Manual",
       "aktor": "Admin",
       "url": "/admin/orders",
-      "expect_text": "Pembayaran",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a11-1.png"
@@ -376,7 +376,7 @@
       "nama": "Procurement: Vendor, PO, GRN dan Bills",
       "aktor": "Admin",
       "url": "/admin/procurement/pos",
-      "expect_text": "Purchase",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a12-1.png"
@@ -387,7 +387,7 @@
       "nama": "Buku Kas, Rekening dan Jurnal",
       "aktor": "Admin",
       "url": "/admin/transactions",
-      "expect_text": "Transaksi",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a13-1.png"
@@ -398,7 +398,7 @@
       "nama": "Laporan Keuangan dan HPP",
       "aktor": "Admin",
       "url": "/admin/reports/income-statement",
-      "expect_text": "Laba",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a14-1.png"
@@ -409,7 +409,7 @@
       "nama": "Retur dan Refund Admin",
       "aktor": "Admin",
       "url": "/admin/returns",
-      "expect_text": "Retur",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a15-1.png"
@@ -420,7 +420,7 @@
       "nama": "Voucher dan Promo Admin",
       "aktor": "Admin",
       "url": "/admin/vouchers",
-      "expect_text": "Voucher",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a16-1.png"
@@ -431,7 +431,7 @@
       "nama": "Moderasi Ulasan",
       "aktor": "Admin",
       "url": "/admin/reviews",
-      "expect_text": "Ulasan",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a17-1.png"
@@ -442,7 +442,7 @@
       "nama": "Template Dokumen dan Resi",
       "aktor": "Admin",
       "url": "/admin/templates",
-      "expect_text": "Template",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a18-1.png"
@@ -453,7 +453,7 @@
       "nama": "Integrasi Ekspedisi dan Pembayaran",
       "aktor": "Admin",
       "url": "/admin/expeditions",
-      "expect_text": "Ekspedisi",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a19-1.png"
@@ -464,7 +464,7 @@
       "nama": "Pengaturan Sistem Terpusat",
       "aktor": "Admin",
       "url": "/admin/settings",
-      "expect_text": "Pengaturan",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a20-1.png"
@@ -475,7 +475,7 @@
       "nama": "Menu dan Role Access",
       "aktor": "Admin",
       "url": "/admin/menus",
-      "expect_text": "Menu",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a21-1.png"
@@ -486,7 +486,7 @@
       "nama": "Master Users",
       "aktor": "Admin",
       "url": "/admin/users",
-      "expect_text": "Pengguna",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a22-1.png"
@@ -497,7 +497,7 @@
       "nama": "Master Role",
       "aktor": "Admin",
       "url": "/admin/roles",
-      "expect_text": "Peran",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a23-1.png"
@@ -508,7 +508,7 @@
       "nama": "Role-Menu Mapping",
       "aktor": "Admin",
       "url": "/admin/role-menu",
-      "expect_text": "Menu",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/admin/a24-1.png"

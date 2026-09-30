@@ -1,0 +1,45 @@
+% ============================================================
+% A02 — Dashboard BI
+% ============================================================
+\flowmeta{A02}{Dashboard BI}{Admin}
+
+\begin{flowsection}{Tujuan}
+KPI revenue, laba kotor, arus kas, liabilitas poin, produk fast/slow moving, dan grafik tren.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka /admin/dashboard.
+  \item Amati kartu KPI: Pendapatan, Laba Kotor, Arus Kas, Liabilitas Poin.
+  \item Lihat daftar produk Fast Moving & Slow Moving.
+  \item Gunakan tombol BULAN/MINGGU untuk mengubah periode grafik.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a02-1.png}{Halaman Dashboard BI pada Panel Admin}{fig:a02-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Ringkasan performa dan tren diperbarui dari data transaksi aktual.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Data belum tampil bila belum ada transaksi.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{AdminDashboardPage.jsx}
+  \item \texttt{DashboardController}
+  \item \texttt{ReportQueryService}
+  \item \texttt{GET /api/dashboard/summary}
+  \item \texttt{GET /api/dashboard/chart}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
