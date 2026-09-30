@@ -62,3 +62,13 @@ Schedule::command('orders:cancel-expired')
 Schedule::command('expeditions:sync')
     ->dailyAt('02:00')
     ->withoutOverlapping();
+
+// 5. T30.3: kedaluwarsakan poin loyalitas (harian).
+Schedule::command('loyalty:expire-points')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();
+
+// 6. T30.3/T10.4: sinkron pelacakan kiriman Biteship yang belum selesai.
+Schedule::command('shipments:sync-tracking')
+    ->hourly()
+    ->withoutOverlapping();

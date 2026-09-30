@@ -100,6 +100,11 @@ export default function AdminDashboardPage({
 
   const activeChartData = chartPeriod === 'monthly' ? monthlyChartData : weeklyChartData;
   const maxGross = Math.max(1, ...activeChartData.map((d) => d.gross));
+  const periodLabel = activeChartData.length === 0
+    ? 'Belum ada data'
+    : (chartPeriod === 'monthly'
+      ? `6 Bulan Terakhir (${monthlyChartData[0]?.label} - ${monthlyChartData[monthlyChartData.length - 1]?.label})`
+      : `Bulan Ini (${weeklyChartData[0]?.label} - ${weeklyChartData[weeklyChartData.length - 1]?.label})`);
 
   // 3. Business Intelligence Fast vs Slow Moving SKUs (dari API)
   const mapMoving = (rows) => (Array.isArray(rows) ? rows : []).map((r) => ({
@@ -147,7 +152,7 @@ export default function AdminDashboardPage({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <div className="px-3 py-2 bg-neutral-100 border border-neutral-300 text-neutral-800 text-xs font-mono font-bold flex items-center gap-2 rounded-none">
             <Clock size={14} className="text-amber-600" />
-            <span>Live Sync 2026</span>
+            <span>Live Sync {new Date().getFullYear()}</span>
           </div>
         </div>
       </div>
@@ -475,7 +480,7 @@ export default function AdminDashboardPage({
         {/* Chart Summary Footer */}
         <div className="mt-4 pt-3 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-2">
           <div>
-            Periode aktif: <span className="font-bold text-neutral-900">{chartPeriod === 'monthly' ? '6 Bulan Terakhir (Apr - Sep 2026)' : 'Bulan Ini (Minggu 1 - 4 Sep 2026)'}</span>
+            Periode aktif: <span className="font-bold text-neutral-900">{periodLabel}</span>
           </div>
           <div className="font-mono text-neutral-700 font-bold">
             Total Perputaran: {formatRupiah(activeChartData.reduce((acc, c) => acc + c.gross, 0))}

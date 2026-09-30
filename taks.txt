@@ -1064,7 +1064,9 @@ T30. Scheduler & Queue ............................................. [PARTIAL]  
   Minor:
     T30.1 [DONE] Queue worker + job infra (INDEPENDEN; prasyarat T20.4/T26.1).
     T30.2 [DONE] Scheduled: auto-cancel order expired + release reservasi (T13.3).
-    T30.3 [NEW] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4).
+    T30.3 [DONE] Scheduled: expire poin (T31.2) + sinkron tracking (T10.4) — command
+           `loyalty:expire-points` (harian 03:00, idempotent) & `shipments:sync-tracking`
+           (per jam) + `withoutOverlapping`; test LoyaltyExpiryTest & ShipmentTrackingSyncCommandTest. [OWNER:A2]
     T30.4 [DONE] SCHEDULER SHARED HOSTING (Hostinger, tanpa Supervisor): `routes/console.php`
            menjalankan `queue:work database --stop-when-empty --max-time=50 --memory=128
            --tries=3` tiap menit (`withoutOverlapping(10)` + `runInBackground`), prune
@@ -1902,6 +1904,8 @@ T46. Dashboard BI Dinamis (Admin) ................................. [DONE]  [OWN
     T46.2 [DONE] FE: `AdminDashboardPage` KPI/chart/fast-slow/loyalty diambil dari API
            (`/api/dashboard/summary`), hapus angka & data hardcode; bukti Playwright
            (angka palsu tidak tampil + toggle BULAN/MINGGU). [OWNER:A1]
+    T46.3 [DONE] FE: label kosmetik dinamis — badge "Live Sync {tahun}" & "Periode aktif"
+           dihitung dari data chart (bukan teks "Apr - Sep 2026" statis). [OWNER:A1]
 
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
