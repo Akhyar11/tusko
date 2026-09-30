@@ -1,0 +1,43 @@
+% ============================================================
+% A21 — Menu dan Role Access
+% ============================================================
+\flowmeta{A21}{Menu dan Role Access}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengelola master menu navigasi admin dan pemetaannya ke peran.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Master Menu & Akses (/admin/menus).
+  \item Tambah/ubah menu: label, path_prefix, view_key, section, icon, feature flag.
+  \item Petakan menu ke peran pada Role → Menu Mapping (A24).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a21-1.png}{Halaman Menu dan Role Access pada Panel Admin}{fig:a21-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Menu dinamis tersimpan; sidebar menampilkan menu sesuai peran.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Menu tanpa cabang render di App akan menjadi dead view.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{MenuListPage.jsx}
+  \item \texttt{MenuCreatePage.jsx}
+  \item \texttt{MenuController}
+  \item \texttt{/api/menus}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
