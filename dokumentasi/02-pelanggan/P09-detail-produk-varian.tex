@@ -1,0 +1,57 @@
+% ============================================================
+% P09 — Detail Produk dan Varian
+% ============================================================
+\flowmeta{P09}{Detail Produk dan Varian}{Pelanggan/Tamu}
+
+\begin{flowsection}{Tujuan}
+Melihat informasi lengkap sebuah produk, memilih varian (bila tersedia),
+menentukan jumlah, lalu menambahkan ke keranjang atau daftar keinginan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Tidak perlu login untuk melihat. Menambah ke keranjang/daftar keinginan
+disarankan dalam keadaan login.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Melihat Detail Produk}
+\begin{enumerate}
+  \item Dari katalog, klik salah satu kartu produk.
+  \item Halaman detail menampilkan galeri foto, nama, harga, harga coret,
+        status stok, dan deskripsi produk.
+  \item Bila produk memiliki \textbf{varian}, pilih kombinasi atribut
+        (mis. warna, ukuran, panjang lengan). Setiap kombinasi memiliki SKU dan
+        harga tersendiri.
+  \item Atur jumlah dengan tombol \textbf{--} / \textbf{+}.
+  \item Klik \textbf{+ Keranjang} untuk menambah ke keranjang, atau
+        \textbf{Simpan ke Daftar Keinginan} untuk wishlist.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p09-1.png}{Halaman detail produk: galeri, harga, status stok, dan aksi}{fig:p09-1}
+
+\begin{flowsection}{Varian Bertingkat}
+Untuk produk bervarian, pelanggan memilih nilai tiap tingkat atribut. Sistem
+menampilkan SKU dan harga aktif sesuai kombinasi yang dipilih, serta ketersediaan
+stok varian tersebut. Bila kombinasi tidak tersedia, tombol keranjang dinonaktifkan.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p09-2.png}{Bagian bawah halaman detail: deskripsi, spesifikasi, dan produk terkait}{fig:p09-2}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Produk ditambahkan ke keranjang (notifikasi sukses) atau tersimpan di daftar
+keinginan; keranjang menampilkan jumlah item terbaru.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Stok habis pada varian terpilih $\rightarrow$ tombol keranjang dinonaktifkan.
+  \item Produk nonaktif $\rightarrow$ tidak tampil di katalog.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProductDetail.jsx}. BE \texttt{ProductController@show},
+\texttt{CartController}. Rute \texttt{GET /api/products/\{id\}}, \texttt{POST /api/cart}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

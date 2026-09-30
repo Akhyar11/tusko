@@ -105,10 +105,11 @@
       "nama": "Detail Produk dan Varian",
       "aktor": "Pelanggan/Tamu",
       "url": "/",
-      "expect_text": "Produk",
+      "expect_text": "RILIS TERBARU",
       "login": null,
       "gambar": [
-        "gambar/pelanggan/p09-1.png"
+        "gambar/pelanggan/p09-1.png",
+        "gambar/pelanggan/p09-2.png"
       ]
     },
     {
