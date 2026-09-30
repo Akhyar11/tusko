@@ -1,0 +1,44 @@
+% ============================================================
+% A19 — Integrasi Ekspedisi dan Pembayaran
+% ============================================================
+\flowmeta{A19}{Integrasi Ekspedisi dan Pembayaran}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengatur integrasi logistik (Biteship/KiriminAja), pembayaran (Midtrans), dan penyimpanan berkas.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Pengaturan Jasa Ekspedisi (/admin/expeditions).
+  \item Sinkronkan daftar kurir dari agensi.
+  \item Aktifkan/nonaktifkan kurir & atur tarif.
+  \item Atur kredensial Midtrans & penyimpanan di Pengaturan Sistem.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a19-1.png}{Halaman Integrasi Ekspedisi dan Pembayaran pada Panel Admin}{fig:a19-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Integrasi aktif sehingga tarif, pengiriman, dan pembayaran berjalan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kredensial salah → integrasi gagal terhubung.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{ExpeditionSettingsPage.jsx}
+  \item \texttt{ExpeditionController}
+  \item \texttt{BiteshipAreaService}
+  \item \texttt{/api/expeditions}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
