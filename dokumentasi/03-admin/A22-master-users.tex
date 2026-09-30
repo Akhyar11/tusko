@@ -1,0 +1,43 @@
+% ============================================================
+% A22 — Master Users
+% ============================================================
+\flowmeta{A22}{Master Users}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengelola akun pengguna admin/operasional dan perannya.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Master Users (/admin/users).
+  \item Tambah user: nama, email, kata sandi, peran; atau ubah user.
+  \item Aktifkan/nonaktifkan akun dari menu baris.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a22-1.png}{Halaman Master Users pada Panel Admin}{fig:a22-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Akun pengguna dikelola dan dapat masuk sesuai peran.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Email harus unik.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{UsersListPage.jsx}
+  \item \texttt{UserCreatePage.jsx}
+  \item \texttt{UserController}
+  \item \texttt{/api/users}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
