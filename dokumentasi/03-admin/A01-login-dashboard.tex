@@ -1,0 +1,41 @@
+% ============================================================
+% A01 — Login Admin dan Dashboard
+% ============================================================
+\flowmeta{A01}{Login Admin dan Dashboard}{Admin}
+
+\begin{flowsection}{Tujuan}
+Masuk ke Panel Admin dan melihat dashboard utama berisi ringkasan performa toko.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Akun dengan peran admin/operasional yang aktif.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Login Admin}
+\begin{enumerate}
+  \item Buka \texttt{/login}, masukkan email \& kata sandi admin.
+  \item Setelah masuk, buka \texttt{/admin/dashboard}.
+  \item Dashboard menampilkan KPI ringkas dan pintasan modul pada sidebar.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a01-1.png}{Dashboard utama Panel Admin beserta sidebar modul sesuai peran}{fig:a01-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Admin melihat ringkasan performa dan dapat membuka modul dari sidebar.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Tanpa menu $\rightarrow$ peran belum dipetakan ke menu (lihat A24).
+  \item Kredensial salah $\rightarrow$ pesan kesalahan pada halaman login.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{AdminDashboardPage.jsx}, \texttt{AdminSidebar.jsx}. BE
+\texttt{DashboardController}, \texttt{AuthController}. Rute \texttt{GET /api/auth/menus},
+\texttt{GET /api/dashboard/summary}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

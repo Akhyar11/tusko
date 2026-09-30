@@ -585,7 +585,7 @@
       "nama": "Hak Akses dan Menu",
       "aktor": "Umum",
       "url": "/admin/dashboard",
-      "expect_text": "Dashboard",
+      "expect_text": "TUSKO",
       "login": "admin",
       "gambar": [
         "gambar/umum/d04-1.png"

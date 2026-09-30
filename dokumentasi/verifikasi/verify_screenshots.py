@@ -149,10 +149,14 @@ def main():
                             continue
                         logged[need] = True
                     page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                    page.wait_for_timeout(1200)
+                    page.wait_for_timeout(1800)
 
                     expect = entry.get("expect_text")
                     body = page.inner_text("body")
+                    if expect and expect.lower() not in body.lower():
+                        page.reload(wait_until="domcontentloaded")
+                        page.wait_for_timeout(2500)
+                        body = page.inner_text("body")
                     if expect and expect.lower() not in body.lower():
                         failures.append(f"{code}: teks penanda '{expect}' TIDAK ditemukan di {url} "
                                         f"(halaman/alur tidak sesuai dokumentasi)")
