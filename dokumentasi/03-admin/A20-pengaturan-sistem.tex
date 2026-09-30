@@ -1,0 +1,44 @@
+% ============================================================
+% A20 — Pengaturan Sistem Terpusat
+% ============================================================
+\flowmeta{A20}{Pengaturan Sistem Terpusat}{Admin}
+
+\begin{flowsection}{Tujuan}
+Pusat konfigurasi: identitas toko, legal, storefront, pengiriman, pembayaran, notifikasi, keamanan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Pengaturan Sistem (/admin/settings).
+  \item Pilih grup pengaturan (Store/Legal/Storefront/Shipping/Payment/Notification/Security/Auth).
+  \item Isi nilai & unggah gambar storefront.
+  \item Simpan; perubahan berlaku pada storefront.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a20-1.png}{Halaman Pengaturan Sistem Terpusat pada Panel Admin}{fig:a20-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Konfigurasi tersimpan dan memengaruhi perilaku sistem/storefront.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Field sensitif disimpan terenkripsi.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{SystemSettingsHub.jsx}
+  \item \texttt{SettingsRegistry}
+  \item \texttt{/api/settings}
+  \item \texttt{/api/admin/storefront/image}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
