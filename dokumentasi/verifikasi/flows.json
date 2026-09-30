@@ -132,7 +132,8 @@
       "expect_text": "Checkout",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p11-1.png"
+        "gambar/pelanggan/p11-1.png",
+        "gambar/pelanggan/p11-2.png"
       ]
     },
     {

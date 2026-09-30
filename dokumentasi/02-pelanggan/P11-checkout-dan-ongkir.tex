@@ -1,0 +1,54 @@
+% ============================================================
+% P11 — Checkout dan Ongkos Kirim
+% ============================================================
+\flowmeta{P11}{Checkout dan Ongkos Kirim}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Menyelesaikan pesanan: memilih alamat pengiriman, menentukan layanan kurir
+beserta ongkos kirim, lalu memilih metode pembayaran.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login dan memiliki minimal satu item terpilih di keranjang (P10). Alamat
+pengiriman harus tersedia (dapat ditambahkan lewat P07).
+\end{flowsection}
+
+\begin{flowsection}{Langkah Checkout}
+\begin{enumerate}
+  \item Dari keranjang, klik \textbf{Lanjut ke Pembayaran} (halaman \texttt{/checkout}).
+  \item Pada bagian \textbf{Alamat Pengiriman}, pilih alamat atau klik
+        \textbf{+ Tambah Alamat} bila belum ada.
+  \item Periksa \textbf{Berat \& Dimensi Paket} (otomatis dari item; dapat diubah).
+  \item Pada \textbf{Opsi Pengiriman}, pilih kurir \& layanan; tarif dihitung
+        otomatis dari agen logistik.
+  \item (Opsional) terapkan \textbf{Kupon Promo}.
+  \item Pilih \textbf{Metode Pembayaran} (lihat P12/P13) lalu klik
+        \textbf{Bayar Sekarang}.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p11-1.png}{Halaman checkout: alamat, berat paket, opsi pengiriman, metode pembayaran, dan ringkasan}{fig:p11-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Ringkasan pembayaran menampilkan total harga barang + ongkir + asuransi/biaya
+lain; tombol \textbf{Bayar Sekarang} aktif setelah alamat, pengiriman, dan
+pembayaran dipilih.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p11-2.png}{Bagian pemilihan metode pembayaran (Midtrans) pada checkout}{fig:p11-2}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Belum ada alamat $\rightarrow$ tombol bayar menahan proses; tambahkan alamat dahulu.
+  \item Tarif kurir gagal dimuat $\rightarrow$ coba ubah kurir/ulangi.
+  \item Keranjang berubah/stok habis saat checkout $\rightarrow$ validasi ulang di server.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{CheckoutPage.jsx}, \texttt{checkoutService.js}. BE
+\texttt{CheckoutController}, \texttt{ShippingRateService}. Rute
+\texttt{POST /api/checkout}, \texttt{GET /api/shipping/rates}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
