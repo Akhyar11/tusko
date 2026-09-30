@@ -1,0 +1,52 @@
+% ============================================================
+% P08 — Katalog: Filter, Pencarian dan Urutan
+% ============================================================
+\flowmeta{P08}{Katalog: Filter, Pencarian dan Urutan}{Pelanggan/Tamu}
+
+\begin{flowsection}{Tujuan}
+Menjelajahi katalog produk, mencari produk dengan cepat, serta menyaring dan
+mengurutkan hasil sesuai kebutuhan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Tidak perlu login; dapat diakses siapa saja.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Menjelajah Katalog}
+\begin{enumerate}
+  \item Buka beranda/katalog (mis. \texttt{/}).
+  \item Gunakan kolom \textbf{Cari produk} di header untuk mencari nama produk;
+        saran produk muncul saat mengetik.
+  \item Gunakan kategori pada navbar (mis. \textbf{Sepatu Lari}) untuk membuka
+        kelompok produk.
+  \item Gunakan kontrol \textbf{Filter} (mis. \textbf{RATING}) dan \textbf{URUTKAN}
+        pada bagian \emph{Rilis Terbaru TUSKO}.
+  \item Klik kartu produk untuk membuka detail (lihat P09).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p08-1.png}{Katalog produk dengan kartu produk serta kontrol filter (Rating) dan urutan}{fig:p08-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Daftar produk tampil dan berubah sesuai kata kunci pencarian, filter, dan urutan
+yang dipilih.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p08-2.png}{Pencarian produk: saran produk muncul saat mengetik}{fig:p08-2}
+
+\shot{gambar/pelanggan/p08-3.png}{Kontrol filter Rating dibuka}{fig:p08-3}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Tidak ada produk cocok $\rightarrow$ muncul empty-state ``Tidak ada produk yang cocok''.
+  \item Katalog gagal dimuat $\rightarrow$ coba muat ulang; pastikan koneksi stabil.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProductGrid.jsx}, \texttt{App.jsx} (view catalog). BE
+\texttt{ProductController@index}, \texttt{CategoryController@index}. Rute
+\texttt{GET /api/products}, \texttt{GET /api/categories}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
