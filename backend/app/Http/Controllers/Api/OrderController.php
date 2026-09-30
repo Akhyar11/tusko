@@ -257,6 +257,11 @@ class OrderController extends Controller
             ]);
         }
 
+        // T40.14: batalkan order pengiriman Biteship (bila ada) agar booking tidak menggantung.
+        if ($newStatus === 'cancelled' && $previousStatus !== 'cancelled') {
+            app(\App\Services\BiteshipOrderService::class)->cancelForOrder($order, $validated['cancellation_reason'] ?? null);
+        }
+
         // Send status change notification email if status changed
         if ($previousStatus !== $newStatus) {
             app(\App\Services\OrderEmailService::class)->sendStatusNotification($order, $previousStatus);
@@ -302,6 +307,9 @@ class OrderController extends Controller
             'cancelled_at' => Carbon::now(),
             'notes' => $validated['cancellation_reason'] ?? $order->notes,
         ]);
+
+        // T40.14: batalkan order pengiriman Biteship (bila ada).
+        app(\App\Services\BiteshipOrderService::class)->cancelForOrder($order, $validated['cancellation_reason'] ?? null);
 
         return response()->json([
             'status' => 'success',

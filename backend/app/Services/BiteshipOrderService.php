@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Shipment;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -143,6 +144,48 @@ class BiteshipOrderService
         }
 
         return $this->client->post('/v1/orders', $payload);
+    }
+
+    /**
+     * Batalkan order pengiriman Biteship (T40.14).
+     *
+     * Memanggil POST /v1/orders/{id}/cancel saat pesanan dibatalkan admin agar
+     * booking tidak menggantung/tertagih. Best-effort: kegagalan jaringan dicatat
+     * ke log, tidak melempar error ke pemanggil.
+     */
+    public function cancelForOrder(Order $order, ?string $reason = null): bool
+    {
+        $shipment = Shipment::query()
+            ->where('order_id', $order->id)
+            ->where('provider', 'biteship')
+            ->first();
+
+        if (! $shipment || empty($shipment->provider_order_id) || ! $this->isConfigured()) {
+            return false;
+        }
+
+        $terminal = ['cancelled', 'returned', 'delivered', 'disposed', 'rejected'];
+        if (in_array((string) $shipment->provider_status, $terminal, true)) {
+            return false;
+        }
+
+        try {
+            $this->client->post(
+                '/v1/orders/' . rawurlencode((string) $shipment->provider_order_id) . '/cancel',
+                ['reason' => $reason ?: 'Dibatalkan oleh admin']
+            );
+
+            $shipment->forceFill([
+                'provider_status' => 'cancelled',
+                'status' => 'cancelled',
+            ])->save();
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Biteship cancel order gagal: ' . $e->getMessage(), ['order_id' => $order->id]);
+
+            return false;
+        }
     }
 
     private function courierType(Order $order): ?string

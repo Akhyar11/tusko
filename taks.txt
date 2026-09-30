@@ -1629,6 +1629,11 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
             (fallback origin browser); `SystemSettingsHub` menampilkan URL webhook dari
             helper tsb sehingga benar saat backend di subfolder `/backend` (Hostinger).
             Bukti browser Playwright (VITE_API_URL=/backend). [OWNER:A1]
+    T40.14 [DONE] GAP AUDIT BITESHIP — CANCEL ORDER: `BiteshipOrderService::cancelForOrder()`
+            memanggil `POST /v1/orders/{id}/cancel` saat pesanan dibatalkan (admin via
+            `updateStatus` & pelanggan via `cancel`), menandai `shipments.provider_status/status`
+            = `cancelled`. Best-effort (gagal jaringan dicatat log). Skip bila belum ada
+            provider_order_id atau status terminal. Test `BiteshipCancelOrderTest`.
   ACCEPTANCE (T40):
    (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
        secret via Settings Hub, lalu menyinkronkan kurir/layanan.
