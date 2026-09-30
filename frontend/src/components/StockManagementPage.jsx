@@ -364,7 +364,7 @@ export default function StockManagementPage({
     return (
       <StockMutationPage
         mode={mutationRequest.mode}
-        inventory={inventory}
+        inventory={paginatedInventory}
         preselectedProductId={mutationRequest.productId}
         onSaveMutation={handleSaveMutation}
         onNavigateBack={() => setMutationRequest(null)}

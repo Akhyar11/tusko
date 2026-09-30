@@ -16,6 +16,7 @@ import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
 import { formatRupiah } from '../utils/formatters';
 import { vendorService } from '../services/vendorService';
+import { inventoryService } from '../services/inventoryService';
 import FormTipsPanel from './organisms/FormTipsPanel';
 
 const reductionReasons = [
@@ -94,7 +95,7 @@ export default function StockMutationPage({
     if (found) setNotes(found.defaultDesc);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!currentProduct) {
@@ -109,33 +110,39 @@ export default function StockMutationPage({
     const nowIso = new Date().toISOString();
     setIsSubmitting(true);
     try {
+      let savedLog = null;
+      let updatedStock = 0;
+      let costAmount = 0;
+
       if (mode === 'in') {
-        const updatedStock = (Number(currentProduct.stock) || 0) + qtyNumber;
-        onSaveMutation({
-          kind: 'in',
-          log: {
-            id: Date.now(),
-            product_id: currentProduct.id,
-            sku: currentProduct.sku,
-            product_name: currentProduct.name,
-            type: 'in',
-            quantity: qtyNumber,
-            previous_stock: currentProduct.stock,
-            current_stock: updatedStock,
-            reference: poNumber.trim() || `PO-${Date.now()}`,
-            notes: notes.trim() || `Restock barang masuk dari ${supplier}`,
-            created_at: nowIso,
-            operator: operator.trim() || 'Admin Gudang',
-            warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
-          },
-          updatedStock,
-          costAmount: syncToCashflow ? totalCost : 0,
-          costMeta: {
-            category: 'restock',
-            category_label: 'Restock Stok Produk',
-            description: `Pengadaan restock: ${currentProduct.name} (${qtyNumber} unit)`
-          }
+        const res = await inventoryService.addStock(currentProduct.id, {
+          quantity: qtyNumber,
+          cost_price: Number(costPrice) || 0,
+          supplier: supplier || null,
+          po_number: poNumber.trim() || null,
+          warehouse_bin: warehouseBin.trim() || null,
+          notes: notes.trim() || null,
+          operator: operator.trim() || null,
+          sync_to_cashflow: syncToCashflow
         });
+        const prod = res?.product || {};
+        updatedStock = Number(prod.stock ?? ((Number(currentProduct.stock) || 0) + qtyNumber));
+        costAmount = syncToCashflow ? totalCost : 0;
+        savedLog = {
+          id: res?.mutation?.id || Date.now(),
+          product_id: currentProduct.id,
+          sku: currentProduct.sku,
+          product_name: currentProduct.name,
+          type: 'in',
+          quantity: qtyNumber,
+          previous_stock: currentProduct.stock,
+          current_stock: updatedStock,
+          reference: poNumber.trim() || `PO-${Date.now()}`,
+          notes: notes.trim() || 'Restock barang masuk',
+          created_at: nowIso,
+          operator: operator.trim() || 'Admin Gudang',
+          warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
+        };
         onShowToast(`Stok ${currentProduct.name} berhasil ditambah (+${qtyNumber} unit).`);
       } else if (mode === 'out') {
         const maxAvailable = Number(currentProduct.stock) || 0;
@@ -145,25 +152,30 @@ export default function StockMutationPage({
           return;
         }
         const selectedReason = reductionReasons.find((r) => r.id === reasonId) || reductionReasons[0];
-        onSaveMutation({
-          kind: 'out',
-          log: {
-            id: Date.now(),
-            product_id: currentProduct.id,
-            sku: currentProduct.sku,
-            product_name: currentProduct.name,
-            type: 'out',
-            quantity: -qtyNumber,
-            previous_stock: currentProduct.stock,
-            current_stock: remainingAfter,
-            reference: reference.trim() || `BA-${Date.now()}`,
-            notes: notes.trim() || selectedReason.label,
-            created_at: nowIso,
-            operator: operator.trim() || 'Admin Gudang',
-            warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
-          },
-          updatedStock: remainingAfter
+        const res = await inventoryService.reduceStock(currentProduct.id, {
+          quantity: qtyNumber,
+          reason: reasonId,
+          reference: reference.trim() || null,
+          notes: notes.trim() || selectedReason.label,
+          operator: operator.trim() || null
         });
+        const prod = res?.product || {};
+        updatedStock = Number(prod.stock ?? remainingAfter);
+        savedLog = {
+          id: res?.mutation?.id || Date.now(),
+          product_id: currentProduct.id,
+          sku: currentProduct.sku,
+          product_name: currentProduct.name,
+          type: 'out',
+          quantity: -qtyNumber,
+          previous_stock: currentProduct.stock,
+          current_stock: updatedStock,
+          reference: reference.trim() || `BA-${Date.now()}`,
+          notes: notes.trim() || selectedReason.label,
+          created_at: nowIso,
+          operator: operator.trim() || 'Admin Gudang',
+          warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
+        };
         onShowToast(`Stok ${currentProduct.name} dikurangi (-${qtyNumber} unit).`);
       } else {
         const currentStock = Number(currentProduct.stock) || 0;
@@ -179,28 +191,59 @@ export default function StockMutationPage({
           newStock = qtyNumber;
           delta = qtyNumber - currentStock;
         }
-        onSaveMutation({
-          kind: 'adjust',
-          log: {
-            id: Date.now(),
-            product_id: currentProduct.id,
-            sku: currentProduct.sku,
-            product_name: currentProduct.name,
-            type: 'adjustment',
+        let res = null;
+        if (delta > 0) {
+          res = await inventoryService.addStock(currentProduct.id, {
             quantity: delta,
-            previous_stock: currentStock,
-            current_stock: newStock,
-            reference: `ADJ-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`,
-            notes: notes.trim() || 'Penyesuaian stok manual',
-            created_at: nowIso,
-            operator: 'Admin Gudang',
-            warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
-          },
-          updatedStock: newStock
-        });
-        onShowToast(`Stok ${currentProduct.sku} diperbarui: ${currentStock} -> ${newStock} unit.`);
+            sync_to_cashflow: false,
+            notes: notes.trim() || 'Penyesuaian stok manual (tambah)',
+            operator: operator.trim() || null
+          });
+        } else if (delta < 0) {
+          res = await inventoryService.reduceStock(currentProduct.id, {
+            quantity: Math.abs(delta),
+            reason: 'other',
+            notes: notes.trim() || 'Penyesuaian stok manual (kurang)',
+            operator: operator.trim() || null
+          });
+        }
+        const prod = res?.product || {};
+        updatedStock = Number(prod.stock ?? newStock);
+        savedLog = {
+          id: res?.mutation?.id || Date.now(),
+          product_id: currentProduct.id,
+          sku: currentProduct.sku,
+          product_name: currentProduct.name,
+          type: 'adjustment',
+          quantity: delta,
+          previous_stock: currentStock,
+          current_stock: updatedStock,
+          reference: `ADJ-${nowIso.slice(0, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`,
+          notes: notes.trim() || 'Penyesuaian stok manual',
+          created_at: nowIso,
+          operator: operator.trim() || 'Admin Gudang',
+          warehouse_code: currentProduct.warehouse_code || 'WH-CGK-01'
+        };
+        onShowToast(`Stok ${currentProduct.sku} diperbarui: ${currentStock} -> ${updatedStock} unit.`);
       }
+
+      onSaveMutation({
+        kind: mode,
+        log: savedLog,
+        updatedStock,
+        costAmount,
+        costMeta:
+          mode === 'in' && costAmount > 0
+            ? {
+                category: 'restock',
+                category_label: 'Restock Stok Produk',
+                description: `Pengadaan restock: ${currentProduct.name} (${qtyNumber} unit)`
+              }
+            : undefined
+      });
       onNavigateBack();
+    } catch (err) {
+      setError(err?.message || 'Gagal menyimpan mutasi stok. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
