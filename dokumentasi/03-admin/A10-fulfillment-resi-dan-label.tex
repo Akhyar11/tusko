@@ -1,0 +1,44 @@
+% ============================================================
+% A10 — Fulfillment: Pickup, Resi dan Label
+% ============================================================
+\flowmeta{A10}{Fulfillment: Pickup, Resi dan Label}{Admin}
+
+\begin{flowsection}{Tujuan}
+Membuat pengiriman, booking pickup, mencetak label resi, dan melacak paket.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Dari detail pesanan, buat pengiriman (pilih kurir/layanan).
+  \item Booking pickup ke kurir.
+  \item Cetak label resi (termal) berisi barcode.
+  \item Status pengiriman disinkronkan berkala.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a10-1.png}{Halaman Fulfillment: Pickup, Resi dan Label pada Panel Admin}{fig:a10-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pesanan terkirim dengan nomor resi yang dapat dilacak pelanggan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Gagal booking bila data alamat/kurir tidak lengkap.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{OrderDetailPage.jsx}
+  \item \texttt{ShipmentController}
+  \item \texttt{BiteshipOrderService}
+  \item \texttt{BiteshipTrackingService}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
