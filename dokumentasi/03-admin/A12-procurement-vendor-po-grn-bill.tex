@@ -1,0 +1,45 @@
+% ============================================================
+% A12 — Procurement: Vendor, PO, GRN dan Bills
+% ============================================================
+\flowmeta{A12}{Procurement: Vendor, PO, GRN dan Bills}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengelola pemasok, Purchase Order, penerimaan barang (GRN), dan tagihan vendor.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Kelola Master Supplier & Vendor.
+  \item Buat Purchase Order (PO) ke vendor.
+  \item Catat penerimaan barang (GRN) yang menambah stok.
+  \item Kelola Tagihan Vendor (Bills) dan pelunasannya.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a12-1.png}{Halaman Procurement: Vendor, PO, GRN dan Bills pada Panel Admin}{fig:a12-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Rantai pengadaan terdokumentasi: PO → GRN → Bill → pembayaran.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item GRN menambah stok dan memperbarui HPP.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{SupplierListPage.jsx}
+  \item \texttt{PurchaseOrderListPage.jsx}
+  \item \texttt{GoodsReceiptListPage.jsx}
+  \item \texttt{VendorBillListPage.jsx}
+  \item \texttt{/api/procurement}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
