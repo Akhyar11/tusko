@@ -1,0 +1,43 @@
+% ============================================================
+% A09 — Antrean Pesanan
+% ============================================================
+\flowmeta{A09}{Antrean Pesanan}{Admin}
+
+\begin{flowsection}{Tujuan}
+Memantau pesanan masuk dan memperbarui status pesanan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Antrean Pesanan (/admin/orders).
+  \item Gunakan tab status & filter untuk menyaring pesanan.
+  \item Buka detail pesanan; ubah status (mis. diproses) dari menu aksi.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a09-1.png}{Halaman Antrean Pesanan pada Panel Admin}{fig:a09-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Status pesanan diperbarui dan tercatat pada riwayat status.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Perubahan status tercatat di order_status_histories.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{OrderListPage.jsx}
+  \item \texttt{OrderDetailPage.jsx}
+  \item \texttt{OrderController}
+  \item \texttt{/api/orders}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
