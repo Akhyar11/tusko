@@ -1,0 +1,42 @@
+% ============================================================
+% A04 — Kategori dan Konfigurasi Navbar
+% ============================================================
+\flowmeta{A04}{Kategori dan Konfigurasi Navbar}{Admin}
+
+\begin{flowsection}{Tujuan}
+Kelola taksonomi kategori produk yang tampil pada navbar storefront.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Master Kategori (/admin/categories).
+  \item Tambah kategori: nama, slug, deskripsi, urutan, tampilkan di navbar.
+  \item Ubah/aktifkan kategori dari menu baris.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a04-1.png}{Halaman Kategori dan Konfigurasi Navbar pada Panel Admin}{fig:a04-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Kategori tersimpan dan muncul pada navbar storefront.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Slug harus unik.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{CategoryListPage.jsx}
+  \item \texttt{CategoryController}
+  \item \texttt{/api/categories}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
