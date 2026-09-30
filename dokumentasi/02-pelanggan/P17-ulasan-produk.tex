@@ -1,0 +1,43 @@
+% ============================================================
+% P17 — Ulasan Produk
+% ============================================================
+\flowmeta{P17}{Ulasan Produk}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Memberikan penilaian (rating) dan ulasan tertulis atas produk yang telah dibeli,
+sebagai masukan bagi pelanggan lain.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login dan telah memiliki pesanan atas produk tersebut.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Menulis Ulasan}
+\begin{enumerate}
+  \item Buka \texttt{/reviews/create} (atau dari detail pesanan).
+  \item Pilih produk yang akan diulas.
+  \item Beri \textbf{rating bintang} (1--5).
+  \item Tuliskan ulasan, lalu kirim.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p17-1.png}{Formulir menulis ulasan produk}{fig:p17-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Ulasan tersimpan dan menunggu moderasi admin; setelah disetujui, ulasan tampil
+pada halaman detail produk.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Produk belum pernah dibeli $\rightarrow$ ulasan tidak dapat dibuat.
+  \item Ulasan menunggu moderasi $\rightarrow$ belum tampil di halaman produk.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ReviewCreatePage.jsx}, ulasan pada \texttt{ProductDetail.jsx}. BE
+\texttt{ProductReviewController}. Rute \texttt{POST /api/reviews}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
