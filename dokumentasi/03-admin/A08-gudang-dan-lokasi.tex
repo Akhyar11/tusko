@@ -1,0 +1,43 @@
+% ============================================================
+% A08 — Master Gudang dan Lokasi
+% ============================================================
+\flowmeta{A08}{Master Gudang dan Lokasi}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mengelola daftar gudang, alamat, koordinat, dan status aktif.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Master Gudang & Lokasi (/admin/warehouses).
+  \item Tambah gudang: kode, nama, alamat, koordinat, prioritas.
+  \item Ubah/aktifkan gudang dari menu baris.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a08-1.png}{Halaman Master Gudang dan Lokasi pada Panel Admin}{fig:a08-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Gudang tersimpan dan menjadi lokasi penyimpanan stok.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kode gudang mengikuti format identitas (WH/ddmmyyyy/xxx).
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{WarehouseListPage.jsx}
+  \item \texttt{WarehouseCreatePage.jsx}
+  \item \texttt{WarehouseController}
+  \item \texttt{/api/warehouses}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
