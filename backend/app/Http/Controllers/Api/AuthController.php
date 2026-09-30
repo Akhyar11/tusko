@@ -169,9 +169,18 @@ class AuthController extends Controller
             'email.email' => 'Format alamat email tidak valid.',
         ]);
 
-        $status = Password::sendResetLink([
-            'email' => strtolower(trim((string) $request->input('email'))),
-        ]);
+        try {
+            $status = Password::sendResetLink([
+                'email' => strtolower(trim((string) $request->input('email'))),
+            ]);
+        } catch (\Throwable $e) {
+            logger()->warning('Gagal mengirim tautan reset kata sandi.', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'message' => 'Jika email tersebut terdaftar, kami telah mengirimkan tautan reset kata sandi.',
+            ]);
+        }
 
         if ($status === Password::RESET_THROTTLED) {
             return response()->json([
