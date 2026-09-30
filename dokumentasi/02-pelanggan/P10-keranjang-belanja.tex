@@ -1,0 +1,48 @@
+% ============================================================
+% P10 — Keranjang Belanja
+% ============================================================
+\flowmeta{P10}{Keranjang Belanja}{Pelanggan/Tamu}
+
+\begin{flowsection}{Tujuan}
+Mengelola daftar produk yang akan dibeli sebelum melanjutkan ke checkout.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Boleh tanpa login (tamu); disarankan login agar keranjang tersimpan pada akun.
+Produk tersedia stoknya.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengelola Keranjang}
+\begin{enumerate}
+  \item Tambahkan produk dari halaman detail (\textbf{+ Keranjang}).
+  \item Buka halaman \texttt{/cart}.
+  \item Ubah jumlah dengan tombol \textbf{--} / \textbf{+}; sistem memvalidasi stok.
+  \item Centang item (atau \textbf{Pilih Semua}) untuk dihitung ke total.
+  \item (Opsional) masukkan \textbf{Kode Kupon} lalu \textbf{Terapkan}.
+  \item Klik \textbf{Lanjut ke Pembayaran} untuk menuju checkout (P11).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p10-1.png}{Halaman keranjang menampilkan daftar item beserta harga}{fig:p10-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Item tampil dengan subtotal; total pembayaran terbarui saat item dipilih; stok
+divalidasi secara langsung dari data inventori server.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p10-2.png}{Item dipilih sehingga Total Pembayaran terhitung}{fig:p10-2}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Stok tidak cukup $\rightarrow$ jumlah dibatasi/pesan peringatan.
+  \item Keranjang kosong $\rightarrow$ tampil empty-state ``Keranjang belanjamu kosong''.
+  \item Kupon tidak valid $\rightarrow$ muncul pesan kesalahan kupon.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{CartPage.jsx}, \texttt{cartService.js}. BE \texttt{CartController}. Rute
+\texttt{/api/cart}, \texttt{/api/cart/items}, \texttt{/api/vouchers/validate}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

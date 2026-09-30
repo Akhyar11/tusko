@@ -120,7 +120,8 @@
       "expect_text": "Keranjang",
       "login": null,
       "gambar": [
-        "gambar/pelanggan/p10-1.png"
+        "gambar/pelanggan/p10-1.png",
+        "gambar/pelanggan/p10-2.png"
       ]
     },
     {
