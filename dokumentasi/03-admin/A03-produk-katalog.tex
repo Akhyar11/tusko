@@ -1,0 +1,44 @@
+% ============================================================
+% A03 — Produk: Daftar, Tambah, Edit
+% ============================================================
+\flowmeta{A03}{Produk: Daftar, Tambah, Edit}{Admin}
+
+\begin{flowsection}{Tujuan}
+Kelola katalog: daftar produk, tambah, ubah, dan kelola varian serta foto.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Produk & Varian SKU (/admin/products).
+  \item Tambah produk: tombol Tambah (ikon plus) → isi nama, kategori, SKU, harga, berat, foto.
+  \item Aktifkan varian bila perlu (atribut bertingkat), lalu simpan.
+  \item Ubah produk dari menu titik tiga (MoreVertical) pada baris.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a03-1.png}{Halaman Produk: Daftar, Tambah, Edit pada Panel Admin}{fig:a03-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Produk tersimpan dan tampil di katalog storefront.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Field wajib (nama, kategori, SKU, harga, foto) harus diisi.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{ProductListPage.jsx}
+  \item \texttt{ProductCreateForm.jsx}
+  \item \texttt{ProductController}
+  \item \texttt{/api/products}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
