@@ -168,7 +168,8 @@
       "expect_text": "Pesanan",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p14-1.png"
+        "gambar/pelanggan/p14-1.png",
+        "gambar/pelanggan/p14-2.png"
       ]
     },
     {
