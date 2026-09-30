@@ -47,18 +47,15 @@ export default function AdminDashboardPage({
     return () => { active = false; };
   }, []);
 
-  // 1. KPI Metrics
+  // 1. KPI Metrics (dinamis dari API; tanpa angka hardcode)
   const metrics = useMemo(() => {
-    // Total Produk
-    const totalProducts = products.length;
+    const kpi = bi?.kpi || {};
 
-    // Produk Perlu Restok
-    const lowStockProducts = products.filter(
+    const totalProducts = kpi.products_total ?? products.length;
+    const lowStockCount = kpi.low_stock ?? products.filter(
       (p) => Number(p.stock) <= Number(p.stock_minimum || 5)
-    );
-    const lowStockCount = lowStockProducts.length;
+    ).length;
 
-    // Hitung dari data transaksi jika tersedia, atau gunakan baseline toko Tusko
     let grossMonthlyIncome = 0;
     let monthlyExpense = 0;
     let totalAccountBalance = 0;
@@ -76,63 +73,57 @@ export default function AdminDashboardPage({
       }
     });
 
-    const grossRevenueMonth = grossMonthlyIncome > 0 ? grossMonthlyIncome : 428500000;
-    const netRevenueMonth = grossMonthlyIncome > 0 
-      ? Math.max(0, grossMonthlyIncome - monthlyExpense) 
-      : 184200000;
-    const accountBalance = totalAccountBalance > 0 ? totalAccountBalance : 612450000;
-
     return {
       totalProducts,
       lowStockCount,
-      grossRevenueMonth,
-      netRevenueMonth,
-      accountBalance
+      grossRevenueMonth: kpi.revenue ?? grossMonthlyIncome,
+      netRevenueMonth: kpi.gross_profit ?? Math.max(0, grossMonthlyIncome - monthlyExpense),
+      accountBalance: kpi.account_balance ?? totalAccountBalance,
     };
-  }, [products, transactions]);
+  }, [products, transactions, bi]);
 
-  // 2. Data Grafik Revenue (Bulanan vs Mingguan)
-  const monthlyChartData = [
-    { label: 'Apr 2026', gross: 290000000, net: 115000000, growth: '+8.2%' },
-    { label: 'Mei 2026', gross: 325000000, net: 132000000, growth: '+12.1%' },
-    { label: 'Jun 2026', gross: 360000000, net: 148000000, growth: '+10.8%' },
-    { label: 'Jul 2026', gross: 395000000, net: 162000000, growth: '+9.7%' },
-    { label: 'Agu 2026', gross: 380000000, net: 155000000, growth: '-3.8%' },
-    { label: 'Sep 2026', gross: 428500000, net: 184200000, growth: '+12.7%' }
-  ];
+  // 2. Data Grafik Revenue (bulanan vs mingguan) dari API
+  const buildChart = (rows) => (Array.isArray(rows) ? rows : []).map((d, i, arr) => {
+    const prev = i > 0 ? Number(arr[i - 1].gross) : 0;
+    const gross = Number(d.gross) || 0;
+    const growth = prev > 0 ? ((gross - prev) / prev) * 100 : 0;
+    return {
+      label: d.label,
+      gross,
+      net: Number(d.net) || 0,
+      growth: `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`,
+    };
+  });
 
-  const weeklyChartData = [
-    { label: 'Minggu 1 (1-7 Sep)', gross: 94500000, net: 41200000, growth: '+5.4%' },
-    { label: 'Minggu 2 (8-14 Sep)', gross: 118200000, net: 52400000, growth: '+25.1%' },
-    { label: 'Minggu 3 (15-21 Sep)', gross: 104800000, net: 44600000, growth: '-11.3%' },
-    { label: 'Minggu 4 (22-28 Sep)', gross: 111000000, net: 46000000, growth: '+5.9%' }
-  ];
+  const monthlyChartData = useMemo(() => buildChart(bi?.chart?.monthly), [bi]);
+  const weeklyChartData = useMemo(() => buildChart(bi?.chart?.weekly), [bi]);
 
   const activeChartData = chartPeriod === 'monthly' ? monthlyChartData : weeklyChartData;
-  const maxGross = Math.max(...activeChartData.map((d) => d.gross));
+  const maxGross = Math.max(1, ...activeChartData.map((d) => d.gross));
 
-  // 3. PRD Fase 5: Business Intelligence Fast vs Slow Moving SKUs
-  const fastMovingSKUs = [
-    { sku: 'TSK-AERO-01-BLK-L', name: 'AeroSwift Pro Training Tee', category: 'Apparel', soldWeekly: 142, turnoverDays: 8, stockOnHand: 34, status: 'Restok Cepat' },
-    { sku: 'TSK-COMP-02-NVY-M', name: 'Elite Compression Tight Pant', category: 'Running', soldWeekly: 98, turnoverDays: 12, stockOnHand: 22, status: 'Restok Cepat' },
-    { sku: 'TSK-JACK-03-BLK-XL', name: 'StormShield Windrunner Jacket', category: 'Outerwear', soldWeekly: 67, turnoverDays: 16, stockOnHand: 18, status: 'Stok Aman' }
-  ];
+  // 3. Business Intelligence Fast vs Slow Moving SKUs (dari API)
+  const mapMoving = (rows) => (Array.isArray(rows) ? rows : []).map((r) => ({
+    sku: r.sku || '-',
+    name: r.product_name || 'Produk',
+    category: r.category || '-',
+    soldWeekly: Number(r.total_quantity) || 0,
+    turnoverDays: 0,
+    stockOnHand: Number(r.stock_on_hand) || 0,
+    status: '',
+  }));
 
-  const slowMovingSKUs = [
-    { sku: 'TSK-HEAVY-09-GRY-XXL', name: 'Heavy Fleece Winter Training Top', category: 'Apparel', soldWeekly: 2, turnoverDays: 94, stockOnHand: 120, status: 'Cuci Gudang' },
-    { sku: 'TSK-CAP-04-RED-OS', name: 'Heritage Classic Runner Cap (Red)', category: 'Accessories', soldWeekly: 4, turnoverDays: 78, stockOnHand: 85, status: 'Promo Diskon' },
-    { sku: 'TSK-SOCK-07-WHT-M', name: 'Cushion High Crew Socks 3-Pack', category: 'Accessories', soldWeekly: 6, turnoverDays: 62, stockOnHand: 95, status: 'Bundling' }
-  ];
+  const fastMovingSKUs = useMemo(() => mapMoving(bi?.fast_moving), [bi]);
+  const slowMovingSKUs = useMemo(() => mapMoving(bi?.slow_moving), [bi]);
 
-  // 4. PRD Fase 5: Customer Loyalty Points Liability Monitor
-  const loyaltyMetrics = {
-    totalPointsOutstanding: 2450000,
-    pointExchangeRate: 10, // 1 Poin = Rp 10
-    totalFinancialLiability: 24500000, // Rp 24.500.000
-    redemptionRate: 68.4,
-    pointsExpiringThisMonth: 120000,
-    liabilityExpiringThisMonth: 1200000
-  };
+  // 4. Loyalty Points Liability Monitor (dari API)
+  const loyaltyMetrics = useMemo(() => ({
+    totalPointsOutstanding: bi?.loyalty?.points_outstanding ?? 0,
+    pointExchangeRate: bi?.loyalty?.redeem_value ?? 1,
+    totalFinancialLiability: bi?.loyalty?.liability ?? 0,
+    redemptionRate: 0,
+    pointsExpiringThisMonth: 0,
+    liabilityExpiringThisMonth: 0,
+  }), [bi]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">

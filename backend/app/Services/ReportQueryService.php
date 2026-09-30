@@ -290,14 +290,85 @@ class ReportQueryService
             ]);
     }
 
+    /**
+     * Saldo total seluruh rekening keuangan (T46).
+     */
+    public function accountBalance(): float
+    {
+        return round((float) \App\Models\FinancialAccount::query()->sum('current_balance'), 2);
+    }
+
+    /**
+     * Seri revenue bulanan (gross & net=gross profit) untuk grafik dashboard (T46).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function revenueSeriesMonths(int $months = 6): array
+    {
+        $series = [];
+
+        for ($i = max(1, $months) - 1; $i >= 0; $i--) {
+            $start = now()->subMonths($i)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $from = $start->toDateString();
+            $to = $end->toDateString();
+
+            $series[] = [
+                'label' => $start->translatedFormat('M Y'),
+                'gross' => $this->revenue($from, $to),
+                'net' => $this->grossProfit($from, $to),
+            ];
+        }
+
+        return $series;
+    }
+
+    /**
+     * Seri revenue mingguan bulan berjalan untuk grafik dashboard (T46).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function revenueSeriesWeeks(): array
+    {
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+        $series = [];
+        $week = 1;
+
+        for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addDays(7)) {
+            $weekStart = $cursor->copy();
+            $weekEnd = $cursor->copy()->addDays(6)->min($end);
+            $from = $weekStart->toDateString();
+            $to = $weekEnd->toDateString();
+
+            $series[] = [
+                'label' => sprintf(
+                    'Minggu %d (%s-%s %s)',
+                    $week,
+                    $weekStart->format('d'),
+                    $weekEnd->format('d'),
+                    $weekStart->translatedFormat('M')
+                ),
+                'gross' => $this->revenue($from, $to),
+                'net' => $this->grossProfit($from, $to),
+            ];
+
+            $week++;
+        }
+
+        return $series;
+    }
+
     private function productSalesQuery(?string $from, ?string $to): Builder
     {
         return OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->where('orders.payment_status', 'paid')
             ->when($from, fn (Builder $q) => $q->whereDate('orders.created_at', '>=', $from))
             ->when($to, fn (Builder $q) => $q->whereDate('orders.created_at', '<=', $to))
-            ->groupBy('order_items.product_id')
-            ->selectRaw('order_items.product_id, SUM(order_items.quantity) as total_quantity, SUM(order_items.subtotal) as total_sales');
+            ->groupBy('order_items.product_id', 'products.name', 'products.sku', 'products.stock', 'categories.name')
+            ->selectRaw('order_items.product_id, products.name as product_name, products.sku as sku, products.stock as stock_on_hand, categories.name as category, SUM(order_items.quantity) as total_quantity, SUM(order_items.subtotal) as total_sales');
     }
 }

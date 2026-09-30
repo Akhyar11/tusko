@@ -43,6 +43,24 @@ class DashboardBiApiTest extends TestCase
         $this->assertIsArray($response->json('data.slow_moving'));
     }
 
+    public function test_summary_exposes_chart_balance_and_loyalty(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));
+
+        $response = $this->getJson('/api/dashboard/summary')->assertStatus(200);
+
+        $response->assertJsonStructure([
+            'data' => [
+                'chart' => ['monthly', 'weekly'],
+                'loyalty' => ['points_outstanding', 'redeem_value', 'liability'],
+                'kpi' => ['account_balance'],
+            ],
+        ]);
+
+        $this->assertCount(6, $response->json('data.chart.monthly'));
+        $this->assertNotEmpty($response->json('data.chart.weekly'));
+    }
+
     public function test_summary_is_cached(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));

@@ -104,6 +104,7 @@ class SettingsRegistry
             'keys' => [
                 'loyalty.points_expiry_months' => ['type' => 'integer', 'default' => 12, 'rule' => 'nullable|integer|min:1|max:120', 'is_secret' => false, 'label' => 'Masa Berlaku Poin (bulan)', 'description' => 'Durasi kedaluwarsa poin loyalitas sejak diperoleh.'],
                 'loyalty.points_earn_rate' => ['type' => 'integer', 'default' => 0, 'rule' => 'nullable|integer|min:0', 'is_secret' => false, 'label' => 'Rate Perolehan Poin', 'description' => 'Nilai poin default jika produk tidak menentukan manual.'],
+                'loyalty.points_redeem_value' => ['type' => 'integer', 'default' => 1, 'rule' => 'nullable|integer|min:1', 'is_secret' => false, 'label' => 'Nilai Tukar Poin (Rp)', 'description' => 'Nilai rupiah per 1 poin saat ditukar (untuk liabilitas poin di dashboard).'],
             ],
         ],
         'notification' => [

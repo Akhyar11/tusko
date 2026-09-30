@@ -1890,6 +1890,18 @@ T45. Hapus Data Mock / Fallback Palsu (Admin) ...................... [DONE]  [OW
            template + log notifikasi) dan daftar kategori/akun keuangan/supplier pada form
            belum memuat dari API setelah mock dihapus — perlu muat dari endpoint terkait. [OWNER:A1]
 
+T46. Dashboard BI Dinamis (Admin) ................................. [DONE]  [OWNER:A1]
+  LATAR BELAKANG: `AdminDashboardPage` menampilkan angka & grafik HARDCODE
+   (Revenue 428.5jt, Saldo 612.45jt, chart Apr–Sep, fast/slow SKU, loyalitas).
+  Minor:
+    T46.1 [DONE] BACKEND: `ReportQueryService` + `accountBalance()`, `revenueSeriesMonths(6)`,
+           `revenueSeriesWeeks()`, dan enrich `productSalesQuery` (nama/SKU/kategori/stok);
+           `DashboardController@summary` menambah `kpi.account_balance`, `chart.monthly/weekly`,
+           `loyalty` (dari setting `loyalty.points_redeem_value`). Test `DashboardBiApiTest`. [OWNER:A1]
+    T46.2 [DONE] FE: `AdminDashboardPage` KPI/chart/fast-slow/loyalty diambil dari API
+           (`/api/dashboard/summary`), hapus angka & data hardcode; bukti Playwright
+           (angka palsu tidak tampil + toggle BULAN/MINGGU). [OWNER:A1]
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================
