@@ -1,0 +1,44 @@
+% ============================================================
+% P21 — Notifikasi Email
+% ============================================================
+\flowmeta{P21}{Notifikasi Email}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Memberitahu pelanggan melalui email atas peristiwa penting akun dan pesanan.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Kredensial email (SMTP) telah dikonfigurasi admin pada Pengaturan Sistem.
+\end{flowsection}
+
+\begin{flowsection}{Peristiwa Notifikasi}
+\begin{itemize}
+  \item Verifikasi email akun baru.
+  \item Reset kata sandi.
+  \item Konfirmasi/ringkasan pesanan.
+  \item Perubahan status pesanan (diproses, dikirim, selesai).
+\end{itemize}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p21-1.png}{Diagram alur notifikasi email (peristiwa $\rightarrow$ template $\rightarrow$ pengiriman)}{fig:p21-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Email terkirim sesuai peristiwa; riwayat notifikasi tercatat dan dapat ditinjau
+admin.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item SMTP belum dikonfigurasi/gagal $\rightarrow$ email tidak terkirim (dicatat di log);
+        proses utama (mis. registrasi) tetap berjalan.
+  \item Email masuk folder spam $\rightarrow$ minta pengguna memeriksa spam.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{TemplateManagementPage.jsx} (kelola template \& log). BE
+\texttt{NotificationService}, \texttt{EmailLogController}. Rute
+\texttt{GET /api/admin/email-logs}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

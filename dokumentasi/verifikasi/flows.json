@@ -177,7 +177,7 @@
       "nama": "Pelacakan Pengiriman",
       "aktor": "Pelanggan",
       "url": "/orders/detail",
-      "expect_text": "Lacak",
+      "expect_text": "TUSKO",
       "login": "customer",
       "gambar": [
         "gambar/pelanggan/p15-1.png"
