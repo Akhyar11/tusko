@@ -174,6 +174,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/expeditions/sync', [\App\Http\Controllers\Api\ExpeditionController::class, 'sync']);
 
     Route::post('/admin/storefront/image', [\App\Http\Controllers\Api\StorefrontController::class, 'uploadImage']);
+    Route::get('/admin/email-logs', [\App\Http\Controllers\Api\EmailLogController::class, 'index']);
+    Route::get('/financial-accounts', [\App\Http\Controllers\Api\FinancialAccountController::class, 'index']);
 
     Route::post('/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'store'])->where('idOrOrderNumber', '.*');
 

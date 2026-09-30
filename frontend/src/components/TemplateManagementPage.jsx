@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Mail,
@@ -25,6 +25,42 @@ import TextArea from './molecules/TextArea';
 import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import { availablePlaceholders } from '../data/referenceData';
+import { templateService } from '../services/templateService';
+
+const mapEmailTemplate = (t) => ({
+  id: t.id,
+  key: t.key,
+  name: t.name,
+  event: t.event,
+  category: t.category,
+  fromName: t.from_name,
+  replyTo: t.reply_to,
+  colorTheme: t.color_theme,
+  subject: t.subject,
+  preheader: t.preheader,
+  headline: t.headline,
+  body: t.body,
+  buttonText: t.button_text,
+  buttonLink: t.button_link,
+  isActive: Boolean(t.is_active),
+});
+
+const mapReceiptTemplate = (t) => ({
+  paperSize: t.paper_size,
+  barcodeType: t.barcode_type,
+  barcodeHeight: t.barcode_height,
+  addressFontSize: t.address_font_size,
+  showItemsList: Boolean(t.show_items_list),
+  showBuyerNotes: Boolean(t.show_buyer_notes),
+  showSortingCode: Boolean(t.show_sorting_code),
+  showUnboxingNotice: Boolean(t.show_unboxing_notice),
+  showCodBadge: Boolean(t.show_cod_badge),
+  senderName: t.sender_name,
+  senderPhone: t.sender_phone,
+  senderAddress: t.sender_address,
+  footerNote: t.footer_note,
+  courierBrandTag: t.courier_brand_tag,
+});
 
 const SECTIONS = [
   { id: 'email', label: 'Template Email', icon: Mail, desc: 'Formulir notifikasi email pembeli' },
@@ -58,7 +94,7 @@ export default function TemplateManagementPage({
 
   // Email template state
   const [emailTemplates, setEmailTemplates] = useState([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState('order_shipped');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [previewDevice, setPreviewDevice] = useState('desktop');
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [isTestEmailModalOpen, setIsTestEmailModalOpen] = useState(false);
@@ -66,7 +102,42 @@ export default function TemplateManagementPage({
 
   // Receipt template state
   const [receiptConfig, setReceiptConfig] = useState({});
-  const notificationLogs = [];
+  const [notificationLogs, setNotificationLogs] = useState([]);
+
+  // T45.3: muat template email/resi & log notifikasi dari API.
+  useEffect(() => {
+    let active = true;
+
+    templateService.getEmailTemplates()
+      .then((list) => {
+        if (!active) return;
+        const mapped = (list || []).map(mapEmailTemplate);
+        setEmailTemplates(mapped);
+        setSelectedTemplateId((prev) => (prev && mapped.some((m) => m.id === prev) ? prev : (mapped[0]?.id ?? '')));
+      })
+      .catch(() => {});
+
+    templateService.getReceiptTemplate()
+      .then((t) => { if (active && t) setReceiptConfig(mapReceiptTemplate(t)); })
+      .catch(() => {});
+
+    templateService.getEmailLogs()
+      .then((res) => {
+        if (!active) return;
+        const rows = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
+        setNotificationLogs(rows.map((l) => ({
+          id: l.id,
+          sentAt: l.sent_at ? new Date(l.sent_at).toLocaleString('id-ID') : '-',
+          orderNumber: l.order_id ? `#${l.order_id}` : '-',
+          recipient: l.recipient_email,
+          subject: l.subject,
+          status: l.status,
+        })));
+      })
+      .catch(() => {});
+
+    return () => { active = false; };
+  }, []);
 
   const currentEmailTemplate =
     emailTemplates.find((t) => t.id === selectedTemplateId) || emailTemplates[0] || {
@@ -117,21 +188,74 @@ export default function TemplateManagementPage({
     handleUpdateEmailField('body', `${currentEmailTemplate.body || ''}\n${prefix}Teks${suffix}`);
   };
 
-  const handleSaveEmailTemplate = () => {
-    onShowToast(`Perubahan template "${currentEmailTemplate.name}" berhasil disimpan.`);
+  const handleSaveEmailTemplate = async () => {
+    try {
+      await templateService.updateEmailTemplate(currentEmailTemplate.id ?? currentEmailTemplate.key, {
+        name: currentEmailTemplate.name,
+        event: currentEmailTemplate.event,
+        category: currentEmailTemplate.category,
+        from_name: currentEmailTemplate.fromName,
+        reply_to: currentEmailTemplate.replyTo,
+        color_theme: currentEmailTemplate.colorTheme,
+        subject: currentEmailTemplate.subject,
+        preheader: currentEmailTemplate.preheader,
+        headline: currentEmailTemplate.headline,
+        body: currentEmailTemplate.body,
+        button_text: currentEmailTemplate.buttonText,
+        button_link: currentEmailTemplate.buttonLink,
+        is_active: Boolean(currentEmailTemplate.isActive),
+      });
+      onShowToast(`Perubahan template "${currentEmailTemplate.name}" berhasil disimpan.`);
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal menyimpan template.', { type: 'error' });
+    }
   };
 
-  const handleResetEmailTemplate = () => {
-    onShowToast('Template mengikuti data tersimpan dari server.');
+  const handleResetEmailTemplate = async () => {
+    try {
+      await templateService.resetEmailTemplates();
+      const list = await templateService.getEmailTemplates();
+      const mapped = (list || []).map(mapEmailTemplate);
+      setEmailTemplates(mapped);
+      onShowToast('Template dikembalikan ke pengaturan awal server.');
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal mengembalikan template.', { type: 'error' });
+    }
   };
 
-  const handleSaveReceiptTemplate = () => {
-    onShowToast('Format label resi thermal berhasil disimpan & diterapkan.');
+  const handleSaveReceiptTemplate = async () => {
+    try {
+      await templateService.saveReceiptTemplate({
+        paper_size: receiptConfig.paperSize,
+        barcode_type: receiptConfig.barcodeType,
+        barcode_height: receiptConfig.barcodeHeight,
+        address_font_size: receiptConfig.addressFontSize,
+        show_items_list: Boolean(receiptConfig.showItemsList),
+        show_buyer_notes: Boolean(receiptConfig.showBuyerNotes),
+        show_sorting_code: Boolean(receiptConfig.showSortingCode),
+        show_unboxing_notice: Boolean(receiptConfig.showUnboxingNotice),
+        show_cod_badge: Boolean(receiptConfig.showCodBadge),
+        sender_name: receiptConfig.senderName,
+        sender_phone: receiptConfig.senderPhone,
+        sender_address: receiptConfig.senderAddress,
+        footer_note: receiptConfig.footerNote,
+        courier_brand_tag: receiptConfig.courierBrandTag,
+      });
+      onShowToast('Format label resi thermal berhasil disimpan & diterapkan.');
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal menyimpan format resi.', { type: 'error' });
+    }
   };
 
-  const handleResetReceiptTemplate = () => {
-    setReceiptConfig({});
-    onShowToast('Format label resi dikembalikan ke pengaturan default.');
+  const handleResetReceiptTemplate = async () => {
+    try {
+      await templateService.resetReceiptTemplate();
+      const t = await templateService.getReceiptTemplate();
+      if (t) setReceiptConfig(mapReceiptTemplate(t));
+      onShowToast('Format label resi dikembalikan ke pengaturan default.');
+    } catch (err) {
+      onShowToast(err?.message || 'Gagal mengembalikan format resi.', { type: 'error' });
+    }
   };
 
   const handleSendTestEmail = () => {

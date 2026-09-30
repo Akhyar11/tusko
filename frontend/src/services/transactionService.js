@@ -26,6 +26,14 @@ function setStoredTransactions(txs) {
 
 export const transactionService = {
   /**
+   * Daftar rekening keuangan aktif (T45.3) untuk dropdown form transaksi.
+   */
+  async fetchFinancialAccounts() {
+    const response = await apiClient.get('/api/financial-accounts');
+    return response.data || [];
+  },
+
+  /**
    * Fetch transactions with dynamic filters, pagination, and sorting.
    */
   async fetchTransactions(params = {}) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Receipt, 
   ArrowLeft, 
@@ -30,11 +30,30 @@ export default function FinancialTransactionCreatePage({
   const [formCategory, setFormCategory] = useState('operational');
   const [formAmount, setFormAmount] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [formPaymentMethod, setFormPaymentMethod] = useState(
-    financialAccounts[0]?.name ? `${financialAccounts[0].name} (${financialAccounts[0].account_number})` : 'BCA Bisnis Transfer'
-  );
+  const [accounts, setAccounts] = useState(financialAccounts || []);
+  const [formPaymentMethod, setFormPaymentMethod] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // T45.3: muat rekening keuangan dari API untuk dropdown.
+  useEffect(() => {
+    let active = true;
+    transactionService.fetchFinancialAccounts()
+      .then((list) => {
+        if (!active) return;
+        const mapped = (list || []).map((acc) => ({
+          name: acc.account_name,
+          account_number: acc.account_number,
+          balance: Number(acc.current_balance) || 0,
+        }));
+        setAccounts(mapped);
+        if (mapped[0]) {
+          setFormPaymentMethod(`${mapped[0].name} (${mapped[0].account_number})`);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -183,7 +202,7 @@ export default function FinancialTransactionCreatePage({
             <ServerSideSelect
               value={formPaymentMethod}
               onChange={(val) => setFormPaymentMethod(val)}
-              options={financialAccounts.map((acc) => ({
+              options={accounts.map((acc) => ({
                 value: `${acc.name} (${acc.account_number})`,
                 label: `${acc.name} (${acc.account_number}) — Saldo ${formatRupiah(acc.balance)}`
               }))}

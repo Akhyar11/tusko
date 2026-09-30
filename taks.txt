@@ -1886,9 +1886,10 @@ T45. Hapus Data Mock / Fallback Palsu (Admin) ...................... [DONE]  [OW
            Hapus seluruh berkas `frontend/src/data/mock*.js`; konstanta referensi pindah ke
            `data/referenceData.js`; helper SKU pindah ke `utils/productSku.js`.
            Bukti Playwright: 10 halaman admin render, 0 console error, 0 dialog. [OWNER:A1]
-    T45.3 [TODO] WIRING API (gap yang tersingkap): `TemplateManagementPage` (email/receipt
-           template + log notifikasi) dan daftar kategori/akun keuangan/supplier pada form
-           belum memuat dari API setelah mock dihapus — perlu muat dari endpoint terkait. [OWNER:A1]
+    T45.3 [DONE] WIRING API: `TemplateManagementPage` (email/resi + log notifikasi) &
+           dropdown rekening keuangan pada form transaksi kini memuat dari API
+           (`/api/templates/emails`, `/api/templates/receipt`, `/api/admin/email-logs`,
+           `/api/financial-accounts`). Test `BacklogWiringApiTest` (5) + bukti browser. [OWNER:A1]
 
 T46. Dashboard BI Dinamis (Admin) ................................. [DONE]  [OWNER:A1]
   LATAR BELAKANG: `AdminDashboardPage` menampilkan angka & grafik HARDCODE
