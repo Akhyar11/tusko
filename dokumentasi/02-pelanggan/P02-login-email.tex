@@ -1,0 +1,45 @@
+% ============================================================
+% P02 — Login Email
+% ============================================================
+\flowmeta{P02}{Login Email}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Masuk ke akun menggunakan alamat email/WhatsApp dan kata sandi.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah memiliki akun (lihat alur P01).
+\end{flowsection}
+
+\begin{flowsection}{Langkah Login}
+\begin{enumerate}
+  \item Buka halaman \texttt{/login}.
+  \item Isi \textbf{Alamat Email / No. WhatsApp} dan \textbf{Kata Sandi}.
+  \item (Opsional) centang \textbf{Ingat saya di perangkat ini}.
+  \item Klik \textbf{Masuk Sekarang}.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p02-1.png}{Halaman login member TUSKO}{fig:p02-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Login berhasil $\rightarrow$ pengguna diarahkan ke beranda dalam keadaan masuk;
+navbar menampilkan nama pengguna dan menu akun.
+\end{flowsection}
+
+\shot{gambar/pelanggan/p02-2.png}{Pesan error saat email atau kata sandi salah}{fig:p02-2}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kredensial salah $\rightarrow$ ``Email atau kata sandi yang Anda masukkan tidak valid''.
+  \item Terlalu banyak percobaan $\rightarrow$ permintaan dibatasi sementara (coba lagi nanti).
+  \item Akun nonaktif $\rightarrow$ tidak dapat masuk; hubungi admin.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{LoginPage.jsx}. BE \texttt{AuthController@login}. Rute
+\texttt{POST /api/auth/login}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
