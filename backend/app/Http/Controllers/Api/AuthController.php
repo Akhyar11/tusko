@@ -72,7 +72,14 @@ class AuthController extends Controller
         ]);
 
         // Kirim tautan verifikasi email ke pengguna baru.
-        $user->sendEmailVerificationNotification();
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            logger()->warning('Gagal mengirim email verifikasi saat registrasi.', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Gabungkan keranjang guest (bila ada) ke akun baru.
         $cartService->mergeGuestCart($user, $request->input('session_id'));
