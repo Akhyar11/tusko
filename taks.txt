@@ -1634,6 +1634,12 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
             `updateStatus` & pelanggan via `cancel`), menandai `shipments.provider_status/status`
             = `cancelled`. Best-effort (gagal jaringan dicatat log). Skip bila belum ada
             provider_order_id atau status terminal. Test `BiteshipCancelOrderTest`.
+    T40.15 [DONE] SOP KLAIM & RETUR (gap operasional, bukan API):
+            (a) Klaim asuransi Biteship = manual via dashboard Biteship (tidak ada endpoint
+                API); nilai asuransi sudah dikirim pada payload order (`courier_insurance`).
+            (b) Retur barang tidak memanggil API Biteship (retur dibuat sebagai order baru
+                bila perlu); alur stok/refund ditangani internal (T29/T13).
+            (c) Aktivasi API Biteship butuh 2 order uji sandbox (status Delivered + Cancelled).
   ACCEPTANCE (T40):
    (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
        secret via Settings Hub, lalu menyinkronkan kurir/layanan.
