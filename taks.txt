@@ -1868,6 +1868,19 @@ T44. Pembersihan Data Demo (ops) ................................... [DONE]  [OW
   CATATAN PRODUKSI: jalankan `php artisan demo:purge-orders --force` via SSH di server
     (tidak disertakan di deploy otomatis agar tidak menghapus data tanpa sengaja).
 
+T45. Hapus Data Mock / Fallback Palsu (Admin) ...................... [PARTIAL]  [OWNER:A1]
+  LATAR BELAKANG (temuan 2026-09-29): Daftar "Antrean Pesanan" admin menampilkan 5 pesanan
+   padahal DB kosong — berasal dari fallback mock (`data/mockOrders.js`) di
+   `orderService.fetchOrders` + default prop `orders=mockOrders` di `OrderListPage` +
+   state `orders=mockOrders` di `App.jsx`.
+  Minor:
+    T45.1 [DONE] PESANAN: hapus fallback mock/localStorage di `orderService.fetchOrders`
+           (kembalikan daftar kosong saat API gagal) + `OrderListPage` default `orders=[]`
+           + `App.jsx` `useState([])`. Bukti Playwright: admin kosong tanpa invoice mock. [OWNER:A1]
+    T45.2 [TODO] MODUL LAIN (masih ada fallback mock): `transactionService`,
+           `expeditionService`, `inventoryService`, `warehouseService`, `vendorService`,
+           `categoryService` (+ default prop di halaman terkait & state mock di `App.jsx`). [OWNER:A1]
+
 ==============================================================================
 ACCEPTANCE CRITERIA (task berisiko uang/stok)
 ==============================================================================

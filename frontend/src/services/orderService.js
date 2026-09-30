@@ -4,27 +4,6 @@
  */
 import { apiClient, getStoredToken } from './apiClient';
 import { getCartSessionId } from './cartService';
-import { mockOrders } from '../data/mockOrders';
-
-const STORAGE_KEY = 'tusko_orders_cache';
-
-function getStoredOrders() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // ignore
-  }
-  return mockOrders;
-}
-
-function setStoredOrders(orders) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  } catch {
-    // ignore
-  }
-}
 
 export const orderService = {
   /**
@@ -59,9 +38,6 @@ export const orderService = {
       const res = await apiClient.get(url);
 
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      if (list.length > 0) {
-        setStoredOrders(list);
-      }
 
       return {
         data: list,
@@ -75,26 +51,15 @@ export const orderService = {
         }
       };
     } catch (err) {
-      console.warn('orderService.fetchOrders: fallback to local/mock data.', err.message);
-      let list = getStoredOrders();
-      const status = params.status || params.activeTab;
-      if (status && status !== 'all') {
-        list = list.filter(o => o.status === status);
-      }
-      const search = params.search || params.searchKeyword;
-      if (search && search.trim()) {
-        const q = search.toLowerCase();
-        list = list.filter(o =>
-          (o.order_number && o.order_number.toLowerCase().includes(q)) ||
-          (o.recipient_name && o.recipient_name.toLowerCase().includes(q)) ||
-          (o.tracking_number && o.tracking_number.toLowerCase().includes(q))
-        );
-      }
+      // Tanpa fallback mock/local: tampilkan daftar kosong agar admin tidak
+      // melihat data pesanan palsu saat API gagal.
+      console.warn('orderService.fetchOrders: gagal memuat pesanan.', err.message);
+
       return {
-        data: list,
-        total: list.length,
+        data: [],
+        total: 0,
         status_counts: null,
-        meta: { current_page: 1, last_page: 1, per_page: list.length, total: list.length }
+        meta: { current_page: 1, last_page: 1, per_page: params.per_page || params.limit || 10, total: 0 }
       };
     }
   },

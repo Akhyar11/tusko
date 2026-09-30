@@ -82,7 +82,6 @@ import SupplierListPage from './components/SupplierListPage';
 import VoucherListPage from './components/VoucherListPage';
 import VoucherCreatePage from './components/VoucherCreatePage';
 import VoucherEditPage from './components/VoucherEditPage';
-import { mockOrders } from './data/mockOrders';
 import { mockTransactions } from './data/mockTransactions';
 import { initialInventory, initialStockLogs } from './data/mockStockData';
 import { initialExpeditions } from './data/mockExpeditionSettings';
@@ -557,7 +556,7 @@ export default function App() {
   const [selectedGrnForDetail, setSelectedGrnForDetail] = useState(null);
   const [selectedBillForDetail, setSelectedBillForDetail] = useState(null);
   const [billPayMode, setBillPayMode] = useState(false);
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [transactions, setTransactions] = useState(mockTransactions);
   const [inventory, setInventory] = useState(initialInventory);
   const [stockLogs, setStockLogs] = useState(initialStockLogs);
