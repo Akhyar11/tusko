@@ -1,0 +1,44 @@
+% ============================================================
+% P16 — Retur dan Refund
+% ============================================================
+\flowmeta{P16}{Retur dan Refund}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Mengajukan pengembalian barang (retur) dan permintaan pengembalian dana (refund)
+atas pesanan yang telah selesai.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login dan memiliki pesanan yang memenuhi syarat retur (mis. dalam masa
+garansi tukar ukuran 14 hari).
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengajukan Retur}
+\begin{enumerate}
+  \item Buka \texttt{/returns/request}.
+  \item Pilih pesanan dan produk yang ingin diretur.
+  \item Isi alasan retur dan jumlah barang.
+  \item Kirim pengajuan; tunggu peninjauan admin.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p16-1.png}{Formulir pengajuan retur \& refund}{fig:p16-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pengajuan tercatat dengan status menunggu; pelanggan dapat memantau perkembangannya
+melalui detail pesanan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Pesanan tidak memenuhi syarat retur $\rightarrow$ pengajuan ditolak.
+  \item Belum ada pesanan $\rightarrow$ tidak ada yang dapat diretur.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ReturnRequestPage.jsx}, \texttt{ReturnDetailPage.jsx}. BE
+\texttt{ReturnController}. Rute \texttt{/api/returns}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
