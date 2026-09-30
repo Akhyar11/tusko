@@ -1,0 +1,43 @@
+% ============================================================
+% A13 — Buku Kas, Rekening dan Jurnal
+% ============================================================
+\flowmeta{A13}{Buku Kas, Rekening dan Jurnal}{Admin}
+
+\begin{flowsection}{Tujuan}
+Mencatat arus kas masuk/keluar, rekening, dan jurnal double-entry.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Buku Kas & Transaksi (/admin/transactions).
+  \item Tambah transaksi: jenis, kategori, rekening, nominal.
+  \item Lihat Jurnal Umum (/admin/journal) untuk rincian double-entry.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a13-1.png}{Halaman Buku Kas, Rekening dan Jurnal pada Panel Admin}{fig:a13-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Arus kas dan jurnal tercatat rapi untuk laporan keuangan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Nominal & rekening wajib valid.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{FinancialTransactionsPage.jsx}
+  \item \texttt{FinancialTransactionCreatePage.jsx}
+  \item \texttt{TransactionController}
+  \item \texttt{/api/financial-transactions}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
