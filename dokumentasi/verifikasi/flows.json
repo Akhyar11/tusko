@@ -79,10 +79,12 @@
       "nama": "Buku Alamat dan GPS",
       "aktor": "Pelanggan",
       "url": "/profile",
-      "expect_text": "Alamat",
+      "expect_text": "BUKU ALAMAT",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p07-1.png"
+        "gambar/pelanggan/p07-1.png",
+        "gambar/pelanggan/p07-2.png",
+        "gambar/pelanggan/p07-3.png"
       ]
     },
     {

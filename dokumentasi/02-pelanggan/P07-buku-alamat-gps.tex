@@ -1,0 +1,49 @@
+% ============================================================
+% P07 — Buku Alamat dan GPS
+% ============================================================
+\flowmeta{P07}{Buku Alamat dan GPS}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Mengelola beberapa alamat pengiriman, lengkap dengan penanda titik lokasi pada
+peta agar kurir mudah menemukan alamat.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login sebagai pelanggan.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengelola Alamat}
+\begin{enumerate}
+  \item Buka \texttt{/profile} lalu tab \textbf{Buku Alamat}.
+  \item Klik \textbf{Tambah Alamat Baru} (atau Ubah pada alamat yang ada).
+  \item Isi label alamat, nama penerima, nomor HP, dan alamat lengkap.
+  \item Tentukan titik lokasi pada peta: seret penanda, atau klik
+        \textbf{Isi Otomatis (GPS)} untuk memakai lokasi perangkat.
+  \item Simpan alamat.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p07-1.png}{Daftar alamat pada tab Buku Alamat}{fig:p07-1}
+
+\shot{gambar/pelanggan/p07-2.png}{Formulir alamat baru beserta peta pemilih lokasi}{fig:p07-2}
+
+\shot{gambar/pelanggan/p07-3.png}{Pengambilan titik lokasi via GPS pada peta (Leaflet)}{fig:p07-3}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Alamat tersimpan dan dapat dipilih saat checkout; titik koordinat tercatat untuk
+keperluan pengiriman.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Field wajib kosong $\rightarrow$ pesan validasi.
+  \item Izin lokasi ditolak pada perangkat $\rightarrow$ isi titik peta secara manual.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProfilePage.jsx}, \texttt{AddressFormPage.jsx}, \texttt{MapPickerModal.jsx}
+(Leaflet). BE \texttt{ShippingAddressController}. Rute \texttt{/api/shipping-addresses}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
