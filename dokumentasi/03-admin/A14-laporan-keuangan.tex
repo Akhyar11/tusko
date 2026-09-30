@@ -1,0 +1,45 @@
+% ============================================================
+% A14 — Laporan Keuangan dan HPP
+% ============================================================
+\flowmeta{A14}{Laporan Keuangan dan HPP}{Admin}
+
+\begin{flowsection}{Tujuan}
+Menyajikan Laba Rugi, Neraca Saldo, Aging Hutang Vendor, dan Profit & HPP.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Login sebagai admin dengan peran yang memiliki akses modul ini.
+\end{flowsection}
+
+\begin{flowsection}{Langkah}
+\begin{enumerate}
+  \item Buka Laporan Laba Rugi (/admin/reports/income-statement).
+  \item Lihat Neraca Saldo (/admin/reports/trial-balance).
+  \item Lihat Aging Hutang Vendor (/admin/reports/vendor-aging).
+  \item Lihat Profit & HPP (/admin/reports/profit).
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/admin/a14-1.png}{Halaman Laporan Keuangan dan HPP pada Panel Admin}{fig:a14-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Laporan keuangan dan laba kotor per produk tersaji untuk pengambilan keputusan.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Angka bergantung pada kelengkapan transaksi & HPP.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+\begin{itemize}
+  \item \texttt{IncomeStatementPage.jsx}
+  \item \texttt{TrialBalancePage.jsx}
+  \item \texttt{VendorAgingPage.jsx}
+  \item \texttt{ProfitReportPage.jsx}
+  \item \texttt{ReportQueryService}
+\end{itemize}
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
