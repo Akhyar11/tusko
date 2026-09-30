@@ -3,6 +3,7 @@
 namespace App\Services\Settings;
 
 use App\Services\ActivityLogService;
+use App\Services\HtmlSanitizer;
 use App\Services\IntegrationService;
 
 /**
@@ -19,7 +20,8 @@ class SettingsService
 
     public function __construct(
         private readonly IntegrationService $integrations,
-        private readonly ActivityLogService $activityLog
+        private readonly ActivityLogService $activityLog,
+        private readonly HtmlSanitizer $sanitizer
     ) {
     }
 
@@ -98,6 +100,10 @@ class SettingsService
 
             $isSecret = SettingsRegistry::isSecret($key);
             $typed = $this->cast($key, $value);
+
+            if (($allowed[$key]['type'] ?? null) === 'richtext' && is_string($typed)) {
+                $typed = $this->sanitizer->clean($typed);
+            }
 
             $this->integrations->set($key, $this->serialize($typed), $group, $isSecret);
 

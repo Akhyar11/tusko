@@ -83,6 +83,7 @@ class SettingsController extends Controller
                 'label' => $config['label'],
                 'description' => $config['description'],
                 'options' => $config['options'] ?? [],
+                'item_fields' => $config['item_fields'] ?? [],
             ],
             array_keys(SettingsRegistry::keys($group)),
             SettingsRegistry::keys($group)

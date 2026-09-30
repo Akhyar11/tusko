@@ -28,6 +28,9 @@ import ServerSideSelect from './molecules/ServerSideSelect';
 import ToggleSwitch from './molecules/ToggleSwitch';
 import ImageUploadField from './molecules/ImageUploadField';
 import SearchBar from './molecules/SearchBar';
+import RichTextEditor from './molecules/RichTextEditor';
+import RepeaterField from './molecules/RepeaterField';
+import TagsInput from './molecules/TagsInput';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import ConfirmationModal from './organisms/ConfirmationModal';
 import { settingsService } from '../services/settingsService';
@@ -58,7 +61,7 @@ const SHIPPING_GENERIC_KEYS = new Set([
 ]);
 const SHIPPING_BITESHIP_PREFIX = 'shipping.biteship_';
 
-const WIDE_TYPES = new Set(['text', 'image']);
+const WIDE_TYPES = new Set(['text', 'image', 'richtext', 'repeater', 'tags']);
 
 const fieldWrapClass = (field) => (WIDE_TYPES.has(field.type) ? 'sm:col-span-2' : '');
 
@@ -293,6 +296,38 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
     if (field.type === 'text') {
       return (
         <TextArea rows={3} value={value ?? ''} onChange={(val) => setValue(field.key, val)} placeholder={field.label} />
+      );
+    }
+
+    if (field.type === 'richtext') {
+      return (
+        <RichTextEditor
+          key={`${activeGroup}-${field.key}`}
+          value={value ?? ''}
+          onChange={(html) => setValue(field.key, html)}
+          placeholder={`Tulis ${field.label.toLowerCase()}...`}
+        />
+      );
+    }
+
+    if (field.type === 'repeater') {
+      return (
+        <RepeaterField
+          value={value ?? ''}
+          onChange={(json) => setValue(field.key, json)}
+          itemFields={field.item_fields || []}
+          addLabel={`Tambah ${field.label}`}
+        />
+      );
+    }
+
+    if (field.type === 'tags') {
+      return (
+        <TagsInput
+          value={value ?? ''}
+          onChange={(val) => setValue(field.key, val)}
+          placeholder="Ketik nilai lalu tekan Enter..."
+        />
       );
     }
 

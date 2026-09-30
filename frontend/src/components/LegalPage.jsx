@@ -9,6 +9,7 @@ import {
   FileText,
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
+import { isHtmlContent, sanitizeHtml } from '../utils/sanitizeHtml';
 
 /**
  * T42.2 — Halaman legal/informasi storefront generik.
@@ -64,6 +65,7 @@ export default function LegalPage({ docKey = 'about', storeProfile = {}, onBackT
     || instagram || tiktok || facebook;
 
   const paragraphs = content ? content.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean) : [];
+  const htmlMode = isHtmlContent(content);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -79,7 +81,12 @@ export default function LegalPage({ docKey = 'about', storeProfile = {}, onBackT
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 bg-white p-5 sm:p-6 border border-neutral-300 rounded-none shadow-2xs space-y-4">
-          {paragraphs.length > 0 ? (
+          {content && htmlMode ? (
+            <>
+              <style>{`.tusko-legal p{margin:0 0 .6rem;line-height:1.7}.tusko-legal h2{font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;margin:.8rem 0 .5rem}.tusko-legal h3{font-size:.9rem;font-weight:800;margin:.7rem 0 .4rem}.tusko-legal ul{list-style:disc;padding-left:1.25rem;margin:0 0 .6rem}.tusko-legal ol{list-style:decimal;padding-left:1.25rem;margin:0 0 .6rem}.tusko-legal blockquote{border-left:3px solid #d4d4d4;padding-left:.75rem;color:#525252;margin:.5rem 0}.tusko-legal a{color:#b45309;text-decoration:underline}`}</style>
+              <div className="tusko-legal text-xs sm:text-sm text-neutral-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
+            </>
+          ) : paragraphs.length > 0 ? (
             paragraphs.map((paragraph, idx) => (
               <p key={idx} className="text-xs sm:text-sm text-neutral-700 leading-relaxed whitespace-pre-line">
                 {paragraph}
