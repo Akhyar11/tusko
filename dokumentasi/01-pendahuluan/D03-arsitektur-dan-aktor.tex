@@ -1,0 +1,47 @@
+% ============================================================
+% D03 — Arsitektur dan Aktor
+% ============================================================
+\flowmeta{D03}{Arsitektur dan Aktor}{Umum}
+
+\begin{flowsection}{Ringkasan Arsitektur}
+TUSKO dibangun dengan arsitektur \emph{decoupled}: antarmuka pengguna (frontend)
+dan layanan data (backend API) berjalan terpisah dan berkomunikasi melalui
+permintaan HTTP/JSON. Gambaran lapisan sistem:
+\begin{itemize}
+  \item \textbf{Frontend} --- aplikasi web React (SPA) untuk storefront pelanggan
+        dan panel admin ERP.
+  \item \textbf{API Backend} --- layanan REST berbasis Laravel dengan autentikasi
+        token (Sanctum) dan login Google.
+  \item \textbf{Basis Data} --- basis data relasional (MySQL) untuk seluruh data
+        pengguna, produk, pesanan, inventori, dan keuangan.
+  \item \textbf{Layanan Pihak Ketiga} --- Midtrans (pembayaran), Biteship
+        (logistik/kurir), penyimpanan berkas (R2/S3), dan pengiriman email.
+\end{itemize}
+\end{flowsection}
+
+\shot{gambar/umum/d03-1.png}{Diagram arsitektur sistem TUSKO beserta aktor dan layanan pihak ketiga}{fig:d03-1}
+
+\begin{flowsection}{Aktor Sistem}
+\begin{itemize}
+  \item \textbf{Pelanggan} --- pengguna terdaftar yang berbelanja; dapat melihat
+        katalog, mengelola akun, dan melacak pesanan.
+  \item \textbf{Tamu} --- pengunjung yang dapat melihat katalog publik tanpa login.
+  \item \textbf{Admin} --- pengelola toko yang mengakses panel ERP sesuai peran
+        (menu ditentukan oleh peran masing-masing).
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Aliran Data Utama}
+Pelanggan/tamu berinteraksi dengan frontend. Frontend mengirim permintaan ke API
+backend; backend memvalidasi, memproses aturan bisnis, menyimpan/membaca dari
+basis data, dan bila perlu memanggil layanan pihak ketiga (mis. membuat
+pembayaran ke Midtrans atau pengiriman ke Biteship). Hasilnya dikembalikan ke
+frontend untuk ditampilkan.
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+Frontend: \texttt{frontend/src/} (React, Tailwind, Lucide). Backend:
+\texttt{backend/app/} (Laravel, controller/service). Rute: \texttt{backend/routes/api.php}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
