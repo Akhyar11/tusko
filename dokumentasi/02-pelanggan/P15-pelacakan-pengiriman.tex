@@ -1,0 +1,43 @@
+% ============================================================
+% P15 — Pelacakan Pengiriman
+% ============================================================
+\flowmeta{P15}{Pelacakan Pengiriman}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Memantau perjalanan paket pesanan secara langsung melalui status pengiriman dan
+nomor resi.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Memiliki pesanan yang sudah dibuat pengirimannya (berstatus dikirim) dengan
+nomor resi.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Melacak Pesanan}
+\begin{enumerate}
+  \item Buka \textbf{Pesanan Saya} (P14) dan pilih pesanan yang sedang dikirim.
+  \item Pada detail pesanan, klik \textbf{Lacak} (atau lihat nomor resi).
+  \item Sistem menampilkan \textbf{timeline status} paket dari kurir.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p15-1.png}{Diagram alur pelacakan pengiriman (tracking) beserta sinkronisasi status}{fig:p15-1}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Pelanggan melihat posisi terakhir paket; status diperbarui berkala dari layanan
+agen logistik.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Resi belum tersedia $\rightarrow$ pengiriman belum dibuat admin.
+  \item Status tidak terbarui $\rightarrow$ menunggu sinkronisasi berikutnya.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{OrderDetailPage.jsx} (timeline). BE \texttt{ShipmentController},
+\texttt{BiteshipTrackingService}. Scheduler \texttt{shipments:sync-tracking}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
