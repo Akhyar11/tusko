@@ -567,9 +567,9 @@
       "kode": "D04",
       "nama": "Hak Akses dan Menu",
       "aktor": "Umum",
-      "url": null,
-      "expect_text": null,
-      "login": null,
+      "url": "/admin/dashboard",
+      "expect_text": "Dashboard",
+      "login": "admin",
       "gambar": [
         "gambar/umum/d04-1.png"
       ]

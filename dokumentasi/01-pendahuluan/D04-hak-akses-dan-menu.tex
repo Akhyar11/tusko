@@ -1,0 +1,63 @@
+% ============================================================
+% D04 — Hak Akses dan Menu
+% ============================================================
+\flowmeta{D04}{Hak Akses dan Menu}{Umum}
+
+\begin{flowsection}{Tujuan}
+Menjelaskan peran pengguna dan bagaimana menu Panel Admin ditampilkan sesuai
+peran (\emph{role-based menu access}).
+\end{flowsection}
+
+\begin{flowsection}{Peran Pengguna}
+Sistem mengenal beberapa peran berikut:
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Peran} & \textbf{Akses} & \textbf{Keterangan} \\ \hline
+\texttt{admin} & Panel Admin & Akses penuh ke modul ERP sesuai menu peran \\ \hline
+\texttt{warehouse\_staff} & Panel Admin & Operasional gudang/stok \\ \hline
+\texttt{finance\_officer} & Panel Admin & Keuangan, kas, dan laporan \\ \hline
+\texttt{customer} & Storefront & Berbelanja sebagai pelanggan \\ \hline
+\end{tabular}
+\end{center}
+\end{flowsection}
+
+\begin{flowsection}{Menu Dinamis}
+Daftar menu Panel Admin tidak ditulis tetap di kode, melainkan diambil dari
+basis data (\emph{master menu} + pemetaan peran-ke-menu). Saat admin login,
+sistem mengirim daftar menu yang boleh diakses oleh perannya. Bila sebuah peran
+tidak memiliki menu, sisi kiri tidak menampilkan menu apa pun dan URL admin
+tersebut tidak dapat diakses.
+\end{flowsection}
+
+\shot{gambar/umum/d04-1.png}{Sidebar menu Panel Admin setelah login (menu tampil sesuai peran admin)}{fig:d04-1}
+
+\begin{flowsection}{Langkah Melihat Hak Akses}
+\begin{enumerate}
+  \item Login sebagai admin pada halaman \texttt{/login}.
+  \item Setelah berhasil, buka \texttt{/admin/dashboard}.
+  \item Amati sidebar: daftar menu muncul sesuai peran akun tersebut.
+  \item Menu \textbf{Master Pengguna}, \textbf{Peran}, dan \textbf{Kelola Menu}
+        (bagian Pengaturan) mengatur peran dan hak akses menu.
+\end{enumerate}
+\end{flowsection}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Admin melihat menu sesuai perannya; halaman yang tidak diizinkan tidak muncul di
+menu dan tidak dapat diakses langsung lewat URL.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error}
+Jika muncul pesan ``Tidak ada menu yang tersedia untuk peran Anda'', berarti akun
+tersebut belum memiliki pemetaan menu. Admin perlu menetapkan menu untuk peran
+tersebut melalui modul \textbf{Role--Menu Mapping}.
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{AdminSidebar.jsx}, \texttt{App.jsx} (guard view admin). BE
+\texttt{AuthController@menus}, \texttt{MenuController}, rute \texttt{/api/auth/menus}.
+Tabel \texttt{roles}, \texttt{menus}, \texttt{role\_menus}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

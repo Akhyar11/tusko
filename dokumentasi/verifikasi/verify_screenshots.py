@@ -79,10 +79,10 @@ def do_login(page, kind):
     if not email or not password:
         return False, f"kredensial DOC_{kind.upper()}_EMAIL/PASSWORD tidak diset"
     page.goto(f"{BASE_URL}/login", wait_until="domcontentloaded")
-    page.fill('input[type="email"], input[name="email"]', email)
-    page.fill('input[type="password"], input[name="password"]', password)
-    page.click('button[type="submit"], button:has-text("Masuk")')
-    page.wait_for_timeout(1500)
+    page.fill('input[name="login-email"]', email)
+    page.fill('input[name="login-password"]', password)
+    page.click('button[type="submit"]')
+    page.wait_for_timeout(2500)
     return True, "login dieksekusi"
 
 
