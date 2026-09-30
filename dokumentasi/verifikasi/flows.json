@@ -67,10 +67,11 @@
       "nama": "Profil dan Keamanan",
       "aktor": "Pelanggan",
       "url": "/profile",
-      "expect_text": "Profil",
+      "expect_text": "BIODATA",
       "login": "customer",
       "gambar": [
-        "gambar/pelanggan/p06-1.png"
+        "gambar/pelanggan/p06-1.png",
+        "gambar/pelanggan/p06-2.png"
       ]
     },
     {

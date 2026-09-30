@@ -1,0 +1,48 @@
+% ============================================================
+% P06 — Profil dan Keamanan
+% ============================================================
+\flowmeta{P06}{Profil dan Keamanan}{Pelanggan}
+
+\begin{flowsection}{Tujuan}
+Mengelola data pribadi dan keamanan akun: biodata, kata sandi, serta sesi
+perangkat yang aktif.
+\end{flowsection}
+
+\begin{flowsection}{Prasyarat}
+Sudah login sebagai pelanggan.
+\end{flowsection}
+
+\begin{flowsection}{Langkah Mengelola Profil}
+\begin{enumerate}
+  \item Buka \texttt{/profile}.
+  \item Tab \textbf{Biodata Pribadi}: ubah nama, email, nomor HP, jenis kelamin,
+        tanggal lahir, lalu klik \textbf{Simpan Perubahan Data}.
+  \item Tab \textbf{Keamanan \& Kata Sandi}: ganti kata sandi (kata sandi lama +
+        baru + konfirmasi) dan kelola sesi perangkat yang aktif.
+\end{enumerate}
+\end{flowsection}
+
+\shot{gambar/pelanggan/p06-1.png}{Halaman profil --- tab Biodata Pribadi}{fig:p06-1}
+
+\shot{gambar/pelanggan/p06-2.png}{Tab Keamanan \& Kata Sandi (ganti sandi dan kelola sesi)}{fig:p06-2}
+
+\begin{flowsection}{Hasil yang Diharapkan}
+Perubahan data tersimpan dan muncul notifikasi sukses; kata sandi baru berlaku
+setelah disimpan; sesi perangkat lain dapat dicabut.
+\end{flowsection}
+
+\begin{flowsection}{Penanganan Error dan Kasus Khusus}
+\begin{itemize}
+  \item Kata sandi lama salah $\rightarrow$ pesan validasi.
+  \item Konfirmasi kata sandi tidak cocok $\rightarrow$ pesan validasi.
+  \item Email diubah menjadi sudah terdaftar $\rightarrow$ ditolak.
+\end{itemize}
+\end{flowsection}
+
+\begin{flowsection}{Kaitan Modul}
+FE \texttt{ProfilePage.jsx}. BE \texttt{AuthController@updateProfile},
+\texttt{@updatePassword}, \texttt{@getActiveSessions}, \texttt{@revokeSession}.
+Rute \texttt{/api/auth/profile}, \texttt{/api/auth/password}, \texttt{/api/auth/sessions}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
