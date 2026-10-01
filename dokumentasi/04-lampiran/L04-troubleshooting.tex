@@ -1,0 +1,30 @@
+% ============================================================
+% L04 — Troubleshooting
+% ============================================================
+\flowmeta{L04}{Troubleshooting}{Lampiran}
+
+\begin{flowsection}{Masalah Umum \& Solusi}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{5.5cm}|p{8.5cm}|}
+\hline
+\textbf{Gejala} & \textbf{Solusi} \\ \hline
+Admin ``Tidak ada menu untuk peran Anda'' & Petakan menu ke peran pada Role--Menu Mapping (A24). \\ \hline
+Halaman admin tidak dapat diakses & Pastikan akun berperan admin \& menu terpetakan. \\ \hline
+Popup pembayaran tidak muncul & Periksa kredensial Midtrans \& Snap URL di Pengaturan Sistem (A20). \\ \hline
+Ongkos kirim tidak muncul & Periksa kredensial agen logistik \& sinkronkan kurir (A19). \\ \hline
+Email tidak terkirim & Periksa konfigurasi SMTP (notifikasi) di Pengaturan Sistem. \\ \hline
+``Tujuan balik tidak diizinkan'' (login Google) & Daftarkan alamat redirect pada Google Cloud Console; isi kredensial AUTH. \\ \hline
+Stok tidak berubah setelah mutasi & Pastikan simpan berhasil; cek koneksi server. \\ \hline
+Halaman legal kosong & Isi konten pada Pengaturan Sistem (grup Store/Legal). \\ \hline
+Katalog/pesanan kosong & Belum ada data; tambah produk (A03) dan proses transaksi. \\ \hline
+\end{tabular}
+\end{center}
+\end{flowsection}
+
+\begin{flowsection}{Catatan}
+Bila masalah berlanjut, tinjau log aplikasi backend dan log server (web server/
+cron) untuk detail kesalahan.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

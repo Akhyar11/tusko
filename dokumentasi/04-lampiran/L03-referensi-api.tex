@@ -1,0 +1,56 @@
+% ============================================================
+% L03 — Referensi API
+% ============================================================
+\flowmeta{L03}{Referensi API}{Lampiran}
+
+\begin{flowsection}{Ringkasan}
+API backend berbasis REST (Laravel) dengan autentikasi token (Sanctum) dan
+prefiks \texttt{/api}. Kelompok endpoint utama ditampilkan di bawah.
+\end{flowsection}
+
+\begin{flowsection}{Endpoint Publik / Storefront}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|l|p{8.5cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Fungsi} \\ \hline
+\texttt{POST /api/auth/register} & Registrasi pelanggan \\ \hline
+\texttt{POST /api/auth/login} & Login \\ \hline
+\texttt{GET  /api/products} & Katalog produk \\ \hline
+\texttt{GET  /api/categories} & Kategori \\ \hline
+\texttt{GET  /api/storefront/navbar} & Menu navigasi kategori \\ \hline
+\texttt{GET  /api/storefront/content} & Konten storefront \\ \hline
+\texttt{GET  /api/store/profile} & Identitas/legal toko \\ \hline
+\texttt{GET  /api/payment-methods} & Metode pembayaran \\ \hline
+\end{tabular}
+\end{center}
+\end{flowsection}
+
+\begin{flowsection}{Endpoint Pelanggan (Terautentikasi)}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|l|p{8.5cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Fungsi} \\ \hline
+\texttt{/api/cart} & Keranjang (list/add/update/remove) \\ \hline
+\texttt{POST /api/checkout} & Membuat pesanan \\ \hline
+\texttt{/api/orders} & Pesanan pelanggan \\ \hline
+\texttt{/api/loyalty/ledger} & Riwayat poin \\ \hline
+\texttt{/api/vouchers}, \texttt{.../claim} & Voucher \\ \hline
+\end{tabular}
+\end{center}
+\end{flowsection}
+
+\begin{flowsection}{Endpoint Admin}
+Verifikasi admin (\texttt{/api/admin/*}) mencakup products, categories,
+warehouses, inventory, orders, shipments, procurement (PO/GRN/Bills),
+financial-transactions, vouchers, returns, menus, roles, users, settings,
+email-logs, dan laporan (reports). Autentikasi wajib dengan token berperan admin.
+\end{flowsection}
+
+\begin{flowsection}{Catatan}
+Daftar lengkap rute dapat dilihat pada \texttt{backend/routes/api.php}. Seluruh
+respons berformat JSON dengan pembungkus \texttt{data}/\texttt{meta}.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}

@@ -1,0 +1,35 @@
+% ============================================================
+% L01 — Skema Database
+% ============================================================
+\flowmeta{L01}{Skema Database}{Lampiran}
+
+\begin{flowsection}{Ringkasan}
+Sistem menerapkan prinsip \emph{zero static enum}: status, metode, dan kategori
+pembukuan disimpan pada tabel lookup dinamis agar dapat dikelola admin tanpa
+mengubah struktur basis data.
+\end{flowsection}
+
+\begin{flowsection}{Kelompok Tabel Utama}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{4.2cm}|p{10cm}|}
+\hline
+\textbf{Kelompok} & \textbf{Tabel} \\ \hline
+Identitas \& Akses & users, roles, role\_menus, menus, shipping\_addresses, social\_accounts \\ \hline
+Katalog \& Varian & categories, products, product\_images, attributes, attribute\_values, product\_variants, variant\_attribute\_values \\ \hline
+Transaksi \& Loyalitas & carts, cart\_items, discount\_types, vouchers, voucher\_targets, voucher\_usages, loyalty\_point\_transactions \\ \hline
+Order \& Pengiriman & order\_statuses, payment\_statuses, orders, order\_items, order\_status\_histories, payments, shipments, invoices \\ \hline
+Inventori & warehouses, stock\_mutation\_types, inventory\_balances, stock\_mutations, stock\_reservations, stock\_opnames, stock\_opname\_items \\ \hline
+Pengadaan & vendors, purchase\_orders, purchase\_order\_items, goods\_receipts, goods\_receipt\_items, vendor\_bills \\ \hline
+Keuangan & financial\_accounts, chart\_of\_accounts, transactions, cost\_of\_goods\_sold\_records \\ \hline
+Integrasi \& Sistem & integrations, settings, activity\_logs \\ \hline
+\end{tabular}
+\end{center}
+\end{flowsection}
+
+\begin{flowsection}{Catatan}
+Nama tabel aktual mengikuti migrasi terbaru; kelompok di atas bersifat ikhtisar.
+Seluruh kolom lengkap tercatat pada berkas migrasi backend.
+\end{flowsection}
+
+\docver{v1.0}{Sep 2026}
