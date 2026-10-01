@@ -3,7 +3,7 @@ TAKS_DOKUMENTASI.TXT — RENCANA & BREAKDOWN DOKUMENTASI SISTEM TUSKO
 Acuan kanonis : taks.txt (T00–T46) + PRD_DAN_DESAIN_SISTEM_TUSKO.md
 Output akhir  : PDF (Bahasa Indonesia) — Panduan Pengguna TUSKO (Admin & Pelanggan)
 Pemilik       : Agent Dokumentasi (dikerjakan 1 flow = 1 berkas .tex = 1 commit)
-Status per item: [TODO] / [PARTIAL] / [DONE]
+Status per item: [DONE] / [PARTIAL] / [DONE]
 ================================================================================
 
 KONTEKS:
@@ -165,97 +165,97 @@ SPESIMEN KANONIS SATU BERKAS FLOW (template; dipakai konsisten)
 --------------------------------------------------------------------------------
 DAFTAR TASK DOKUMENTASI
 --------------------------------------------------------------------------------
-D00. [TODO] SETUP PROYEK LaTeX & BUILD
+D00. [DONE] SETUP PROYEK LaTeX & BUILD
   - Buat `dokumentasi/` (main/preamble/config/build.sh/README), makro `\shot`,
     `\flowmeta`, `\flowsection`, `\docver`; folder `gambar/*`.
   - `build.sh` mengompilasi ke `dokumentasi/Tusko-Panduan-Pengguna.pdf` (xelatex 2x).
   - Acceptance: `bash dokumentasi/build.sh` sukses; placeholder gambar tampil.
 
-D01. [TODO] PENDAHULUAN
+D01. [DONE] PENDAHULUAN
   - D01 Cover + lembar pengesahan; D02 Gambaran sistem & tujuan;
     D03 Arsitektur (React/Laravel/MySQL/R2) + diagram aktor;
     D04 Hak akses & menu (matrix Admin vs Pelanggan);
     D05 Cara login & navigasi umum.
   - Gambar: diagram arsitektur, diagram aktor/use-case, peta navigasi menu.
 
-D02. [TODO] FLOW PELANGGAN (P01–P10)
-  P01 Registrasi Akun .............. [TODO]
-  P02 Login Email/Nomor ............ [TODO]
-  P03 Login dengan Google .......... [TODO]
-  P04 Lupa & Reset Password ........ [TODO]
-  P05 Verifikasi Email ............. [TODO]
-  P06 Profil & Keamanan ............ [TODO]
-  P07 Buku Alamat + GPS Leaflet .... [TODO]
-  P08 Katalog: Filter/Search/Sort .. [TODO]
-  P09 Detail Produk & Varian ....... [TODO]
-  P10 Keranjang Belanja ............ [TODO]
+D02. [DONE] FLOW PELANGGAN (P01–P10)
+  P01 Registrasi Akun .............. [DONE]
+  P02 Login Email/Nomor ............ [DONE]
+  P03 Login dengan Google .......... [DONE]
+  P04 Lupa & Reset Password ........ [DONE]
+  P05 Verifikasi Email ............. [DONE]
+  P06 Profil & Keamanan ............ [DONE]
+  P07 Buku Alamat + GPS Leaflet .... [DONE]
+  P08 Katalog: Filter/Search/Sort .. [DONE]
+  P09 Detail Produk & Varian ....... [DONE]
+  P10 Keranjang Belanja ............ [DONE]
 
-D03. [TODO] FLOW PELANGGAN (P11–P21)
-  P11 Checkout & Ongkir (multi-kurir) [TODO]
-  P12 Pembayaran Midtrans Snap ...... [TODO]
-  P13 Transfer Bank Manual .......... [TODO]
-  P14 Pesanan Saya (+bayar ulang) ... [TODO]
-  P15 Pelacakan Pengiriman .......... [TODO]
-  P16 Retur & Refund (pengajuan) .... [TODO]
-  P17 Ulasan Produk (Review) ........ [TODO]
-  P18 Voucher Pelanggan ............. [TODO]
-  P19 Poin Loyalitas ................ [TODO]
-  P20 Halaman Legal & Informasi ..... [TODO]
-  P21 Notifikasi Email .............. [TODO]
+D03. [DONE] FLOW PELANGGAN (P11–P21)
+  P11 Checkout & Ongkir (multi-kurir) [DONE]
+  P12 Pembayaran Midtrans Snap ...... [DONE]
+  P13 Transfer Bank Manual .......... [DONE]
+  P14 Pesanan Saya (+bayar ulang) ... [DONE]
+  P15 Pelacakan Pengiriman .......... [DONE]
+  P16 Retur & Refund (pengajuan) .... [DONE]
+  P17 Ulasan Produk (Review) ........ [DONE]
+  P18 Voucher Pelanggan ............. [DONE]
+  P19 Poin Loyalitas ................ [DONE]
+  P20 Halaman Legal & Informasi ..... [DONE]
+  P21 Notifikasi Email .............. [DONE]
 
-D04. [TODO] FLOW ADMIN — KATALOG & INVENTORI (A01–A08)
-  A01 Login Admin & Dashboard ....... [TODO]
-  A02 Dashboard BI .................. [TODO]
-  A03 Produk: List/Create/Edit ...... [TODO]
-  A04 Kategori & Konfigurasi Navbar . [TODO]
-  A05 Stok & Mutasi ................. [TODO]
-  A06 Smart Inventory Multi-Gudang .. [TODO]
-  A07 Stock Opname .................. [TODO]
-  A08 Master Gudang & Lokasi ........ [TODO]
+D04. [DONE] FLOW ADMIN — KATALOG & INVENTORI (A01–A08)
+  A01 Login Admin & Dashboard ....... [DONE]
+  A02 Dashboard BI .................. [DONE]
+  A03 Produk: List/Create/Edit ...... [DONE]
+  A04 Kategori & Konfigurasi Navbar . [DONE]
+  A05 Stok & Mutasi ................. [DONE]
+  A06 Smart Inventory Multi-Gudang .. [DONE]
+  A07 Stock Opname .................. [DONE]
+  A08 Master Gudang & Lokasi ........ [DONE]
 
-D05. [TODO] FLOW ADMIN — PESANAN & FULFILLMENT (A09–A11)
-  A09 Antrean Pesanan (list/detail) . [TODO]
-  A10 Fulfillment (pickup/resi/label/tracking) [TODO]
-  A11 Pembayaran Manual (approve/reject) [TODO]
+D05. [DONE] FLOW ADMIN — PESANAN & FULFILLMENT (A09–A11)
+  A09 Antrean Pesanan (list/detail) . [DONE]
+  A10 Fulfillment (pickup/resi/label/tracking) [DONE]
+  A11 Pembayaran Manual (approve/reject) [DONE]
 
-D06. [TODO] FLOW ADMIN — PROCUREMENT (A12)
-  A12 Vendor, PO, GRN, Vendor Bills & Pembayaran [TODO]
+D06. [DONE] FLOW ADMIN — PROCUREMENT (A12)
+  A12 Vendor, PO, GRN, Vendor Bills & Pembayaran [DONE]
 
-D07. [TODO] FLOW ADMIN — KEUANGAN & LAPORAN (A13–A14)
-  A13 Buku Kas, Rekening & Jurnal .... [TODO]
-  A14 Laporan: Laba Rugi, Neraca, Aging, Profit/HPP [TODO]
+D07. [DONE] FLOW ADMIN — KEUANGAN & LAPORAN (A13–A14)
+  A13 Buku Kas, Rekening & Jurnal .... [DONE]
+  A14 Laporan: Laba Rugi, Neraca, Aging, Profit/HPP [DONE]
 
-D08. [TODO] FLOW ADMIN — PROMO, ULASAN, TEMPLATE (A15–A18)
-  A15 Retur & Refund (admin) ......... [TODO]
-  A16 Voucher & Promo (admin) ........ [TODO]
-  A17 Moderasi Ulasan ................ [TODO]
-  A18 Template Dokumen & Resi (email/resi + log) [TODO]
+D08. [DONE] FLOW ADMIN — PROMO, ULASAN, TEMPLATE (A15–A18)
+  A15 Retur & Refund (admin) ......... [DONE]
+  A16 Voucher & Promo (admin) ........ [DONE]
+  A17 Moderasi Ulasan ................ [DONE]
+  A18 Template Dokumen & Resi (email/resi + log) [DONE]
 
-D09. [TODO] FLOW ADMIN — INTEGRASI & PENGATURAN (A19–A20)
-  A19 Integrasi Ekspedisi (Biteship/KiriminAja) + Payment (Midtrans) + Storage (R2) [TODO]
+D09. [DONE] FLOW ADMIN — INTEGRASI & PENGATURAN (A19–A20)
+  A19 Integrasi Ekspedisi (Biteship/KiriminAja) + Payment (Midtrans) + Storage (R2) [DONE]
   A20 Pengaturan Sistem Terpusat (store/legal/storefront/shipping/payment/
-      notification/auth-Google/security/feature flag) [TODO]
+      notification/auth-Google/security/feature flag) [DONE]
 
-D10. [TODO] FLOW ADMIN — RBAC, USERS, AUDIT (A21–A25)
-  A21 Dynamic Menu & Role-Menu Access . [TODO]
-  A22 Master Users .................... [TODO]
-  A23 Master Role ..................... [TODO]
-  A24 Role -> Menu Mapping ............ [TODO]
-  A25 Audit Log (activity_logs) ....... [TODO]
+D10. [DONE] FLOW ADMIN — RBAC, USERS, AUDIT (A21–A25)
+  A21 Dynamic Menu & Role-Menu Access . [DONE]
+  A22 Master Users .................... [DONE]
+  A23 Master Role ..................... [DONE]
+  A24 Role -> Menu Mapping ............ [DONE]
+  A25 Audit Log (activity_logs) ....... [DONE]
 
-D11. [TODO] OPERASIONAL & OPS (A26–A27)
+D11. [DONE] OPERASIONAL & OPS (A26–A27)
   A26 Scheduler & Queue (orders:cancel-expired, loyalty:expire-points,
-      shipments:sync-tracking, expeditions:sync, queue:work) [TODO]
-  A27 Deployment & Operasional (Hostinger/VPS, cron schedule:run, .env, backup) [TODO]
+      shipments:sync-tracking, expeditions:sync, queue:work) [DONE]
+  A27 Deployment & Operasional (Hostinger/VPS, cron schedule:run, .env, backup) [DONE]
 
-D12. [TODO] LAMPIRAN (L01–L05)
-  L01 Skema Database (ringkas per kelompok tabel) [TODO]
-  L02 Daftar Status & Kode (order/payment/mutasi) [TODO]
-  L03 Referensi API (endpoint publik & admin) [TODO]
-  L04 Troubleshooting (error umum + solusi) [TODO]
-  L05 Glosarium (istilah teknis & bisnis) [TODO]
+D12. [DONE] LAMPIRAN (L01–L05)
+  L01 Skema Database (ringkas per kelompok tabel) [DONE]
+  L02 Daftar Status & Kode (order/payment/mutasi) [DONE]
+  L03 Referensi API (endpoint publik & admin) [DONE]
+  L04 Troubleshooting (error umum + solusi) [DONE]
+  L05 Glosarium (istilah teknis & bisnis) [DONE]
 
-D13. [TODO] QA DOKUMENTASI
+D13. [DONE] QA DOKUMENTASI
   - Kompilasi PDF tanpa error; semua `\ref`/`\label` valid (tidak ada "??").
   - Cek MATRIKS TRACEABILITY: 0 fitur taks.txt tanpa flow.
   - Cek setiap flow punya >=1 gambar (placeholder dihitung "belum ada gambar").
