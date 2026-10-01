@@ -383,7 +383,7 @@ class CheckoutController extends Controller
                 'loyalty_points_redeemed' => $pointsRedeemed,
                 'coupon_code' => $couponCode,
                 'notes' => $request->input('notes'),
-                'expires_at' => Carbon::now()->addHours(24),
+                'expires_at' => Carbon::now()->addHours($this->resolveExpiryHours($paymentMethod)),
             ]);
 
             // `expedition_service_id` dikelola di luar mass-assignment (Order fillable milik A2).
@@ -503,6 +503,20 @@ class CheckoutController extends Controller
                 'free_shipping_min_purchase' => (float) ($this->integrations->get('shipping.free_shipping_min_purchase', 0) ?? 0),
             ],
         ]);
+    }
+
+    /**
+     * Batas waktu pembayaran (jam) dari konfigurasi admin (G6 — tanpa hardcode).
+     * Transfer manual memakai jendela terpisah yang lebih panjang.
+     */
+    private function resolveExpiryHours(string $paymentMethod): int
+    {
+        $isManual = $paymentMethod === 'manual_transfer';
+        $key = $isManual ? 'payment.manual_transfer_expiry_hours' : 'payment.expiry_hours';
+        $default = $isManual ? 72 : 24;
+        $hours = (int) ($this->integrations->get($key, $default) ?? $default);
+
+        return $hours > 0 ? $hours : $default;
     }
 
     /**

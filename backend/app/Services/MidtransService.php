@@ -7,6 +7,7 @@ use App\Models\Payment;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class MidtransService
@@ -37,6 +38,16 @@ class MidtransService
         return $this->integrations->get($registryKey)
             ?? $this->integrations->get($legacyKey)
             ?? config($configKey, $default);
+    }
+
+    /**
+     * Batas waktu pembayaran online (jam) dari konfigurasi admin (default 24).
+     */
+    private function expiryHours(): int
+    {
+        $hours = (int) ($this->integrations->get('payment.expiry_hours', 24) ?? 24);
+
+        return $hours > 0 ? $hours : 24;
     }
 
     /**
@@ -354,8 +365,20 @@ class MidtransService
             'payment_status' => 'pending',
             'midtrans_transaction_id' => $body['transaction_id'] ?? $order->midtrans_transaction_id,
             'midtrans_payment_type' => $body['payment_type'] ?? $channel,
-            'payment_expires_at' => $order->payment_expires_at ?? now()->addDay(),
+            'payment_expires_at' => $order->payment_expires_at ?? now()->addHours($this->expiryHours()),
         ];
+
+        // Sinkronkan batas waktu dengan Midtrans (`expiry_time`, zona GMT+7) bila tersedia.
+        if (! empty($body['expiry_time'])) {
+            try {
+                $midtransExpiry = Carbon::createFromFormat('Y-m-d H:i:s', (string) $body['expiry_time'], 'Asia/Jakarta')
+                    ->setTimezone(config('app.timezone'));
+                $updates['payment_expires_at'] = $midtransExpiry;
+                $updates['expires_at'] = $midtransExpiry;
+            } catch (\Throwable $e) {
+                Log::warning('Gagal membaca expiry_time Midtrans: ' . $e->getMessage());
+            }
+        }
 
         if (isset($body['va_numbers'][0]['va_number'])) {
             $updates['va_number'] = (string) $body['va_numbers'][0]['va_number'];

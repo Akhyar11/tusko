@@ -58,6 +58,56 @@ class CheckoutApiTest extends TestCase
         ]);
     }
 
+    public function test_checkout_uses_configured_online_expiry_hours(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('payment.expiry_hours', '48', 'payment');
+
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100000, 'stock' => 5]);
+
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Uji Expiry Online',
+            'phone' => '081200000011',
+            'full_address' => 'Jl. Uji No. 11',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'midtrans',
+            'payment_channel' => 'bca_va',
+            'service_fee' => 0,
+        ])->assertCreated();
+
+        $order = Order::where('user_id', $user->id)->latest('id')->firstOrFail();
+        $this->assertNotNull($order->expires_at);
+        $this->assertTrue($order->expires_at->greaterThan(now()->addHours(47)));
+        $this->assertTrue($order->expires_at->lessThan(now()->addHours(49)));
+    }
+
+    public function test_checkout_uses_manual_transfer_expiry_hours(): void
+    {
+        app(\App\Services\IntegrationService::class)->set('payment.manual_transfer_expiry_hours', '96', 'payment');
+
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100000, 'stock' => 5]);
+
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'recipient_name' => 'Uji Expiry Manual',
+            'phone' => '081200000012',
+            'full_address' => 'Jl. Uji No. 12',
+            'expedition_name' => 'JNE',
+            'expedition_service' => 'REG',
+            'payment_method' => 'manual_transfer',
+            'payment_channel' => 'manual_bca',
+            'service_fee' => 0,
+        ])->assertCreated();
+
+        $order = Order::where('user_id', $user->id)->latest('id')->firstOrFail();
+        $this->assertNotNull($order->expires_at);
+        $this->assertTrue($order->expires_at->greaterThan(now()->addHours(95)));
+        $this->assertTrue($order->expires_at->lessThan(now()->addHours(97)));
+    }
+
     public function test_checkout_config_endpoint_returns_dynamic_fees(): void
     {
         app(\App\Services\IntegrationService::class)->set('store.service_fee', '1500', 'store');

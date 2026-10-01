@@ -143,4 +143,20 @@ class CancelExpiredOrdersTest extends TestCase
                 ->count()
         );
     }
+
+    public function test_verifying_manual_order_is_not_auto_cancelled(): void
+    {
+        $order = Order::factory()->create([
+            'status' => 'pending',
+            'payment_status' => 'verifying',
+            'payment_method' => 'manual_transfer',
+            'expires_at' => now()->subHour(),
+        ]);
+
+        $this->artisan('orders:cancel-expired')->assertExitCode(0);
+
+        $order->refresh();
+        $this->assertSame('pending', $order->status);
+        $this->assertSame('verifying', $order->payment_status);
+    }
 }

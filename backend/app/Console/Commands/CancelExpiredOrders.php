@@ -19,7 +19,7 @@ class CancelExpiredOrders extends Command
     {
         $orders = Order::query()
             ->where('status', 'pending')
-            ->where('payment_status', '!=', 'paid')
+            ->whereNotIn('payment_status', ['paid', 'verifying', 'pending_confirmation'])
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', now())
             ->limit((int) $this->option('limit'))

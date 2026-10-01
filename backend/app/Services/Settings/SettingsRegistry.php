@@ -84,6 +84,8 @@ class SettingsRegistry
                 'payment.notification_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Notification URL (Webhook)', 'description' => 'URL publik webhook Midtrans. Dikirim sebagai header X-Override-Notification saat charge (tanpa perlu setting dashboard).'],
                 'payment.refund_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Refund URL', 'description' => 'Endpoint refund Midtrans.'],
                 'payment.refund_policy' => ['type' => 'string', 'default' => 'auto_online_manual_offline', 'rule' => 'nullable|string|in:auto_online_manual_offline,manual_only,auto_online_only', 'is_secret' => false, 'label' => 'Kebijakan Refund', 'description' => 'Aturan refund: online otomatis via Midtrans, offline manual.', 'options' => ['auto_online_manual_offline', 'manual_only', 'auto_online_only']],
+                'payment.expiry_hours' => ['type' => 'integer', 'default' => 24, 'rule' => 'nullable|integer|min:1|max:720', 'is_secret' => false, 'label' => 'Batas Waktu Pembayaran Online (Jam)', 'description' => 'Jendela pembayaran untuk pesanan online (Virtual Account/QRIS), dalam jam.'],
+                'payment.manual_transfer_expiry_hours' => ['type' => 'integer', 'default' => 72, 'rule' => 'nullable|integer|min:1|max:720', 'is_secret' => false, 'label' => 'Batas Waktu Transfer Manual (Jam)', 'description' => 'Jendela pembayaran untuk Transfer Bank Manual, dalam jam.'],
             ],
         ],
         'storage' => [
@@ -218,6 +220,7 @@ class SettingsRegistry
         ],
         'payment' => [
             ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.midtrans_api_url', 'payment.notification_url']],
+            ['title' => 'Batas Waktu Pembayaran', 'keys' => ['payment.expiry_hours', 'payment.manual_transfer_expiry_hours']],
             ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
         ],
         'storage' => [

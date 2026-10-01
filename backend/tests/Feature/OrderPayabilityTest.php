@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\IntegrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -102,6 +103,43 @@ class OrderPayabilityTest extends TestCase
             ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
+    }
+
+    public function test_charge_sets_payment_expiry_from_midtrans_expiry_time(): void
+    {
+        $integrations = app(IntegrationService::class);
+        $integrations->set('payment.midtrans_server_key', 'SB-Mid-server-TEST', 'payment', true);
+        $integrations->set('payment.midtrans_api_url', 'https://midtrans.test', 'payment');
+
+        $expiry = Carbon::now('Asia/Jakarta')->addHours(3)->format('Y-m-d H:i:s');
+
+        Http::fake([
+            'midtrans.test/*' => Http::response([
+                'transaction_id' => 'trx-expiry',
+                'order_id' => 'x',
+                'gross_amount' => '100000.00',
+                'payment_type' => 'bank_transfer',
+                'transaction_status' => 'pending',
+                'va_numbers' => [['bank' => 'bca', 'va_number' => '12345678901']],
+                'expiry_time' => $expiry,
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+        $order = $this->makeOrder(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
+            ->assertOk();
+
+        $expected = Carbon::createFromFormat('Y-m-d H:i:s', $expiry, 'Asia/Jakarta')
+            ->setTimezone(config('app.timezone'));
+
+        $order->refresh();
+        $this->assertNotNull($order->payment_expires_at);
+        $this->assertTrue($order->payment_expires_at->equalTo($expected));
+        $this->assertNotNull($order->expires_at);
+        $this->assertTrue($order->expires_at->equalTo($expected));
     }
 
 }
