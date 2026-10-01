@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Shipment;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -143,6 +144,110 @@ class BiteshipOrderService
         }
 
         return $this->client->post('/v1/orders', $payload);
+    }
+
+    /**
+     * Field yang boleh diperbarui via `POST /v1/orders/{id}` (T40.16).
+     *
+     * @var array<int, string>
+     */
+    public const UPDATABLE_FIELDS = [
+        'origin_contact_name', 'origin_contact_phone', 'origin_address', 'origin_postal_code', 'origin_area_id',
+        'destination_contact_name', 'destination_contact_phone', 'destination_contact_email',
+        'destination_address', 'destination_postal_code', 'destination_area_id', 'destination_note',
+        'courier_company', 'courier_type', 'courier_insurance', 'delivery_type', 'order_note',
+    ];
+
+    /**
+     * Perbarui order Biteship (T40.16) — hanya selama status belum dijemput.
+     *
+     * Memakai `POST /v1/orders/{id}` dengan partial body (field yang diizinkan).
+     * Mengembalikan null bila tidak ada booking / status sudah lanjut / tak ada field.
+     *
+     * @param  array<string, mixed>  $fields
+     * @return array<string, mixed>|null
+     */
+    public function updateForOrder(Order $order, array $fields): ?array
+    {
+        $shipment = Shipment::query()
+            ->where('order_id', $order->id)
+            ->where('provider', 'biteship')
+            ->first();
+
+        if (! $shipment || empty($shipment->provider_order_id) || ! $this->isConfigured()) {
+            return null;
+        }
+
+        $locked = [
+            'picked', 'dropping_off', 'in_transit', 'delivered', 'return_in_transit',
+            'returned', 'rejected', 'disposed', 'cancelled', 'courier_not_found',
+        ];
+        if (in_array((string) $shipment->provider_status, $locked, true)) {
+            return null;
+        }
+
+        $payload = array_filter(
+            array_intersect_key($fields, array_flip(self::UPDATABLE_FIELDS)),
+            fn ($value) => $value !== null && $value !== ''
+        );
+
+        if ($payload === []) {
+            return null;
+        }
+
+        $response = $this->client->post(
+            '/v1/orders/' . rawurlencode((string) $shipment->provider_order_id),
+            $payload
+        );
+
+        $shipment->forceFill([
+            'provider_payload' => array_merge((array) $shipment->provider_payload, ['last_update' => $response]),
+            'provider_status' => $response['status'] ?? $shipment->provider_status,
+        ])->save();
+
+        return $response;
+    }
+
+    /**
+     * Batalkan order pengiriman Biteship (T40.14).
+     *
+     * Memanggil POST /v1/orders/{id}/cancel saat pesanan dibatalkan admin agar
+     * booking tidak menggantung/tertagih. Best-effort: kegagalan jaringan dicatat
+     * ke log, tidak melempar error ke pemanggil.
+     */
+    public function cancelForOrder(Order $order, ?string $reason = null): bool
+    {
+        $shipment = Shipment::query()
+            ->where('order_id', $order->id)
+            ->where('provider', 'biteship')
+            ->first();
+
+        if (! $shipment || empty($shipment->provider_order_id) || ! $this->isConfigured()) {
+            return false;
+        }
+
+        $terminal = ['cancelled', 'returned', 'delivered', 'disposed', 'rejected'];
+        if (in_array((string) $shipment->provider_status, $terminal, true)) {
+            return false;
+        }
+
+        try {
+            $this->client->post(
+                '/v1/orders/' . rawurlencode((string) $shipment->provider_order_id) . '/cancel',
+                ['reason' => $reason ?: 'Dibatalkan oleh admin']
+            );
+
+            $shipment->forceFill([
+                'provider_status' => 'cancelled',
+                'status' => 'cancelled',
+            ])->save();
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Biteship cancel order gagal: ' . $e->getMessage(), ['order_id' => $order->id]);
+
+            return false;
+        }
     }
 
     private function courierType(Order $order): ?string

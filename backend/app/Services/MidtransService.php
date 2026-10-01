@@ -85,9 +85,10 @@ class MidtransService
             $transactionStatus === 'capture' && $fraudStatus === 'challenge' => 'challenge',
             $transactionStatus === 'pending' => 'pending',
             $transactionStatus === 'deny' => 'failed',
+            $transactionStatus === 'failure' => 'failed',
             $transactionStatus === 'expire' => 'expired',
             $transactionStatus === 'cancel' => 'cancelled',
-            in_array($transactionStatus, ['refund', 'partial_refund'], true) => 'refunded',
+            in_array($transactionStatus, ['refund', 'partial_refund', 'chargeback', 'partial_chargeback'], true) => 'refunded',
             default => 'pending',
         };
     }

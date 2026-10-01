@@ -177,6 +177,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/financial-accounts', [\App\Http\Controllers\Api\FinancialAccountController::class, 'index']);
 
     Route::post('/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'store'])->where('idOrOrderNumber', '.*');
+    Route::match(['put', 'patch'], '/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'update'])->where('idOrOrderNumber', '.*');
 
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\ProductReviewController::class, 'adminIndex']);

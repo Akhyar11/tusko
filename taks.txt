@@ -580,6 +580,9 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
            endpoint `POST /api/orders/{id}/sync-payment` (lookup id/order_number/midtrans_order_id);
            tombol "Cek Status Pembayaran" FE memanggil sync. Uji NYATA sandbox: bayar Mandiri
            via Simulator -> paid; cancel via API -> cancelled. [commit 0fd5567 (BE) + 255a44f (FE)]
+    T07.11 [DONE] GAP AUDIT MIDTRANS — pemetaan `chargeback`/`partial_chargeback` -> `refunded`
+           dan `failure` -> `failed` (sebelumnya jatuh ke default `pending`). Test
+           `MidtransStatusMappingTest` (12 status resmi).
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)
@@ -1626,6 +1629,21 @@ T40. Integrasi Biteship (Agregator Logistik Pihak Ketiga) .......... [DONE]  [OW
             (fallback origin browser); `SystemSettingsHub` menampilkan URL webhook dari
             helper tsb sehingga benar saat backend di subfolder `/backend` (Hostinger).
             Bukti browser Playwright (VITE_API_URL=/backend). [OWNER:A1]
+    T40.14 [DONE] GAP AUDIT BITESHIP — CANCEL ORDER: `BiteshipOrderService::cancelForOrder()`
+            memanggil `POST /v1/orders/{id}/cancel` saat pesanan dibatalkan (admin via
+            `updateStatus` & pelanggan via `cancel`), menandai `shipments.provider_status/status`
+            = `cancelled`. Best-effort (gagal jaringan dicatat log). Skip bila belum ada
+            provider_order_id atau status terminal. Test `BiteshipCancelOrderTest`.
+    T40.15 [DONE] SOP KLAIM & RETUR (gap operasional, bukan API):
+            (a) Klaim asuransi Biteship = manual via dashboard Biteship (tidak ada endpoint
+                API); nilai asuransi sudah dikirim pada payload order (`courier_insurance`).
+            (b) Retur barang tidak memanggil API Biteship (retur dibuat sebagai order baru
+                bila perlu); alur stok/refund ditangani internal (T29/T13).
+            (c) Aktivasi API Biteship butuh 2 order uji sandbox (status Delivered + Cancelled).
+    T40.16 [DONE] GAP AUDIT BITESHIP — UPDATE ORDER: `BiteshipOrderService::updateForOrder()`
+            memanggil `POST /v1/orders/{id}` (partial body, field allow-list) untuk ubah
+            alamat/kurir selama status belum dijemput; endpoint `PUT /api/admin/orders/{id}/shipment`.
+            Test `BiteshipUpdateOrderTest`.
   ACCEPTANCE (T40):
    (1) Admin bisa memilih provider `biteship`, mengisi API key (terenkripsi) & webhook
        secret via Settings Hub, lalu menyinkronkan kurir/layanan.

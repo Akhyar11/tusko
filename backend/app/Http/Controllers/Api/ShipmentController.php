@@ -113,4 +113,56 @@ class ShipmentController extends Controller
             ],
         ], 201);
     }
+
+    /**
+     * Perbarui order pengiriman Biteship (T40.16, admin-only) — ubah alamat/kurir
+     * selama status belum dijemput.
+     */
+    public function update(Request $request, string $idOrOrderNumber, BiteshipOrderService $biteship): JsonResponse
+    {
+        $order = Order::whereIdOrCode($idOrOrderNumber)->firstOrFail();
+
+        if (! $biteship->isConfigured()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Integrasi Biteship belum dikonfigurasi admin.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'origin_contact_name' => 'nullable|string|max:150',
+            'origin_contact_phone' => 'nullable|string|max:30',
+            'origin_address' => 'nullable|string|max:500',
+            'origin_postal_code' => 'nullable|string|max:10',
+            'destination_contact_name' => 'nullable|string|max:150',
+            'destination_contact_phone' => 'nullable|string|max:30',
+            'destination_address' => 'nullable|string|max:500',
+            'destination_postal_code' => 'nullable|string|max:10',
+            'courier_company' => 'nullable|string|max:50',
+            'courier_type' => 'nullable|string|max:50',
+            'delivery_type' => 'nullable|string|in:now,scheduled',
+            'order_note' => 'nullable|string|max:500',
+        ]);
+
+        $result = $biteship->updateForOrder($order, $validated);
+
+        if ($result === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Order pengiriman tidak dapat diperbarui (belum dibooking, sudah dijemput, atau tidak ada perubahan).',
+            ], 422);
+        }
+
+        $shipment = $order->fresh()->shipment;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Order pengiriman Biteship berhasil diperbarui.',
+            'data' => [
+                'provider_status' => $shipment?->provider_status,
+                'waybill_number' => $shipment?->waybill_number,
+                'provider_waybill_id' => $shipment?->provider_waybill_id,
+            ],
+        ]);
+    }
 }
