@@ -924,9 +924,11 @@ export default function ProductCreateForm({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* 1. Harga Jual Ritel */}
                 <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Harga Jual Ritel <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center min-h-8 mb-1.5">
+                    <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                      Harga Jual Ritel <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
                   <TextInput
                     type="number"
                     min="0"
@@ -944,12 +946,12 @@ export default function ProductCreateForm({
 
                 {/* 2. Harga Coret (Normal) */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between gap-2 min-h-8 mb-1.5">
                     <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                       Harga Coret (Normal)
                     </label>
                     {discountPercent > 0 && (
-                      <span className="px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-sport font-black uppercase">
+                      <span className="shrink-0 px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-sport font-black uppercase">
                         Diskon {discountPercent}%
                       </span>
                     )}
@@ -970,9 +972,11 @@ export default function ProductCreateForm({
 
                 {/* 3. Harga Modal Beli / HPP */}
                 <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Harga Modal Beli / HPP
-                  </label>
+                  <div className="flex items-center min-h-8 mb-1.5">
+                    <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
+                      Harga Modal Beli / HPP
+                    </label>
+                  </div>
                   <TextInput
                     type="number"
                     min="0"
