@@ -946,15 +946,10 @@ export default function ProductCreateForm({
 
                 {/* 2. Harga Coret (Normal) */}
                 <div>
-                  <div className="flex items-center justify-between gap-2 min-h-8 mb-1.5">
+                  <div className="flex items-center min-h-8 mb-1.5">
                     <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
                       Harga Coret (Normal)
                     </label>
-                    {discountPercent > 0 && (
-                      <span className="shrink-0 px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-sport font-black uppercase">
-                        Diskon {discountPercent}%
-                      </span>
-                    )}
                   </div>
                   <TextInput
                     type="number"
@@ -965,9 +960,16 @@ export default function ProductCreateForm({
                     prefix="Rp"
                     weight="mono"
                   />
-                  <span className="text-[11px] text-neutral-500 mt-1 block">
-                    Tampil dicoret jika sedang masa promo
-                  </span>
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <span className="text-[11px] text-neutral-500">
+                      Tampil dicoret jika sedang masa promo
+                    </span>
+                    {discountPercent > 0 && (
+                      <span className="shrink-0 px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-sport font-black uppercase">
+                        Diskon {discountPercent}%
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* 3. Harga Modal Beli / HPP */}
