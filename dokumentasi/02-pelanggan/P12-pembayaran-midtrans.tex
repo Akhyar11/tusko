@@ -1,11 +1,13 @@
 % ============================================================
-% P12 — Pembayaran Midtrans Snap
+% P12 — Pembayaran Midtrans (Core API)
 % ============================================================
-\flowmeta{P12}{Pembayaran Midtrans Snap}{Pelanggan}
+\flowmeta{P12}{Pembayaran Midtrans}{Pelanggan}
 
 \begin{flowsection}{Tujuan}
-Membayar pesanan secara daring melalui gerbang pembayaran Midtrans Snap:
-Virtual Account, QRIS, e-Wallet, atau Kartu Kredit/Debit.
+Membayar pesanan secara daring melalui Midtrans \textbf{Core API} dengan
+antarmuka penuh milik TUSKO: Virtual Account dan QRIS/e-Wallet. Nomor Virtual
+Account / kode QR ditampilkan langsung pada halaman pesanan TUSKO (tanpa popup
+pihak ketiga).
 \end{flowsection}
 
 \begin{flowsection}{Prasyarat}
@@ -15,48 +17,41 @@ Midtrans telah diisi admin pada Pengaturan Sistem.
 
 \begin{flowsection}{Langkah Pembayaran}
 \begin{enumerate}
-  \item Pada checkout, pilih metode pembayaran (mis. \textbf{BCA Virtual Account},
-        \textbf{QRIS \& E-Wallet}, atau \textbf{Kartu Kredit/Debit}).
+  \item Pada checkout, pilih metode pembayaran Midtrans:
+        \textbf{Virtual Account} (BCA/Mandiri/BRI/BNI) atau \textbf{QRIS \& E-Wallet}.
   \item Klik \textbf{Bayar Sekarang}.
-  \item Popup \textbf{Midtrans Snap} muncul; ikuti instruksi sesuai metode.
-  \item Setelah pembayaran berhasil, Midtrans mengirim notifikasi (webhook) ke
-        backend dan status pesanan berubah menjadi \textbf{PAID}.
+  \item Sistem membuat transaksi melalui Midtrans Core API dan menampilkan
+        \textbf{nomor Virtual Account} atau \textbf{kode QR} pada halaman pesanan.
+  \item Pelanggan menyelesaikan pembayaran sesuai instruksi.
+  \item Midtrans mengirim notifikasi (webhook); backend memverifikasi
+        \texttt{signature\_key} lalu menandai pesanan \textbf{PAID}.
 \end{enumerate}
 \end{flowsection}
 
-\shot{gambar/pelanggan/p12-1.png}{Pemilihan metode pembayaran Midtrans pada halaman checkout}{fig:p12-1}
-
-\begin{flowsection}{Alur Teknis}
-\begin{enumerate}
-  \item Pelanggan menekan Bayar Sekarang.
-  \item Backend membuat order dan meminta Snap token ke Midtrans.
-  \item Popup Snap tampil untuk memilih kanal pembayaran.
-  \item Pelanggan menyelesaikan pembayaran.
-  \item Midtrans mengirim webhook ke backend.
-  \item Backend memverifikasi \texttt{signature\_key} (SHA-512), lalu menandai
-        order \textbf{PAID} (idempoten agar tidak dobel).
-\end{enumerate}
-\end{flowsection}
-
-\shot{gambar/pelanggan/p12-2.png}{Diagram alur pembayaran Midtrans Snap beserta verifikasi webhook}{fig:p12-2}
+\shot{gambar/pelanggan/p12-1.png}{Memilih metode pembayaran Midtrans (Virtual Account) pada checkout TUSKO}{fig:p12-1}
 
 \begin{flowsection}{Hasil yang Diharapkan}
-Order tercatat dan berstatus menunggu/terbayar sesuai hasil; pelanggan dapat
-memantau status di \textbf{Pesanan Saya} (P14).
+Halaman pesanan menampilkan nomor Virtual Account / kode QR beserta batas waktu
+pembayaran; setelah terbayar status berubah menjadi \textbf{PAID}. Seluruh
+tampilan instruksi berada pada UI TUSKO.
 \end{flowsection}
+
+\shot{gambar/pelanggan/p12-2.png}{Instruksi pembayaran Virtual Account ditampilkan pada halaman pesanan TUSKO}{fig:p12-2}
 
 \begin{flowsection}{Penanganan Error dan Kasus Khusus}
 \begin{itemize}
-  \item Popup tidak muncul $\rightarrow$ pastikan kredensial Midtrans \&  Snap URL benar.
-  \item Pembayaran kedaluwarsa $\rightarrow$ order tetap belum terbayar; dapat dibuat ulang.
+  \item Kredensial Midtrans belum diisi $\rightarrow$ muncul pesan kesalahan.
+  \item Pembayaran kedaluwarsa $\rightarrow$ pesanan belum terbayar; dapat dibuat ulang.
   \item Webhook gagal diverifikasi $\rightarrow$ status tidak berubah (aman).
 \end{itemize}
 \end{flowsection}
 
 \begin{flowsection}{Kaitan Modul}
-FE \texttt{CheckoutPage.jsx} (Snap), \texttt{checkoutService.js}. BE
-\texttt{PaymentController}, \texttt{MidtransWebhookController}. Tabel
-\texttt{payments}, \texttt{midtrans\_transactions}.
+FE \texttt{CheckoutPage.jsx}, \texttt{OrderSuccessPage.jsx}, \texttt{checkoutService.js}
+(\texttt{chargeOrder}). BE \texttt{CheckoutController@charge},
+\texttt{MidtransService}, \texttt{MidtransWebhookController}. Rute
+\texttt{POST /api/orders/\{id\}/charge}. Tabel \texttt{payments},
+\texttt{midtrans\_transactions}.
 \end{flowsection}
 
 \docver{v1.0}{Sep 2026}

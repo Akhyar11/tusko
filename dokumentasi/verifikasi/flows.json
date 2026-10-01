@@ -138,7 +138,7 @@
     },
     {
       "kode": "P12",
-      "nama": "Pembayaran Midtrans Snap",
+      "nama": "Pembayaran Midtrans",
       "aktor": "Pelanggan",
       "url": "/checkout",
       "expect_text": "TUSKO",
