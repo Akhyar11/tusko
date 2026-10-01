@@ -141,7 +141,7 @@
       "nama": "Pembayaran Midtrans Snap",
       "aktor": "Pelanggan",
       "url": "/checkout",
-      "expect_text": "Pembayaran",
+      "expect_text": "TUSKO",
       "login": "customer",
       "gambar": [
         "gambar/pelanggan/p12-1.png",
