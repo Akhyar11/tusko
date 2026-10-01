@@ -25,7 +25,6 @@ class OrderResource extends JsonResource
             'payment_method' => $this->payment_method,
             'payment_channel' => $this->payment_channel,
             'va_number' => $this->va_number,
-            'midtrans_snap_token' => $this->midtrans_snap_token,
             'midtrans_transaction_id' => $this->midtrans_transaction_id,
             'midtrans_pdf_url' => $this->midtrans_pdf_url,
             'midtrans_payment_type' => $this->midtrans_payment_type,
