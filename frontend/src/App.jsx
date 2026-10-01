@@ -14,6 +14,7 @@ import StockManagementPage from './components/StockManagementPage';
 import SizeChartListPage from './components/SizeChartListPage';
 import SizeChartCreatePage from './components/SizeChartCreatePage';
 import SizeChartEditPage from './components/SizeChartEditPage';
+import { stockOpnameService } from './services/stockOpnameService';
 import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import SystemSettingsHub from './components/SystemSettingsHub';
@@ -380,8 +381,11 @@ const getInitialView = () => {
     if (rawView === 'role-edit') {
       return 'roles-admin';
     }
-    if (rawView === 'stock-opname-create' || rawView === 'stock-opname-detail') {
-      return 'stock-opname';
+    if (rawView === 'stock-opname-create') {
+      return 'stock-opname-create';
+    }
+    if (rawView === 'stock-opname-detail') {
+      return 'stock-opname-detail';
     }
     if (rawView === 'supplier-edit') {
       return 'suppliers-admin';
@@ -767,6 +771,20 @@ export default function App() {
       if (window.location.pathname !== '/admin/stock') {
         window.history.pushState(null, '', '/admin/stock');
       }
+    } else if (currentView === 'stock-opname') {
+      if (window.location.pathname !== '/admin/stock-opname') {
+        window.history.pushState(null, '', '/admin/stock-opname');
+      }
+    } else if (currentView === 'stock-opname-create') {
+      if (window.location.pathname !== '/admin/stock-opname/create') {
+        window.history.pushState(null, '', '/admin/stock-opname/create');
+      }
+    } else if (currentView === 'stock-opname-detail') {
+      const opnameParam = editingOpname?.opname_number || editingOpname?.id;
+      const targetPath = opnameParam ? `/admin/stock-opname/${opnameParam}` : '/admin/stock-opname';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
+      }
     } else if (currentView === 'procurement-pos' || currentView === 'procurement') {
       if (window.location.pathname !== '/admin/procurement/pos' && window.location.pathname !== '/admin/procurement') {
         window.history.pushState(null, '', '/admin/procurement/pos');
@@ -927,6 +945,23 @@ export default function App() {
     if (currentUser?.role === 'admin' && (currentView === 'orders' || currentView === 'order-detail')) return true;
     return false;
   }, [currentView, currentUser]);
+
+  // Restore halaman detail Stock Opname dari URL saat reload (mis. /admin/stock-opname/OPN-...).
+  useEffect(() => {
+    if (currentView !== 'stock-opname-detail' || editingOpname) return;
+    const match = window.location.pathname.match(/^\/admin\/stock-opname\/(.+)$/);
+    const id = match ? decodeURIComponent(match[1]) : null;
+    if (!id || id === 'create') {
+      setCurrentView('stock-opname');
+      return;
+    }
+    stockOpnameService.getOpname(id)
+      .then((data) => {
+        if (data && data.id) setEditingOpname(data);
+        else setCurrentView('stock-opname');
+      })
+      .catch(() => setCurrentView('stock-opname'));
+  }, [currentView, editingOpname]);
 
   // Unique locations from product catalog
   const uniqueLocations = useMemo(() => {
