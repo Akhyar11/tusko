@@ -11,6 +11,9 @@ import MyOrderDetailPage from './components/MyOrderDetailPage';
 import OrderDetailPage from './components/OrderDetailPage';
 import FinancialTransactionsPage from './components/FinancialTransactionsPage';
 import StockManagementPage from './components/StockManagementPage';
+import SizeChartListPage from './components/SizeChartListPage';
+import SizeChartCreatePage from './components/SizeChartCreatePage';
+import SizeChartEditPage from './components/SizeChartEditPage';
 import TemplateManagementPage from './components/TemplateManagementPage';
 import ExpeditionSettingsPage from './components/ExpeditionSettingsPage';
 import SystemSettingsHub from './components/SystemSettingsHub';
@@ -128,6 +131,9 @@ const VALID_VIEWS = [
       'voucher-edit',
       'product-create', 
   'product-edit',
+  'size-charts-admin',
+  'size-chart-create',
+  'size-chart-edit',
   'transactions',
   'transaction-create',
   'journal',
@@ -246,6 +252,8 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/products' || rawPath === '/admin/product') return 'products-admin';
     if (rawPath === '/admin/categories' || rawPath === '/admin/category') return 'categories-admin';
     if (rawPath === '/admin/categories/create') return 'category-create';
+    if (rawPath === '/admin/size-chart' || rawPath === '/admin/size-charts') return 'size-charts-admin';
+    if (rawPath === '/admin/size-chart/create') return 'size-chart-create';
     if (rawPath === '/admin/warehouses' || rawPath === '/admin/warehouse' || rawPath === '/admin/inventory/warehouses') return 'warehouses-admin';
     if (rawPath === '/admin/warehouses/create' || rawPath === '/admin/inventory/warehouses/create') return 'warehouse-create';
     if (rawPath === '/admin/menus' || rawPath === '/admin/menu') return 'menus-admin';
@@ -508,6 +516,7 @@ export default function App() {
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingSizeChartId, setEditingSizeChartId] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [editingMenu, setEditingMenu] = useState(null);
@@ -666,7 +675,7 @@ export default function App() {
     setCart([]);
 
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail', 'size-charts-admin', 'size-chart-create', 'size-chart-edit'];
     if (['profile', 'cart', 'checkout'].includes(currentView) || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -722,6 +731,18 @@ export default function App() {
     } else if (currentView === 'category-create') {
       if (window.location.pathname !== '/admin/categories/create') {
         window.history.pushState(null, '', '/admin/categories/create');
+      }
+    } else if (currentView === 'size-charts-admin') {
+      if (window.location.pathname !== '/admin/size-chart') {
+        window.history.pushState(null, '', '/admin/size-chart');
+      }
+    } else if (currentView === 'size-chart-create') {
+      if (window.location.pathname !== '/admin/size-chart/create') {
+        window.history.pushState(null, '', '/admin/size-chart/create');
+      }
+    } else if (currentView === 'size-chart-edit') {
+      if (window.location.pathname !== '/admin/size-chart') {
+        window.history.pushState(null, '', '/admin/size-chart');
       }
     } else if (currentView === 'suppliers-admin') {
       if (window.location.pathname !== '/admin/suppliers') {
@@ -1617,6 +1638,23 @@ export default function App() {
             onNavigateBack={() => setCurrentView('categories-admin')}
             onShowToast={showToast}
             onCategoriesChange={setCategories}
+          />
+        ) : currentView === 'size-charts-admin' ? (
+          <SizeChartListPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('size-chart-create')}
+            onNavigateToEdit={(id) => { setEditingSizeChartId(id); setCurrentView('size-chart-edit'); }}
+          />
+        ) : currentView === 'size-chart-create' ? (
+          <SizeChartCreatePage
+            onNavigateBack={() => setCurrentView('size-charts-admin')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'size-chart-edit' ? (
+          <SizeChartEditPage
+            chartId={editingSizeChartId}
+            onNavigateBack={() => setCurrentView('size-charts-admin')}
+            onShowToast={showToast}
           />
         ) : currentView === 'products-admin' ? (
           <ProductListPage

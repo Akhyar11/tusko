@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GoodsReceivingNoteController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SizeChartController;
 use App\Http\Controllers\Api\VendorBillController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Http\Request;
@@ -98,6 +99,7 @@ Route::prefix('expeditions')->group(function () {
 Route::post('/checkout', [\App\Http\Controllers\Api\CheckoutController::class, 'checkout'])->middleware(['auth.optional', 'throttle:checkout']);
 Route::get('/checkout/config', [\App\Http\Controllers\Api\CheckoutController::class, 'config'])->middleware('auth.optional');
 Route::get('/store/profile', [\App\Http\Controllers\Api\StoreProfileController::class, 'show']);
+Route::get('/store/size-chart', [SizeChartController::class, 'publicShow']);
 Route::get('/storefront/navbar', [\App\Http\Controllers\Api\StorefrontController::class, 'navbar']);
 Route::get('/storefront/content', [\App\Http\Controllers\Api\StorefrontController::class, 'content']);
 Route::get('/shipping/rates', [\App\Http\Controllers\Api\ShippingRateController::class, 'index'])->middleware('auth.optional');
@@ -171,6 +173,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardController::class, 'summary']);
 
     Route::post('/admin/expeditions/sync', [\App\Http\Controllers\Api\ExpeditionController::class, 'sync']);
+
+    Route::prefix('admin/size-charts')->group(function () {
+        Route::get('/', [SizeChartController::class, 'index']);
+        Route::post('/', [SizeChartController::class, 'store']);
+        Route::get('/{id}', [SizeChartController::class, 'show'])->whereNumber('id');
+        Route::match(['put', 'patch'], '/{id}', [SizeChartController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [SizeChartController::class, 'destroy'])->whereNumber('id');
+    });
 
     Route::post('/admin/storefront/image', [\App\Http\Controllers\Api\StorefrontController::class, 'uploadImage']);
     Route::get('/admin/email-logs', [\App\Http\Controllers\Api\EmailLogController::class, 'index']);

@@ -20,7 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
-import { storeService } from '../services/storeService';
+import { sizeChartService } from '../services/sizeChartService';
 import ProductReviewsSection from './organisms/ProductReviewsSection';
 
 export default function ProductDetail({ 
@@ -69,26 +69,19 @@ export default function ProductDetail({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [sizeChart, setSizeChart] = useState([]);
 
-  // Tabel konversi ukuran dinamis dari Pengaturan Sistem (grup store.size_chart).
+  // Tabel konversi ukuran dinamis: per kategori produk (fallback default).
   useEffect(() => {
     let mounted = true;
-    storeService.getStoreProfile()
-      .then((profile) => {
-        if (!mounted) return;
-        let rows = [];
-        try {
-          const parsed = profile?.size_chart ? JSON.parse(profile.size_chart) : [];
-          rows = Array.isArray(parsed) ? parsed : [];
-        } catch {
-          rows = [];
-        }
-        setSizeChart(rows);
+    const categoryId = product?.category_id || product?.category?.id || null;
+    sizeChartService.getForCategory(categoryId)
+      .then((data) => {
+        if (mounted) setSizeChart(Array.isArray(data?.rows) ? data.rows : []);
       })
       .catch(() => {});
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [product?.category_id, product?.category?.id]);
 
   // Initialize selectedOptions with first in-stock variant or default
   const [selectedOptions, setSelectedOptions] = useState(() => {
