@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Star, 
   Truck, 
@@ -20,6 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
+import { storeService } from '../services/storeService';
 import ProductReviewsSection from './organisms/ProductReviewsSection';
 
 export default function ProductDetail({ 
@@ -66,6 +67,28 @@ export default function ProductDetail({
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [sizeChart, setSizeChart] = useState([]);
+
+  // Tabel konversi ukuran dinamis dari Pengaturan Sistem (grup store.size_chart).
+  useEffect(() => {
+    let mounted = true;
+    storeService.getStoreProfile()
+      .then((profile) => {
+        if (!mounted) return;
+        let rows = [];
+        try {
+          const parsed = profile?.size_chart ? JSON.parse(profile.size_chart) : [];
+          rows = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          rows = [];
+        }
+        setSizeChart(rows);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Initialize selectedOptions with first in-stock variant or default
   const [selectedOptions, setSelectedOptions] = useState(() => {
@@ -212,16 +235,7 @@ export default function ProductDetail({
   };
 
   // Size conversion guide table data
-  const sizeConversionTable = [
-    { uk: '6', eur: '39⅓', us: '6.5', cm: '24.5 cm', rawSize: '39' },
-    { uk: '6.5', eur: '40', us: '7', cm: '25.0 cm', rawSize: '40' },
-    { uk: '7', eur: '40⅔', us: '7.5', cm: '25.5 cm', rawSize: '40.5' },
-    { uk: '7.5', eur: '41⅓', us: '8', cm: '26.0 cm', rawSize: '41' },
-    { uk: '8', eur: '42', us: '8.5', cm: '26.5 cm', rawSize: '42' },
-    { uk: '8.5', eur: '42⅔', us: '9', cm: '27.0 cm', rawSize: '42.5' },
-    { uk: '9', eur: '43⅓', us: '9.5', cm: '27.5 cm', rawSize: '43' },
-    { uk: '9.5', eur: '44', us: '10', cm: '28.0 cm', rawSize: '44' },
-  ];
+  const hasSizeLevel = (product.variant_levels || []).some((l) => l.code === 'size');
 
   // Check which variant levels we have
   const sizeLevel = (product.variant_levels || []).find((l) => l.code === 'size');
@@ -744,7 +758,8 @@ export default function ProductDetail({
             </div>
           </div>
 
-          {/* Size Table */}
+          {/* Size Table — dinamis dari Pengaturan Sistem; hanya untuk produk bervarian ukuran */}
+          {hasSizeLevel && sizeChart.length > 0 && (
           <div className="bg-neutral-50 border border-neutral-200 p-4 sm:p-5">
             <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-black">
               TABEL KONVERSI UKURAN SEPATU RESMI
@@ -760,11 +775,12 @@ export default function ProductDetail({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200 font-medium text-neutral-700">
-                  {sizeConversionTable.map((row) => {
-                    const isRowActive = selectedSizeValue === row.rawSize || selectedSizeValue === row.eur;
+                  {sizeChart.map((row, idx) => {
+                    const raw = row.raw_size ?? row.rawSize ?? '';
+                    const isRowActive = selectedSizeValue === raw || selectedSizeValue === row.eur;
                     return (
-                      <tr 
-                        key={row.uk} 
+                      <tr
+                        key={`${row.uk}-${idx}`}
                         className={isRowActive ? "bg-amber-100/60 font-bold text-black" : "hover:bg-white"}
                       >
                         <td className={`p-2 ${isRowActive ? "font-black" : "font-bold"}`}>{row.uk}</td>
@@ -778,6 +794,7 @@ export default function ProductDetail({
               </table>
             </div>
           </div>
+          )}
 
         </div>
       </section>

@@ -53,4 +53,24 @@ class StoreProfileApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('data.name', 'Tusko Official Store');
     }
+
+    public function test_profile_includes_dynamic_size_chart(): void
+    {
+        $default = $this->getJson('/api/store/profile')->json('data.size_chart');
+        $this->assertIsString($default);
+
+        $rows = json_decode($default, true);
+        $this->assertIsArray($rows);
+        $this->assertNotEmpty($rows);
+        $this->assertArrayHasKey('uk', $rows[0]);
+        $this->assertArrayHasKey('eur', $rows[0]);
+        $this->assertArrayHasKey('cm', $rows[0]);
+
+        $custom = json_encode([['uk' => 'A', 'eur' => 'B', 'us' => 'C', 'cm' => 'D', 'raw_size' => 'X']]);
+        app(SettingsService::class)->setGroup('store', ['store.size_chart' => $custom]);
+
+        $this->getJson('/api/store/profile')
+            ->assertStatus(200)
+            ->assertJsonPath('data.size_chart', $custom);
+    }
 }
