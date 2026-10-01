@@ -42,7 +42,7 @@ class SettingsConnectionTest extends TestCase
     {
         app(SettingsService::class)->setGroup('payment', [
             'payment.midtrans_server_key' => 'SB-Mid-server-test',
-            'payment.snap_url' => 'https://app.sandbox.midtrans.com/snap/v1/transactions',
+            'payment.midtrans_api_url' => 'https://api.sandbox.midtrans.com',
         ]);
 
         Http::fake(['*' => Http::response([], 200)]);

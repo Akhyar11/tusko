@@ -216,7 +216,7 @@ export default function PrintInvoiceModal({
                 No. Resi: <span className="font-mono font-bold text-neutral-900">{trackingNumber}</span>
               </div>
               <div className="text-neutral-600 text-[11px]">
-                Metode Pembayaran: <span className="font-semibold uppercase text-neutral-800">{order.payment_method || 'Midtrans Snap (Auto-Settled)'}</span>
+                Metode Pembayaran: <span className="font-semibold uppercase text-neutral-800">{order.payment_method || 'Midtrans (Core API)'}</span>
               </div>
               <div className="text-neutral-500 text-[10px]">
                 Lunas pada: {paidDate}

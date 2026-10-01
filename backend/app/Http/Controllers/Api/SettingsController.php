@@ -262,21 +262,21 @@ class SettingsController extends Controller
     private function testPayment(array $values): array
     {
         $serverKey = $values['payment.midtrans_server_key'] ?? null;
-        $snapUrl = $values['payment.snap_url'] ?? null;
+        $apiUrl = $values['payment.midtrans_api_url'] ?? null;
 
         if (empty($serverKey)) {
             return ['ok' => false, 'message' => 'Server key Midtrans belum diisi.'];
         }
 
-        if (empty($snapUrl)) {
-            return ['ok' => false, 'message' => 'Snap URL Midtrans belum diisi.'];
+        if (empty($apiUrl)) {
+            return ['ok' => false, 'message' => 'Core API URL Midtrans belum diisi.'];
         }
 
         $response = Http::timeout(8)->acceptJson()
             ->withHeaders(['Authorization' => 'Basic ' . base64_encode($serverKey . ':')])
-            ->get($snapUrl);
+            ->get($apiUrl);
 
-        // Endpoint Snap mengembalikan 4xx bila method salah; kredensial dianggap
+        // Endpoint Core API mengembalikan 4xx bila method salah; kredensial dianggap
         // terjangkau selama bukan error server.
         $ok = $response->status() < 500;
 

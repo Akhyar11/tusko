@@ -138,14 +138,6 @@ export const checkoutService = {
   },
 
   /**
-   * Ambil/regenerate Midtrans Snap token untuk sebuah pesanan.
-   */
-  async getSnapToken(idOrOrderNumber) {
-    const response = await apiClient.post(`/api/orders/${orderPath(idOrOrderNumber)}/snap-token`);
-    return response.data;
-  },
-
-  /**
    * T07.9: buat charge Core API (VA/Mandiri/QRIS) dan ambil instruksi bayar.
    */
   async chargeOrder(idOrOrderNumber, paymentMethod) {

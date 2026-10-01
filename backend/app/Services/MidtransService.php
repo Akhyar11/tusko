@@ -14,7 +14,6 @@ class MidtransService
     protected string $serverKey;
     protected string $clientKey;
     protected bool $isProduction;
-    protected string $snapUrl;
     protected string $refundUrl;
     protected string $apiUrl;
     protected string $notificationUrl;
@@ -24,7 +23,6 @@ class MidtransService
         $this->serverKey = (string) $this->resolve('payment.midtrans_server_key', 'midtrans.server_key', 'midtrans.server_key', '');
         $this->clientKey = (string) $this->resolve('payment.midtrans_client_key', 'midtrans.client_key', 'midtrans.client_key', '');
         $this->isProduction = filter_var($this->resolve('payment.is_production', 'midtrans.is_production', 'midtrans.is_production', false), FILTER_VALIDATE_BOOLEAN);
-        $this->snapUrl = (string) $this->resolve('payment.snap_url', 'midtrans.snap_url', 'midtrans.snap_url', '');
         $this->refundUrl = (string) $this->resolve('payment.refund_url', 'midtrans.refund_url', 'midtrans.refund_url', '');
         $this->apiUrl = (string) $this->resolve('payment.midtrans_api_url', 'midtrans.api_url', 'midtrans.api_url', '');
         $this->notificationUrl = (string) $this->resolve('payment.notification_url', 'midtrans.notification_url', 'midtrans.notification_url', '');
@@ -63,14 +61,6 @@ class MidtransService
     public function isProduction(): bool
     {
         return $this->isProduction;
-    }
-
-    /**
-     * URL Snap.js (dari konfigurasi admin/G6 — tanpa hardcode).
-     */
-    public function snapJsUrl(): string
-    {
-        return (string) $this->resolve('payment.snap_js_url', 'midtrans.snap_js_url', 'midtrans.snap_js_url', '');
     }
 
     /**
@@ -404,73 +394,6 @@ class MidtransService
                 'status' => 'pending',
             ]
         );
-    }
-
-    /**
-     * Create Midtrans Snap Token for an Order.
-     *
-     * @return array{token: string, redirect_url: string}
-     */
-    public function createSnapToken(Order $order): array
-    {
-        $order->loadMissing(['items', 'user']);
-
-        $itemDetails = $this->itemDetails($order);
-        $grossAmount = (int) round($order->grand_total);
-
-        $payload = [
-            'transaction_details' => [
-                'order_id' => $this->midtransOrderId($order),
-                'gross_amount' => $grossAmount,
-            ],
-            'customer_details' => $this->customerDetails($order),
-        ];
-
-        if ($itemDetails !== []) {
-            $payload['item_details'] = $itemDetails;
-        }
-
-        try {
-            $response = Http::withHeaders($this->apiHeaders())
-                ->timeout(8)
-                ->post($this->snapUrl, $payload);
-
-            if ($response->successful() && isset($response['token'])) {
-                $snapToken = $response['token'];
-                $redirectUrl = $response['redirect_url'] ?? "https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}";
-
-                $order->update([
-                    'midtrans_snap_token' => $snapToken,
-                    'midtrans_pdf_url' => $redirectUrl,
-                ]);
-
-                return [
-                    'token' => $snapToken,
-                    'redirect_url' => $redirectUrl,
-                ];
-            }
-
-            Log::warning('Midtrans Snap request unsucessful, generating fallback token', [
-                'status' => $response->status(),
-                'body' => $response->json(),
-            ]);
-        } catch (Exception $e) {
-            Log::warning('Midtrans Snap request exception, generating fallback token: ' . $e->getMessage());
-        }
-
-        // Reliable fallback snap token (for testing or sandbox offline development)
-        $fallbackToken = 'snap-token-' . Str::uuid();
-        $fallbackRedirectUrl = "https://app.sandbox.midtrans.com/snap/v2/vtweb/{$fallbackToken}";
-
-        $order->update([
-            'midtrans_snap_token' => $fallbackToken,
-            'midtrans_pdf_url' => $fallbackRedirectUrl,
-        ]);
-
-        return [
-            'token' => $fallbackToken,
-            'redirect_url' => $fallbackRedirectUrl,
-        ];
     }
 
     /**

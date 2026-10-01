@@ -23,13 +23,10 @@ class MidtransConfigTest extends TestCase
         $integrations = app(IntegrationService::class);
         $integrations->set('payment.midtrans_server_key', 'SB-Mid-server-ADMIN', 'payment', true);
         $integrations->set('payment.midtrans_client_key', 'SB-Mid-client-ADMIN', 'payment', true);
-        $integrations->set('payment.snap_js_url', 'https://app.sandbox.midtrans.com/snap/snap.js', 'payment');
-
         $service = app(MidtransService::class);
 
         $this->assertTrue($service->isConfigured());
         $this->assertSame('SB-Mid-client-ADMIN', $service->clientKey());
-        $this->assertSame('https://app.sandbox.midtrans.com/snap/snap.js', $service->snapJsUrl());
         $this->assertFalse($service->isProduction());
     }
 
@@ -40,22 +37,5 @@ class MidtransConfigTest extends TestCase
         $this->assertTrue(app(MidtransService::class)->isConfigured());
     }
 
-    public function test_snap_js_url_falls_back_to_config_default(): void
-    {
-        config()->set('midtrans.snap_js_url', 'https://app.sandbox.midtrans.com/snap/snap.js');
 
-        $this->assertSame(
-            'https://app.sandbox.midtrans.com/snap/snap.js',
-            app(MidtransService::class)->snapJsUrl()
-        );
-    }
-
-    public function test_registry_has_snap_js_url_key(): void
-    {
-        $keys = \App\Services\Settings\SettingsRegistry::keys('payment');
-
-        $this->assertArrayHasKey('payment.snap_js_url', $keys);
-        $this->assertSame('url', $keys['payment.snap_js_url']['type']);
-        $this->assertFalse($keys['payment.snap_js_url']['is_secret']);
-    }
 }

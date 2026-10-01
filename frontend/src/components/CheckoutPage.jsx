@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
 import { checkoutService } from '../services/checkoutService';
-import { loadSnapScript } from '../utils/snapLoader';
 import { authService } from '../services/authService';
 import TextInput from './molecules/TextInput';
 import Checkbox from './molecules/Checkbox';
@@ -552,27 +551,6 @@ export default function CheckoutPage({
 
       setOrderSuccessData(completedOrder);
       onFinishOrder(completedOrder);
-
-      // Kartu kredit / kanal non-Core: Snap popup + polling status pembayaran.
-      if (payload.payment_method === 'midtrans') {
-        try {
-          const snap = await checkoutService.getSnapToken(order.order_number);
-          if (snap?.snap_token && snap?.client_key) {
-            await loadSnapScript(snap.client_key, snap.snap_js_url);
-
-            if (window.snap && typeof window.snap.pay === 'function') {
-              window.snap.pay(snap.snap_token, {
-                onSuccess: () => pollPaymentStatus(order.order_number),
-                onPending: () => pollPaymentStatus(order.order_number),
-                onError: () => {},
-                onClose: () => {},
-              });
-            }
-          }
-        } catch {
-          // Fallback: modal instruksi pembayaran tetap tampil.
-        }
-      }
     } catch (err) {
       const firstValidation = err.errors ? Object.values(err.errors)[0] : null;
       setCheckoutError(

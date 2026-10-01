@@ -149,7 +149,7 @@ export default function OrderDetailPage({
       case 'pending':
         return {
           title: 'Menunggu Pembayaran',
-          description: 'Menunggu pelanggan menyelesaikan pembayaran via Midtrans Snap / Transfer.',
+          description: 'Menunggu pelanggan menyelesaikan pembayaran via Midtrans / Transfer.',
           color: 'text-amber-800',
           bg: 'bg-amber-50',
           border: 'border-amber-300',
@@ -376,7 +376,7 @@ export default function OrderDetailPage({
           <div className="flex items-center gap-2 text-neutral-600">
             <span>Metode Bayar:</span>
             <span className="font-bold text-neutral-900 uppercase font-sport">
-              {order.payment_channel || order.payment_method || 'Midtrans Snap'}
+              {order.payment_channel || order.payment_method || 'Midtrans'}
             </span>
           </div>
         </div>
@@ -590,7 +590,7 @@ export default function OrderDetailPage({
           <div className="flex justify-between items-center">
             <span className="text-neutral-600">Metode Pembayaran:</span>
             <strong className="text-neutral-950 uppercase font-sport font-bold">
-              {order.payment_channel || order.payment_method?.toUpperCase() || 'Virtual Account (Midtrans Snap)'}
+              {order.payment_channel || order.payment_method?.toUpperCase() || 'Virtual Account (Midtrans)'}
             </strong>
           </div>
 

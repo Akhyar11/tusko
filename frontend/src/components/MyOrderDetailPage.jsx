@@ -18,7 +18,6 @@ import PaymentInstructionModal from './PaymentInstructionModal';
 import { formatRupiah } from '../utils/formatters';
 import { orderService } from '../services/orderService';
 import { checkoutService } from '../services/checkoutService';
-import { openSnapPayment } from '../utils/snapLoader';
 import { orderStatusMeta, orderDeadline, isOrderPayable, canCancelOrder, canCompleteOrder } from './MyOrdersPage';
 
 function formatDateTime(value) {
@@ -124,31 +123,20 @@ export default function MyOrderDetailPage({
       return;
     }
 
+    const coreChannels = ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'qris'];
+    if (!coreChannels.includes(order.payment_channel)) {
+      onShowToast('Metode pembayaran ini tidak lagi didukung.', { type: 'error' });
+      return;
+    }
+
     setIsPaying(true);
     try {
-      const snap = await checkoutService.getSnapToken(order.order_number);
-      if (!snap?.snap_token) {
-        throw new Error('Snap token tidak tersedia. Periksa konfigurasi Midtrans.');
-      }
-
-      await openSnapPayment({
-        clientKey: snap.client_key,
-        snapJsUrl: snap.snap_js_url,
-        token: snap.snap_token,
-        onSuccess: async () => {
-          await checkoutService.syncPayment(order.order_number).catch(() => {});
-          await load();
-          onShowToast('Pembayaran berhasil!');
-        },
-        onPending: async () => {
-          await load();
-          onShowToast('Pembayaran menunggu penyelesaian.');
-        },
-        onError: () => onShowToast('Pembayaran gagal. Silakan coba lagi.', { type: 'error' }),
-        onClose: () => {},
-      });
+      await checkoutService.chargeOrder(order.order_number, order.payment_channel);
+      await load();
+      setIsInstructionOpen(true);
+      onShowToast('Instruksi pembayaran diperbarui.');
     } catch (err) {
-      onShowToast(err?.message || 'Gagal memulai pembayaran.', { type: 'error' });
+      onShowToast(err?.message || 'Gagal memuat instruksi pembayaran.', { type: 'error' });
     } finally {
       setIsPaying(false);
     }

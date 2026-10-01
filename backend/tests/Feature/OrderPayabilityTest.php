@@ -12,7 +12,7 @@ use Tests\TestCase;
 /**
  * T39.3 — guard resume pembayaran: hanya order yang masih boleh dibayar
  * (belum lunas / belum dibatalkan / belum kedaluwarsa) yang dapat membuat
- * Snap token atau charge.
+ * charge pembayaran.
  */
 class OrderPayabilityTest extends TestCase
 {
@@ -22,13 +22,17 @@ class OrderPayabilityTest extends TestCase
     {
         $integrations = app(IntegrationService::class);
         $integrations->set('payment.midtrans_server_key', 'SB-Mid-server-TEST', 'payment', true);
-        $integrations->set('payment.snap_url', 'https://midtrans.test/snap/v1/transactions', 'payment');
+        $integrations->set('payment.midtrans_api_url', 'https://midtrans.test', 'payment');
 
         Http::fake([
             'midtrans.test/*' => Http::response([
-                'token' => 'SNAP-TOKEN-123',
-                'redirect_url' => 'https://midtrans.test/redirect',
-            ], 201),
+                'transaction_id' => 'trx-1',
+                'order_id' => 'x',
+                'gross_amount' => '100000.00',
+                'payment_type' => 'bank_transfer',
+                'transaction_status' => 'pending',
+                'va_numbers' => [['bank' => 'bca', 'va_number' => '12345678901']],
+            ], 200),
         ]);
     }
 
@@ -42,19 +46,18 @@ class OrderPayabilityTest extends TestCase
         ], $attributes));
     }
 
-    public function test_snap_token_allowed_for_pending_unexpired_order(): void
+    public function test_charge_allowed_for_pending_unexpired_order(): void
     {
         $this->configureMidtrans();
         $user = User::factory()->create();
         $order = $this->makeOrder(['user_id' => $user->id]);
 
         $this->actingAs($user)
-            ->postJson("/api/orders/{$order->order_number}/snap-token")
-            ->assertOk()
-            ->assertJsonPath('data.snap_token', 'SNAP-TOKEN-123');
+            ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
+            ->assertOk();
     }
 
-    public function test_snap_token_rejected_for_paid_order(): void
+    public function test_charge_rejected_for_paid_order(): void
     {
         $this->configureMidtrans();
         $user = User::factory()->create();
@@ -65,38 +68,7 @@ class OrderPayabilityTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->postJson("/api/orders/{$order->order_number}/snap-token")
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('order');
-    }
-
-    public function test_snap_token_rejected_for_cancelled_order(): void
-    {
-        $this->configureMidtrans();
-        $user = User::factory()->create();
-        $order = $this->makeOrder([
-            'user_id' => $user->id,
-            'status' => 'cancelled',
-            'payment_status' => 'cancelled',
-        ]);
-
-        $this->actingAs($user)
-            ->postJson("/api/orders/{$order->order_number}/snap-token")
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('order');
-    }
-
-    public function test_snap_token_rejected_for_expired_order(): void
-    {
-        $this->configureMidtrans();
-        $user = User::factory()->create();
-        $order = $this->makeOrder([
-            'user_id' => $user->id,
-            'expires_at' => now()->subMinutes(10),
-        ]);
-
-        $this->actingAs($user)
-            ->postJson("/api/orders/{$order->order_number}/snap-token")
+            ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
     }
@@ -112,10 +84,24 @@ class OrderPayabilityTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->postJson("/api/orders/{$order->order_number}/charge", [
-                'payment_method' => 'bca_va',
-            ])
+            ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
     }
+
+    public function test_charge_rejected_for_expired_order(): void
+    {
+        $this->configureMidtrans();
+        $user = User::factory()->create();
+        $order = $this->makeOrder([
+            'user_id' => $user->id,
+            'expires_at' => now()->subMinutes(10),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('order');
+    }
+
 }

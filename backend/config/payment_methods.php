@@ -26,12 +26,5 @@ return [
                 ['id' => 'qris', 'name' => 'QRIS (GoPay, OVO, DANA, ShopeePay, LinkAja)', 'code' => 'QRIS', 'type' => 'midtrans', 'icon' => 'QrCode', 'badge' => 'Bebas Biaya', 'description' => 'Scan sekali untuk semua aplikasi e-wallet berlogo QRIS'],
             ],
         ],
-        [
-            'key' => 'Kartu Kredit / Debit',
-            'label' => 'Kartu Kredit / Debit (Verifikasi Otomatis Midtrans)',
-            'methods' => [
-                ['id' => 'credit_card', 'name' => 'Kartu Kredit / Debit Visa & Mastercard', 'code' => 'CARD', 'type' => 'midtrans', 'icon' => 'CreditCard', 'badge' => '3D Secure', 'description' => 'Pembayaran aman dengan proteksi 3D Secure'],
-            ],
-        ],
     ],
 ];

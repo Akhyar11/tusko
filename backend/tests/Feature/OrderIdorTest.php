@@ -19,7 +19,7 @@ class OrderIdorTest extends TestCase
 
         $this->actingAs($other)->getJson("/api/orders/{$order->order_number}")->assertStatus(404);
         $this->actingAs($other)->getJson("/api/orders/{$order->order_number}/receipt")->assertStatus(404);
-        $this->actingAs($other)->postJson("/api/orders/{$order->order_number}/snap-token")->assertStatus(404);
+        $this->actingAs($other)->postJson("/api/orders/{$order->order_number}/charge", ['payment_method' => 'bca_va'])->assertStatus(404);
     }
 
     public function test_owner_and_admin_can_access_order(): void

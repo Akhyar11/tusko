@@ -80,10 +80,8 @@ class SettingsRegistry
                 'payment.midtrans_server_key' => ['type' => 'secret', 'default' => null, 'rule' => 'nullable|string|max:255', 'is_secret' => true, 'label' => 'Midtrans Server Key', 'description' => 'Server key Midtrans (disimpan terenkripsi).'],
                 'payment.midtrans_client_key' => ['type' => 'secret', 'default' => null, 'rule' => 'nullable|string|max:255', 'is_secret' => true, 'label' => 'Midtrans Client Key', 'description' => 'Client key Midtrans (disimpan terenkripsi).'],
                 'payment.is_production' => ['type' => 'boolean', 'default' => false, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Mode Produksi', 'description' => 'Aktifkan endpoint Midtrans produksi.'],
-                'payment.snap_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Snap URL', 'description' => 'Endpoint Snap Midtrans.'],
                 'payment.midtrans_api_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Core API Base URL', 'description' => 'Base URL Midtrans Core API (mis. https://api.sandbox.midtrans.com) untuk charge VA/QRIS.'],
                 'payment.notification_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Notification URL (Webhook)', 'description' => 'URL publik webhook Midtrans. Dikirim sebagai header X-Override-Notification saat charge (tanpa perlu setting dashboard).'],
-                'payment.snap_js_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Snap.js URL', 'description' => 'URL Snap.js untuk popup pembayaran (mis. https://app.sandbox.midtrans.com/snap/snap.js).'],
                 'payment.refund_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Refund URL', 'description' => 'Endpoint refund Midtrans.'],
                 'payment.refund_policy' => ['type' => 'string', 'default' => 'auto_online_manual_offline', 'rule' => 'nullable|string|in:auto_online_manual_offline,manual_only,auto_online_only', 'is_secret' => false, 'label' => 'Kebijakan Refund', 'description' => 'Aturan refund: online otomatis via Midtrans, offline manual.', 'options' => ['auto_online_manual_offline', 'manual_only', 'auto_online_only']],
             ],
@@ -219,7 +217,7 @@ class SettingsRegistry
             ['title' => 'Biteship', 'keys' => ['shipping.biteship_base_url', 'shipping.biteship_api_key', 'shipping.biteship_origin_area_id', 'shipping.biteship_origin_postal_code', 'shipping.biteship_default_delivery_type', 'shipping.biteship_couriers', 'shipping.biteship_webhook_signature_key', 'shipping.biteship_webhook_signature_secret']],
         ],
         'payment' => [
-            ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.snap_url', 'payment.midtrans_api_url', 'payment.snap_js_url', 'payment.notification_url']],
+            ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.midtrans_api_url', 'payment.notification_url']],
             ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
         ],
         'storage' => [
