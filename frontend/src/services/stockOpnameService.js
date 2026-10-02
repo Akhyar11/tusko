@@ -55,6 +55,14 @@ export const stockOpnameService = {
     return res?.data || null;
   },
 
+  /**
+   * Kandidat item opname untuk gudang terpilih (hanya produk/varian yang punya saldo).
+   */
+  async getCandidates(warehouseId) {
+    const res = await apiClient.get(`/api/stock-opnames/candidates?warehouse_id=${encodeURIComponent(warehouseId)}`);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
   async createOpname(payload) {
     const res = await apiClient.post('/api/stock-opnames', payload);
     return res?.data || null;

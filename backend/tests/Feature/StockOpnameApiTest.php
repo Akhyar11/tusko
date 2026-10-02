@@ -180,4 +180,36 @@ class StockOpnameApiTest extends TestCase
     {
         $this->getJson('/api/stock-opnames')->assertStatus(401);
     }
+
+    public function test_candidates_only_returns_items_stocked_in_warehouse(): void
+    {
+        $this->actingAsAdmin();
+        [$warehouse, $product] = $this->fixture();
+
+        // Produk lain tanpa saldo gudang — tidak boleh muncul sebagai kandidat.
+        $other = Product::factory()->create(['stock' => 5, 'cost_price' => 5000]);
+
+        $response = $this->getJson('/api/stock-opnames/candidates?warehouse_id='.$warehouse->id)
+            ->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('product_id')->all();
+        $this->assertContains($product->id, $ids);
+        $this->assertNotContains($other->id, $ids);
+    }
+
+    public function test_store_rejects_item_not_stocked_in_warehouse(): void
+    {
+        $this->actingAsAdmin();
+        $warehouse = Warehouse::firstOrFail();
+        $notStocked = Product::factory()->create(['stock' => 3, 'cost_price' => 1000]);
+
+        $this->postJson('/api/stock-opnames', [
+            'warehouse_id' => $warehouse->id,
+            'items' => [
+                ['product_id' => $notStocked->id, 'physical_stock' => 3],
+            ],
+        ])->assertStatus(422)->assertJsonValidationErrors('items');
+
+        $this->assertDatabaseCount('stock_opnames', 0);
+    }
 }

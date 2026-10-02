@@ -15,6 +15,7 @@ use App\Services\JournalMappingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StockOpnameController extends Controller
 {
@@ -82,6 +83,36 @@ class StockOpnameController extends Controller
     }
 
     /**
+     * Kandidat item opname: HANYA produk/varian yang memiliki saldo di gudang terpilih.
+     * Mencegah opname produk yang tidak benar-benar tersedia di gudang (anti-manipulasi).
+     */
+    public function candidates(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+        ]);
+
+        $items = InventoryBalance::query()
+            ->with(['product:id,name,sku', 'variant:id,sku,variant_name'])
+            ->where('warehouse_id', (int) $validated['warehouse_id'])
+            ->whereNotNull('product_id')
+            ->get()
+            ->filter(fn ($b) => $b->product)
+            ->map(fn ($b) => [
+                'product_id' => $b->product_id,
+                'product_variant_id' => $b->product_variant_id,
+                'name' => $b->product?->name,
+                'sku' => $b->variant?->sku ?: $b->product?->sku,
+                'variant_name' => $b->variant?->variant_name,
+                'system_stock' => (int) $b->on_hand_stock,
+            ])
+            ->sortBy([['name', 'asc'], ['variant_name', 'asc']])
+            ->values();
+
+        return response()->json(['status' => 'success', 'data' => $items]);
+    }
+
+    /**
      * Buat sesi stok opname beserta input fisik awal (snapshot stok sistem).
      */
     public function store(Request $request): JsonResponse
@@ -95,6 +126,24 @@ class StockOpnameController extends Controller
             'items.*.physical_stock' => 'required|integer|min:0',
             'items.*.notes' => 'nullable|string|max:255',
         ]);
+
+        // Guard anti-manipulasi: item opname WAJIB terdaftar pada stok gudang terpilih.
+        $warehouseId = (int) $validated['warehouse_id'];
+        foreach (array_values($validated['items']) as $index => $item) {
+            $variantId = $item['product_variant_id'] ?? null;
+            $exists = InventoryBalance::query()
+                ->where('warehouse_id', $warehouseId)
+                ->where('product_id', (int) $item['product_id'])
+                ->when($variantId, fn ($q) => $q->where('product_variant_id', (int) $variantId))
+                ->when(! $variantId, fn ($q) => $q->whereNull('product_variant_id'))
+                ->exists();
+
+            if (! $exists) {
+                throw ValidationException::withMessages([
+                    'items' => ['Item #'.($index + 1).' tidak terdaftar pada stok gudang terpilih. Opname hanya untuk produk/varian yang benar-benar tersedia di gudang tersebut.'],
+                ]);
+            }
+        }
 
         $opname = DB::transaction(function () use ($validated, $request) {
             $opname = StockOpname::create([

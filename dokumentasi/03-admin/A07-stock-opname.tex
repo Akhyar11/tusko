@@ -14,10 +14,21 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 \begin{flowsection}{Langkah}
 \begin{enumerate}
   \item Buka Stock Opname (/admin/stock-opname).
-  \item Buat sesi opname baru (pilih gudang).
-  \item Isi jumlah fisik per produk; sistem menghitung selisih.
-  \item Setujui sesi untuk menerapkan penyesuaian stok.
+  \item Buat sesi opname baru, lalu pilih \textbf{gudang}. Setelah gudang dipilih,
+        sistem memuat \textbf{hanya produk/varian yang benar-benar memiliki saldo}
+        di gudang tersebut (beserta stok sistem).
+  \item Isi \textbf{stok fisik} per item/varian; selisih = fisik $-$ sistem
+        dihitung otomatis.
+  \item Simpan sesi (draft), lalu \textbf{Ajukan} untuk proses persetujuan.
+  \item \textbf{Setujui \& Sesuaikan Stok} agar saldo stok otoritatif dan jurnal
+        penyesuaian dibuat.
 \end{enumerate}
+\end{flowsection}
+
+\begin{flowsection}{Anti-Manipulasi Stok}
+Opname hanya berlaku untuk item yang terdaftar pada stok gudang terpilih.
+Produk/varian yang tidak ada di gudang \textbf{ditolak} oleh sistem (validasi
+server) sehingga opname tidak dapat dipakai untuk menyuntikkan stok semaunya.
 \end{flowsection}
 
 \shot{gambar/admin/a07-1.png}{Halaman Stock Opname pada Panel Admin}{fig:a07-1}
@@ -28,16 +39,18 @@ Selisih opname diterapkan sebagai penyesuaian stok.
 
 \begin{flowsection}{Penanganan Error dan Kasus Khusus}
 \begin{itemize}
-  \item Sesi harus disetujui agar penyesuaian berlaku.
+  \item Item yang tidak terdaftar di stok gudang terpilih $\rightarrow$ ditolak
+        (``Item tidak terdaftar pada stok gudang terpilih'').
+  \item Sesi harus disetujui agar penyesuaian stok berlaku.
 \end{itemize}
 \end{flowsection}
 
 \begin{flowsection}{Kaitan Modul}
 \begin{itemize}
-  \item \texttt{StockOpnameListPage.jsx}
-  \item \texttt{StockOpnameCreatePage.jsx}
-  \item \texttt{InventoryController}
-  \item \texttt{/api/stock-opnames}
+  \item \texttt{StockOpnameListPage.jsx}, \texttt{StockOpnameCreatePage.jsx}
+  \item \texttt{StockOpnameController} (store/approve, dukungan varian)
+  \item \texttt{/api/stock-opnames}, \texttt{/api/stock-opnames/candidates},
+        \texttt{/api/stock-opnames/\{id\}/approve}
 \end{itemize}
 \end{flowsection}
 
