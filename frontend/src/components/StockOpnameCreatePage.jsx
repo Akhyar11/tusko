@@ -1,12 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, Save, X, AlertCircle, ClipboardCheck, Warehouse, Package, Info, ListChecks
+  ArrowLeft, Save, X, AlertCircle, ClipboardCheck, Warehouse, Package, Info, ListChecks, Truck
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import TextInput from './molecules/TextInput';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { warehouseService } from '../services/warehouseService';
+import { procurementService } from '../services/procurementService';
 import { stockOpnameService } from '../services/stockOpnameService';
 
 const itemKey = (item) => `${item.product_id}-${item.product_variant_id ?? 'base'}`;
@@ -15,13 +16,16 @@ export default function StockOpnameCreatePage({
   onNavigateBack = () => {},
   onShowToast = () => {}
 }) {
+  const [source, setSource] = useState('warehouse'); // 'warehouse' | 'grn'
   const [warehouseId, setWarehouseId] = useState('');
+  const [grnId, setGrnId] = useState('');
   const [notes, setNotes] = useState('');
   const [candidates, setCandidates] = useState([]);
   const [physical, setPhysical] = useState({});
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const grnMapRef = useRef({});
 
   const loadWarehouseOptions = useCallback(async (query = '', page = 1) => {
     if (page > 1) return { options: [], hasMore: false };
@@ -30,16 +34,24 @@ export default function StockOpnameCreatePage({
     return { options, hasMore: false };
   }, []);
 
-  const handleWarehouseChange = async (val) => {
-    setWarehouseId(val || '');
-    setErrorMessage('');
-    setCandidates([]);
-    setPhysical({});
-    if (!val) return;
+  const loadGrnOptions = useCallback(async (query = '', page = 1) => {
+    const res = await procurementService.fetchGoodsReceivingNotes({ search: query, page, per_page: 15 });
+    const list = res.data || [];
+    list.forEach((g) => { grnMapRef.current[g.id] = g; });
+    const options = list.map((g) => ({
+      value: String(g.id),
+      label: `${g.grn_number}${g.warehouse?.name ? ` • ${g.warehouse.name}` : ''}`,
+    }));
+    const lastPage = res.meta?.last_page || 1;
+    return { options, hasMore: page < lastPage };
+  }, []);
 
+  const loadCandidates = async (wh, grn = null) => {
+    if (!wh) return;
     setIsLoadingCandidates(true);
+    setErrorMessage('');
     try {
-      const items = await stockOpnameService.getCandidates(val);
+      const items = await stockOpnameService.getCandidates({ warehouseId: wh, goodsReceivingId: grn || null });
       setCandidates(items);
       const prefilled = {};
       items.forEach((it) => { prefilled[itemKey(it)] = String(it.system_stock); });
@@ -49,6 +61,34 @@ export default function StockOpnameCreatePage({
     } finally {
       setIsLoadingCandidates(false);
     }
+  };
+
+  const handleSourceChange = (val) => {
+    const next = val || 'warehouse';
+    setSource(next);
+    setWarehouseId('');
+    setGrnId('');
+    setCandidates([]);
+    setPhysical({});
+    setErrorMessage('');
+  };
+
+  const handleWarehouseChange = async (val) => {
+    setWarehouseId(val || '');
+    setCandidates([]);
+    setPhysical({});
+    if (val) await loadCandidates(val, null);
+  };
+
+  const handleGrnChange = async (val) => {
+    setGrnId(val || '');
+    setCandidates([]);
+    setPhysical({});
+    if (!val) return;
+    const grn = grnMapRef.current[val];
+    const wh = grn?.warehouse_id ? String(grn.warehouse_id) : warehouseId;
+    setWarehouseId(wh);
+    await loadCandidates(wh, val);
   };
 
   const setPhysicalValue = (key, value) => setPhysical((prev) => ({ ...prev, [key]: value }));
@@ -61,6 +101,7 @@ export default function StockOpnameCreatePage({
   }), [candidates, physical]);
 
   const countedCount = rows.filter((r) => r.physicalVal !== null).length;
+  const showReceived = source === 'grn';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,8 +109,12 @@ export default function StockOpnameCreatePage({
       setErrorMessage('Pilih gudang terlebih dahulu.');
       return;
     }
+    if (source === 'grn' && !grnId) {
+      setErrorMessage('Pilih dokumen penerimaan (GRN).');
+      return;
+    }
     if (candidates.length === 0) {
-      setErrorMessage('Gudang ini belum memiliki stok produk/varian untuk diopname.');
+      setErrorMessage('Tidak ada item untuk diopname pada sumber yang dipilih.');
       return;
     }
     const items = rows
@@ -89,6 +134,7 @@ export default function StockOpnameCreatePage({
     try {
       await stockOpnameService.createOpname({
         warehouse_id: Number(warehouseId),
+        goods_receiving_id: source === 'grn' && grnId ? Number(grnId) : null,
         notes: notes.trim() || null,
         items,
       });
@@ -137,24 +183,62 @@ export default function StockOpnameCreatePage({
             <div>
               <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2 border-b border-neutral-200 pb-3">
                 <Warehouse size={16} className="text-amber-500" />
-                <span>1. Gudang &amp; Catatan</span>
+                <span>1. Sumber Opname</span>
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                    Gudang <span className="text-rose-500">*</span>
-                  </label>
+                  <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">Jenis Sumber</label>
                   <ServerSideSelect
-                    loadOptions={loadWarehouseOptions}
-                    value={warehouseId}
-                    onChange={handleWarehouseChange}
-                    placeholder="Pilih gudang opname..."
+                    value={source}
+                    onChange={handleSourceChange}
+                    options={[
+                      { value: 'warehouse', label: 'Seluruh Stok Gudang' },
+                      { value: 'grn', label: 'Berdasarkan Penerimaan (GRN)' },
+                    ]}
+                    placeholder="Pilih sumber opname..."
                   />
                 </div>
+
+                {source === 'warehouse' ? (
+                  <div>
+                    <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                      Gudang <span className="text-rose-500">*</span>
+                    </label>
+                    <ServerSideSelect
+                      loadOptions={loadWarehouseOptions}
+                      value={warehouseId}
+                      onChange={handleWarehouseChange}
+                      placeholder="Pilih gudang opname..."
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                      Dokumen Penerimaan (GRN) <span className="text-rose-500">*</span>
+                    </label>
+                    <ServerSideSelect
+                      loadOptions={loadGrnOptions}
+                      value={grnId}
+                      onChange={handleGrnChange}
+                      placeholder="Pilih nomor penerimaan..."
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">Catatan</label>
                   <TextInput value={notes} onChange={setNotes} placeholder="Catatan sesi opname (opsional)" />
                 </div>
+                {source === 'grn' && warehouseId && (
+                  <div className="flex items-end">
+                    <div className="w-full p-2.5 bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 flex items-center gap-2">
+                      <Truck size={14} className="text-amber-500" />
+                      Gudang dari GRN: <span className="font-mono font-bold text-neutral-800">{warehouseId}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -162,24 +246,24 @@ export default function StockOpnameCreatePage({
               <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
                 <h2 className="text-sm font-black font-sport text-neutral-950 uppercase tracking-wider flex items-center gap-2">
                   <Package size={16} className="text-amber-500" />
-                  <span>2. Item Gudang &amp; Stok Fisik</span>
+                  <span>2. Item &amp; Stok Fisik</span>
                 </h2>
                 {candidates.length > 0 && (
                   <span className="text-[11px] font-mono font-bold text-neutral-500">{countedCount}/{candidates.length} terisi</span>
                 )}
               </div>
 
-              {!warehouseId ? (
+              {(!warehouseId && !grnId) ? (
                 <div className="mt-4 p-6 border border-dashed border-neutral-300 rounded-none text-center text-xs text-neutral-500 flex flex-col items-center gap-2">
                   <Warehouse size={20} className="text-neutral-400" />
-                  Pilih gudang untuk memuat daftar produk/varian yang tersedia.
+                  Pilih {source === 'grn' ? 'dokumen penerimaan (GRN)' : 'gudang'} untuk memuat daftar item.
                 </div>
               ) : isLoadingCandidates ? (
-                <div className="mt-4 p-6 text-center text-xs text-neutral-500">Memuat item gudang…</div>
+                <div className="mt-4 p-6 text-center text-xs text-neutral-500">Memuat item…</div>
               ) : candidates.length === 0 ? (
                 <div className="mt-4 p-6 border border-dashed border-neutral-300 rounded-none text-center text-xs text-neutral-500 flex flex-col items-center gap-2">
                   <Package size={20} className="text-neutral-400" />
-                  Gudang ini belum memiliki saldo stok. Opname hanya untuk item yang benar-benar ada di gudang.
+                  Tidak ada item pada sumber yang dipilih.
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto">
@@ -188,6 +272,7 @@ export default function StockOpnameCreatePage({
                       <tr className="bg-neutral-950 text-white font-bold">
                         <th className="p-2 border border-neutral-800">Produk / Varian</th>
                         <th className="p-2 border border-neutral-800">SKU</th>
+                        {showReceived && <th className="p-2 border border-neutral-800 text-right w-24">Diterima (GRN)</th>}
                         <th className="p-2 border border-neutral-800 text-right w-24">Stok Sistem</th>
                         <th className="p-2 border border-neutral-800 w-32">Stok Fisik</th>
                         <th className="p-2 border border-neutral-800 text-right w-24">Selisih</th>
@@ -201,6 +286,9 @@ export default function StockOpnameCreatePage({
                             {r.variant_name && <div className="text-[11px] text-neutral-500">{r.variant_name}</div>}
                           </td>
                           <td className="p-2 font-mono text-neutral-600">{r.sku || '-'}</td>
+                          {showReceived && (
+                            <td className="p-2 text-right font-mono text-neutral-600">{r.received_quantity ?? '-'}</td>
+                          )}
                           <td className="p-2 text-right font-mono font-bold text-neutral-800">{r.system_stock}</td>
                           <td className="p-2">
                             <TextInput
@@ -252,9 +340,9 @@ export default function StockOpnameCreatePage({
           className="lg:col-span-1"
           title="Panduan Opname"
           tips={[
-            { icon: Warehouse, heading: 'Gudang', text: 'Pilih gudang yang dihitung. Daftar item diambil dari saldo stok gudang tersebut.' },
+            { icon: Warehouse, heading: 'Sumber', text: 'Seluruh stok gudang untuk hitung menyeluruh, atau berdasarkan Penerimaan (GRN) untuk rekonsiliasi barang tertentu.' },
             { icon: ListChecks, heading: 'Hanya Item Tersedia', text: 'Hanya produk/varian yang benar-benar ada di gudang yang bisa diopname (anti-manipulasi stok).' },
-            { icon: Package, heading: 'Stok Fisik', text: 'Isi hasil hitung fisik. Selisih = fisik − sistem dihitung otomatis (termasuk per varian).' },
+            { icon: Package, heading: 'Stok Fisik', text: 'Isi hasil hitung fisik. Selisih = fisik − sistem (termasuk per varian).' },
             { icon: ClipboardCheck, heading: 'Alur', text: 'Simpan (draft) → Ajukan → Setujui. Persetujuan menyesuaikan stok otoritatif + jurnal.' },
           ]}
         />

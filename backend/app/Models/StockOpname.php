@@ -19,6 +19,8 @@ class StockOpname extends Model
     protected $fillable = [
         'opname_number',
         'warehouse_id',
+        'purchase_order_id',
+        'goods_receiving_id',
         'status',
         'conducted_by',
         'approved_by',
@@ -35,6 +37,16 @@ class StockOpname extends Model
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function goodsReceiving(): BelongsTo
+    {
+        return $this->belongsTo(GoodsReceivingNote::class, 'goods_receiving_id');
     }
 
     public function conductor(): BelongsTo

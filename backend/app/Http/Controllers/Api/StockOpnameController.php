@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\GoodsReceivingNote;
 use App\Models\InventoryBalance;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -90,22 +91,43 @@ class StockOpnameController extends Controller
     {
         $validated = $request->validate([
             'warehouse_id' => 'required|exists:warehouses,id',
+            'goods_receiving_id' => 'nullable|exists:goods_receiving_notes,id',
         ]);
+        $warehouseId = (int) $validated['warehouse_id'];
+
+        // Bila dibatasi ke dokumen penerimaan (GRN): hanya item pada GRN tsb.
+        $grnItems = collect();
+        if (! empty($validated['goods_receiving_id'])) {
+            $grn = GoodsReceivingNote::with('items')->findOrFail((int) $validated['goods_receiving_id']);
+            if ((int) $grn->warehouse_id !== $warehouseId) {
+                return response()->json(['status' => 'success', 'data' => []]);
+            }
+            $grnItems = $grn->items->keyBy(fn ($it) => ((int) $it->product_id).'-'.($it->product_variant_id ? (int) $it->product_variant_id : 'base'));
+        }
 
         $items = InventoryBalance::query()
             ->with(['product:id,name,sku', 'variant:id,sku,variant_name'])
-            ->where('warehouse_id', (int) $validated['warehouse_id'])
+            ->where('warehouse_id', $warehouseId)
             ->whereNotNull('product_id')
             ->get()
             ->filter(fn ($b) => $b->product)
-            ->map(fn ($b) => [
-                'product_id' => $b->product_id,
-                'product_variant_id' => $b->product_variant_id,
-                'name' => $b->product?->name,
-                'sku' => $b->variant?->sku ?: $b->product?->sku,
-                'variant_name' => $b->variant?->variant_name,
-                'system_stock' => (int) $b->on_hand_stock,
-            ])
+            ->when($grnItems->isNotEmpty(), fn ($col) => $col->filter(
+                fn ($b) => $grnItems->has(((int) $b->product_id).'-'.($b->product_variant_id ? (int) $b->product_variant_id : 'base'))
+            ))
+            ->map(function ($b) use ($grnItems) {
+                $key = ((int) $b->product_id).'-'.($b->product_variant_id ? (int) $b->product_variant_id : 'base');
+                $grnItem = $grnItems->get($key);
+
+                return [
+                    'product_id' => $b->product_id,
+                    'product_variant_id' => $b->product_variant_id,
+                    'name' => $b->product?->name,
+                    'sku' => $b->variant?->sku ?: $b->product?->sku,
+                    'variant_name' => $b->variant?->variant_name,
+                    'system_stock' => (int) $b->on_hand_stock,
+                    'received_quantity' => $grnItem ? (int) $grnItem->accepted_quantity : null,
+                ];
+            })
             ->sortBy([['name', 'asc'], ['variant_name', 'asc']])
             ->values();
 
@@ -119,6 +141,8 @@ class StockOpnameController extends Controller
     {
         $validated = $request->validate([
             'warehouse_id' => 'required|exists:warehouses,id',
+            'purchase_order_id' => 'nullable|exists:purchase_orders,id',
+            'goods_receiving_id' => 'nullable|exists:goods_receiving_notes,id',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -145,10 +169,37 @@ class StockOpnameController extends Controller
             }
         }
 
+        // Rujukan dokumen (opsional): bila dari Penerimaan (GRN), item WAJIB milik GRN
+        // tersebut, gudang harus sama, dan PO diturunkan dari GRN bila belum diisi.
+        if (! empty($validated['goods_receiving_id'])) {
+            $grn = GoodsReceivingNote::with('items')->findOrFail((int) $validated['goods_receiving_id']);
+            if ((int) $grn->warehouse_id !== $warehouseId) {
+                throw ValidationException::withMessages([
+                    'goods_receiving_id' => ['Gudang penerimaan tidak sama dengan gudang opname.'],
+                ]);
+            }
+
+            $grnKeys = $grn->items->map(fn ($it) => ((int) $it->product_id).'-'.($it->product_variant_id ? (int) $it->product_variant_id : 'base'))->all();
+            foreach (array_values($validated['items']) as $index => $item) {
+                $key = ((int) $item['product_id']).'-'.(! empty($item['product_variant_id']) ? (int) $item['product_variant_id'] : 'base');
+                if (! in_array($key, $grnKeys, true)) {
+                    throw ValidationException::withMessages([
+                        'items' => ['Item #'.($index + 1).' tidak termasuk dalam dokumen penerimaan (GRN) yang dipilih.'],
+                    ]);
+                }
+            }
+
+            if (empty($validated['purchase_order_id']) && $grn->purchase_order_id) {
+                $validated['purchase_order_id'] = $grn->purchase_order_id;
+            }
+        }
+
         $opname = DB::transaction(function () use ($validated, $request) {
             $opname = StockOpname::create([
                 'opname_number' => IdentityCodeService::generate(StockOpname::class, 'SO', 'opname_number'),
                 'warehouse_id' => $validated['warehouse_id'],
+                'purchase_order_id' => $validated['purchase_order_id'] ?? null,
+                'goods_receiving_id' => $validated['goods_receiving_id'] ?? null,
                 'status' => 'draft',
                 'conducted_by' => $request->user()?->id,
                 'conducted_at' => now(),

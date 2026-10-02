@@ -57,9 +57,13 @@ export const stockOpnameService = {
 
   /**
    * Kandidat item opname untuk gudang terpilih (hanya produk/varian yang punya saldo).
+   * Opsional dibatasi ke dokumen penerimaan (GRN).
    */
-  async getCandidates(warehouseId) {
-    const res = await apiClient.get(`/api/stock-opnames/candidates?warehouse_id=${encodeURIComponent(warehouseId)}`);
+  async getCandidates({ warehouseId, goodsReceivingId = null } = {}) {
+    const qs = new URLSearchParams();
+    qs.append('warehouse_id', warehouseId);
+    if (goodsReceivingId) qs.append('goods_receiving_id', goodsReceivingId);
+    const res = await apiClient.get(`/api/stock-opnames/candidates?${qs.toString()}`);
     return Array.isArray(res?.data) ? res.data : [];
   },
 

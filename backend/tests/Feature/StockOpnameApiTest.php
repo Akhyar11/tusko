@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\GoodsReceivingItem;
+use App\Models\GoodsReceivingNote;
 use App\Models\InventoryBalance;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
 use App\Models\StockMutation;
 use App\Models\StockOpname;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Models\Warehouse;
 use Database\Seeders\MasterReferenceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -211,5 +215,95 @@ class StockOpnameApiTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('items');
 
         $this->assertDatabaseCount('stock_opnames', 0);
+    }
+
+    private function makeGrn(Warehouse $warehouse, Product $product, int $accepted = 4): GoodsReceivingNote
+    {
+        $vendor = Vendor::create([
+            'code' => 'VND-TEST-'.uniqid(),
+            'company_name' => 'Vendor Uji',
+            'contact_person' => 'Kontak Uji',
+            'phone' => '081200000000',
+            'email' => 'vendor@uji.test',
+            'address' => 'Jl. Uji No. 1',
+            'is_active' => true,
+        ]);
+        $po = PurchaseOrder::create([
+            'po_number' => 'PO-TEST-'.uniqid(),
+            'vendor_id' => $vendor->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'received',
+            'total_amount' => 10000,
+            'order_date' => now(),
+        ]);
+        $grn = GoodsReceivingNote::create([
+            'grn_number' => 'GRN-TEST-'.uniqid(),
+            'purchase_order_id' => $po->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'received',
+            'received_date' => now(),
+        ]);
+        GoodsReceivingItem::create([
+            'grn_id' => $grn->id,
+            'product_id' => $product->id,
+            'accepted_quantity' => $accepted,
+            'rejected_quantity' => 0,
+            'unit_cost' => 10000,
+        ]);
+
+        return $grn;
+    }
+
+    public function test_candidates_can_be_limited_to_goods_receiving(): void
+    {
+        $this->actingAsAdmin();
+        [$warehouse, $product] = $this->fixture();
+
+        // Produk lain yang juga berstok di gudang (tapi tidak ada di GRN).
+        $other = Product::factory()->create(['stock' => 5, 'cost_price' => 5000]);
+        InventoryBalance::create([
+            'warehouse_id' => $warehouse->id, 'product_id' => $other->id,
+            'product_variant_id' => null, 'on_hand_stock' => 5, 'reserved_stock' => 0,
+            'available_stock' => 5, 'safety_stock' => 0,
+        ]);
+
+        $grn = $this->makeGrn($warehouse, $product, 4);
+
+        $response = $this->getJson('/api/stock-opnames/candidates?warehouse_id='.$warehouse->id.'&goods_receiving_id='.$grn->id)
+            ->assertOk();
+
+        $rows = collect($response->json('data'));
+        $this->assertContains($product->id, $rows->pluck('product_id')->all());
+        $this->assertNotContains($other->id, $rows->pluck('product_id')->all());
+        $this->assertSame(4, $rows->firstWhere('product_id', $product->id)['received_quantity']);
+    }
+
+    public function test_store_with_grn_reference_links_and_validates_membership(): void
+    {
+        $this->actingAsAdmin();
+        [$warehouse, $product] = $this->fixture();
+        $grn = $this->makeGrn($warehouse, $product, 4);
+
+        $resp = $this->postJson('/api/stock-opnames', [
+            'warehouse_id' => $warehouse->id,
+            'goods_receiving_id' => $grn->id,
+            'items' => [['product_id' => $product->id, 'physical_stock' => 10]],
+        ])->assertStatus(201);
+
+        $this->assertSame($grn->id, (int) $resp->json('data.goods_receiving_id'));
+
+        // Produk lain (berstok di gudang) tetapi TIDAK ada di GRN -> ditolak.
+        $other = Product::factory()->create(['stock' => 5, 'cost_price' => 1000]);
+        InventoryBalance::create([
+            'warehouse_id' => $warehouse->id, 'product_id' => $other->id,
+            'product_variant_id' => null, 'on_hand_stock' => 5, 'reserved_stock' => 0,
+            'available_stock' => 5, 'safety_stock' => 0,
+        ]);
+
+        $this->postJson('/api/stock-opnames', [
+            'warehouse_id' => $warehouse->id,
+            'goods_receiving_id' => $grn->id,
+            'items' => [['product_id' => $other->id, 'physical_stock' => 5]],
+        ])->assertStatus(422)->assertJsonValidationErrors('items');
     }
 }

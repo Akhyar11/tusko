@@ -14,9 +14,12 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 \begin{flowsection}{Langkah}
 \begin{enumerate}
   \item Buka Stock Opname (/admin/stock-opname).
-  \item Buat sesi opname baru, lalu pilih \textbf{gudang}. Setelah gudang dipilih,
-        sistem memuat \textbf{hanya produk/varian yang benar-benar memiliki saldo}
-        di gudang tersebut (beserta stok sistem).
+  \item Buat sesi opname baru, lalu pilih \textbf{sumber}:
+        \textbf{Seluruh Stok Gudang}, atau \textbf{Berdasarkan Penerimaan (GRN)}
+        untuk merekonsiliasi barang dari dokumen penerimaan tertentu.
+  \item Setelah sumber dipilih, sistem memuat \textbf{hanya produk/varian yang
+        benar-benar memiliki saldo} di gudang tersebut (beserta stok sistem; dan
+        jumlah diterima bila sumbernya GRN).
   \item Isi \textbf{stok fisik} per item/varian; selisih = fisik $-$ sistem
         dihitung otomatis.
   \item Simpan sesi (draft), lalu \textbf{Ajukan} untuk proses persetujuan.
@@ -29,6 +32,8 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 Opname hanya berlaku untuk item yang terdaftar pada stok gudang terpilih.
 Produk/varian yang tidak ada di gudang \textbf{ditolak} oleh sistem (validasi
 server) sehingga opname tidak dapat dipakai untuk menyuntikkan stok semaunya.
+Bila sumbernya dokumen penerimaan (GRN), item juga wajib termasuk dalam GRN
+tersebut dan gudangnya harus sama.
 \end{flowsection}
 
 \shot{gambar/admin/a07-1.png}{Halaman Stock Opname pada Panel Admin}{fig:a07-1}
