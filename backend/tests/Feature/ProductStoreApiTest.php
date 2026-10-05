@@ -53,7 +53,7 @@ class ProductStoreApiTest extends TestCase
                     'price' => 450000,
                     'original_price' => 600000,
                     'discount_percentage' => 25,
-                    'stock' => 15,
+                    'stock' => 0,
                     'weight' => 750,
                     'status' => 'active',
                 ]
@@ -69,13 +69,9 @@ class ProductStoreApiTest extends TestCase
         $this->assertNotNull($product);
         $this->assertCount(2, $product->images);
 
-        // Mutasi stok tercatat otomatis
-        $this->assertDatabaseHas('stock_mutations', [
-            'product_id' => $product->id,
-            'type' => 'in',
-            'quantity' => 15,
-            'reference_type' => 'initial_inventory',
-        ]);
+        // Kebijakan: stok TIDAK dibuat dari form produk (hanya via PO/GRN).
+        $this->assertSame(0, (int) $product->stock);
+        $this->assertDatabaseMissing('stock_mutations', ['product_id' => $product->id]);
     }
 
     public function test_can_create_product_with_minimal_attributes(): void

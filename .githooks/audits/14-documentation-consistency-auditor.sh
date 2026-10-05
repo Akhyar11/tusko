@@ -12,6 +12,9 @@
 # ==============================================================================
 echo "🤖 [Audit 14/14: Dokumentasi vs Aktual + Screenshot (Playwright + OpenCode AI)] Memeriksa kesesuaian dokumentasi..."
 
+# Model AI auditor dapat dikonfigurasi (cadangan bila model default tak merespons).
+AUDITOR_MODEL="${AUDITOR_MODEL:-opencode/muse-spark-1.3-contributor-free}"
+
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$REPO_ROOT" || exit 1
 
@@ -193,7 +196,7 @@ for attempt in 1 2 3; do
     if command -v agy &> /dev/null; then
         AUDITOR_RESULT=$(cd "$AUDIT_BLANK_DIR" && timeout 90s agy --print "$(cat "$PROMPT_FILE")" 2>&1)
     elif command -v opencode &> /dev/null; then
-        AUDITOR_RESULT=$(cd "$AUDIT_BLANK_DIR" && timeout 150s opencode run --pure -m opencode/muse-spark-1.3-contributor-free "$(cat "$PROMPT_FILE")" 2>&1)
+        AUDITOR_RESULT=$(cd "$AUDIT_BLANK_DIR" && timeout 150s opencode run --pure -m "$AUDITOR_MODEL" "$(cat "$PROMPT_FILE")" 2>&1)
     fi
     if grep -Eq "(PASSED|REJECTED|DITOLAK)" <<< "$AUDITOR_RESULT"; then
         break

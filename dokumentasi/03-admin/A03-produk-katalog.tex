@@ -20,6 +20,14 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 \end{enumerate}
 \end{flowsection}
 
+\begin{flowsection}{Catatan Stok}
+Form produk \textbf{tidak} menetapkan stok. Produk/varian dibuat dengan
+\textbf{stok 0}; stok hanya bertambah melalui \textbf{Purchase Order $\rightarrow$
+Penerimaan Barang (GRN)} dan berpindah melalui transfer antar-gudang. Varian
+disimpan sebagai data otonom pada tabel \texttt{product\_variants} (id asli
+dipakai oleh PO/GRN).
+\end{flowsection}
+
 \shot{gambar/admin/a03-1.png}{Halaman Produk: Daftar, Tambah, Edit pada Panel Admin}{fig:a03-1}
 
 \begin{flowsection}{Hasil yang Diharapkan}

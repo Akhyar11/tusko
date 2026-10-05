@@ -19,6 +19,47 @@ class ProductResource extends JsonResource
             ? $allCategories->pluck('id')->values()->all()
             : ($this->category_id ? [$this->category_id] : []);
 
+        // Sumber varian OTORITATIF = tabel `product_variants` (id asli untuk PO/GRN).
+        // Atribut tampilan (mis. size/color) tetap diambil dari kolom JSON legacy
+        // `products.variants` dan digabung berdasarkan SKU (tanpa duplikasi id virtual).
+        $legacyVariants = collect($this->variants ?: []);
+        $variantRows = $this->relationLoaded('variants') ? $this->getRelation('variants') : collect();
+        $reserved = ['id', 'sku', 'name', 'variant_name', 'price', 'original_price', 'cost_price', 'stock', 'is_active'];
+        $jsonBySku = $legacyVariants->keyBy(fn ($v) => strtoupper((string) ($v['sku'] ?? '')));
+
+        $variants = $variantRows->map(function ($row) use ($jsonBySku, $reserved) {
+            $json = $jsonBySku->get(strtoupper((string) $row->sku)) ?? [];
+            $attrs = collect($json)->except($reserved)->all();
+
+            return array_merge($attrs, [
+                'id' => $row->id,
+                'sku' => $row->sku,
+                'name' => $json['name'] ?? $row->variant_name,
+                'variant_name' => $row->variant_name,
+                'price' => (float) $row->price,
+                'original_price' => $row->original_price !== null ? (float) $row->original_price : null,
+                'cost_price' => (float) ($row->current_cogs ?? 0),
+                'stock' => (int) $row->stock,
+                'is_active' => (bool) $row->is_active,
+            ]);
+        })->values();
+
+        if ($variants->isEmpty()) {
+            $variants = $legacyVariants->values();
+        }
+
+        // Turunkan level varian (kode + opsi) dari atribut pada varian untuk UI storefront.
+        $attrCodes = $variants
+            ->flatMap(fn ($v) => array_keys(array_diff_key($v, array_flip($reserved))))
+            ->unique()->values();
+        $variantLevels = $attrCodes->map(function ($code) use ($variants) {
+            return [
+                'name' => ucfirst(str_replace('_', ' ', $code)),
+                'code' => $code,
+                'options' => $variants->pluck($code)->filter()->unique()->values()->all(),
+            ];
+        })->values();
+
         return [
             'id' => $this->id,
             'category_id' => $this->category_id,
@@ -61,7 +102,8 @@ class ProductResource extends JsonResource
             'is_low_stock' => $this->isLowStock(),
             'is_out_of_stock' => $this->isOutOfStock(),
             'specifications' => $this->specifications ?: [],
-            'variants' => $this->variants ?: [],
+            'variants' => $variants,
+            'variant_levels' => $variantLevels,
             'rating' => (float) ($this->rating ?: 5.0),
             'sold_count' => (int) ($this->sold_count ?: 0),
             'point_type' => $this->point_type ?: 'manual',

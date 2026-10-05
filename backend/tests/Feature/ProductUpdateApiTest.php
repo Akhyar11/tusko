@@ -88,7 +88,7 @@ class ProductUpdateApiTest extends TestCase
         $this->assertSame('195000.00', (string) $product->fresh()->price);
     }
 
-    public function test_updating_stock_creates_mutation_record(): void
+    public function test_updating_stock_via_product_form_does_not_change_stock(): void
     {
         $category = Category::create(['name' => 'Perlengkapan', 'slug' => 'perlengkapan']);
 
@@ -101,21 +101,14 @@ class ProductUpdateApiTest extends TestCase
             'stock' => 10,
         ]);
 
-        // Restock +15 (stok dari 10 jadi 25)
+        // Kebijakan: stok hanya via PO/GRN & transfer; form produk tidak mengubah stok.
         $response = $this->putJson("/api/products/{$product->id}", [
             'stock' => 25,
         ]);
 
         $response->assertStatus(200);
-
-        $this->assertDatabaseHas('stock_mutations', [
-            'product_id' => $product->id,
-            'type' => 'in',
-            'quantity' => 15,
-            'stock_before' => 10,
-            'stock_after' => 25,
-            'reference_type' => 'adjustment',
-        ]);
+        $this->assertSame(10, (int) $product->fresh()->stock);
+        $this->assertDatabaseMissing('stock_mutations', ['product_id' => $product->id]);
     }
 
     public function test_update_fails_when_sku_taken_by_other_product(): void

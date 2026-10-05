@@ -136,7 +136,7 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug): JsonResponse
     {
-        $product = Product::with(['category.parent', 'categories', 'images'])
+        $product = Product::with(['category.parent', 'categories', 'images', 'variants'])
             ->where(function ($q) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
                     $q->where('id', (int) $idOrSlug)->orWhere('slug', $idOrSlug);
@@ -317,7 +317,7 @@ class ProductController extends Controller
             'cost_price' => $validated['cost_price'] ?? round($validated['price'] * 0.65),
             'point_type' => $validated['point_type'] ?? 'manual',
             'point_value' => $validated['point_value'] ?? 0.00,
-            'stock' => $validated['stock'] ?? 0,
+            'stock' => 0,
             'stock_minimum' => $validated['stock_minimum'] ?? 5,
             'min_stock' => $validated['stock_minimum'] ?? 5,
             'weight' => $validated['weight'] ?? 500,
@@ -330,7 +330,7 @@ class ProductController extends Controller
             'variants' => $validated['variants'] ?? null,
             'rating' => 5.00,
             'sold_count' => 0,
-            'last_restock_at' => ($validated['stock'] ?? 0) > 0 ? now() : null,
+            'last_restock_at' => null,
         ]);
 
         // Sinkronisasi record ProductVariant
@@ -340,7 +340,7 @@ class ProductController extends Controller
                     $vSku = !empty($varItem['sku']) ? strtoupper(trim($varItem['sku'])) : null;
                     $vName = $varItem['name'] ?? ($varItem['variant_name'] ?? 'Varian');
                     $vPrice = $varItem['price'] ?? $product->price;
-                    $vStock = $varItem['stock'] ?? 0;
+                    $vStock = 0; // stok varian hanya bertambah via PO/GRN
                     if ($vSku) {
                         $product->variants()->updateOrCreate(
                             ['sku' => $vSku],
@@ -513,28 +513,8 @@ class ProductController extends Controller
             $product->name = $validated['name'];
         }
 
-        // Perbarui mutasi stok jika nilai stock diubah
-        if (array_key_exists('stock', $validated)) {
-            $newStock = (int) $validated['stock'];
-            $stockDiff = $newStock - $product->stock;
-            if ($stockDiff !== 0) {
-                StockMutation::create([
-                    'product_id' => $product->id,
-                    'type' => $stockDiff > 0 ? 'in' : 'out',
-                    'quantity' => abs($stockDiff),
-                    'stock_before' => $product->stock,
-                    'stock_after' => $newStock,
-                    'reference_type' => 'adjustment',
-                    'reference_id' => $product->sku,
-                    'notes' => 'Penyesuaian stok melalui pembaruan produk',
-                    'created_by' => $request->user()?->name ?? 'Admin',
-                ]);
-                if ($stockDiff > 0) {
-                    $product->last_restock_at = now();
-                }
-            }
-            $product->stock = $newStock;
-        }
+        // Catatan: stok TIDAK diubah dari form produk. Stok hanya bertambah via
+        // PO/GRN dan berpindah via transfer antar-gudang (InventoryService).
 
         if (array_key_exists('vendor_id', $validated)) {
             $product->vendor_id = $validated['vendor_id'];
@@ -623,8 +603,8 @@ class ProductController extends Controller
                         $vSku = !empty($varItem['sku']) ? strtoupper(trim($varItem['sku'])) : null;
                         $vName = $varItem['name'] ?? ($varItem['variant_name'] ?? 'Varian');
                         $vPrice = $varItem['price'] ?? $product->price;
-                        $vStock = $varItem['stock'] ?? 0;
                         if ($vSku) {
+                            $existingVariant = $product->variants()->where('sku', $vSku)->first();
                             $product->variants()->updateOrCreate(
                                 ['sku' => $vSku],
                                 [
@@ -632,7 +612,7 @@ class ProductController extends Controller
                                     'price' => $vPrice,
                                     'original_price' => $varItem['original_price'] ?? null,
                                     'current_cogs' => $varItem['cost_price'] ?? ($product->cost_price ?? 0),
-                                    'stock' => $vStock,
+                                    'stock' => $existingVariant?->stock ?? 0,
                                     'is_active' => true,
                                 ]
                             );
