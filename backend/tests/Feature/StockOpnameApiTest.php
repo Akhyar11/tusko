@@ -98,7 +98,7 @@ class StockOpnameApiTest extends TestCase
         ]);
 
         // Jurnal selisih lebih opname + audit log.
-        $this->assertDatabaseHas('transactions', ['reference_type' => 'stock_opname', 'reference_id' => $opname->opname_number]);
+        $this->assertDatabaseHas('transactions', ['reference_type' => 'stock_opname', 'reference_code' => $opname->opname_number]);
         $this->assertGreaterThanOrEqual(2, DB::table('financial_ledger_entries')->count());
         $this->assertDatabaseHas('activity_logs', ['action' => 'stock_opname.approved', 'subject_id' => $opname->id]);
     }

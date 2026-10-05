@@ -121,7 +121,7 @@ class ReturnRefundApiTest extends TestCase
         $this->assertDatabaseHas('loyalty_points_ledger', ['user_id' => $user->id, 'type' => 'refund', 'points' => 50]);
 
         // Jurnal balik + audit log.
-        $this->assertDatabaseHas('transactions', ['reference_type' => 'refund', 'reference_id' => $order->order_number]);
+        $this->assertDatabaseHas('transactions', ['reference_type' => 'refund', 'reference_code' => $order->order_number]);
         $this->assertGreaterThanOrEqual(2, DB::table('financial_ledger_entries')->count());
         $this->assertDatabaseHas('activity_logs', ['action' => 'return.refunded', 'subject_id' => $return->id]);
     }

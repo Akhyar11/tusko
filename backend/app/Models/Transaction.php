@@ -22,6 +22,7 @@ class Transaction extends Model
         'financial_account_id',
         'reference_type',
         'reference_id',
+        'reference_code',
         'type',
         'category',
         'category_label',

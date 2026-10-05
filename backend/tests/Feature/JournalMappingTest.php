@@ -34,7 +34,10 @@ class JournalMappingTest extends TestCase
     private function entries(string $referenceType, string $referenceId): Collection
     {
         $transaction = Transaction::where('reference_type', $referenceType)
-            ->where('reference_id', (string) $referenceId)
+            ->where(function ($q) use ($referenceId) {
+                $q->where('reference_code', (string) $referenceId)
+                    ->orWhere('reference_id', is_numeric($referenceId) ? (int) $referenceId : -1);
+            })
             ->firstOrFail();
 
         return FinancialLedgerEntry::with('account')

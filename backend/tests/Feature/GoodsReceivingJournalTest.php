@@ -112,7 +112,7 @@ class GoodsReceivingJournalTest extends TestCase
         $grn = GoodsReceivingNote::where('purchase_order_id', $po->id)->firstOrFail();
 
         $container = Transaction::where('reference_type', 'grn')
-            ->where('reference_id', $grn->grn_number)
+            ->where('reference_code', $grn->grn_number)
             ->first();
 
         $this->assertNotNull($container, 'transaksi kontainer jurnal grn tidak dibuat');
@@ -144,7 +144,7 @@ class GoodsReceivingJournalTest extends TestCase
 
         $grn = GoodsReceivingNote::with('items')->where('purchase_order_id', $po->id)->firstOrFail();
         $container = Transaction::where('reference_type', 'grn')
-            ->where('reference_id', $grn->grn_number)
+            ->where('reference_code', $grn->grn_number)
             ->firstOrFail();
 
         $before = FinancialLedgerEntry::where('transaction_id', $container->id)->count();
@@ -152,6 +152,6 @@ class GoodsReceivingJournalTest extends TestCase
         app(JournalMappingService::class)->postGoodsReceiving($grn);
 
         $this->assertSame($before, FinancialLedgerEntry::where('transaction_id', $container->id)->count());
-        $this->assertSame(1, Transaction::where('reference_type', 'grn')->where('reference_id', $grn->grn_number)->count());
+        $this->assertSame(1, Transaction::where('reference_type', 'grn')->where('reference_code', $grn->grn_number)->count());
     }
 }

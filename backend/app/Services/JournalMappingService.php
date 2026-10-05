@@ -61,7 +61,8 @@ class JournalMappingService
                 'transaction_number' => Transaction::generateTransactionNumber('income'),
                 'order_id' => $order->id,
                 'reference_type' => 'order_payment',
-                'reference_id' => $order->order_number,
+                'reference_id' => null,
+                'reference_code' => $order->order_number,
                 'type' => 'income',
                 'category' => 'order_payment',
                 'category_label' => 'Pembayaran Pesanan',
@@ -415,8 +416,17 @@ class JournalMappingService
      */
     private function container(string $referenceType, string $referenceId, array $overrides): Transaction
     {
+        // Kolom `transactions.reference_id` bertipe bigint. Nomor dokumen berbasis
+        // teks (mis. GRN-.../INV-...) disimpan pada `reference_code` agar tidak
+        // melanggar integritas tipe di MySQL (strict) — sebelumnya gagal senyap.
+        $isNumeric = is_numeric($referenceId);
+
         return Transaction::firstOrCreate(
-            ['reference_type' => $referenceType, 'reference_id' => (string) $referenceId],
+            [
+                'reference_type' => $referenceType,
+                'reference_id' => $isNumeric ? (int) $referenceId : null,
+                'reference_code' => $isNumeric ? null : (string) $referenceId,
+            ],
             array_merge([
                 'transaction_number' => Transaction::generateTransactionNumber($overrides['type'] ?? 'expense'),
                 'status' => 'settled',
