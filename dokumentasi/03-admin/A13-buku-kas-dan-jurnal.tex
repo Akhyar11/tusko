@@ -21,6 +21,14 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 
 \shot{gambar/admin/a13-1.png}{Halaman Buku Kas, Rekening dan Jurnal pada Panel Admin}{fig:a13-1}
 
+\begin{flowsection}{Pencatatan Otomatis}
+Pembayaran pesanan (termasuk \textbf{Midtrans}) dicatat otomatis sebagai kas
+masuk (kategori \emph{Pembayaran Pesanan}) beserta jurnal pendapatan. \textbf{Fee
+transaksi Midtrans} dihitung dari pengaturan admin (\emph{Fee Midtrans \%} dan
+\emph{Fee Midtrans Tetap}) lalu dicatat sebagai beban gateway (Debit 6200,
+Kredit Bank) dan memengaruhi nilai bersih (\texttt{fee\_deducted}/\texttt{net\_amount}).
+\end{flowsection}
+
 \begin{flowsection}{Hasil yang Diharapkan}
 Arus kas dan jurnal tercatat rapi untuk laporan keuangan.
 \end{flowsection}

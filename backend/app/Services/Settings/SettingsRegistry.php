@@ -86,6 +86,8 @@ class SettingsRegistry
                 'payment.refund_policy' => ['type' => 'string', 'default' => 'auto_online_manual_offline', 'rule' => 'nullable|string|in:auto_online_manual_offline,manual_only,auto_online_only', 'is_secret' => false, 'label' => 'Kebijakan Refund', 'description' => 'Aturan refund: online otomatis via Midtrans, offline manual.', 'options' => ['auto_online_manual_offline', 'manual_only', 'auto_online_only']],
                 'payment.expiry_hours' => ['type' => 'integer', 'default' => 24, 'rule' => 'nullable|integer|min:1|max:720', 'is_secret' => false, 'label' => 'Batas Waktu Pembayaran Online (Jam)', 'description' => 'Jendela pembayaran untuk pesanan online (Virtual Account/QRIS), dalam jam.'],
                 'payment.manual_transfer_expiry_hours' => ['type' => 'integer', 'default' => 72, 'rule' => 'nullable|integer|min:1|max:720', 'is_secret' => false, 'label' => 'Batas Waktu Transfer Manual (Jam)', 'description' => 'Jendela pembayaran untuk Transfer Bank Manual, dalam jam.'],
+                'payment.midtrans_fee_percent' => ['type' => 'string', 'default' => '0', 'rule' => 'nullable|numeric|min:0|max:100', 'is_secret' => false, 'label' => 'Fee Midtrans (%)', 'description' => 'Persentase biaya gateway Midtrans per transaksi (mis. 0.7). Dipakai untuk mencatat fee ke kas & jurnal.'],
+                'payment.midtrans_fee_fixed' => ['type' => 'string', 'default' => '0', 'rule' => 'nullable|numeric|min:0', 'is_secret' => false, 'label' => 'Fee Midtrans Tetap (Rp)', 'description' => 'Biaya tetap per transaksi Midtrans (dalam rupiah).'],
             ],
         ],
         'storage' => [
@@ -219,7 +221,7 @@ class SettingsRegistry
             ['title' => 'Biteship', 'keys' => ['shipping.biteship_base_url', 'shipping.biteship_api_key', 'shipping.biteship_origin_area_id', 'shipping.biteship_origin_postal_code', 'shipping.biteship_default_delivery_type', 'shipping.biteship_couriers', 'shipping.biteship_webhook_signature_key', 'shipping.biteship_webhook_signature_secret']],
         ],
         'payment' => [
-            ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.midtrans_api_url', 'payment.notification_url']],
+            ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.midtrans_api_url', 'payment.notification_url', 'payment.midtrans_fee_percent', 'payment.midtrans_fee_fixed']],
             ['title' => 'Batas Waktu Pembayaran', 'keys' => ['payment.expiry_hours', 'payment.manual_transfer_expiry_hours']],
             ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
         ],
