@@ -28,6 +28,12 @@ transaksi Midtrans} dihitung \textbf{per kanal} (Fee BCA VA / BNI VA / BRI VA /
 Mandiri VA / QRIS: persen + nominal tetap) dengan fallback ke tarif global, lalu
 dicatat sebagai beban gateway (Debit 6200, Kredit Bank) dan memengaruhi nilai
 bersih (\texttt{fee\_deducted}/\texttt{net\_amount}).
+
+\textbf{Fee otomatis (SNAP):} bila \emph{SNAP Fee Sync} diaktifkan (Client ID +
+RSA Private Key SNAP diisi admin), sistem menarik \textbf{fee per transaksi}
+langsung dari \textbf{Midtrans SNAP Transaction History API} melalui perintah
+terjadwal \texttt{midtrans:sync-fees} (tiap jam) — tanpa input manual. Tarif per
+kanal hanya dipakai sebagai estimasi/fallback bila SNAP tidak aktif.
 \end{flowsection}
 
 \begin{flowsection}{Hasil yang Diharapkan}

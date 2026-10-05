@@ -98,6 +98,10 @@ class SettingsRegistry
                 'payment.fee_mandiri_va_fixed' => ['type' => 'string', 'default' => '0', 'rule' => 'nullable|numeric|min:0', 'is_secret' => false, 'label' => 'Fee Mandiri VA (Rp)', 'description' => 'Fee tetap kanal Mandiri Bill/VA.'],
                 'payment.fee_qris_percent' => ['type' => 'string', 'default' => '0', 'rule' => 'nullable|numeric|min:0|max:100', 'is_secret' => false, 'label' => 'Fee QRIS (%)', 'description' => 'MDR/fee kanal QRIS (%).'],
                 'payment.fee_qris_fixed' => ['type' => 'string', 'default' => '0', 'rule' => 'nullable|numeric|min:0', 'is_secret' => false, 'label' => 'Fee QRIS (Rp)', 'description' => 'Fee tetap kanal QRIS.'],
+                'payment.snap_enabled' => ['type' => 'boolean', 'default' => false, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Aktifkan SNAP Fee Sync', 'description' => 'Tarik fee per transaksi otomatis dari Midtrans SNAP Transaction History API.'],
+                'payment.snap_base_url' => ['type' => 'url', 'default' => 'https://api.midtrans.com', 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'SNAP Base URL', 'description' => 'Base URL API SNAP Midtrans (mis. https://api.midtrans.com atau https://api.sandbox.midtrans.com).'],
+                'payment.snap_client_id' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:150', 'is_secret' => false, 'label' => 'SNAP Client ID', 'description' => 'Client ID (Partner ID) SNAP Midtrans.'],
+                'payment.snap_private_key' => ['type' => 'secret', 'default' => null, 'rule' => 'nullable|string', 'is_secret' => true, 'label' => 'SNAP Private Key (RSA)', 'description' => 'Private key RSA untuk signature SNAP (public key-nya di-upload ke Midtrans). Disimpan terenkripsi.'],
             ],
         ],
         'storage' => [
@@ -233,6 +237,7 @@ class SettingsRegistry
         'payment' => [
             ['title' => 'Midtrans', 'keys' => ['payment.midtrans_server_key', 'payment.midtrans_client_key', 'payment.is_production', 'payment.midtrans_api_url', 'payment.notification_url', 'payment.midtrans_fee_percent', 'payment.midtrans_fee_fixed']],
             ['title' => 'Fee per Kanal Midtrans', 'keys' => ['payment.fee_bca_va_percent', 'payment.fee_bca_va_fixed', 'payment.fee_bni_va_percent', 'payment.fee_bni_va_fixed', 'payment.fee_bri_va_percent', 'payment.fee_bri_va_fixed', 'payment.fee_mandiri_va_percent', 'payment.fee_mandiri_va_fixed', 'payment.fee_qris_percent', 'payment.fee_qris_fixed']],
+            ['title' => 'SNAP Fee Sync (Fee Otomatis Midtrans)', 'keys' => ['payment.snap_enabled', 'payment.snap_base_url', 'payment.snap_client_id', 'payment.snap_private_key']],
             ['title' => 'Batas Waktu Pembayaran', 'keys' => ['payment.expiry_hours', 'payment.manual_transfer_expiry_hours']],
             ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
         ],

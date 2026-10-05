@@ -72,3 +72,8 @@ Schedule::command('loyalty:expire-points')
 Schedule::command('shipments:sync-tracking')
     ->hourly()
     ->withoutOverlapping();
+
+// 7. Fee per transaksi Midtrans via SNAP (otomatis, tanpa input manual admin).
+Schedule::command('midtrans:sync-fees')
+    ->hourly()
+    ->withoutOverlapping();
