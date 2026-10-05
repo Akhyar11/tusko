@@ -137,7 +137,7 @@ class MidtransWebhookController extends Controller
 
             // T07.7: catat fee gateway saat lunas (dari konfigurasi Admin, G6) + sinkron ke kas.
             if ($mappedStatus === 'paid') {
-                $fee = $this->calculateGatewayFee((float) $payment->amount);
+                $fee = $this->calculateGatewayFee((float) $payment->amount, $locked->payment_channel);
                 $payment->fee = $fee;
                 $payment->save();
 
@@ -183,10 +183,21 @@ class MidtransWebhookController extends Controller
     /**
      * Hitung fee gateway dari konfigurasi Admin (persen + nominal tetap) — G6.
      */
-    private function calculateGatewayFee(float $amount): float
+    private function calculateGatewayFee(float $amount, ?string $channel = null): float
     {
-        $percent = (float) ($this->integrations->get('payment.midtrans_fee_percent', 0) ?? 0);
-        $fixed = (float) ($this->integrations->get('payment.midtrans_fee_fixed', 0) ?? 0);
+        $percent = 0.0;
+        $fixed = 0.0;
+
+        if ($channel && in_array($channel, ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'qris'], true)) {
+            $percent = (float) ($this->integrations->get("payment.fee_{$channel}_percent", 0) ?? 0);
+            $fixed = (float) ($this->integrations->get("payment.fee_{$channel}_fixed", 0) ?? 0);
+        }
+
+        // Fallback ke tarif global bila fee kanal belum diatur.
+        if ($percent <= 0 && $fixed <= 0) {
+            $percent = (float) ($this->integrations->get('payment.midtrans_fee_percent', 0) ?? 0);
+            $fixed = (float) ($this->integrations->get('payment.midtrans_fee_fixed', 0) ?? 0);
+        }
 
         return round(max(0, ($amount * $percent / 100) + $fixed), 2);
     }

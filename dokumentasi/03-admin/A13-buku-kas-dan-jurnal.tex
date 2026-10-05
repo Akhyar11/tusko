@@ -24,9 +24,10 @@ Login sebagai admin dengan peran yang memiliki akses modul ini.
 \begin{flowsection}{Pencatatan Otomatis}
 Pembayaran pesanan (termasuk \textbf{Midtrans}) dicatat otomatis sebagai kas
 masuk (kategori \emph{Pembayaran Pesanan}) beserta jurnal pendapatan. \textbf{Fee
-transaksi Midtrans} dihitung dari pengaturan admin (\emph{Fee Midtrans \%} dan
-\emph{Fee Midtrans Tetap}) lalu dicatat sebagai beban gateway (Debit 6200,
-Kredit Bank) dan memengaruhi nilai bersih (\texttt{fee\_deducted}/\texttt{net\_amount}).
+transaksi Midtrans} dihitung \textbf{per kanal} (Fee BCA VA / BNI VA / BRI VA /
+Mandiri VA / QRIS: persen + nominal tetap) dengan fallback ke tarif global, lalu
+dicatat sebagai beban gateway (Debit 6200, Kredit Bank) dan memengaruhi nilai
+bersih (\texttt{fee\_deducted}/\texttt{net\_amount}).
 \end{flowsection}
 
 \begin{flowsection}{Hasil yang Diharapkan}
