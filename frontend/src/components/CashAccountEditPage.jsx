@@ -38,6 +38,8 @@ export default function CashAccountEditPage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const effectiveAccountId = accountId || (typeof window !== 'undefined' ? window.location.pathname.match(/\/admin\/cash-accounts\/([^/]+)\/edit/)?.[1] : null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -57,8 +59,8 @@ export default function CashAccountEditPage({
       .catch(() => {});
 
     // Muat data akun kas
-    if (accountId) {
-      financialAccountService.getAccount(accountId)
+    if (effectiveAccountId) {
+      financialAccountService.getAccount(effectiveAccountId)
         .then(res => {
           if (!isMounted || !res) return;
           setFormData({
@@ -80,7 +82,7 @@ export default function CashAccountEditPage({
     }
 
     return () => { isMounted = false; };
-  }, [accountId]);
+  }, [effectiveAccountId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,7 +103,7 @@ export default function CashAccountEditPage({
         is_active: formData.is_active
       };
 
-      await financialAccountService.updateAccount(accountId, payload);
+      await financialAccountService.updateAccount(effectiveAccountId, payload);
       onShowToast(`Akun kas "${payload.account_name}" berhasil diperbarui.`);
       onNavigateBack();
     } catch (err) {

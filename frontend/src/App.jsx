@@ -248,6 +248,12 @@ const ADMIN_CORE_VIEWS = [
   'expeditions',
   'expedition-create',
   'expedition-edit',
+  'cash-accounts',
+  'cash-account-create',
+  'cash-account-edit',
+  'bank-accounts',
+  'bank-account-create',
+  'bank-account-edit',
   'transactions',
   'transaction-create',
   'journal',
@@ -952,7 +958,7 @@ export default function App() {
         window.history.pushState(null, '', targetHash);
       }
     }
-  }, [currentView, currentUser]);
+  }, [currentView, currentUser, editingCashAccountId, editingBankAccountId]);
 
   // Listener navigasi riwayat browser (Back/Forward) via popstate dan hashchange
   useEffect(() => {

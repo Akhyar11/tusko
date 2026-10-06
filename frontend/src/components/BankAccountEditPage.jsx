@@ -54,6 +54,8 @@ export default function BankAccountEditPage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const effectiveAccountId = accountId || (typeof window !== 'undefined' ? window.location.pathname.match(/\/admin\/bank-accounts\/([^/]+)\/edit/)?.[1] : null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -73,8 +75,8 @@ export default function BankAccountEditPage({
       .catch(() => {});
 
     // Muat data akun bank
-    if (accountId) {
-      financialAccountService.getAccount(accountId)
+    if (effectiveAccountId) {
+      financialAccountService.getAccount(effectiveAccountId)
         .then(res => {
           if (!isMounted || !res) return;
           setFormData({
@@ -99,7 +101,7 @@ export default function BankAccountEditPage({
     }
 
     return () => { isMounted = false; };
-  }, [accountId]);
+  }, [effectiveAccountId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -131,7 +133,7 @@ export default function BankAccountEditPage({
         is_active: formData.is_active
       };
 
-      await financialAccountService.updateAccount(accountId, payload);
+      await financialAccountService.updateAccount(effectiveAccountId, payload);
       onShowToast(`Rekening bank "${payload.account_name}" berhasil diperbarui.`);
       onNavigateBack();
     } catch (err) {
