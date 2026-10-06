@@ -124,8 +124,17 @@ class Transaction extends Model
      */
     public static function recordOrderPayment(Order $order, ?string $channel = null): self
     {
+        $method = strtolower((string) ($channel ?: $order->payment_channel ?: $order->payment_method));
+        $isCash = str_contains($method, 'cash') || str_contains($method, 'tunai') || str_contains($method, 'cod');
+
+        $account = $isCash
+            ? FinancialAccount::where('type', 'cash')->where('is_active', true)->first()
+            : (FinancialAccount::where('account_number', 'MIDTRANS-ESCROW')->first()
+                ?? FinancialAccount::where('type', 'bank')->where('is_active', true)->first());
+
         return self::create([
             'transaction_number' => self::generateTransactionNumber('income'),
+            'financial_account_id' => $account?->id,
             'order_id' => $order->id,
             'type' => 'income',
             'category' => 'order_payment',

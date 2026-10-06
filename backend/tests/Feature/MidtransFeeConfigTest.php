@@ -85,7 +85,7 @@ class MidtransFeeConfigTest extends TestCase
         $this->assertNotNull($entries);
 
         $codes = collect($entries)->map(fn ($e) => $e->account->account_code)->sort()->values()->all();
-        $this->assertSame(['1200', '6200'], $codes);
+        $this->assertSame(['1210', '6200'], $codes);
         $this->assertSame(1400.0, (float) collect($entries)->sum('debit'));
         $this->assertSame(1400.0, (float) collect($entries)->sum('credit'));
 

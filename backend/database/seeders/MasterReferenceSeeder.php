@@ -74,6 +74,7 @@ class MasterReferenceSeeder extends Seeder
         $coaList = [
             ['account_code' => '1100', 'account_name' => 'Kas Toko & Kasir', 'account_type' => 'asset'],
             ['account_code' => '1200', 'account_name' => 'Bank Operasional BCA', 'account_type' => 'asset'],
+            ['account_code' => '1210', 'account_name' => 'Kliring Payment Gateway Midtrans (Dana Customer)', 'account_type' => 'asset'],
             ['account_code' => '1300', 'account_name' => 'Persediaan Barang Dagang (Inventory Asset)', 'account_type' => 'asset'],
             ['account_code' => '2100', 'account_name' => 'Utang Usaha / Hutang Vendor', 'account_type' => 'liability'],
             ['account_code' => '2200', 'account_name' => 'Liabilitas Poin Loyalitas (Deferred)', 'account_type' => 'liability'],
@@ -90,14 +91,39 @@ class MasterReferenceSeeder extends Seeder
             DB::table('chart_of_accounts')->updateOrInsert(['account_code' => $coa['account_code']], array_merge($coa, ['created_at' => now(), 'updated_at' => now()]));
         }
 
+        $bcaCoaId = DB::table('chart_of_accounts')->where('account_code', '1200')->value('id');
+        $midtransCoaId = DB::table('chart_of_accounts')->where('account_code', '1210')->value('id');
+
         // 6. Seed Financial Account (Rekening Toko)
         DB::table('financial_accounts')->updateOrInsert(
             ['account_number' => '8012345678'],
             [
                 'account_name' => 'BCA Rekening Operasional Utama',
                 'bank_name' => 'Bank Central Asia (BCA)',
+                'account_holder' => 'PT Tusko Sportswear',
+                'type' => 'bank',
+                'chart_of_account_id' => $bcaCoaId,
+                'opening_balance' => 45850000.00,
                 'current_balance' => 45850000.00,
                 'is_active' => true,
+                'notes' => 'Rekening operasional utama Tusko untuk pengadaan barang dan biaya operasional internal.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        DB::table('financial_accounts')->updateOrInsert(
+            ['account_number' => 'MIDTRANS-ESCROW'],
+            [
+                'account_name' => 'Midtrans Escrow (Dana Customer)',
+                'bank_name' => 'Midtrans Payment Gateway',
+                'account_holder' => 'PT Tusko Sportswear',
+                'type' => 'bank',
+                'chart_of_account_id' => $midtransCoaId,
+                'opening_balance' => 0.00,
+                'current_balance' => 0.00,
+                'is_active' => true,
+                'notes' => 'Rekening penampungan kliring transaksi online customer via Midtrans (QRIS, VA, E-Wallet, CC).',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]

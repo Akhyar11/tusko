@@ -110,7 +110,7 @@ class JournalMappingTest extends TestCase
         $this->assertBalanced(
             $this->entries('order_payment', $order->order_number),
             100000.0,
-            ['1200', '4100']
+            ['1210', '4100']
         );
     }
 
@@ -124,7 +124,7 @@ class JournalMappingTest extends TestCase
         $this->assertBalanced(
             $this->entries('order_gateway_fee', $order->order_number),
             2500.0,
-            ['1200', '6200']
+            ['1210', '6200']
         );
     }
 
@@ -208,7 +208,7 @@ class JournalMappingTest extends TestCase
         $this->assertBalanced(
             $this->entries('refund', $order->order_number),
             40000.0,
-            ['1200', '4100']
+            ['1210', '4100']
         );
     }
 

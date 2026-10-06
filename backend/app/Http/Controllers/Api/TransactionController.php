@@ -197,8 +197,26 @@ class TransactionController extends Controller
         $categoryLabel = $categoryLabels[$validated['category']] ?? 'Lain-lain';
 
         $transactionNumber = Transaction::generateTransactionNumber($validated['type']);
-        $financialAccountId = $validated['financial_account_id']
-            ?? FinancialAccount::where('is_active', true)->orderBy('id')->value('id');
+        $financialAccountId = $validated['financial_account_id'] ?? null;
+        if (!$financialAccountId) {
+            $pm = strtolower((string) ($validated['payment_method'] ?? ''));
+            if (str_contains($pm, 'kas') || str_contains($pm, 'tunai') || str_contains($pm, 'cash')) {
+                $financialAccountId = FinancialAccount::where('type', 'cash')->where('is_active', true)->value('id');
+            } elseif (str_contains($pm, 'bank') || str_contains($pm, 'transfer') || str_contains($pm, 'bca')) {
+                $financialAccountId = FinancialAccount::where('type', 'bank')
+                    ->where('account_number', '!=', 'MIDTRANS-ESCROW')
+                    ->where('is_active', true)
+                    ->value('id');
+            }
+
+            // Fallback ke akun operasional utama toko (bukan akun penampungan kliring midtrans customer)
+            $financialAccountId = $financialAccountId
+                ?? FinancialAccount::where('account_number', '!=', 'MIDTRANS-ESCROW')
+                    ->where('is_active', true)
+                    ->orderBy('id')
+                    ->value('id')
+                ?? FinancialAccount::where('is_active', true)->orderBy('id')->value('id');
+        }
 
         $transaction = Transaction::create([
             'transaction_number' => $transactionNumber,

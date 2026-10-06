@@ -25,6 +25,7 @@ class JournalMappingService
     private const ACCOUNTS = [
         'cash' => '1100',
         'bank' => '1200',
+        'gateway_escrow' => '1210',
         'inventory' => '1300',
         'payable' => '2100',
         'points_liability' => '2200',
@@ -42,7 +43,7 @@ class JournalMappingService
     }
 
     /**
-     * Event: pesanan lunas → Debit Kas/Bank, Kredit Pendapatan.
+     * Event: pesanan lunas → Debit Kliring Midtrans/Kas, Kredit Pendapatan.
      *
      * @return array<int, \App\Models\FinancialLedgerEntry>|null
      */
@@ -54,11 +55,23 @@ class JournalMappingService
             return null;
         }
 
+        $settlementCode = $this->settlementCode($order->payment_method);
+        $escrowAccount = null;
+        if ($settlementCode === self::ACCOUNTS['gateway_escrow']) {
+            $escrowAccount = \App\Models\FinancialAccount::where('account_number', 'MIDTRANS-ESCROW')->first()
+                ?? \App\Models\FinancialAccount::where('type', 'bank')->where('is_active', true)->first();
+        } elseif ($settlementCode === self::ACCOUNTS['cash']) {
+            $escrowAccount = \App\Models\FinancialAccount::where('type', 'cash')->where('is_active', true)->first();
+        }
+
         $container = Transaction::where('order_id', $order->id)
             ->where('category', 'order_payment')
-            ->first()
-            ?? Transaction::create([
+            ->first();
+
+        if (!$container) {
+            $container = Transaction::create([
                 'transaction_number' => Transaction::generateTransactionNumber('income'),
+                'financial_account_id' => $escrowAccount?->id,
                 'order_id' => $order->id,
                 'reference_type' => 'order_payment',
                 'reference_id' => null,
@@ -71,15 +84,18 @@ class JournalMappingService
                 'status' => 'settled',
                 'customer_name' => $order->recipient_name,
             ]);
+        } elseif (!$container->financial_account_id && $escrowAccount) {
+            $container->update(['financial_account_id' => $escrowAccount->id]);
+        }
 
         return $this->journal->post($container, [
-            ['account_code' => $this->settlementCode($order->payment_method), 'debit' => $amount],
+            ['account_code' => $settlementCode, 'debit' => $amount],
             ['account_code' => self::ACCOUNTS['revenue'], 'credit' => $amount],
         ], "Jurnal pesanan lunas {$order->order_number}");
     }
 
     /**
-     * Event: biaya payment gateway → Debit Beban Gateway, Kredit Bank.
+     * Event: biaya payment gateway → Debit Beban Gateway, Kredit Kliring Midtrans.
      *
      * @return array<int, \App\Models\FinancialLedgerEntry>|null
      */
@@ -91,7 +107,11 @@ class JournalMappingService
             return null;
         }
 
+        $escrowAccount = \App\Models\FinancialAccount::where('account_number', 'MIDTRANS-ESCROW')->first()
+            ?? \App\Models\FinancialAccount::where('type', 'bank')->where('is_active', true)->first();
+
         $container = $this->container('order_gateway_fee', $order->order_number, [
+            'financial_account_id' => $escrowAccount?->id,
             'order_id' => $order->id,
             'type' => 'expense',
             'category' => 'gateway_fee',
@@ -102,7 +122,7 @@ class JournalMappingService
 
         return $this->journal->post($container, [
             ['account_code' => self::ACCOUNTS['gateway_fee'], 'debit' => $fee],
-            ['account_code' => self::ACCOUNTS['bank'], 'credit' => $fee],
+            ['account_code' => self::ACCOUNTS['gateway_escrow'], 'credit' => $fee],
         ], "Jurnal biaya gateway {$order->order_number}");
     }
 
@@ -405,12 +425,23 @@ class JournalMappingService
 
     /**
      * Kode akun penyelesaian kas/bank berdasarkan metode pembayaran.
+     * Transaksi digital customer (Midtrans, VA, QRIS, e-wallet, dsb.) dipetakan ke COA 1210 (Kliring Midtrans).
+     * Transaksi internal/manual bank dipetakan ke COA 1200 (Bank Operasional).
+     * Transaksi tunai kasir / COD dipetakan ke COA 1100 (Kas Toko).
      */
     private function settlementCode(?string $method): string
     {
         $method = strtolower((string) $method);
 
-        foreach (['midtrans', 'transfer', 'bank', 'va', 'bca', 'mandiri', 'bni', 'bri', 'qris', 'gopay', 'shopeepay'] as $needle) {
+        // Metode pembayaran digital customer via Midtrans -> Kliring Midtrans (COA 1210)
+        foreach (['midtrans', 'qris', 'gopay', 'shopeepay', 'va', 'credit_card', 'cc'] as $needle) {
+            if (str_contains($method, $needle)) {
+                return self::ACCOUNTS['gateway_escrow'];
+            }
+        }
+
+        // Transfer bank langsung / rekening operasional internal -> Bank Operasional (COA 1200)
+        foreach (['transfer', 'bank', 'bca', 'mandiri', 'bni', 'bri'] as $needle) {
             if (str_contains($method, $needle)) {
                 return self::ACCOUNTS['bank'];
             }
