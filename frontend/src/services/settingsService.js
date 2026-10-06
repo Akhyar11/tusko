@@ -32,8 +32,8 @@ export const settingsService = {
   /**
    * Uji koneksi satu grup (shipping/payment/storage/notification).
    */
-  async testConnection(group) {
-    const res = await apiClient.post(`/api/admin/settings/${group}/test-connection`);
+  async testConnection(group, payload = {}) {
+    const res = await apiClient.post(`/api/admin/settings/${group}/test-connection`, payload);
     return res.data || res;
   }
 };

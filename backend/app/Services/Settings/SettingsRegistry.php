@@ -105,13 +105,82 @@ class SettingsRegistry
             ],
         ],
         'storage' => [
-            'label' => 'Storage',
-            'description' => 'Konfigurasi penyimpanan berkas (Cloudflare R2, D7).',
+            'label' => 'Storage & Cloudflare R2',
+            'description' => 'Konfigurasi penyimpanan berkas Cloudflare R2 / S3 dinamis (D7).',
             'keys' => [
-                'storage.disk' => ['type' => 'string', 'default' => 's3', 'rule' => 'nullable|string|max:50', 'is_secret' => false, 'label' => 'Disk Default', 'description' => 'Disk default untuk aset publik.'],
-                'storage.public_bucket' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:100', 'is_secret' => false, 'label' => 'Bucket Publik', 'description' => 'Bucket untuk aset publik (gambar produk/avatar).'],
-                'storage.private_bucket' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:100', 'is_secret' => false, 'label' => 'Bucket Privat', 'description' => 'Bucket untuk dokumen sensitif (menggunakan temporaryUrl).'],
-                'storage.base_url' => ['type' => 'url', 'default' => null, 'rule' => 'nullable|url|max:255', 'is_secret' => false, 'label' => 'Base URL CDN', 'description' => 'URL publik aset (R2 dev domain).'],
+                'storage.disk' => [
+                    'type' => 'string',
+                    'default' => 's3',
+                    'rule' => 'nullable|string|in:s3,local,public',
+                    'is_secret' => false,
+                    'label' => 'Driver Penyimpanan',
+                    'description' => 'Pilih driver penyimpanan (s3 untuk Cloudflare R2 / AWS S3, local / public untuk penyimpanan server lokal).',
+                    'options' => ['s3', 'local', 'public'],
+                ],
+                'storage.endpoint' => [
+                    'type' => 'url',
+                    'default' => null,
+                    'rule' => 'nullable|url|max:255',
+                    'is_secret' => false,
+                    'label' => 'S3 / R2 Endpoint URL',
+                    'description' => 'Endpoint Cloudflare R2 atau S3 (mis. https://<account_id>.r2.cloudflarestorage.com).',
+                ],
+                'storage.key' => [
+                    'type' => 'string',
+                    'default' => null,
+                    'rule' => 'nullable|string|max:255',
+                    'is_secret' => false,
+                    'label' => 'Access Key ID',
+                    'description' => 'Access Key ID untuk S3 / Cloudflare R2 API token.',
+                ],
+                'storage.secret' => [
+                    'type' => 'secret',
+                    'default' => null,
+                    'rule' => 'nullable|string',
+                    'is_secret' => true,
+                    'label' => 'Secret Access Key',
+                    'description' => 'Secret Access Key untuk S3 / Cloudflare R2. Disimpan terenkripsi.',
+                ],
+                'storage.region' => [
+                    'type' => 'string',
+                    'default' => 'auto',
+                    'rule' => 'nullable|string|max:50',
+                    'is_secret' => false,
+                    'label' => 'Region',
+                    'description' => 'Region bucket (gunakan "auto" untuk Cloudflare R2 atau mis. "ap-southeast-1" untuk AWS).',
+                ],
+                'storage.public_bucket' => [
+                    'type' => 'string',
+                    'default' => null,
+                    'rule' => 'nullable|string|max:100',
+                    'is_secret' => false,
+                    'label' => 'Bucket Publik',
+                    'description' => 'Nama bucket untuk aset publik (gambar produk, galeri, avatar).',
+                ],
+                'storage.private_bucket' => [
+                    'type' => 'string',
+                    'default' => null,
+                    'rule' => 'nullable|string|max:100',
+                    'is_secret' => false,
+                    'label' => 'Bucket Privat (Dokumen Sensitif)',
+                    'description' => 'Nama bucket untuk dokumen sensitif (bukti bayar, invoice vendor) yang diakses via presigned temporaryUrl.',
+                ],
+                'storage.base_url' => [
+                    'type' => 'url',
+                    'default' => null,
+                    'rule' => 'nullable|url|max:255',
+                    'is_secret' => false,
+                    'label' => 'Base URL CDN',
+                    'description' => 'URL publik aset R2 dev domain atau custom CDN (mis. https://pub-xxx.r2.dev).',
+                ],
+                'storage.use_path_style_endpoint' => [
+                    'type' => 'boolean',
+                    'default' => false,
+                    'rule' => 'nullable|boolean',
+                    'is_secret' => false,
+                    'label' => 'Use Path Style Endpoint',
+                    'description' => 'Aktifkan jika menggunakan MinIO atau penyedia S3 yang mewajibkan format path-style.',
+                ],
             ],
         ],
         'loyalty' => [
@@ -242,7 +311,9 @@ class SettingsRegistry
             ['title' => 'Kebijakan Refund', 'keys' => ['payment.refund_policy', 'payment.refund_url']],
         ],
         'storage' => [
-            ['title' => 'Disk & Bucket', 'keys' => ['storage.disk', 'storage.public_bucket', 'storage.private_bucket', 'storage.base_url']],
+            ['title' => 'Driver & Koneksi Endpoint', 'keys' => ['storage.disk', 'storage.endpoint', 'storage.region', 'storage.use_path_style_endpoint']],
+            ['title' => 'Kredensial Autentikasi (S3 / R2)', 'keys' => ['storage.key', 'storage.secret']],
+            ['title' => 'Bucket & Distribusi CDN', 'keys' => ['storage.public_bucket', 'storage.private_bucket', 'storage.base_url']],
         ],
         'loyalty' => [
             ['title' => 'Poin Loyalitas', 'keys' => ['loyalty.points_expiry_months', 'loyalty.points_earn_rate']],
@@ -378,7 +449,22 @@ class SettingsRegistry
 
     public static function default(string $key): mixed
     {
-        return self::get($key)['default'] ?? null;
+        $def = self::get($key)['default'] ?? null;
+        if ($def !== null) {
+            return $def;
+        }
+
+        return match ($key) {
+            'storage.endpoint' => env('AWS_ENDPOINT'),
+            'storage.key' => env('AWS_ACCESS_KEY_ID'),
+            'storage.secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'storage.region' => env('AWS_DEFAULT_REGION', 'auto'),
+            'storage.public_bucket' => env('AWS_BUCKET', 'tusko'),
+            'storage.private_bucket' => env('AWS_PRIVATE_BUCKET', env('AWS_BUCKET', 'tusko')),
+            'storage.base_url' => env('AWS_URL'),
+            'storage.use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            default => null,
+        };
     }
 
     /**

@@ -29,6 +29,27 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureRateLimiting();
         $this->applyMailSettings();
+        $this->applyStorageSettings();
+    }
+
+    /**
+     * Terapkan konfigurasi penyimpanan (Cloudflare R2 / S3) dari Settings Hub (T36) pada request HTTP.
+     */
+    protected function applyStorageSettings(): void
+    {
+        if ($this->app->runningInConsole() && ! $this->app->environment('testing')) {
+            return;
+        }
+
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('integrations')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        app(\App\Services\StorageConfigService::class)->apply();
     }
 
     /**

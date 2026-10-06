@@ -23,7 +23,7 @@ class VendorBillPaymentResource extends JsonResource
             'paid_at' => $this->paid_at?->toDateString(),
             'notes' => $this->notes,
             'proof_file_url' => $this->proof_file_path
-                ? \Illuminate\Support\Facades\Storage::disk(config('filesystems.default', 'public'))->url($this->proof_file_path)
+                ? \App\Services\FileStorageService::temporaryUrl($this->proof_file_path)
                 : null,
             'proof_file_name' => $this->proof_file_name,
             'proof_file_mime' => $this->proof_file_mime,

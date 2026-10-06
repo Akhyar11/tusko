@@ -99,6 +99,12 @@ class SettingsService
             }
 
             $isSecret = SettingsRegistry::isSecret($key);
+
+            // Jangan timpa secret yang sudah tersimpan bila input berupa mask atau kosong
+            if ($isSecret && ($value === self::SECRET_MASK || $value === '' || $value === null) && !empty($before[$key])) {
+                continue;
+            }
+
             $typed = $this->cast($key, $value);
 
             if (($allowed[$key]['type'] ?? null) === 'richtext' && is_string($typed)) {
@@ -120,6 +126,13 @@ class SettingsService
                 'group' => $group,
                 'changes' => $changes,
             ], $userId, $ipAddress);
+
+            // Sinkronkan ke runtime config jika grup storage atau notification diperbarui
+            if ($group === 'storage') {
+                app(\App\Services\StorageConfigService::class)->apply();
+            } elseif ($group === 'notification') {
+                app(\App\Services\MailConfigService::class)->apply();
+            }
         }
 
         return $changes;

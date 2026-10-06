@@ -206,7 +206,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
     if (!activeGroup) return;
     setTesting(true);
     try {
-      const res = await settingsService.testConnection(activeGroup);
+      const res = await settingsService.testConnection(activeGroup, draft);
       onShowToast(res?.message || 'Uji koneksi selesai.');
     } catch (err) {
       onShowToast(err?.message || 'Uji koneksi gagal.', { type: 'error' });

@@ -167,7 +167,13 @@ class SettingsController extends Controller
             ], 404);
         }
 
-        $values = $this->settings->all($group);
+        $incoming = $request->all();
+        foreach ($incoming as $k => $v) {
+            if ($v === SettingsService::SECRET_MASK || $v === null) {
+                unset($incoming[$k]);
+            }
+        }
+        $values = array_merge($this->settings->all($group), $incoming);
 
         try {
             $result = match ($group) {
@@ -295,20 +301,60 @@ class SettingsController extends Controller
      */
     private function testStorage(array $values): array
     {
+        // Terapkan nilai pengujian secara dinamis
+        app(\App\Services\StorageConfigService::class)->applyValues($values);
+
         $disk = $values['storage.disk'] ?: config('filesystems.default', 'public');
-        $path = 'settings-probe/' . uniqid('probe_', true) . '.txt';
+        $probeKey = 'settings-probe/' . uniqid('probe_', true) . '.txt';
 
-        Storage::disk($disk)->put($path, 'ok');
-        $exists = Storage::disk($disk)->exists($path);
-        Storage::disk($disk)->delete($path);
+        try {
+            Storage::disk($disk)->put($probeKey, 'probe-content-' . time());
+            $exists = Storage::disk($disk)->exists($probeKey);
+            Storage::disk($disk)->delete($probeKey);
 
-        return [
-            'ok' => $exists,
-            'message' => $exists
-                ? 'Penyimpanan dapat menulis & membaca objek uji.'
-                : 'Gagal menulis objek uji pada penyimpanan.',
-            'details' => ['disk' => $disk],
-        ];
+            if (! $exists) {
+                return [
+                    'ok' => false,
+                    'message' => "Gagal memverifikasi keberadaan file probe pada disk {$disk}.",
+                    'details' => ['disk' => $disk],
+                ];
+            }
+
+            // Jika disk s3 dan bucket privat terkonfigurasi, uji juga bucket privat
+            $privateBucket = $values['storage.private_bucket'] ?? null;
+            if ($disk === 's3' && !empty($privateBucket)) {
+                $privateProbe = 'settings-probe/' . uniqid('probe_priv_', true) . '.txt';
+                Storage::disk('s3_private')->put($privateProbe, 'probe-private-' . time());
+                $privateExists = Storage::disk('s3_private')->exists($privateProbe);
+                Storage::disk('s3_private')->delete($privateProbe);
+
+                if (! $privateExists) {
+                    return [
+                        'ok' => false,
+                        'message' => "Disk publik berhasil diuji, namun gagal menulis ke bucket privat ({$privateBucket}).",
+                        'details' => ['disk' => 's3_private', 'bucket' => $privateBucket],
+                    ];
+                }
+            }
+
+            return [
+                'ok' => true,
+                'message' => $disk === 's3'
+                    ? 'Koneksi Cloudflare R2 / S3 berhasil! Dapat menulis, membaca, dan menghapus objek uji.'
+                    : "Penyimpanan lokal ({$disk}) berhasil diuji.",
+                'details' => [
+                    'disk' => $disk,
+                    'public_bucket' => $values['storage.public_bucket'] ?? null,
+                    'private_bucket' => $values['storage.private_bucket'] ?? null,
+                ],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'message' => 'Gagal koneksi storage: ' . $e->getMessage(),
+                'details' => ['disk' => $disk, 'error' => $e->getMessage()],
+            ];
+        }
     }
 
     /**

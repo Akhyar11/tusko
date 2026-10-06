@@ -70,12 +70,47 @@ class FileStorageService
             return null;
         }
 
+        $clean = self::extractStoragePath($path) ?? $path;
+        $privateDisk = self::privateDisk();
+
         try {
-            return Storage::disk(self::privateDisk())->temporaryUrl(
-                $path,
+            // Jika disk privat adalah s3_private, tetapi file hanya ada di disk lokal 'private'
+            // (misalnya file historis yang diunggah saat R2 privat belum aktif):
+            if ($privateDisk === 's3_private') {
+                try {
+                    $existsOnS3 = Storage::disk('s3_private')->exists($clean);
+                    if (! $existsOnS3 && Storage::disk('private')->exists($clean)) {
+                        $content = Storage::disk('private')->get($clean);
+                        if ($content !== null) {
+                            Storage::disk('s3_private')->put($clean, $content);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    if (Storage::disk('private')->exists($clean)) {
+                        return Storage::disk('private')->temporaryUrl(
+                            $clean,
+                            $expiry ?? now()->addMinutes(30)
+                        );
+                    }
+                }
+            }
+
+            return Storage::disk($privateDisk)->temporaryUrl(
+                $clean,
                 $expiry ?? now()->addMinutes(30)
             );
         } catch (\Throwable $e) {
+            try {
+                if (Storage::disk('private')->exists($clean)) {
+                    return Storage::disk('private')->temporaryUrl(
+                        $clean,
+                        $expiry ?? now()->addMinutes(30)
+                    );
+                }
+            } catch (\Throwable $ex) {
+                // Abaikan jika disk lokal juga gagal
+            }
+
             return null;
         }
     }
@@ -92,11 +127,16 @@ class FileStorageService
         $clean = self::extractStoragePath($path) ?? $path;
         $disk = self::privateDisk();
 
+        $deleted = false;
         if (Storage::disk($disk)->exists($clean)) {
-            return Storage::disk($disk)->delete($clean);
+            $deleted = Storage::disk($disk)->delete($clean) || $deleted;
         }
 
-        return false;
+        if ($disk !== 'private' && Storage::disk('private')->exists($clean)) {
+            $deleted = Storage::disk('private')->delete($clean) || $deleted;
+        }
+
+        return $deleted;
     }
 
     /**

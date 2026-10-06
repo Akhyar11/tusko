@@ -30,7 +30,7 @@ class VendorBillResource extends JsonResource
             'bill_date' => $this->bill_date?->toDateString(),
             'due_date' => $this->due_date?->toDateString(),
             'invoice_file_url' => $this->invoice_file_path
-                ? \Illuminate\Support\Facades\Storage::disk(config('filesystems.default', 'public'))->url($this->invoice_file_path)
+                ? \App\Services\FileStorageService::temporaryUrl($this->invoice_file_path)
                 : null,
             'invoice_file_name' => $this->invoice_file_name,
             'invoice_file_mime' => $this->invoice_file_mime,

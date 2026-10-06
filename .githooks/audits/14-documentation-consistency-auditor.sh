@@ -65,7 +65,9 @@ echo ""
 echo "🎭 [2/3] Verifikasi keaslian screenshot dengan Playwright (Chromium Python)..."
 PW_LOG=""
 PW_EXIT=0
-if [ -f "$DOC_DIR/verifikasi/verify_screenshots.py" ]; then
+if [ -z "$DOC_CHANGED" ]; then
+    echo "ℹ️  Tidak ada gambar/berkas dokumentasi yang berubah (hanya perubahan kode). Skip verifikasi screenshot Playwright."
+elif [ -f "$DOC_DIR/verifikasi/verify_screenshots.py" ]; then
     PW_LOG=$(python3 "$DOC_DIR/verifikasi/verify_screenshots.py" 2>&1)
     PW_EXIT=$?
     echo "$PW_LOG"
