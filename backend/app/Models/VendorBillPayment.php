@@ -12,6 +12,7 @@ class VendorBillPayment extends Model
 
     protected $fillable = [
         'vendor_bill_id',
+        'financial_account_id',
         'amount',
         'payment_method',
         'reference_number',
@@ -31,6 +32,11 @@ class VendorBillPayment extends Model
     public function vendorBill(): BelongsTo
     {
         return $this->belongsTo(VendorBill::class);
+    }
+
+    public function financialAccount(): BelongsTo
+    {
+        return $this->belongsTo(FinancialAccount::class);
     }
 
     public function creator(): BelongsTo

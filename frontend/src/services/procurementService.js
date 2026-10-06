@@ -274,6 +274,7 @@ export const procurementService = {
     const formData = new FormData();
     formData.append('amount', paymentData.amount);
     if (paymentData.payment_method) formData.append('payment_method', paymentData.payment_method);
+    if (paymentData.financial_account_id) formData.append('financial_account_id', paymentData.financial_account_id);
     if (paymentData.reference_number) formData.append('reference_number', paymentData.reference_number);
     if (paymentData.paid_at) formData.append('paid_at', paymentData.paid_at);
     if (paymentData.notes) formData.append('notes', paymentData.notes);

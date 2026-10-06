@@ -22,6 +22,7 @@ import FinancialFilterDrawer from './organisms/FinancialFilterDrawer';
 import { formatRupiah } from '../utils/formatters';
 import { transactionCategories } from '../data/referenceData';
 import { useTransactionTableStore } from '../stores/useTransactionTableStore';
+import { financialAccountService } from '../services/financialAccountService';
 
 export default function FinancialTransactionsPage({
   transactions: initialTransactions = [],
@@ -52,8 +53,24 @@ export default function FinancialTransactionsPage({
     fetchData,
   } = useTransactionTableStore();
 
+  const loadAccounts = () => {
+    financialAccountService.getAccounts({ all: true, is_active: true })
+      .then(res => {
+        const list = Array.isArray(res.data) ? res.data : [];
+        setFinancialAccounts(list);
+        if (list.length >= 2) {
+          setTransferFrom(list[0].id);
+          setTransferTo(list[1].id);
+        } else if (list.length === 1) {
+          setTransferFrom(list[0].id);
+        }
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetchData();
+    loadAccounts();
   }, []);
 
   // Filter drawer & selection
@@ -66,8 +83,8 @@ export default function FinancialTransactionsPage({
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   // Internal transfer form state
-  const [transferFrom, setTransferFrom] = useState(1);
-  const [transferTo, setTransferTo] = useState(3);
+  const [transferFrom, setTransferFrom] = useState('');
+  const [transferTo, setTransferTo] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
 
@@ -103,7 +120,7 @@ export default function FinancialTransactionsPage({
     });
 
     const netCashflow = totalIncome - totalExpense;
-    const totalLiquidBalance = financialAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+    const totalLiquidBalance = financialAccounts.reduce((sum, acc) => sum + (parseFloat(acc.current_balance) || 0), 0);
 
     return {
       totalIncome,
@@ -156,46 +173,38 @@ export default function FinancialTransactionsPage({
   };
 
   // Transfer Antar Rekening
-  const handleTransfer = (e) => {
+  const handleTransfer = async (e) => {
     e.preventDefault();
     const amt = Number(transferAmount);
-    if (isNaN(amt) || amt <= 0) return;
-    if (transferFrom === transferTo) return;
+    if (isNaN(amt) || amt <= 0) {
+      onShowToast('Nominal transfer harus lebih dari 0.', { type: 'error' });
+      return;
+    }
+    if (!transferFrom || !transferTo) {
+      onShowToast('Pilih rekening asal dan tujuan.', { type: 'error' });
+      return;
+    }
+    if (String(transferFrom) === String(transferTo)) {
+      onShowToast('Rekening asal dan tujuan tidak boleh sama.', { type: 'error' });
+      return;
+    }
 
-    setFinancialAccounts(prev => prev.map(acc => {
-      if (acc.id === Number(transferFrom)) {
-        return { ...acc, balance: acc.balance - amt };
-      }
-      if (acc.id === Number(transferTo)) {
-        return { ...acc, balance: acc.balance + amt };
-      }
-      return acc;
-    }));
-
-    const fromAcc = financialAccounts.find(a => a.id === Number(transferFrom));
-    const toAcc = financialAccounts.find(a => a.id === Number(transferTo));
-
-    const transferTx = {
-      id: Date.now(),
-      transaction_number: `TRX/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/TRF-${Math.floor(100 + Math.random() * 900)}`,
-      order_id: null,
-      order_number: null,
-      type: 'expense',
-      category: 'operational',
-      category_label: 'Transfer Antar Rekening',
-      amount: amt,
-      description: `Transfer internal: dari ${fromAcc?.name} ke ${toAcc?.name}. ${transferNotes || ''}`.trim(),
-      payment_method: fromAcc?.name || 'Bank Transfer',
-      status: 'settled',
-      created_at: new Date().toISOString(),
-      customer_name: 'Internal Toko'
-    };
-    setTransactions(prev => [transferTx, ...prev]);
-
-    setIsTransferModalOpen(false);
-    setTransferAmount('');
-    setTransferNotes('');
-    onShowToast(`Transfer internal ${formatRupiah(amt)} berhasil dicatat.`);
+    try {
+      await financialAccountService.transfer({
+        from_account_id: Number(transferFrom),
+        to_account_id: Number(transferTo),
+        amount: amt,
+        notes: transferNotes || undefined
+      });
+      onShowToast(`Transfer internal ${formatRupiah(amt)} berhasil dicatat.`);
+      setIsTransferModalOpen(false);
+      setTransferAmount('');
+      setTransferNotes('');
+      loadAccounts();
+      fetchData();
+    } catch (err) {
+      onShowToast(err.message || 'Gagal melakukan transfer dana.', { type: 'error' });
+    }
   };
 
   // Table Columns Definition
@@ -556,7 +565,7 @@ export default function FinancialTransactionsPage({
                     onChange={(val) => setTransferFrom(val)}
                     options={financialAccounts.map((acc) => ({
                       value: acc.id,
-                      label: `${acc.name} (${formatRupiah(acc.balance)})`
+                      label: `${acc.account_name || acc.name} (${formatRupiah(parseFloat(acc.current_balance ?? acc.balance) || 0)})`
                     }))}
                     placeholder="Pilih rekening asal..."
                   />
@@ -571,7 +580,7 @@ export default function FinancialTransactionsPage({
                     onChange={(val) => setTransferTo(val)}
                     options={financialAccounts.map((acc) => ({
                       value: acc.id,
-                      label: `${acc.name} (${formatRupiah(acc.balance)})`
+                      label: `${acc.account_name || acc.name} (${formatRupiah(parseFloat(acc.current_balance ?? acc.balance) || 0)})`
                     }))}
                     placeholder="Pilih rekening tujuan..."
                   />

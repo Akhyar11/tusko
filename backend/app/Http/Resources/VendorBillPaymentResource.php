@@ -18,6 +18,8 @@ class VendorBillPaymentResource extends JsonResource
             'id' => $this->id,
             'vendor_bill_id' => $this->vendor_bill_id,
             'amount' => (float) $this->amount,
+            'financial_account_id' => $this->financial_account_id,
+            'financial_account_name' => $this->financialAccount?->account_name,
             'payment_method' => $this->payment_method,
             'reference_number' => $this->reference_number,
             'paid_at' => $this->paid_at?->toDateString(),

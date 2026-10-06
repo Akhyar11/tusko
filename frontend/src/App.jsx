@@ -86,6 +86,12 @@ import SupplierListPage from './components/SupplierListPage';
 import VoucherListPage from './components/VoucherListPage';
 import VoucherCreatePage from './components/VoucherCreatePage';
 import VoucherEditPage from './components/VoucherEditPage';
+import CashAccountsPage from './components/CashAccountsPage';
+import CashAccountCreatePage from './components/CashAccountCreatePage';
+import CashAccountEditPage from './components/CashAccountEditPage';
+import BankAccountsPage from './components/BankAccountsPage';
+import BankAccountCreatePage from './components/BankAccountCreatePage';
+import BankAccountEditPage from './components/BankAccountEditPage';
 import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
@@ -134,7 +140,12 @@ const VALID_VIEWS = [
   'product-edit',
   'size-charts-admin',
   'size-chart-create',
-  'size-chart-edit',
+  'cash-accounts',
+  'cash-account-create',
+  'cash-account-edit',
+  'bank-accounts',
+  'bank-account-create',
+  'bank-account-edit',
   'transactions',
   'transaction-create',
   'journal',
@@ -292,7 +303,12 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/procurement/grn/detail') return 'procurement-grn-detail';
     if (rawPath === '/admin/procurement/bills' || rawPath === '/admin/procurement/bill') return 'procurement-bills';
     if (rawPath === '/admin/procurement/bills/detail' || rawPath === '/admin/procurement/bill/detail') return 'procurement-bill-detail';
-    if (rawPath === '/admin/procurement/vendors' || rawPath === '/admin/procurement/vendor') return 'suppliers-admin';
+    if (rawPath === '/admin/cash-accounts' || rawPath === '/admin/cash-account') return 'cash-accounts';
+    if (rawPath === '/admin/cash-accounts/create' || rawPath === '/admin/cash-account/create') return 'cash-account-create';
+    if (rawPath.startsWith('/admin/cash-accounts/') && rawPath.endsWith('/edit')) return 'cash-account-edit';
+    if (rawPath === '/admin/bank-accounts' || rawPath === '/admin/bank-account') return 'bank-accounts';
+    if (rawPath === '/admin/bank-accounts/create' || rawPath === '/admin/bank-account/create') return 'bank-account-create';
+    if (rawPath.startsWith('/admin/bank-accounts/') && rawPath.endsWith('/edit')) return 'bank-account-edit';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
     if (rawPath === '/admin/transactions/create') return 'transaction-create';
     if (rawPath === '/admin/journal') return 'journal';
@@ -536,6 +552,8 @@ export default function App() {
   const [editingVendor, setEditingVendor] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [editingExpedition, setEditingExpedition] = useState(null);
+  const [editingCashAccountId, setEditingCashAccountId] = useState(null);
+  const [editingBankAccountId, setEditingBankAccountId] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   // T42: profil toko dinamis (dari Settings Hub) untuk footer & halaman legal.
   const [storeProfile, setStoreProfile] = useState({});
@@ -682,7 +700,7 @@ export default function App() {
     setCart([]);
 
     showToast('Anda telah keluar dari akun (Logout).');
-    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail', 'size-charts-admin', 'size-chart-create', 'size-chart-edit'];
+    const adminViews = ['admin-dashboard', 'products-admin', 'categories-admin', 'category-create', 'category-edit', 'suppliers-admin', 'supplier-create', 'supplier-edit', 'product-create', 'product-edit', 'stock', 'templates', 'expeditions', 'expedition-create', 'expedition-edit', 'cash-accounts', 'cash-account-create', 'cash-account-edit', 'bank-accounts', 'bank-account-create', 'bank-account-edit', 'transactions', 'transaction-create', 'journal', 'income-statement', 'trial-balance', 'vendor-aging', 'profit-report', 'procurement-pos', 'procurement-po-create', 'procurement-po-detail', 'procurement-grn', 'procurement-grn-detail', 'procurement-bills', 'procurement-bill-detail', 'size-charts-admin', 'size-chart-create', 'size-chart-edit'];
     if (['profile', 'cart', 'checkout'].includes(currentView) || adminViews.includes(currentView)) {
       setCurrentView('catalog');
       window.history.pushState(null, '', '/');
@@ -821,6 +839,32 @@ export default function App() {
     } else if (currentView === 'orders' && currentUser?.role === 'admin') {
       if (window.location.pathname !== '/admin/orders') {
         window.history.pushState(null, '', '/admin/orders');
+      }
+    } else if (currentView === 'cash-accounts' && currentUser?.role === 'admin') {
+      if (window.location.pathname !== '/admin/cash-accounts') {
+        window.history.pushState(null, '', '/admin/cash-accounts');
+      }
+    } else if (currentView === 'cash-account-create') {
+      if (window.location.pathname !== '/admin/cash-accounts/create') {
+        window.history.pushState(null, '', '/admin/cash-accounts/create');
+      }
+    } else if (currentView === 'cash-account-edit') {
+      const target = editingCashAccountId ? `/admin/cash-accounts/${editingCashAccountId}/edit` : '/admin/cash-accounts';
+      if (window.location.pathname !== target) {
+        window.history.pushState(null, '', target);
+      }
+    } else if (currentView === 'bank-accounts' && currentUser?.role === 'admin') {
+      if (window.location.pathname !== '/admin/bank-accounts') {
+        window.history.pushState(null, '', '/admin/bank-accounts');
+      }
+    } else if (currentView === 'bank-account-create') {
+      if (window.location.pathname !== '/admin/bank-accounts/create') {
+        window.history.pushState(null, '', '/admin/bank-accounts/create');
+      }
+    } else if (currentView === 'bank-account-edit') {
+      const target = editingBankAccountId ? `/admin/bank-accounts/${editingBankAccountId}/edit` : '/admin/bank-accounts';
+      if (window.location.pathname !== target) {
+        window.history.pushState(null, '', target);
       }
     } else if (currentView === 'transactions' && currentUser?.role === 'admin') {
       if (window.location.pathname !== '/admin/transactions') {
@@ -1833,6 +1877,54 @@ export default function App() {
               setToastMessage(msg);
               setTimeout(() => setToastMessage(null), 3000);
             }}
+          />
+        ) : currentView === 'cash-accounts' ? (
+          <CashAccountsPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('cash-account-create')}
+            onNavigateToEdit={(id) => {
+              setEditingCashAccountId(id);
+              setCurrentView('cash-account-edit');
+            }}
+            onNavigateToTransactions={() => setCurrentView('transactions')}
+          />
+        ) : currentView === 'cash-account-create' ? (
+          <CashAccountCreatePage
+            onNavigateBack={() => setCurrentView('cash-accounts')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'cash-account-edit' ? (
+          <CashAccountEditPage
+            accountId={editingCashAccountId}
+            onNavigateBack={() => {
+              setEditingCashAccountId(null);
+              setCurrentView('cash-accounts');
+            }}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'bank-accounts' ? (
+          <BankAccountsPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('bank-account-create')}
+            onNavigateToEdit={(id) => {
+              setEditingBankAccountId(id);
+              setCurrentView('bank-account-edit');
+            }}
+            onNavigateToTransactions={() => setCurrentView('transactions')}
+          />
+        ) : currentView === 'bank-account-create' ? (
+          <BankAccountCreatePage
+            onNavigateBack={() => setCurrentView('bank-accounts')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'bank-account-edit' ? (
+          <BankAccountEditPage
+            accountId={editingBankAccountId}
+            onNavigateBack={() => {
+              setEditingBankAccountId(null);
+              setCurrentView('bank-accounts');
+            }}
+            onShowToast={showToast}
           />
         ) : currentView === 'transactions' ? (
           <FinancialTransactionsPage

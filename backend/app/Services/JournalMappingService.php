@@ -349,6 +349,16 @@ class JournalMappingService
         }
 
         $settlement = $this->settlementCode($transaction->payment_method);
+        if ($transaction->financialAccount) {
+            $accountCoa = $transaction->financialAccount->chartOfAccount?->account_code;
+            $methodIsBank = $settlement === self::ACCOUNTS['bank'];
+            $accountIsBank = $transaction->financialAccount->type === 'bank' || $accountCoa === self::ACCOUNTS['bank'];
+
+            // Jika tipe akun dan metode pembayaran selaras, gunakan COA dari rekening spesifik
+            if ($accountCoa && $methodIsBank === $accountIsBank) {
+                $settlement = $accountCoa;
+            }
+        }
 
         $lines = match ($transaction->category) {
             'order_payment' => [

@@ -33,7 +33,11 @@ export const CHILD_VIEW_TO_MENU = {
   'stock-opname-detail': 'stock-opname',
   'return-detail': 'returns-admin',
   'voucher-create': 'vouchers-admin',
-  'voucher-edit': 'vouchers-admin'
+  'voucher-edit': 'vouchers-admin',
+  'cash-account-create': 'cash-accounts',
+  'cash-account-edit': 'cash-accounts',
+  'bank-account-create': 'bank-accounts',
+  'bank-account-edit': 'bank-accounts'
 };
 
 /**

@@ -25,7 +25,9 @@ import {
   ClipboardCheck,
   Star,
   RotateCcw,
-  Circle
+  Circle,
+  Coins,
+  Landmark
 } from 'lucide-react';
 
 /**
@@ -59,7 +61,9 @@ export const MENU_ICONS = {
   LayoutGrid,
   ClipboardCheck,
   Star,
-  RotateCcw
+  RotateCcw,
+  Coins,
+  Landmark
 };
 
 export function resolveMenuIcon(name) {

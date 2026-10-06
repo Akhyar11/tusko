@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VendorBillPaymentResource;
 use App\Http\Resources\VendorBillResource;
+use App\Models\FinancialAccount;
 use App\Models\Transaction;
 use App\Models\VendorBill;
 use App\Models\VendorBillPayment;
@@ -162,6 +163,7 @@ class VendorBillController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
+            'financial_account_id' => 'nullable|exists:financial_accounts,id',
             'payment_method' => 'required|string|max:100',
             'reference_number' => 'nullable|string|max:100',
             'paid_at' => 'nullable|date',
@@ -184,8 +186,14 @@ class VendorBillController extends Controller
         $proofStored = FileStorageService::storePrivate($proofFile, 'bills/payments');
 
         $result = DB::transaction(function () use ($bill, $validated, $request, $proofStored, $proofFile) {
+            $finAccId = $validated['financial_account_id'] ?? null;
+            if (! $finAccId) {
+                $finAccId = FinancialAccount::where('is_active', true)->first()?->id;
+            }
+
             $payment = VendorBillPayment::create([
                 'vendor_bill_id' => $bill->id,
+                'financial_account_id' => $finAccId,
                 'amount' => (float) $validated['amount'],
                 'payment_method' => $validated['payment_method'],
                 'reference_number' => $validated['reference_number'] ?? null,
@@ -204,6 +212,7 @@ class VendorBillController extends Controller
                 'type' => 'expense',
                 'category' => 'vendor_payment',
                 'category_label' => 'Pembayaran Hutang Vendor',
+                'financial_account_id' => $finAccId,
                 'amount' => (float) $validated['amount'],
                 'description' => "Pembayaran tagihan {$bill->bill_number} ({$bill->vendor?->company_name})",
                 'payment_method' => $validated['payment_method'],
@@ -214,20 +223,25 @@ class VendorBillController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            // Potong saldo rekening kas/bank riil
+            if ($finAccId) {
+                FinancialAccount::where('id', $finAccId)->decrement('current_balance', (float) $validated['amount']);
+            }
+
             // T14.5: posting jurnal otomatis (Debit Utang Usaha, Kredit Kas/Bank).
             $this->journalMapping->postVendorBillPayment($payment);
 
             return $payment;
         });
 
-        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator']);
+        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator', 'payments.financialAccount']);
 
         return response()->json([
             'status' => 'success',
             'message' => "Pembayaran tagihan {$bill->bill_number} berhasil dicatat.",
             'data' => [
                 'bill' => new VendorBillResource($bill),
-                'payment' => new VendorBillPaymentResource($result->load('creator')),
+                'payment' => new VendorBillPaymentResource($result->load(['creator', 'financialAccount'])),
             ],
         ], 201);
     }
@@ -245,6 +259,12 @@ class VendorBillController extends Controller
                 FileStorageService::deletePrivate($payment->proof_file_path);
             }
 
+            // Kembalikan saldo rekening kas/bank
+            if ($payment->financial_account_id) {
+                FinancialAccount::where('id', $payment->financial_account_id)
+                    ->increment('current_balance', (float) $payment->amount);
+            }
+
             Transaction::where('reference_type', 'vendor_bill_payment')
                 ->where('reference_id', $payment->id)
                 ->delete();
@@ -254,7 +274,7 @@ class VendorBillController extends Controller
             $this->recalculateBill($bill);
         });
 
-        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator']);
+        $bill->refresh()->load(['vendor', 'purchaseOrder', 'receivingNote.items.product', 'receivingNote.items.variant', 'payments.creator', 'payments.financialAccount']);
 
         return response()->json([
             'status' => 'success',

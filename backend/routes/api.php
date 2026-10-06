@@ -150,6 +150,16 @@ Route::prefix('transactions')->group(function () {
     Route::get('/{idOrTransactionNumber}', [\App\Http\Controllers\Api\TransactionController::class, 'show'])->where('idOrTransactionNumber', '.*');
 });
 
+Route::prefix('financial-accounts')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\FinancialAccountController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\FinancialAccountController::class, 'store']);
+    Route::post('/transfer', [\App\Http\Controllers\Api\FinancialAccountController::class, 'transfer']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'show'])->whereNumber('id');
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'update'])->whereNumber('id');
+    Route::delete('/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'destroy'])->whereNumber('id');
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\FinancialAccountController::class, 'toggleStatus'])->whereNumber('id');
+});
+
 Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
 Route::get('/chart-of-accounts', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'index']);
 
@@ -184,7 +194,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::post('/admin/storefront/image', [\App\Http\Controllers\Api\StorefrontController::class, 'uploadImage']);
     Route::get('/admin/email-logs', [\App\Http\Controllers\Api\EmailLogController::class, 'index']);
-    Route::get('/financial-accounts', [\App\Http\Controllers\Api\FinancialAccountController::class, 'index']);
 
     Route::post('/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'store'])->where('idOrOrderNumber', '.*');
     Route::match(['put', 'patch'], '/admin/orders/{idOrOrderNumber}/shipment', [\App\Http\Controllers\Api\ShipmentController::class, 'update'])->where('idOrOrderNumber', '.*');

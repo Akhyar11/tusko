@@ -48,8 +48,8 @@ return new class extends Migration
             Schema::create('financial_accounts', function (Blueprint $table) {
                 $table->id();
                 $table->string('account_name'); // 'BCA Operasional', 'Mandiri Escrow'
-                $table->string('account_number');
-                $table->string('bank_name');
+                $table->string('account_number')->nullable();
+                $table->string('bank_name')->nullable();
                 $table->decimal('current_balance', 16, 2)->default(0.00);
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();

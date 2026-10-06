@@ -23,6 +23,7 @@ import FileInput from './molecules/FileInput';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import { formatRupiah } from '../utils/formatters';
 import { procurementService } from '../services/procurementService';
+import { financialAccountService } from '../services/financialAccountService';
 
 const PAYMENT_METHODS = [
   { value: 'Transfer Bank BCA', label: 'Transfer Bank BCA' },
@@ -51,10 +52,28 @@ export default function VendorBillDetailPage({
   // Payment form state
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState(PAYMENT_METHODS[0].value);
+  const [payAccountId, setPayAccountId] = useState('');
+  const [financialAccounts, setFinancialAccounts] = useState([]);
   const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10));
   const [payReference, setPayReference] = useState('');
   const [payNotes, setPayNotes] = useState('');
   const [payProof, setPayProof] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    financialAccountService.getAccounts({ all: true, is_active: true })
+      .then(res => {
+        if (!isMounted) return;
+        const list = Array.isArray(res.data) ? res.data : [];
+        setFinancialAccounts(list);
+        if (list.length > 0 && !payAccountId) {
+          const def = list.find(a => a.type === 'bank') || list[0];
+          setPayAccountId(String(def.id));
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const loadBill = async () => {
     if (!bill?.id) return;
@@ -98,6 +117,13 @@ export default function VendorBillDetailPage({
     setErrorMessage('');
   };
 
+  const accountOptions = useMemo(() => {
+    return financialAccounts.map(acc => ({
+      value: String(acc.id),
+      label: `[${acc.type === 'bank' ? 'BANK' : 'KAS'}] ${acc.account_name} (${formatRupiah(parseFloat(acc.current_balance) || 0)})`
+    }));
+  }, [financialAccounts]);
+
   const handleSubmitPayment = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setErrorMessage('');
@@ -121,6 +147,7 @@ export default function VendorBillDetailPage({
       const result = await procurementService.createVendorBillPayment(currentBill.id, {
         amount,
         payment_method: payMethod,
+        financial_account_id: payAccountId ? parseInt(payAccountId, 10) : undefined,
         paid_at: payDate,
         reference_number: payReference,
         notes: payNotes,
@@ -309,7 +336,7 @@ export default function VendorBillDetailPage({
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
                   Nominal Bayar (Rp) <span className="text-rose-500">*</span>
@@ -323,6 +350,21 @@ export default function VendorBillDetailPage({
                 />
                 <span className="text-[11px] text-neutral-500 mt-1 block">
                   Boleh sebagian (cicilan), maksimal {formatRupiah(outstanding)}.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
+                  Rekening Kas / Bank Sumber <span className="text-rose-500">*</span>
+                </label>
+                <ServerSideSelect
+                  value={payAccountId}
+                  onChange={setPayAccountId}
+                  options={accountOptions}
+                  placeholder="Pilih rekening kas / bank sumber..."
+                />
+                <span className="text-[11px] text-neutral-500 mt-1 block">
+                  Saldo rekening akan dipotong otomatis &amp; dibukukan.
                 </span>
               </div>
 
@@ -565,7 +607,8 @@ export default function VendorBillDetailPage({
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-100 text-[11px] font-sport font-black uppercase tracking-wider text-neutral-700">
                   <th className="py-2.5 px-3 min-w-[120px]">Tanggal</th>
-                  <th className="py-2.5 px-3 w-40">Metode</th>
+                  <th className="py-2.5 px-3 w-36">Metode</th>
+                  <th className="py-2.5 px-3 min-w-[160px]">Rekening Sumber</th>
                   <th className="py-2.5 px-3 min-w-[140px]">Referensi</th>
                   <th className="py-2.5 px-3 w-40 text-right">Nominal</th>
                   <th className="py-2.5 px-3 w-28 text-center">Bukti</th>
@@ -577,6 +620,11 @@ export default function VendorBillDetailPage({
                   <tr key={p.id} className="hover:bg-neutral-50/80 transition-colors">
                     <td className="py-2 px-3 font-mono text-neutral-700">{p.paid_at || '-'}</td>
                     <td className="py-2 px-3 text-neutral-800">{p.payment_method || '-'}</td>
+                    <td className="py-2 px-3 text-xs font-semibold text-neutral-900">
+                      {p.financial_account_name || p.financial_account?.account_name || (
+                        <span className="text-neutral-400 font-normal italic">-</span>
+                      )}
+                    </td>
                     <td className="py-2 px-3 font-mono text-neutral-700">{p.reference_number || '-'}</td>
                     <td className="py-2 px-3 text-right font-mono font-black text-neutral-950">
                       {formatRupiah(p.amount || 0)}
