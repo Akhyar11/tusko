@@ -120,31 +120,34 @@ export default function CashAccountsPage({
     }
   };
 
-  // Kolom Tabel ServerSideTable
   const columns = [
     {
       key: 'account_name',
       label: 'NAMA AKUN KAS',
       sortable: true,
-      render: (row) => (
-        <div className="py-1">
-          <div className="font-sport font-black text-xs text-neutral-950 uppercase leading-snug">
-            {row.account_name}
-          </div>
-          {row.notes && (
-            <div className="text-[11px] text-neutral-500 mt-0.5 max-w-xs truncate">
-              {row.notes}
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' && val !== null ? val : {}) || {};
+        return (
+          <div className="py-1">
+            <div className="font-sport font-black text-xs text-neutral-950 uppercase leading-snug">
+              {r.account_name || (typeof val === 'string' ? val : '-')}
             </div>
-          )}
-        </div>
-      )
+            {r.notes && (
+              <div className="text-[11px] text-neutral-500 mt-0.5 max-w-xs truncate">
+                {r.notes}
+              </div>
+            )}
+          </div>
+        );
+      }
     },
     {
       key: 'chart_of_account',
       label: 'BAGAN AKUN (COA)',
       sortable: false,
-      render: (row) => {
-        const coa = row.chart_of_account;
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' && val !== null ? val : {}) || {};
+        const coa = r.chart_of_account || (val && typeof val === 'object' ? val : null);
         if (!coa) return <span className="font-mono text-neutral-400 text-xs">-</span>;
         return (
           <div className="flex items-center gap-1.5">
@@ -162,18 +165,24 @@ export default function CashAccountsPage({
       key: 'current_balance',
       label: 'SALDO KAS SAAT INI',
       sortable: true,
-      render: (row) => (
-        <div className="font-mono font-black text-xs text-neutral-950">
-          {formatRupiah(parseFloat(row.current_balance) || 0)}
-        </div>
-      )
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' && val !== null ? val : {}) || {};
+        const bal = r.current_balance !== undefined ? r.current_balance : val;
+        return (
+          <div className="font-mono font-black text-xs text-neutral-950">
+            {formatRupiah(parseFloat(bal) || 0)}
+          </div>
+        );
+      }
     },
     {
       key: 'is_active',
       label: 'STATUS',
       sortable: false,
-      render: (row) => (
-        row.is_active ? (
+      render: (val, row) => {
+        const r = row || (typeof val === 'object' && val !== null ? val : {}) || {};
+        const active = r.is_active !== undefined ? r.is_active : val;
+        return active ? (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 font-sport font-bold text-[10px] uppercase rounded-none">
             <CheckCircle2 size={12} className="text-emerald-600" />
             <span>Aktif</span>
@@ -183,68 +192,71 @@ export default function CashAccountsPage({
             <XCircle size={12} className="text-neutral-400" />
             <span>Nonaktif</span>
           </span>
-        )
-      )
+        );
+      }
     },
     {
       key: 'actions',
       label: 'AKSI',
       sortable: false,
       align: 'right',
-      render: (row) => (
-        <div className="relative flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => setActiveActionMenuId(activeActionMenuId === row.id ? null : row.id)}
-            className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent hover:border-neutral-300 rounded-none transition-colors cursor-pointer"
-            title="Menu Aksi"
-          >
-            <MoreVertical size={16} />
-          </button>
+      render: (_val, row) => {
+        const r = row || (typeof _val === 'object' && _val !== null ? _val : {}) || {};
+        return (
+          <div className="relative flex justify-end" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setActiveActionMenuId(activeActionMenuId === r.id ? null : r.id)}
+              className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 border border-transparent hover:border-neutral-300 rounded-none transition-colors cursor-pointer"
+              title="Menu Aksi"
+            >
+              <MoreVertical size={16} />
+            </button>
 
-          {activeActionMenuId === row.id && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-neutral-300 shadow-xl z-30 py-1 rounded-none animate-in fade-in zoom-in-95 duration-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveActionMenuId(null);
-                  onNavigateToEdit(row.id);
-                }}
-                className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 cursor-pointer transition-colors"
-              >
-                <Edit3 size={14} className="text-neutral-500" />
-                <span>Ubah Kas</span>
-              </button>
+            {activeActionMenuId === r.id && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-neutral-300 shadow-xl z-30 py-1 rounded-none animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    onNavigateToEdit(r.id);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Edit3 size={14} className="text-neutral-500" />
+                  <span>Ubah Kas</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveActionMenuId(null);
-                  handleToggleStatus(row);
-                }}
-                className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 cursor-pointer transition-colors"
-              >
-                <Power size={14} className="text-neutral-500" />
-                <span>{row.is_active ? 'Nonaktifkan' : 'Aktifkan'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    handleToggleStatus(r);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Power size={14} className="text-neutral-500" />
+                  <span>{r.is_active ? 'Nonaktifkan' : 'Aktifkan'}</span>
+                </button>
 
-              <div className="border-t border-neutral-200 my-1"></div>
+                <div className="border-t border-neutral-200 my-1"></div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveActionMenuId(null);
-                  setDeletingAccount(row);
-                }}
-                className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
-              >
-                <Trash2 size={14} className="text-rose-600" />
-                <span>Hapus Kas</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    setDeletingAccount(r);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Trash2 size={14} className="text-rose-600" />
+                  <span>Hapus Kas</span>
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
