@@ -76,12 +76,12 @@ export default function TrialBalancePage({ onShowToast = () => {} }) {
   const balanced = Number(summary.total_debit) === Number(summary.total_credit);
 
   const accountColumns = [
-    { key: 'account_code', label: 'Kode', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.account_code}</span>) },
-    { key: 'account_name', label: 'Nama Akun', render: (row) => (<span className="text-xs font-medium">{row.account_name}</span>) },
-    { key: 'account_type', label: 'Tipe', render: (row) => (<span className="text-xs text-neutral-600 capitalize">{row.account_type}</span>) },
-    { key: 'debit', label: 'Debit', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>) },
-    { key: 'credit', label: 'Kredit', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>) },
-    { key: 'balance', label: 'Saldo', align: 'right', render: (row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.balance)}</span>) },
+    { key: 'account_code', label: 'Kode', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.account_code}</span>) },
+    { key: 'account_name', label: 'Nama Akun', render: (_val, row) => (<span className="text-xs font-medium">{row.account_name}</span>) },
+    { key: 'account_type', label: 'Tipe', render: (_val, row) => (<span className="text-xs text-neutral-600 capitalize">{row.account_type}</span>) },
+    { key: 'debit', label: 'Debit', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>) },
+    { key: 'credit', label: 'Kredit', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>) },
+    { key: 'balance', label: 'Saldo', align: 'right', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.balance)}</span>) },
   ];
 
   const staticMeta = (rows) => ({
@@ -143,7 +143,9 @@ export default function TrialBalancePage({ onShowToast = () => {} }) {
       <ServerSideTable
         columns={accountColumns}
         data={lines}
-        meta={staticMeta(lines)}
+        total={lines.length}
+        page={1}
+        limit={Math.max(lines.length, 10)}
         isLoading={isLoading}
         selectable={true}
         limitOptions={[10, 25, 50, 100]}

@@ -61,11 +61,11 @@ export default function ProfitReportPage({ onShowToast = () => {} }) {
   };
 
   const productColumns = [
-    { key: 'product_name', label: 'Produk', render: (row) => (<span className="text-xs font-medium">{row.product_name}</span>) },
-    { key: 'quantity_sold', label: 'Terjual', align: 'right', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.quantity_sold}</span>) },
-    { key: 'revenue', label: 'Pendapatan', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{formatRupiah(row.revenue)}</span>) },
-    { key: 'cogs', label: 'HPP', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{formatRupiah(row.cogs)}</span>) },
-    { key: 'gross_profit', label: 'Laba Kotor', align: 'right', render: (row) => (<span className={`font-mono font-bold text-[11px] ${Number(row.gross_profit) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatRupiah(row.gross_profit)}</span>) },
+    { key: 'product_name', label: 'Produk', render: (_val, row) => (<span className="text-xs font-medium">{row.product_name}</span>) },
+    { key: 'quantity_sold', label: 'Terjual', align: 'right', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.quantity_sold}</span>) },
+    { key: 'revenue', label: 'Pendapatan', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{formatRupiah(row.revenue)}</span>) },
+    { key: 'cogs', label: 'HPP', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{formatRupiah(row.cogs)}</span>) },
+    { key: 'gross_profit', label: 'Laba Kotor', align: 'right', render: (_val, row) => (<span className={`font-mono font-bold text-[11px] ${Number(row.gross_profit) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatRupiah(row.gross_profit)}</span>) },
   ];
 
   const staticMeta = (rows) => ({
@@ -137,7 +137,9 @@ export default function ProfitReportPage({ onShowToast = () => {} }) {
       <ServerSideTable
         columns={productColumns}
         data={rows}
-        meta={staticMeta(rows)}
+        total={rows.length}
+        page={1}
+        limit={Math.max(rows.length, 10)}
         isLoading={isLoading}
         selectable={true}
         limitOptions={[10, 25, 50, 100]}

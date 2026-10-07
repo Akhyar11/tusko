@@ -78,11 +78,11 @@ export default function IncomeStatementPage({ onShowToast = () => {} }) {
   };
 
   const lineColumns = [
-    { key: 'account_code', label: 'Kode', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.account_code}</span>) },
-    { key: 'account_name', label: 'Nama Akun', render: (row) => (<span className="text-xs font-medium">{row.account_name}</span>) },
-    { key: 'debit', label: 'Debit', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>) },
-    { key: 'credit', label: 'Kredit', align: 'right', render: (row) => (<span className="font-mono text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>) },
-    { key: 'balance', label: 'Saldo', align: 'right', render: (row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.balance)}</span>) },
+    { key: 'account_code', label: 'Kode', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.account_code}</span>) },
+    { key: 'account_name', label: 'Nama Akun', render: (_val, row) => (<span className="text-xs font-medium">{row.account_name}</span>) },
+    { key: 'debit', label: 'Debit', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>) },
+    { key: 'credit', label: 'Kredit', align: 'right', render: (_val, row) => (<span className="font-mono text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>) },
+    { key: 'balance', label: 'Saldo', align: 'right', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.balance)}</span>) },
   ];
 
   const staticMeta = (rows) => ({
@@ -148,7 +148,9 @@ export default function IncomeStatementPage({ onShowToast = () => {} }) {
         <ServerSideTable
           columns={lineColumns}
           data={data.revenue_lines}
-          meta={staticMeta(data.revenue_lines)}
+          total={data.revenue_lines.length}
+          page={1}
+          limit={Math.max(data.revenue_lines.length, 10)}
           isLoading={isLoading}
           selectable={true}
           limitOptions={[10, 25, 50, 100]}
@@ -166,7 +168,9 @@ export default function IncomeStatementPage({ onShowToast = () => {} }) {
         <ServerSideTable
           columns={lineColumns}
           data={data.expense_lines}
-          meta={staticMeta(data.expense_lines)}
+          total={data.expense_lines.length}
+          page={1}
+          limit={Math.max(data.expense_lines.length, 10)}
           isLoading={isLoading}
           selectable={true}
           limitOptions={[10, 25, 50, 100]}

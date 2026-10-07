@@ -68,12 +68,12 @@ export default function VendorAgingPage({ onShowToast = () => {} }) {
   const overdueCount = bills.filter((b) => Number(b.days_overdue) > 0).length;
 
   const billColumns = [
-    { key: 'bill_number', label: 'Nomor Tagihan', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.bill_number}</span>) },
-    { key: 'vendor_name', label: 'Vendor', render: (row) => (<span className="text-xs font-medium">{row.vendor_name}</span>) },
-    { key: 'due_date', label: 'Jatuh Tempo', render: (row) => (<span className="text-xs">{row.due_date || '-'}</span>) },
-    { key: 'days_overdue', label: 'Terlambat (hari)', align: 'right', render: (row) => (<span className={`font-mono font-bold text-[11px] ${Number(row.days_overdue) > 0 ? 'text-rose-600' : 'text-neutral-600'}`}>{row.days_overdue ?? 0}</span>) },
-    { key: 'bucket', label: 'Bucket', render: (row) => (<span className="text-[10px] font-sport font-black uppercase px-2 py-0.5 rounded-none bg-neutral-100 border border-neutral-200">{row.bucket || '-'}</span>) },
-    { key: 'outstanding', label: 'Sisa', align: 'right', render: (row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.outstanding)}</span>) },
+    { key: 'bill_number', label: 'Nomor Tagihan', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.bill_number}</span>) },
+    { key: 'vendor_name', label: 'Vendor', render: (_val, row) => (<span className="text-xs font-medium">{row.vendor_name}</span>) },
+    { key: 'due_date', label: 'Jatuh Tempo', render: (_val, row) => (<span className="text-xs">{row.due_date || '-'}</span>) },
+    { key: 'days_overdue', label: 'Terlambat (hari)', align: 'right', render: (_val, row) => (<span className={`font-mono font-bold text-[11px] ${Number(row.days_overdue) > 0 ? 'text-rose-600' : 'text-neutral-600'}`}>{row.days_overdue ?? 0}</span>) },
+    { key: 'bucket', label: 'Bucket', render: (_val, row) => (<span className="text-[10px] font-sport font-black uppercase px-2 py-0.5 rounded-none bg-neutral-100 border border-neutral-200">{row.bucket || '-'}</span>) },
+    { key: 'outstanding', label: 'Sisa', align: 'right', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{formatRupiah(row.outstanding)}</span>) },
   ];
 
   const staticMeta = (rows) => ({
@@ -128,7 +128,9 @@ export default function VendorAgingPage({ onShowToast = () => {} }) {
       <ServerSideTable
         columns={billColumns}
         data={bills}
-        meta={staticMeta(bills)}
+        total={bills.length}
+        page={1}
+        limit={Math.max(bills.length, 10)}
         isLoading={isLoading}
         selectable={true}
         limitOptions={[10, 25, 50, 100]}
