@@ -13,6 +13,11 @@ export default function JournalEntriesPage({ onShowToast = () => {} }) {
   const {
     data: entries,
     meta,
+    total,
+    page,
+    limit,
+    sortBy,
+    sortDirection,
     summary,
     filters,
     isLoading,
@@ -89,24 +94,24 @@ export default function JournalEntriesPage({ onShowToast = () => {} }) {
       key: 'created_at',
       label: 'Tanggal',
       sortable: true,
-      render: (row) => (row.created_at ? new Date(row.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'),
+      render: (_val, row) => (row.created_at ? new Date(row.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'),
     },
-    { key: 'transaction_number', label: 'Nomor Transaksi', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.transaction_number || '-'}</span>) },
-    { key: 'account_code', label: 'Kode Akun', render: (row) => (<span className="font-mono font-bold text-[11px]">{row.account_code || '-'}</span>) },
-    { key: 'account_name', label: 'Nama Akun', render: (row) => (<span className="text-xs font-medium">{row.account_name || '-'}</span>) },
+    { key: 'transaction_number', label: 'Nomor Transaksi', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.transaction_number || '-'}</span>) },
+    { key: 'account_code', label: 'Kode Akun', render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{row.account_code || '-'}</span>) },
+    { key: 'account_name', label: 'Nama Akun', render: (_val, row) => (<span className="text-xs font-medium">{row.account_name || '-'}</span>) },
     {
       key: 'debit',
       label: 'Debit',
       align: 'right',
-      render: (row) => (<span className="font-mono font-bold text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>),
+      render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{Number(row.debit) > 0 ? formatRupiah(row.debit) : '-'}</span>),
     },
     {
       key: 'credit',
       label: 'Kredit',
       align: 'right',
-      render: (row) => (<span className="font-mono font-bold text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>),
+      render: (_val, row) => (<span className="font-mono font-bold text-[11px]">{Number(row.credit) > 0 ? formatRupiah(row.credit) : '-'}</span>),
     },
-    { key: 'notes', label: 'Keterangan', render: (row) => (<span className="text-xs text-neutral-600 line-clamp-2">{row.notes || '-'}</span>) },
+    { key: 'notes', label: 'Keterangan', render: (_val, row) => (<span className="text-xs text-neutral-600 line-clamp-2">{row.notes || '-'}</span>) },
   ]), []);
 
   return (
@@ -183,7 +188,11 @@ export default function JournalEntriesPage({ onShowToast = () => {} }) {
       <ServerSideTable
         columns={columns}
         data={entries}
-        meta={meta}
+        total={total}
+        page={page}
+        limit={limit}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
         isLoading={isLoading}
         selectable={true}
         limitOptions={[10, 25, 50, 100]}
