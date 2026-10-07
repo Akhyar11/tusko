@@ -12,9 +12,10 @@ export default function Checkbox({
   name = '',
   ariaLabel = '',
   inputRef = null,
-  className = ''
+  className = '',
+  label = ''
 }) {
-  return (
+  const input = (
     <input
       type="checkbox"
       ref={inputRef}
@@ -22,8 +23,17 @@ export default function Checkbox({
       onChange={(e) => onChange(e.target.checked)}
       disabled={disabled}
       name={name}
-      aria-label={ariaLabel || undefined}
+      aria-label={ariaLabel || (label || undefined)}
       className={`rounded-none border-neutral-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     />
+  );
+
+  if (!label) return input;
+
+  return (
+    <label className={`flex items-start gap-2.5 select-none ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+      {input}
+      <span className="text-xs sm:text-sm font-medium text-neutral-700 leading-snug">{label}</span>
+    </label>
   );
 }
