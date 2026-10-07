@@ -48,8 +48,27 @@ export default function BankAccountCreatePage({
   });
 
   const [coaOptions, setCoaOptions] = useState([]);
+  const [bankOptions, setBankOptions] = useState(COMMON_BANKS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Muat opsi Bank dari server
+  useEffect(() => {
+    let isMounted = true;
+    apiClient.get('/api/banks?all=true')
+      .then(res => {
+        if (!isMounted) return;
+        const list = Array.isArray(res.data) ? res.data : [];
+        if (list.length > 0) {
+          setBankOptions(list.map(b => ({
+            value: b.name,
+            label: b.name,
+          })));
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Muat opsi COA bertipe asset (Bank)
   useEffect(() => {
@@ -211,7 +230,7 @@ export default function BankAccountCreatePage({
                   <ServerSideSelect
                     value={formData.bank_name}
                     onChange={(val) => setFormData(p => ({ ...p, bank_name: val }))}
-                    options={COMMON_BANKS}
+                    options={bankOptions}
                     placeholder="Pilih bank penerbit..."
                   />
                 </div>

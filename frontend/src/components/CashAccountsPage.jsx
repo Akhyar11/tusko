@@ -11,12 +11,14 @@ import {
   CheckCircle2,
   XCircle,
   BookOpen,
-  ArrowRightLeft
+  ArrowRightLeft,
+  ArrowUpRight
 } from 'lucide-react';
 import IconButton from './atoms/IconButton';
 import ServerSideTable from './ServerSideTable';
 import CashAccountFilterDrawer from './organisms/CashAccountFilterDrawer';
 import ConfirmationModal from './ConfirmationModal';
+import CapitalDepositModal from './organisms/CapitalDepositModal';
 import { financialAccountService } from '../services/financialAccountService';
 import { useCashAccountTableStore } from '../stores/useCashAccountTableStore';
 import { formatRupiah } from '../utils/formatters';
@@ -50,6 +52,7 @@ export default function CashAccountsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(null);
+  const [depositAccount, setDepositAccount] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [coaOptions, setCoaOptions] = useState([]);
 
@@ -225,6 +228,18 @@ export default function CashAccountsPage({
                 >
                   <Edit3 size={14} className="text-neutral-500" />
                   <span>Ubah Kas</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    setDepositAccount(r);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-sport font-bold uppercase tracking-wider text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <ArrowUpRight size={14} className="text-amber-500" />
+                  <span>Setor Modal</span>
                 </button>
 
                 <button
@@ -417,6 +432,15 @@ export default function CashAccountsPage({
         confirmText="Hapus Akun Kas"
         variant="danger"
         isLoading={isSubmitting}
+      />
+
+      {/* 6. Modal Setor / Tambah Modal */}
+      <CapitalDepositModal
+        isOpen={Boolean(depositAccount)}
+        onClose={() => setDepositAccount(null)}
+        account={depositAccount}
+        onSuccess={() => fetchData()}
+        onShowToast={onShowToast}
       />
     </div>
   );

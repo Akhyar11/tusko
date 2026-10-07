@@ -22,8 +22,18 @@ class ChartOfAccount extends Model
         'is_active' => 'boolean',
     ];
 
+    public const SYSTEM_ACCOUNTS = [
+        '1100', '1200', '1210', '1300', '2100', '2200',
+        '3100', '4100', '5100', '6100', '6200', '6300', '6400',
+    ];
+
     public function ledgerEntries(): HasMany
     {
         return $this->hasMany(FinancialLedgerEntry::class);
+    }
+
+    public function financialAccounts(): HasMany
+    {
+        return $this->hasMany(FinancialAccount::class);
     }
 }

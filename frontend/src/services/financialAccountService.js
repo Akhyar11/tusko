@@ -102,4 +102,12 @@ export const financialAccountService = {
     const res = await apiClient.post('/api/financial-accounts/transfer', payload);
     return res.data || null;
   },
+
+  /**
+   * Menyetor modal pemilik langsung ke rekening tertentu.
+   */
+  async depositCapital(id, payload) {
+    const res = await apiClient.post(`/api/financial-accounts/${encodeURIComponent(id)}/deposit-capital`, payload);
+    return res.data || null;
+  },
 };

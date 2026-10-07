@@ -92,6 +92,12 @@ import CashAccountEditPage from './components/CashAccountEditPage';
 import BankAccountsPage from './components/BankAccountsPage';
 import BankAccountCreatePage from './components/BankAccountCreatePage';
 import BankAccountEditPage from './components/BankAccountEditPage';
+import ChartOfAccountsPage from './components/ChartOfAccountsPage';
+import ChartOfAccountCreatePage from './components/ChartOfAccountCreatePage';
+import ChartOfAccountEditPage from './components/ChartOfAccountEditPage';
+import BanksPage from './components/BanksPage';
+import BankCreatePage from './components/BankCreatePage';
+import BankEditPage from './components/BankEditPage';
 import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
@@ -146,6 +152,12 @@ const VALID_VIEWS = [
   'bank-accounts',
   'bank-account-create',
   'bank-account-edit',
+  'chart-of-accounts',
+  'chart-of-account-create',
+  'chart-of-account-edit',
+  'banks',
+  'bank-create',
+  'bank-edit',
   'transactions',
   'transaction-create',
   'journal',
@@ -254,6 +266,12 @@ const ADMIN_CORE_VIEWS = [
   'bank-accounts',
   'bank-account-create',
   'bank-account-edit',
+  'chart-of-accounts',
+  'chart-of-account-create',
+  'chart-of-account-edit',
+  'banks',
+  'bank-create',
+  'bank-edit',
   'transactions',
   'transaction-create',
   'journal',
@@ -315,6 +333,12 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/bank-accounts' || rawPath === '/admin/bank-account') return 'bank-accounts';
     if (rawPath === '/admin/bank-accounts/create' || rawPath === '/admin/bank-account/create') return 'bank-account-create';
     if (rawPath.startsWith('/admin/bank-accounts/') && rawPath.endsWith('/edit')) return 'bank-account-edit';
+    if (rawPath === '/admin/chart-of-accounts' || rawPath === '/admin/chart-of-account') return 'chart-of-accounts';
+    if (rawPath === '/admin/chart-of-accounts/create' || rawPath === '/admin/chart-of-account/create') return 'chart-of-account-create';
+    if (rawPath.startsWith('/admin/chart-of-accounts/') && rawPath.endsWith('/edit')) return 'chart-of-account-edit';
+    if (rawPath === '/admin/banks' || rawPath === '/admin/bank') return 'banks';
+    if (rawPath === '/admin/banks/create' || rawPath === '/admin/bank/create') return 'bank-create';
+    if (rawPath.startsWith('/admin/banks/') && rawPath.endsWith('/edit')) return 'bank-edit';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
     if (rawPath === '/admin/transactions/create') return 'transaction-create';
     if (rawPath === '/admin/journal') return 'journal';
@@ -560,6 +584,8 @@ export default function App() {
   const [editingExpedition, setEditingExpedition] = useState(null);
   const [editingCashAccountId, setEditingCashAccountId] = useState(null);
   const [editingBankAccountId, setEditingBankAccountId] = useState(null);
+  const [editingCoaId, setEditingCoaId] = useState(null);
+  const [editingBankId, setEditingBankId] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   // T42: profil toko dinamis (dari Settings Hub) untuk footer & halaman legal.
   const [storeProfile, setStoreProfile] = useState({});
@@ -1929,6 +1955,52 @@ export default function App() {
             onNavigateBack={() => {
               setEditingBankAccountId(null);
               setCurrentView('bank-accounts');
+            }}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'chart-of-accounts' ? (
+          <ChartOfAccountsPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('chart-of-account-create')}
+            onNavigateToEdit={(id) => {
+              setEditingCoaId(id);
+              setCurrentView('chart-of-account-edit');
+            }}
+          />
+        ) : currentView === 'chart-of-account-create' ? (
+          <ChartOfAccountCreatePage
+            onNavigateBack={() => setCurrentView('chart-of-accounts')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'chart-of-account-edit' ? (
+          <ChartOfAccountEditPage
+            accountId={editingCoaId}
+            onNavigateBack={() => {
+              setEditingCoaId(null);
+              setCurrentView('chart-of-accounts');
+            }}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'banks' ? (
+          <BanksPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('bank-create')}
+            onNavigateToEdit={(id) => {
+              setEditingBankId(id);
+              setCurrentView('bank-edit');
+            }}
+          />
+        ) : currentView === 'bank-create' ? (
+          <BankCreatePage
+            onNavigateBack={() => setCurrentView('banks')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'bank-edit' ? (
+          <BankEditPage
+            bankId={editingBankId}
+            onNavigateBack={() => {
+              setEditingBankId(null);
+              setCurrentView('banks');
             }}
             onShowToast={showToast}
           />

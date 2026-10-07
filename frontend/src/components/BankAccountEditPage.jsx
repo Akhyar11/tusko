@@ -10,7 +10,8 @@ import {
   Info,
   CheckCircle2,
   Wallet,
-  Loader2
+  Loader2,
+  ArrowUpRight
 } from 'lucide-react';
 import { financialAccountService } from '../services/financialAccountService';
 import { apiClient } from '../services/apiClient';
@@ -21,6 +22,7 @@ import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
+import CapitalDepositModal from './organisms/CapitalDepositModal';
 
 const COMMON_BANKS = [
   { value: 'BCA', label: 'BCA (Bank Central Asia)' },
@@ -48,8 +50,11 @@ export default function BankAccountEditPage({
     notes: '',
     is_active: true
   });
+  const [rawAccount, setRawAccount] = useState(null);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [coaOptions, setCoaOptions] = useState([]);
+  const [bankOptions, setBankOptions] = useState(COMMON_BANKS);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -58,6 +63,20 @@ export default function BankAccountEditPage({
 
   useEffect(() => {
     let isMounted = true;
+
+    // Muat opsi Bank
+    apiClient.get('/api/banks?all=true')
+      .then(res => {
+        if (!isMounted) return;
+        const list = Array.isArray(res.data) ? res.data : [];
+        if (list.length > 0) {
+          setBankOptions(list.map(b => ({
+            value: b.name,
+            label: b.name,
+          })));
+        }
+      })
+      .catch(() => {});
 
     // Muat opsi COA
     apiClient.get('/api/chart-of-accounts')
@@ -79,6 +98,7 @@ export default function BankAccountEditPage({
       financialAccountService.getAccount(effectiveAccountId)
         .then(res => {
           if (!isMounted || !res) return;
+          setRawAccount(res);
           setFormData({
             account_name: res.account_name || '',
             bank_name: res.bank_name || 'BCA',
@@ -221,8 +241,8 @@ export default function BankAccountEditPage({
               </div>
             )}
 
-            {/* Banner Saldo Terkini */}
-            <div className="p-4 bg-neutral-50 border border-neutral-300 rounded-none flex items-center justify-between">
+            {/* Banner Saldo Terkini & Aksi Setor Modal */}
+            <div className="p-4 bg-neutral-50 border border-neutral-300 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500 block">
                   Saldo Rekening Terkini
@@ -230,10 +250,18 @@ export default function BankAccountEditPage({
                 <span className="text-xl font-black font-sport text-neutral-950">
                   {formatRupiah(currentBalance)}
                 </span>
+                <span className="text-[11px] font-mono text-neutral-400 block mt-0.5">
+                  Otomatis disinkronkan dari mutasi bayar vendor &amp; transaksi
+                </span>
               </div>
-              <span className="text-xs font-mono text-neutral-400">
-                Otomatis disinkronkan dari mutasi bayar vendor &amp; transaksi
-              </span>
+              <button
+                type="button"
+                onClick={() => setIsDepositModalOpen(true)}
+                className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0"
+              >
+                <ArrowUpRight size={15} />
+                <span>Setor / Tambah Modal</span>
+              </button>
             </div>
 
             {/* Bagian 1: Data Bank & Rekening */}
@@ -263,7 +291,7 @@ export default function BankAccountEditPage({
                   <ServerSideSelect
                     value={formData.bank_name}
                     onChange={(val) => setFormData(p => ({ ...p, bank_name: val }))}
-                    options={COMMON_BANKS}
+                    options={bankOptions}
                     placeholder="Pilih bank penerbit..."
                   />
                 </div>
@@ -363,6 +391,24 @@ export default function BankAccountEditPage({
           className="lg:col-span-1"
         />
       </div>
+
+      {/* Modal Setor / Tambah Modal */}
+      <CapitalDepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        account={rawAccount ? { ...rawAccount, current_balance: currentBalance } : null}
+        onSuccess={() => {
+          if (effectiveAccountId) {
+            financialAccountService.getAccount(effectiveAccountId).then(res => {
+              if (res) {
+                setRawAccount(res);
+                setCurrentBalance(parseFloat(res.current_balance) || 0);
+              }
+            });
+          }
+        }}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }

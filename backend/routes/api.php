@@ -157,11 +157,29 @@ Route::prefix('financial-accounts')->group(function () {
     Route::get('/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'show'])->whereNumber('id');
     Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'update'])->whereNumber('id');
     Route::delete('/{id}', [\App\Http\Controllers\Api\FinancialAccountController::class, 'destroy'])->whereNumber('id');
+    Route::post('/{id}/deposit-capital', [\App\Http\Controllers\Api\FinancialAccountController::class, 'depositCapital'])->whereNumber('id');
     Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\FinancialAccountController::class, 'toggleStatus'])->whereNumber('id');
 });
 
+Route::prefix('banks')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\BankController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\BankController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\BankController::class, 'show'])->whereNumber('id');
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\BankController::class, 'update'])->whereNumber('id');
+    Route::delete('/{id}', [\App\Http\Controllers\Api\BankController::class, 'destroy'])->whereNumber('id');
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\BankController::class, 'toggleStatus'])->whereNumber('id');
+});
+
+Route::prefix('chart-of-accounts')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'show'])->whereNumber('id');
+    Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'update'])->whereNumber('id');
+    Route::delete('/{id}', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'destroy'])->whereNumber('id');
+    Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'toggleStatus'])->whereNumber('id');
+});
+
 Route::get('/journal-entries', [\App\Http\Controllers\Api\JournalEntryController::class, 'index']);
-Route::get('/chart-of-accounts', [\App\Http\Controllers\Api\ChartOfAccountController::class, 'index']);
 
 Route::get('/reports/profit', [\App\Http\Controllers\Api\ReportController::class, 'profit']);
 

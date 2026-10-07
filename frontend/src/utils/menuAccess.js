@@ -37,7 +37,11 @@ export const CHILD_VIEW_TO_MENU = {
   'cash-account-create': 'cash-accounts',
   'cash-account-edit': 'cash-accounts',
   'bank-account-create': 'bank-accounts',
-  'bank-account-edit': 'bank-accounts'
+  'bank-account-edit': 'bank-accounts',
+  'chart-of-account-create': 'chart-of-accounts',
+  'chart-of-account-edit': 'chart-of-accounts',
+  'bank-create': 'banks',
+  'bank-edit': 'banks'
 };
 
 /**

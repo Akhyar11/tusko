@@ -27,7 +27,8 @@ import {
   RotateCcw,
   Circle,
   Coins,
-  Landmark
+  Landmark,
+  BookOpen
 } from 'lucide-react';
 
 /**
@@ -63,7 +64,8 @@ export const MENU_ICONS = {
   Star,
   RotateCcw,
   Coins,
-  Landmark
+  Landmark,
+  BookOpen
 };
 
 export function resolveMenuIcon(name) {

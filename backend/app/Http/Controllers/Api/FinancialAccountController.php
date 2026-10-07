@@ -400,5 +400,64 @@ class FinancialAccountController extends Controller
             ]);
         });
     }
+
+    /**
+     * Setor modal pemilik langsung ke rekening kas/bank tertentu.
+     */
+    public function depositCapital(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:500',
+            'reference_number' => 'nullable|string|max:100',
+        ]);
+
+        $amount = (float) $validated['amount'];
+
+        return DB::transaction(function () use ($id, $validated, $amount) {
+            $account = FinancialAccount::lockForUpdate()->findOrFail($id);
+
+            $dateStr = Carbon::now()->format('Ymd');
+            $ref = ($validated['reference_number'] ?? null) ?: "CAP/{$dateStr}/" . mt_rand(1000, 9999);
+
+            $trxNumber = Transaction::generateTransactionNumber('income');
+            $transaction = Transaction::create([
+                'transaction_number' => $trxNumber,
+                'financial_account_id' => $account->id,
+                'reference_type' => 'manual',
+                'reference_code' => $ref,
+                'type' => 'income',
+                'category' => 'capital_deposit',
+                'category_label' => 'Modal / Setoran Kas',
+                'amount' => $amount,
+                'description' => "Setoran modal pemilik ke {$account->account_name}" . (!empty($validated['notes']) ? ": {$validated['notes']}" : ''),
+                'payment_method' => $account->type === 'bank' ? ($account->bank_name ?? 'Transfer Bank') : 'Kas Toko',
+                'status' => 'settled',
+                'customer_name' => 'Pemilik Toko',
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // Jurnal double-entry: Debit Kas/Bank (Aset), Kredit 3100 (Modal Pemilik)
+            $coaCode = $account->chartOfAccount?->account_code
+                ?? ($account->type === 'bank' ? '1200' : '1100');
+
+            if (ChartOfAccount::where('account_code', '3100')->exists()) {
+                $this->journalPosting->post($transaction, [
+                    ['account_code' => $coaCode, 'debit' => $amount],
+                    ['account_code' => '3100', 'credit' => $amount],
+                ], "Jurnal setoran modal ke {$account->account_name} ({$trxNumber})");
+            } else {
+                $account->increment('current_balance', $amount);
+            }
+
+            return response()->json([
+                'message' => "Setoran modal sebesar Rp " . number_format($amount, 0, ',', '.') . " ke rekening {$account->account_name} berhasil dicatat.",
+                'data' => [
+                    'account' => $account->fresh('chartOfAccount'),
+                    'transaction' => $transaction,
+                ],
+            ], 201);
+        });
+    }
 }
 

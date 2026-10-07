@@ -204,4 +204,49 @@ class FinancialAccountManagementTest extends TestCase
 
         $this->assertDatabaseHas('financial_accounts', ['id' => $cash->id]);
     }
+
+    public function test_can_deposit_capital_directly_to_financial_account(): void
+    {
+        $bankCoa = ChartOfAccount::where('account_code', '1200')->firstOrFail();
+        $account = FinancialAccount::create([
+            'type' => 'bank',
+            'chart_of_account_id' => $bankCoa->id,
+            'account_name' => 'BCA Operasional PT Tusko',
+            'bank_name' => 'BCA',
+            'account_number' => '8012345678',
+            'account_holder' => 'PT Tusko Niaga',
+            'opening_balance' => 20000000,
+            'current_balance' => 20000000,
+            'is_active' => true,
+        ]);
+        $initialBalance = (float) $account->current_balance;
+
+        $response = $this->postJson("/api/financial-accounts/{$account->id}/deposit-capital", [
+            'amount' => 15000000,
+            'notes' => 'Injeksi modal ekspansi cabang baru',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.transaction.category', 'capital_deposit')
+            ->assertJsonPath('data.transaction.amount', 15000000);
+
+        $this->assertEqualsWithDelta(
+            $initialBalance + 15000000,
+            (float) $account->fresh()->current_balance,
+            0.01
+        );
+
+        // Verify journal Debit 1200 (BCA), Kredit 3100 (Modal Pemilik)
+        $trxId = $response->json('data.transaction.id');
+        $this->assertDatabaseHas('financial_ledger_entries', [
+            'transaction_id' => $trxId,
+            'debit' => 15000000,
+            'credit' => 0,
+        ]);
+        $this->assertDatabaseHas('financial_ledger_entries', [
+            'transaction_id' => $trxId,
+            'debit' => 0,
+            'credit' => 15000000,
+        ]);
+    }
 }

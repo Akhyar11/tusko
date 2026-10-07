@@ -9,7 +9,8 @@ import {
   Info,
   CheckCircle2,
   Wallet,
-  Loader2
+  Loader2,
+  ArrowUpRight
 } from 'lucide-react';
 import { financialAccountService } from '../services/financialAccountService';
 import { apiClient } from '../services/apiClient';
@@ -20,6 +21,7 @@ import TextInput from './molecules/TextInput';
 import TextArea from './molecules/TextArea';
 import Checkbox from './molecules/Checkbox';
 import ServerSideSelect from './molecules/ServerSideSelect';
+import CapitalDepositModal from './organisms/CapitalDepositModal';
 
 export default function CashAccountEditPage({
   accountId = null,
@@ -32,8 +34,10 @@ export default function CashAccountEditPage({
     notes: '',
     is_active: true
   });
+  const [rawAccount, setRawAccount] = useState(null);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [coaOptions, setCoaOptions] = useState([]);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -63,6 +67,7 @@ export default function CashAccountEditPage({
       financialAccountService.getAccount(effectiveAccountId)
         .then(res => {
           if (!isMounted || !res) return;
+          setRawAccount(res);
           setFormData({
             account_name: res.account_name || '',
             chart_of_account_id: res.chart_of_account_id ? String(res.chart_of_account_id) : '',
@@ -191,8 +196,8 @@ export default function CashAccountEditPage({
               </div>
             )}
 
-            {/* Banner Saldo Terkini */}
-            <div className="p-4 bg-neutral-50 border border-neutral-300 rounded-none flex items-center justify-between">
+            {/* Banner Saldo Terkini & Aksi Setor Modal */}
+            <div className="p-4 bg-neutral-50 border border-neutral-300 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-[11px] font-sport font-bold uppercase tracking-wider text-neutral-500 block">
                   Saldo Kas Terkini
@@ -200,10 +205,18 @@ export default function CashAccountEditPage({
                 <span className="text-xl font-black font-sport text-neutral-950">
                   {formatRupiah(currentBalance)}
                 </span>
+                <span className="text-[11px] font-mono text-neutral-400 block mt-0.5">
+                  Otomatis dihitung dari mutasi kas &amp; transfer
+                </span>
               </div>
-              <span className="text-xs font-mono text-neutral-400">
-                Otomatis dihitung dari mutasi kas &amp; transfer
-              </span>
+              <button
+                type="button"
+                onClick={() => setIsDepositModalOpen(true)}
+                className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 border border-amber-500 text-neutral-950 text-xs font-sport font-black uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0"
+              >
+                <ArrowUpRight size={15} />
+                <span>Setor / Tambah Modal</span>
+              </button>
             </div>
 
             {/* Bagian 1: Data Utama Kas */}
@@ -297,6 +310,24 @@ export default function CashAccountEditPage({
           className="lg:col-span-1"
         />
       </div>
+
+      {/* Modal Setor / Tambah Modal */}
+      <CapitalDepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        account={rawAccount ? { ...rawAccount, current_balance: currentBalance } : null}
+        onSuccess={() => {
+          if (effectiveAccountId) {
+            financialAccountService.getAccount(effectiveAccountId).then(res => {
+              if (res) {
+                setRawAccount(res);
+                setCurrentBalance(parseFloat(res.current_balance) || 0);
+              }
+            });
+          }
+        }}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }
