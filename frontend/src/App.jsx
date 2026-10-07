@@ -98,6 +98,9 @@ import ChartOfAccountEditPage from './components/ChartOfAccountEditPage';
 import BanksPage from './components/BanksPage';
 import BankCreatePage from './components/BankCreatePage';
 import BankEditPage from './components/BankEditPage';
+import PaymentMethodsPage from './components/PaymentMethodsPage';
+import PaymentMethodCreatePage from './components/PaymentMethodCreatePage';
+import PaymentMethodEditPage from './components/PaymentMethodEditPage';
 import { authService } from './services/authService';
 import { cartService } from './services/cartService';
 import { categoryService } from './services/categoryService';
@@ -167,6 +170,9 @@ const VALID_VIEWS = [
   'profit-report',
   'procurement-po-create',
   'procurement-po-detail',
+  'payment-methods',
+  'payment-method-create',
+  'payment-method-edit',
   'expeditions',
   'expedition-create',
   'expedition-edit',
@@ -279,6 +285,9 @@ const ADMIN_CORE_VIEWS = [
   'trial-balance',
   'vendor-aging',
   'profit-report',
+  'payment-methods',
+  'payment-method-create',
+  'payment-method-edit',
   'settings'
 ];
 
@@ -339,6 +348,9 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/admin/banks' || rawPath === '/admin/bank') return 'banks';
     if (rawPath === '/admin/banks/create' || rawPath === '/admin/bank/create') return 'bank-create';
     if (rawPath.startsWith('/admin/banks/') && rawPath.endsWith('/edit')) return 'bank-edit';
+    if (rawPath === '/admin/payment-methods' || rawPath === '/admin/payment-method') return 'payment-methods';
+    if (rawPath === '/admin/payment-methods/create') return 'payment-method-create';
+    if (rawPath.startsWith('/admin/payment-methods/') && rawPath.endsWith('/edit')) return 'payment-method-edit';
     if (rawPath === '/admin/transactions' || rawPath === '/admin/transaction') return 'transactions';
     if (rawPath === '/admin/transactions/create') return 'transaction-create';
     if (rawPath === '/admin/journal') return 'journal';
@@ -586,6 +598,7 @@ export default function App() {
   const [editingBankAccountId, setEditingBankAccountId] = useState(null);
   const [editingCoaId, setEditingCoaId] = useState(null);
   const [editingBankId, setEditingBankId] = useState(null);
+  const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
   const [currentView, setCurrentView] = useState(getInitialView); // 'catalog' | 'detail' | 'cart' | 'checkout' | 'order-success' | 'orders' | 'order-detail' | 'transactions' | 'stock' | 'login' | 'profile'
   // T42: profil toko dinamis (dari Settings Hub) untuk footer & halaman legal.
   const [storeProfile, setStoreProfile] = useState({});
@@ -2001,6 +2014,29 @@ export default function App() {
             onNavigateBack={() => {
               setEditingBankId(null);
               setCurrentView('banks');
+            }}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'payment-methods' ? (
+          <PaymentMethodsPage
+            onShowToast={showToast}
+            onNavigateToCreate={() => setCurrentView('payment-method-create')}
+            onNavigateToEdit={(id) => {
+              setEditingPaymentMethodId(id);
+              setCurrentView('payment-method-edit');
+            }}
+          />
+        ) : currentView === 'payment-method-create' ? (
+          <PaymentMethodCreatePage
+            onNavigateBack={() => setCurrentView('payment-methods')}
+            onShowToast={showToast}
+          />
+        ) : currentView === 'payment-method-edit' ? (
+          <PaymentMethodEditPage
+            methodId={editingPaymentMethodId}
+            onNavigateBack={() => {
+              setEditingPaymentMethodId(null);
+              setCurrentView('payment-methods');
             }}
             onShowToast={showToast}
           />

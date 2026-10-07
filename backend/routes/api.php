@@ -239,6 +239,16 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::delete('/{id}', [VoucherController::class, 'destroy'])->whereNumber('id');
     });
 
+    // Master metode pembayaran + admin fee per kanal (T07.12).
+    Route::prefix('admin/payment-methods')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\PaymentMethodController::class, 'adminIndex']);
+        Route::post('/', [\App\Http\Controllers\Api\PaymentMethodController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\PaymentMethodController::class, 'show'])->whereNumber('id');
+        Route::match(['put', 'patch'], '/{id}', [\App\Http\Controllers\Api\PaymentMethodController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [\App\Http\Controllers\Api\PaymentMethodController::class, 'destroy'])->whereNumber('id');
+        Route::post('/{id}/toggle-status', [\App\Http\Controllers\Api\PaymentMethodController::class, 'toggleStatus'])->whereNumber('id');
+    });
+
     Route::middleware(['menu.access:/admin/settings', 'throttle:120,1'])->group(function () {
         Route::get('/admin/settings', [\App\Http\Controllers\Api\SettingsController::class, 'index']);
         Route::get('/admin/settings/{group}', [\App\Http\Controllers\Api\SettingsController::class, 'show']);

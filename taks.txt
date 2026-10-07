@@ -583,6 +583,16 @@ T07. Pembayaran (Midtrans Snap + Transfer Manual + Webhook) ......... [PARTIAL] 
     T07.11 [DONE] GAP AUDIT MIDTRANS — pemetaan `chargeback`/`partial_chargeback` -> `refunded`
            dan `failure` -> `failed` (sebelumnya jatuh ke default `pending`). Test
            `MidtransStatusMappingTest` (12 status resmi).
+    T07.12 [DONE] MASTER METODE PEMBAYARAN + ADMIN FEE PER KANAL: tabel `payment_methods`
+           (kode semantik Midtrans: bca_va/mandiri_va/bri_va/bni_va/qris; fee_percent +
+           fee_fixed; is_active; sort_order) + `PaymentMethodSeeder` (tarif publikasi
+           Midtrans: VA Rp4000, QRIS 0.7%) + command `payment-methods:sync` (tambah kanal
+           baru tanpa timpa fee Admin) + CRUD admin (`/api/admin/payment-methods` +
+           toggle) + katalog publik `GET /api/payment-methods` dari DB + fee webhook
+           T07.7 prioritas dari master (fallback `integrations`) + halaman admin
+           (PaymentMethodsPage/Create/Edit + drawer + menu "Metode Pembayaran") +
+           estimasi fee checkout (% + flat) + `PaymentMethodApiTest` (6).
+           [OWNER:A1]
 
 T08. Voucher (Pelanggan) & Loyalitas ............................... [DONE]  [OWNER:A1]
   (Schema voucher -> T15.1; T08 BERGANTUNG pada T15.1.)

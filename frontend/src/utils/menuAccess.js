@@ -41,7 +41,9 @@ export const CHILD_VIEW_TO_MENU = {
   'chart-of-account-create': 'chart-of-accounts',
   'chart-of-account-edit': 'chart-of-accounts',
   'bank-create': 'banks',
-  'bank-edit': 'banks'
+  'bank-edit': 'banks',
+  'payment-method-create': 'payment-methods',
+  'payment-method-edit': 'payment-methods'
 };
 
 /**

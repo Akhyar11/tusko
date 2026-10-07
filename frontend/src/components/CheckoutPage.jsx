@@ -416,7 +416,15 @@ export default function CheckoutPage({
   const shippingCost = appliedCoupon?.free_shipping ? 0 : (Number(expeditionCost) || 0);
   const insuranceCost = withInsurance ? (Number(checkoutFees.insurance_cost) || 0) : 0;
   const serviceFee = Number(checkoutFees.service_fee) || 0;
-  const paymentFee = selectedPayment?.fee || 0;
+  // T07.12: estimasi admin fee dari master (% dari belanja + nominal tetap).
+  const estimatePaymentFee = (method, base) => {
+    if (!method) return 0;
+    const pct = Number(method.fee_percent) || 0;
+    const fix = Number(method.fee_fixed ?? method.fee) || 0;
+    if (pct > 0) return Math.round((base * pct) / 100 + fix);
+    return fix;
+  };
+  const paymentFee = estimatePaymentFee(selectedPayment, totalItemPrice);
   const discountAmount = appliedCoupon?.discount_amount || 0;
   const shippingSavings = selectedExpedition?.is_free ? Number(selectedExpedition?.baseCost ?? selectedExpedition?.baseRate ?? 15000) : 0;
   const totalSavings = discountAmount + shippingSavings;
@@ -934,7 +942,15 @@ export default function CheckoutPage({
                                     </span>
                                   )}
                                   <span className="text-[10px] text-neutral-500 font-medium">
-                                    {method.fee > 0 ? `Biaya: ${formatRupiah(method.fee)}` : 'Bebas Biaya'}
+                                    {(() => {
+                                      const pct = Number(method.fee_percent) || 0;
+                                      const fix = Number(method.fee_fixed ?? method.fee) || 0;
+                                      if (pct <= 0 && fix <= 0) return 'Bebas Biaya';
+                                      const parts = [];
+                                      if (pct > 0) parts.push(`${pct}%`);
+                                      if (fix > 0) parts.push(formatRupiah(fix));
+                                      return `Biaya: ${parts.join(' + ')}`;
+                                    })()}
                                   </span>
                                 </div>
                               </div>

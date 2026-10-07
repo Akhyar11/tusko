@@ -181,16 +181,23 @@ class MidtransWebhookController extends Controller
     }
 
     /**
-     * Hitung fee gateway dari konfigurasi Admin (persen + nominal tetap) — G6.
+     * Hitung fee gateway dari master Metode Pembayaran (T07.12) — G6.
+     * Fallback ke konfigurasi legacy `integrations` bila master belum ada.
      */
     private function calculateGatewayFee(float $amount, ?string $channel = null): float
     {
         $percent = 0.0;
         $fixed = 0.0;
 
-        if ($channel && in_array($channel, ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'qris'], true)) {
-            $percent = (float) ($this->integrations->get("payment.fee_{$channel}_percent", 0) ?? 0);
-            $fixed = (float) ($this->integrations->get("payment.fee_{$channel}_fixed", 0) ?? 0);
+        if ($channel) {
+            $master = \App\Models\PaymentMethod::where('code', $channel)->where('is_active', true)->first();
+            if ($master) {
+                $percent = (float) $master->fee_percent;
+                $fixed = (float) $master->fee_fixed;
+            } else {
+                $percent = (float) ($this->integrations->get("payment.fee_{$channel}_percent", 0) ?? 0);
+                $fixed = (float) ($this->integrations->get("payment.fee_{$channel}_fixed", 0) ?? 0);
+            }
         }
 
         // Fallback ke tarif global bila fee kanal belum diatur.
