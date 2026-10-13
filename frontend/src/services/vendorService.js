@@ -126,82 +126,62 @@ export const vendorService = {
    * Create a new vendor.
    */
   async createVendor(payload) {
-    const list = getStoredVendors();
-    let code = payload.code ? payload.code.trim().toUpperCase() : '';
-    if (!code) {
-      const nextNum = list.length + 1;
-      code = `VND-${String(nextNum).padStart(3, '0')}`;
-      let counter = 1;
-      while (list.some(v => v.code === code)) {
-        counter++;
-        code = `VND-${String(nextNum + counter).padStart(3, '0')}`;
-      }
-    }
-
-    const newVendor = {
-      id: Date.now(),
-      code,
-      company_name: payload.company_name.trim(),
-      contact_person: payload.contact_person.trim(),
-      email: payload.email?.trim() || '',
-      phone: payload.phone.trim(),
+    const body = {
+      company_name: payload.company_name?.trim(),
+      contact_person: payload.contact_person?.trim(),
+      phone: payload.phone?.trim(),
       address: payload.address?.trim() || '',
+      email: payload.email?.trim() || null,
+      bank_account_info: payload.bank_account_info?.trim() || null,
       payment_terms_days: Number(payload.payment_terms_days) || 30,
-      bank_account_info: payload.bank_account_info?.trim() || '',
-      categories: Array.isArray(payload.categories) ? payload.categories : (payload.categories ? [payload.categories] : ['Apparel']),
-      is_active: payload.is_active !== undefined ? payload.is_active : true,
-      rating: 5.0,
-      created_at: new Date().toISOString()
+      is_active: payload.is_active !== undefined ? payload.is_active : true
     };
-
-    try {
-      const res = await apiClient.post('/api/vendors', newVendor);
-      if (res?.data) {
-        const saved = res.data;
-        const updated = [saved, ...list];
-        setStoredVendors(updated);
-        return saved;
-      }
-    } catch {
-      // Save locally
+    if (payload.code?.trim()) {
+      body.code = payload.code.trim().toUpperCase();
     }
 
-    const updated = [newVendor, ...list];
+    const res = await apiClient.post('/api/vendors', body);
+    const saved = res.data || res;
+
+    const list = getStoredVendors();
+    const updated = [saved, ...list.filter(v => v.id !== saved.id)];
     setStoredVendors(updated);
-    return newVendor;
+    return saved;
   },
 
   /**
    * Update existing vendor.
    */
   async updateVendor(id, payload) {
-    try {
-      await apiClient.put(`/api/vendors/${id}`, payload);
-    } catch {
-      // ignore
+    const body = {
+      company_name: payload.company_name?.trim(),
+      contact_person: payload.contact_person?.trim(),
+      phone: payload.phone?.trim(),
+      address: payload.address?.trim() || '',
+      email: payload.email?.trim() || null,
+      bank_account_info: payload.bank_account_info?.trim() || null,
+      payment_terms_days: Number(payload.payment_terms_days) || 30,
+      is_active: payload.is_active !== undefined ? payload.is_active : true
+    };
+    if (payload.code?.trim()) {
+      body.code = payload.code.trim().toUpperCase();
     }
 
-    const list = getStoredVendors();
-    const updated = list.map(v => {
-      if (String(v.id) === String(id)) {
-        return { ...v, ...payload };
-      }
-      return v;
-    });
+    const res = await apiClient.put(`/api/vendors/${id}`, body);
+    const saved = res.data || res;
 
+    const list = getStoredVendors();
+    const updated = list.map(v => (String(v.id) === String(id) ? { ...v, ...saved } : v));
     setStoredVendors(updated);
-    return updated.find(v => String(v.id) === String(id));
+    return saved;
   },
 
   /**
    * Toggle active/inactive status.
    */
   async toggleStatus(id) {
-    try {
-      await apiClient.post(`/api/vendors/${id}/toggle-status`);
-    } catch {
-      // ignore
-    }
+    const res = await apiClient.post(`/api/vendors/${id}/toggle-status`);
+    const saved = res.data || res;
 
     const list = getStoredVendors();
     const updated = list.map(v => {
@@ -212,18 +192,14 @@ export const vendorService = {
     });
 
     setStoredVendors(updated);
-    return updated.find(v => String(v.id) === String(id));
+    return saved;
   },
 
   /**
    * Delete vendor.
    */
   async deleteVendor(id) {
-    try {
-      await apiClient.delete(`/api/vendors/${id}`);
-    } catch {
-      // ignore
-    }
+    await apiClient.delete(`/api/vendors/${id}`);
 
     const list = getStoredVendors();
     const filtered = list.filter(v => String(v.id) !== String(id));

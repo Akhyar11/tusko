@@ -40,8 +40,8 @@ export default function SupplierCreatePage({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.company_name.trim() || !formData.contact_person.trim() || !formData.phone.trim()) {
-      setErrorMessage('Harap lengkapi nama perusahaan, nama kontak PIC, dan nomor telepon.');
+    if (!formData.company_name.trim() || !formData.contact_person.trim() || !formData.phone.trim() || !formData.address.trim()) {
+      setErrorMessage('Harap lengkapi nama perusahaan, nama kontak PIC, nomor telepon, dan alamat kantor/gudang.');
       return;
     }
 
@@ -60,7 +60,7 @@ export default function SupplierCreatePage({
         contact_person: formData.contact_person.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim(),
-        address: formData.address.trim() || null,
+        address: formData.address.trim(),
         bank_account_info: formData.bank_account_info.trim() || null,
         categories: parsedCategories.length > 0 ? parsedCategories : ['Apparel'],
         is_active: formData.is_active
@@ -70,7 +70,10 @@ export default function SupplierCreatePage({
       onShowToast(`Supplier "${payload.company_name}" berhasil ditambahkan.`);
       onNavigateBack();
     } catch (err) {
-      setErrorMessage(err.message || 'Gagal menambahkan data supplier.');
+      const msg = err.errors
+        ? Object.values(err.errors).flat().join(' ')
+        : (err.message || 'Gagal menambahkan data supplier.');
+      setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -234,9 +237,10 @@ export default function SupplierCreatePage({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900 mb-1.5">
-                  Alamat Kantor / Pabrik / Gudang
+                  Alamat Kantor / Pabrik / Gudang <span className="text-rose-500">*</span>
                 </label>
                 <TextArea
+                  required
                   rows={3}
                   value={formData.address}
                   onChange={(val) => setFormData(p => ({ ...p, address: val }))}

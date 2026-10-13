@@ -110,7 +110,7 @@ export default function BanksPage({
   const columns = [
     {
       key: 'code',
-      title: 'Kode Bank',
+      label: 'KODE BANK',
       sortable: true,
       className: 'w-36',
       render: (val, row) => (
@@ -121,7 +121,7 @@ export default function BanksPage({
     },
     {
       key: 'name',
-      title: 'Nama Lembaga Bank',
+      label: 'NAMA LEMBAGA BANK',
       sortable: true,
       render: (val, row) => (
         <div>
@@ -138,7 +138,8 @@ export default function BanksPage({
     },
     {
       key: 'accounts_count',
-      title: 'Rekening Terkait',
+      label: 'REKENING TERKAIT',
+      align: 'center',
       className: 'w-36 text-center',
       render: (val, row) => {
         const count = row?.accounts_count ?? 0;
@@ -151,8 +152,9 @@ export default function BanksPage({
     },
     {
       key: 'is_active',
-      title: 'Status',
+      label: 'STATUS',
       sortable: true,
+      align: 'center',
       className: 'w-28 text-center',
       render: (val, row) => {
         const isActive = Boolean(row?.is_active ?? val);
@@ -168,7 +170,8 @@ export default function BanksPage({
     },
     {
       key: 'actions',
-      title: 'Aksi',
+      label: 'AKSI',
+      align: 'right',
       className: 'w-16 text-right',
       render: (_, row) => {
         if (!row) return null;

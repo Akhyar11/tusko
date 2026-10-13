@@ -38,8 +38,10 @@ import StorefrontPreview from './organisms/StorefrontPreview';
 const RichTextEditor = lazy(() => import('./molecules/RichTextEditor'));
 import FormTipsPanel from './organisms/FormTipsPanel';
 import ConfirmationModal from './organisms/ConfirmationModal';
+import HeroBannersTableField from './molecules/HeroBannersTableField';
 import { settingsService } from '../services/settingsService';
 import { expeditionService } from '../services/expeditionService';
+import { productService } from '../services/productService';
 import { resolveBackendUrl } from '../services/apiClient';
 
 const TESTABLE_GROUPS = ['shipping', 'payment', 'storage', 'notification'];
@@ -77,8 +79,14 @@ const fieldWrapClass = (field) => (WIDE_TYPES.has(field.type) ? 'sm:col-span-2' 
  * lintas grup, layout grid hemat scroll, toggle untuk boolean, tooltip deskripsi,
  * sticky save bar + guard perubahan belum tersimpan.
  */
-export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () => {}, onOpenExpeditions = () => {} }) {
+export default function SystemSettingsHub({ 
+  onShowToast = () => {}, 
+  onBack = () => {}, 
+  onOpenExpeditions = () => {},
+  products: initialProducts = []
+}) {
   const [groupsData, setGroupsData] = useState([]);
+  const [productsList, setProductsList] = useState(initialProducts);
   const [activeGroup, setActiveGroup] = useState(null);
   const [draft, setDraft] = useState({});
   const [baseline, setBaseline] = useState({});
@@ -90,6 +98,24 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setProductsList(initialProducts);
+      return;
+    }
+    let mounted = true;
+    productService.fetchProducts({ active: 'all' })
+      .then((res) => {
+        if (mounted && Array.isArray(res?.data)) {
+          setProductsList(res.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [initialProducts]);
 
   const toastRef = useRef(onShowToast);
   useEffect(() => {
@@ -325,6 +351,15 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
     }
 
     if (field.type === 'repeater') {
+      if (field.key === 'storefront.hero_banners') {
+        return (
+          <HeroBannersTableField
+            value={value ?? ''}
+            onChange={(json) => setValue(field.key, json)}
+            products={productsList}
+          />
+        );
+      }
       return (
         <RepeaterField
           value={value ?? ''}
@@ -372,7 +407,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
 
   const renderFieldBlock = (field) => (
     <div key={field.key} id={`field-${field.key}`} className={fieldWrapClass(field)}>
-      {field.type !== 'boolean' && (
+      {field.type !== 'boolean' && field.key !== 'storefront.hero_banners' && (
         <div className="flex items-center gap-1.5 mb-1.5">
           <label className="block text-xs font-sport font-black uppercase tracking-wider text-neutral-900">
             {field.label}
@@ -418,8 +453,8 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Sidebar navigasi (sticky) */}
-        <aside className="lg:col-span-1 lg:sticky lg:top-6 space-y-4 self-start">
+        {/* Sidebar navigasi (fixed / sticky di desktop) */}
+        <aside className="lg:col-span-1 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto space-y-4 self-start lg:pr-1">
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -454,6 +489,7 @@ export default function SystemSettingsHub({ onShowToast = () => {}, onBack = () 
 
           <FormTipsPanel
             title="Panduan Pengaturan"
+            className="static lg:static self-auto"
             tips={[
               { icon: ShieldCheck, heading: 'Nilai Rahasia', text: 'Kredensial disimpan terenkripsi & hanya tampil bertopeng. Isi ulang hanya bila ingin mengganti.' },
               { icon: SearchIcon, heading: 'Cari Cepat', text: 'Ketik nama pengaturan di kotak cari untuk melompat lintas bagian.' },

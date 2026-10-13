@@ -3,6 +3,12 @@ import { SlidersHorizontal, X, RotateCcw, Check } from 'lucide-react';
 import SearchBar from '../molecules/SearchBar';
 import ServerSideSelect from '../molecules/ServerSideSelect';
 import TextInput from '../molecules/TextInput';
+import { CATEGORY_ICON_OPTIONS } from '../../utils/categoryIcons';
+
+const ICON_FILTER_OPTIONS = [
+  { value: 'all', label: 'Semua Simbol Ikon' },
+  ...CATEGORY_ICON_OPTIONS
+];
 
 /**
  * Organism: CategoryFilterDrawer
@@ -210,18 +216,7 @@ export default function CategoryFilterDrawer({
               <ServerSideSelect
                 value={iconFilter === 'all' ? '' : iconFilter}
                 onChange={(val) => onIconFilterChange(val || 'all')}
-                options={[
-                  { value: 'all', label: 'Semua Simbol Ikon' },
-                  { value: 'Shirt', label: '👕 Shirt (Jersey & Pakaian)' },
-                  { value: 'Footprints', label: '👟 Footprints (Sepatu & Boots)' },
-                  { value: 'Dumbbell', label: '🏋️ Dumbbell (Peralatan & Gym)' },
-                  { value: 'Shield', label: '🛡️ Shield (Aksesoris & Deker)' },
-                  { value: 'Zap', label: '⚡ Zap (Running & Marathon)' },
-                  { value: 'Trophy', label: '🏆 Trophy (Futsal & Sepakbola)' },
-                  { value: 'Activity', label: '📈 Activity (Training & Fitness)' },
-                  { value: 'Sparkles', label: '✨ Sparkles (Koleksi Pro Player)' },
-                  { value: 'Tag', label: '🏷️ Tag (Kategori Umum)' }
-                ]}
+                options={ICON_FILTER_OPTIONS}
                 placeholder="Pilih simbol ikon..."
                 isClearable={iconFilter !== 'all'}
                 scrollPadding={30}

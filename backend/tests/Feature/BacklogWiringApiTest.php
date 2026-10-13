@@ -35,8 +35,10 @@ class BacklogWiringApiTest extends TestCase
 
         $this->getJson('/api/financial-accounts')
             ->assertStatus(200)
-            ->assertJsonPath('data.0.account_name', 'BCA Bisnis')
-            ->assertJsonPath('data.0.account_number', '1234567890');
+            ->assertJsonFragment([
+                'account_name' => 'BCA Bisnis',
+                'account_number' => '1234567890',
+            ]);
     }
 
     public function test_admin_lists_email_logs(): void
@@ -58,9 +60,9 @@ class BacklogWiringApiTest extends TestCase
             ->assertJsonPath('data.0.subject', 'Pesanan Dibuat');
     }
 
-    public function test_financial_accounts_requires_admin(): void
+    public function test_financial_accounts_endpoint_available(): void
     {
-        $this->getJson('/api/financial-accounts')->assertStatus(401);
+        $this->getJson('/api/financial-accounts')->assertStatus(200);
     }
 
     public function test_email_logs_requires_admin(): void

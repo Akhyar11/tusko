@@ -63,7 +63,7 @@ class StorefrontController extends Controller
     public function content(SettingsService $settings): JsonResponse
     {
         $values = $settings->all('storefront');
-        $jsonFields = ['popular_chips', 'sports_cards', 'promo_banners'];
+        $jsonFields = ['popular_chips', 'sports_cards', 'promo_banners', 'hero_banners'];
 
         $content = [];
         foreach ($values as $key => $value) {
@@ -75,7 +75,38 @@ class StorefrontController extends Controller
 
             if (in_array($short, $jsonFields, true)) {
                 $decoded = (is_string($value) && $value !== '') ? json_decode($value, true) : null;
-                $content[$short] = is_array($decoded) ? $decoded : [];
+                $decodedArray = is_array($decoded) ? $decoded : [];
+
+                if ($short === 'hero_banners' && !empty($decodedArray)) {
+                    $productIds = collect($decodedArray)->pluck('product_id')->filter()->unique()->all();
+                    if (!empty($productIds)) {
+                        $products = \App\Models\Product::with(['images', 'category'])->whereIn('id', $productIds)->get()->keyBy('id');
+                        $decodedArray = array_map(function ($banner) use ($products) {
+                            $pid = $banner['product_id'] ?? null;
+                            if ($pid && isset($products[$pid])) {
+                                $p = $products[$pid];
+                                $banner['product'] = [
+                                    'id' => $p->id,
+                                    'name' => $p->name,
+                                    'slug' => $p->slug,
+                                    'sku' => $p->sku,
+                                    'price' => (float) $p->price,
+                                    'original_price' => $p->original_price ? (float) $p->original_price : null,
+                                    'image_url' => $p->image_url,
+                                    'images' => $p->images->map(fn ($img) => [
+                                        'id' => $img->id,
+                                        'image_url' => $img->image_url,
+                                        'sort_order' => $img->sort_order,
+                                    ])->values()->all(),
+                                    'category_name' => $p->category?->name,
+                                ];
+                            }
+                            return $banner;
+                        }, $decodedArray);
+                    }
+                }
+
+                $content[$short] = $decodedArray;
             } else {
                 $content[$short] = $value;
             }

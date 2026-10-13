@@ -20,6 +20,18 @@ import { Search, ChevronDown, ChevronUp, Check, X, Loader2 } from 'lucide-react'
  * @param {string} props.className - Additional classnames for trigger container
  * @param {function} props.renderOption - Custom option renderer: (option, isSelected) => ReactNode
  */
+function renderSelectOptionIcon(IconLike, className = 'shrink-0') {
+  if (!IconLike) return null;
+  if (React.isValidElement(IconLike)) {
+    return IconLike;
+  }
+  if (typeof IconLike === 'function' || typeof IconLike === 'object') {
+    const IconComp = IconLike;
+    return <IconComp size={15} className={className} />;
+  }
+  return null;
+}
+
 export default function ServerSideSelect({
   value,
   onChange = () => {},
@@ -313,8 +325,9 @@ export default function ServerSideSelect({
               selectedOptionsList.map((opt) => (
                 <span
                   key={opt.value}
-                  className="inline-flex items-center gap-1 bg-neutral-900 text-white text-[11px] font-sport uppercase tracking-wider px-2 py-0.5 rounded-none"
+                  className="inline-flex items-center gap-1.5 bg-neutral-900 text-white text-[11px] font-sport uppercase tracking-wider px-2 py-0.5 rounded-none"
                 >
+                  {opt.icon && renderSelectOptionIcon(opt.icon, 'text-amber-400 shrink-0')}
                   <span className="truncate max-w-[140px]">{opt.label}</span>
                   {!disabled && (
                     <span
@@ -338,8 +351,9 @@ export default function ServerSideSelect({
               <span className="text-neutral-400 font-normal text-xs">{placeholder}</span>
             )
           ) : (
-            <span className={`truncate ${selectedOption ? 'text-neutral-950 font-semibold' : 'text-neutral-400 font-normal'}`}>
-              {selectedOption ? selectedOption.label : placeholder}
+            <span className={`inline-flex items-center gap-2 truncate ${selectedOption ? 'text-neutral-950 font-semibold' : 'text-neutral-400 font-normal'}`}>
+              {selectedOption?.icon && renderSelectOptionIcon(selectedOption.icon, 'text-neutral-700 shrink-0')}
+              <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
             </span>
           )}
         </div>
@@ -437,7 +451,7 @@ export default function ServerSideSelect({
                         : 'hover:bg-neutral-100 text-neutral-800'
                     }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
+                    <div className="flex items-center gap-2.5 truncate">
                       {isMulti && (
                         <div
                           className={`w-3.5 h-3.5 border rounded-none flex items-center justify-center shrink-0 ${
@@ -448,6 +462,11 @@ export default function ServerSideSelect({
                         >
                           {isSelected && <Check size={10} strokeWidth={3} />}
                         </div>
+                      )}
+                      {!renderOption && opt.icon && (
+                        <span className={`shrink-0 ${isSelected && !isMulti ? 'text-amber-400' : 'text-neutral-500'}`}>
+                          {renderSelectOptionIcon(opt.icon, isSelected && !isMulti ? 'text-amber-400 shrink-0' : 'text-neutral-500 shrink-0')}
+                        </span>
                       )}
                       {renderOption ? (
                         renderOption(opt, isSelected)

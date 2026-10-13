@@ -30,6 +30,14 @@ class StorefrontContentApiTest extends TestCase
             'storefront.sports_cards' => json_encode([
                 ['tag' => 'Road', 'title' => 'Lari', 'category_id' => 5, 'query' => 'Running'],
             ]),
+            'storefront.hero_banners' => json_encode([
+                [
+                    'title' => 'BANNER SPEED',
+                    'description' => 'Sepatu lari tercepat.',
+                    'product_id' => null,
+                    'active' => true,
+                ],
+            ]),
         ]);
 
         $response = $this->getJson('/api/storefront/content');
@@ -40,7 +48,9 @@ class StorefrontContentApiTest extends TestCase
             ->assertJsonCount(2, 'data.popular_chips')
             ->assertJsonPath('data.popular_chips.0.label', 'Chip A')
             ->assertJsonCount(1, 'data.sports_cards')
-            ->assertJsonPath('data.sports_cards.0.category_id', 5);
+            ->assertJsonPath('data.sports_cards.0.category_id', 5)
+            ->assertJsonCount(1, 'data.hero_banners')
+            ->assertJsonPath('data.hero_banners.0.title', 'BANNER SPEED');
     }
 
     public function test_content_endpoint_is_public_and_has_no_secrets(): void

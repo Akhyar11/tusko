@@ -241,12 +241,11 @@ class SettingsRegistry
         ],
         'storefront' => [
             'label' => 'Storefront (Halaman Depan)',
-            'description' => 'Konten dinamis halaman depan: announcement, hero, section, promo, club. Gambar di-upload ke Storage.',
+            'description' => 'Konten dinamis halaman depan: hero, section, promo, club. Gambar di-upload ke Storage.',
             'keys' => [
-                'storefront.announcement_enabled' => ['type' => 'boolean', 'default' => true, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Tampilkan Announcement Bar', 'description' => 'Tampilkan bar pengumuman di atas navbar.'],
-                'storefront.announcement_text' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:255', 'is_secret' => false, 'label' => 'Teks Announcement', 'description' => 'Teks pengumuman (mis. promo gratis ongkir).'],
                 'storefront.search_placeholder' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:120', 'is_secret' => false, 'label' => 'Placeholder Pencarian', 'description' => 'Teks placeholder pada kotak pencarian navbar.'],
                 'storefront.hero_enabled' => ['type' => 'boolean', 'default' => true, 'rule' => 'nullable|boolean', 'is_secret' => false, 'label' => 'Tampilkan Hero', 'description' => 'Tampilkan banner hero di halaman depan.'],
+                'storefront.hero_banners' => ['type' => 'repeater', 'default' => null, 'rule' => 'nullable|string|max:16000', 'is_secret' => false, 'label' => 'Daftar Hero Banner', 'description' => 'Tabel slide hero banner berbasis produk untuk carousel storefront.', 'item_fields' => [['key' => 'title', 'label' => 'Judul Hero', 'type' => 'text'], ['key' => 'description', 'label' => 'Deskripsi Hero', 'type' => 'text'], ['key' => 'product_id', 'label' => 'Produk', 'type' => 'product'], ['key' => 'badge', 'label' => 'Badge', 'type' => 'text'], ['key' => 'price_badge', 'label' => 'Badge Harga', 'type' => 'text'], ['key' => 'cta_primary', 'label' => 'Tombol Utama', 'type' => 'text'], ['key' => 'cta_secondary', 'label' => 'Tombol Sekunder', 'type' => 'text'], ['key' => 'template_style', 'label' => 'Gaya Template', 'type' => 'text'], ['key' => 'image_urls', 'label' => 'Kombinasi Gambar', 'type' => 'tags'], ['key' => 'active', 'label' => 'Status Aktif', 'type' => 'boolean']]],
                 'storefront.hero_badge' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:120', 'is_secret' => false, 'label' => 'Hero Badge', 'description' => 'Label kecil di atas judul hero.'],
                 'storefront.hero_title' => ['type' => 'string', 'default' => null, 'rule' => 'nullable|string|max:200', 'is_secret' => false, 'label' => 'Hero Judul', 'description' => 'Judul besar hero.'],
                 'storefront.hero_subtitle' => ['type' => 'text', 'default' => null, 'rule' => 'nullable|string|max:600', 'is_secret' => false, 'label' => 'Hero Subjudul', 'description' => 'Deskripsi singkat hero.'],
@@ -332,8 +331,7 @@ class SettingsRegistry
             ['title' => 'Login Google (OAuth)', 'keys' => ['auth.google_enabled', 'auth.google_client_id', 'auth.google_client_secret', 'auth.google_redirect_url', 'auth.allowed_redirect_origins']],
         ],
         'storefront' => [
-            ['title' => 'Announcement Bar', 'keys' => ['storefront.announcement_enabled', 'storefront.announcement_text']],
-            ['title' => 'Hero Banner', 'keys' => ['storefront.hero_enabled', 'storefront.hero_badge', 'storefront.hero_title', 'storefront.hero_subtitle', 'storefront.hero_cta_primary', 'storefront.hero_cta_secondary', 'storefront.hero_price_badge', 'storefront.hero_image_url']],
+            ['title' => 'Hero Banner', 'keys' => ['storefront.hero_enabled', 'storefront.hero_banners']],
             ['title' => 'Populer & Pencarian', 'keys' => ['storefront.popular_enabled', 'storefront.popular_heading', 'storefront.popular_chips', 'storefront.search_placeholder', 'storefront.search_suggest_heading']],
             ['title' => 'Section Olahraga', 'keys' => ['storefront.sports_enabled', 'storefront.sports_heading', 'storefront.sports_subheading', 'storefront.sports_cards']],
             ['title' => 'Club Banner', 'keys' => ['storefront.club_enabled', 'storefront.club_badge', 'storefront.club_title', 'storefront.club_subtitle', 'storefront.club_cta']],

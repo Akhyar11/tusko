@@ -23,6 +23,7 @@ import CategoryFilterDrawer from './organisms/CategoryFilterDrawer';
 import ConfirmationModal from './ConfirmationModal';
 import { categoryService } from '../services/categoryService';
 import { useCategoryTableStore } from '../stores/useCategoryTableStore';
+import { resolveCategoryIcon } from '../utils/categoryIcons';
 
 export default function CategoryListPage({
   categories: initialCategories = [],
@@ -270,11 +271,16 @@ export default function CategoryListPage({
       label: 'Ikon',
       align: 'center',
       width: 'w-24',
-      render: (icon, cat) => (
-        <span className="px-2.5 py-0.5 bg-neutral-900 text-amber-400 text-[10px] font-mono font-bold rounded-none">
-          {icon || cat?.icon || 'Tag'}
-        </span>
-      )
+      render: (icon, cat) => {
+        const iconName = icon || cat?.icon || 'Tag';
+        const IconComponent = resolveCategoryIcon(iconName);
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-900 text-amber-400 text-[10px] font-mono font-bold rounded-none">
+            <IconComponent size={12} className="shrink-0 text-amber-400" />
+            <span>{iconName}</span>
+          </span>
+        );
+      }
     },
     {
       key: 'description',

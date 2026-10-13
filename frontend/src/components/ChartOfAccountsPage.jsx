@@ -130,7 +130,7 @@ export default function ChartOfAccountsPage({
   const columns = [
     {
       key: 'account_code',
-      title: 'Kode Akun',
+      label: 'KODE AKUN',
       sortable: true,
       className: 'w-36',
       render: (val, row) => (
@@ -148,7 +148,7 @@ export default function ChartOfAccountsPage({
     },
     {
       key: 'account_name',
-      title: 'Nama Akun Bagan',
+      label: 'NAMA AKUN BAGAN',
       sortable: true,
       render: (val, row) => (
         <div>
@@ -165,14 +165,15 @@ export default function ChartOfAccountsPage({
     },
     {
       key: 'account_type',
-      title: 'Klasifikasi Akun',
+      label: 'KLASIFIKASI AKUN',
       sortable: true,
       className: 'w-44',
       render: (val, row) => renderTypeBadge(val || row?.account_type),
     },
     {
       key: 'ledger_entries_count',
-      title: 'Pencatatan Jurnal',
+      label: 'PENCATATAN JURNAL',
+      align: 'center',
       className: 'w-36 text-center',
       render: (val, row) => {
         const count = row?.ledger_entries_count ?? 0;
@@ -185,8 +186,9 @@ export default function ChartOfAccountsPage({
     },
     {
       key: 'is_active',
-      title: 'Status',
+      label: 'STATUS',
       sortable: true,
+      align: 'center',
       className: 'w-28 text-center',
       render: (val, row) => {
         const isActive = Boolean(row?.is_active ?? val);
@@ -202,7 +204,8 @@ export default function ChartOfAccountsPage({
     },
     {
       key: 'actions',
-      title: 'Aksi',
+      label: 'AKSI',
+      align: 'right',
       className: 'w-16 text-right',
       render: (_, row) => {
         if (!row) return null;

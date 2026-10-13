@@ -210,7 +210,7 @@ export default function ServerSideTable({
                       col.align === 'center' ? 'justify-center' :
                       col.align === 'right' ? 'justify-end' : 'justify-start'
                     }`}>
-                      <span>{col.label}</span>
+                      <span>{col.label || col.title}</span>
                       {col.sortable && (
                         <span className="text-neutral-500 group-hover:text-amber-400 transition-colors">
                           {isCurrentSort ? (

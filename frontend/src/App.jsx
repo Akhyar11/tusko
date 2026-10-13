@@ -2417,7 +2417,7 @@ export default function App() {
             }}
           />
         ) : currentView === 'settings' ? (
-          <SystemSettingsHub onShowToast={showToast} onBack={() => setCurrentView('admin-dashboard')} onOpenExpeditions={() => setCurrentView('expeditions')} />
+          <SystemSettingsHub products={products} onShowToast={showToast} onBack={() => setCurrentView('admin-dashboard')} onOpenExpeditions={() => setCurrentView('expeditions')} />
         ) : currentView === 'expeditions' ? (
           <ExpeditionSettingsPage
             expeditions={expeditions}
@@ -2597,14 +2597,33 @@ export default function App() {
           />
         ) : (
           <>
-            {/* 3. Hero Campaign Banner (Benchmark: adidas Editorial Campaign) */}
+            {/* 3. Hero Campaign Banner Carousel */}
             <HeroCampaignBanner
               content={storefrontContent}
-              onBuyNowClick={() => {
+              products={products}
+              onBuyNowClick={(targetProductOrId) => {
+                if (targetProductOrId) {
+                  const found = typeof targetProductOrId === 'object' && targetProductOrId.id
+                    ? (products.find((p) => p.id === targetProductOrId.id) || targetProductOrId)
+                    : products.find((p) => p.id === Number(targetProductOrId));
+                  if (found) {
+                    handleBuyNow(found, 1);
+                    return;
+                  }
+                }
                 const el = document.getElementById('product-catalog');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              onExploreClick={() => {
+              onExploreClick={(targetProductOrId) => {
+                if (targetProductOrId) {
+                  const found = typeof targetProductOrId === 'object' && targetProductOrId.id
+                    ? (products.find((p) => p.id === targetProductOrId.id) || targetProductOrId)
+                    : products.find((p) => p.id === Number(targetProductOrId));
+                  if (found) {
+                    handleSelectProduct(found);
+                    return;
+                  }
+                }
                 const el = document.getElementById('sport-categories');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}

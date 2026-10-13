@@ -24,16 +24,24 @@ class MenuSeederTest extends TestCase
     {
         $this->seed(MenuSeeder::class);
 
-        $this->assertSame(28, Menu::where('environment', 'admin')->count());
+        $this->assertSame(32, Menu::where('environment', 'admin')->count());
         $this->assertSame(3, Menu::where('environment', 'storefront')->count());
+        $this->assertFalse(Menu::where('path_prefix', '/admin/banks')->exists());
 
         $product = Menu::where('path_prefix', '/admin/product')->firstOrFail();
         $this->assertSame('products-admin', $product->view_key);
         $this->assertSame('Package', $product->icon);
         $this->assertTrue($product->is_active);
 
+        $template = Menu::where('path_prefix', '/admin/template')->firstOrFail();
+        $this->assertSame('Pengguna & Akses', $template->section);
+
         $settings = Menu::where('path_prefix', '/admin/settings')->firstOrFail();
+        $this->assertSame('Pengguna & Akses', $settings->section);
         $this->assertSame('feature_flags.settings_menu', $settings->feature_flag);
+
+        $menusAdmin = Menu::where('path_prefix', '/admin/menus')->firstOrFail();
+        $this->assertSame('Pengguna & Akses', $menusAdmin->section);
     }
 
     public function test_seeder_assigns_all_admin_menus_to_admin_role_only(): void

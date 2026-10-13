@@ -77,6 +77,13 @@ class VendorController extends Controller
             'payment_terms_days' => 'nullable|integer|min:0|max:365',
             'bank_account_info' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+        ], [
+            'company_name.required' => 'Nama perusahaan / supplier wajib diisi.',
+            'contact_person.required' => 'Nama kontak penanggung jawab (PIC) wajib diisi.',
+            'phone.required' => 'Nomor telepon / WhatsApp wajib diisi.',
+            'address.required' => 'Alamat kantor / gudang supplier wajib diisi.',
+            'code.unique' => 'Kode supplier sudah digunakan, silakan gunakan kode lain.',
+            'email.email' => 'Format email supplier tidak valid.',
         ]);
 
         if (empty($validated['code'])) {
@@ -133,6 +140,13 @@ class VendorController extends Controller
             'payment_terms_days' => 'nullable|integer|min:0|max:365',
             'bank_account_info' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+        ], [
+            'company_name.required' => 'Nama perusahaan / supplier wajib diisi.',
+            'contact_person.required' => 'Nama kontak penanggung jawab (PIC) wajib diisi.',
+            'phone.required' => 'Nomor telepon / WhatsApp wajib diisi.',
+            'address.required' => 'Alamat kantor / gudang supplier wajib diisi.',
+            'code.unique' => 'Kode supplier sudah digunakan, silakan gunakan kode lain.',
+            'email.email' => 'Format email supplier tidak valid.',
         ]);
 
         if (isset($validated['code'])) {

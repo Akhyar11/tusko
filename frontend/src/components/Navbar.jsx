@@ -4,7 +4,6 @@ import {
   ShoppingBag, 
   Heart,
   Truck, 
-  MapPin, 
   X, 
   TrendingUp, 
   User, 
@@ -25,7 +24,6 @@ import { resolveMenuIcon } from '../utils/menuIcons';
 import SearchBar from './molecules/SearchBar';
 import UserMenuDropdown from './UserMenuDropdown';
 import { SHOW_OPERATIONAL_MODULES } from '../config/features';
-import { checkoutService } from '../services/checkoutService';
 
 export default function Navbar({ 
   cartCount = 0, 
@@ -61,10 +59,6 @@ export default function Navbar({
   const brandName = storefrontContent.brand_name || 'TUSKO';
   const brandTagline = storefrontContent.brand_tagline || 'Performance';
   const searchSuggestHeading = storefrontContent.search_suggest_heading || 'Saran Produk Tusko';
-  const trackLabel = storefrontContent.utility_track_label || 'Lacak Pesanan';
-  const helpLabel = storefrontContent.utility_help_label || 'Bantuan & FAQ';
-  const localeLabel = storefrontContent.locale_label || 'ID | IDR';
-  const memberCta = storefrontContent.member_cta_label || 'Gabung Tusko Club';
   const memberBadge = storefrontContent.member_badge_label || 'TUSKO CLUB MEMBER';
 
   const [isFocused, setIsFocused] = useState(false);
@@ -72,26 +66,8 @@ export default function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategoryTab, setActiveCategoryTab] = useState('Semua');
   const [openNavId, setOpenNavId] = useState(null);
-  const [freeShippingMin, setFreeShippingMin] = useState(0);
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
-
-  // T06.10b: ambang gratis ongkir dibaca dari konfigurasi Admin (bukan hardcode).
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const config = await checkoutService.getCheckoutConfig();
-        const value = Number(config?.free_shipping_min_purchase) || 0;
-        if (active) setFreeShippingMin(value);
-      } catch {
-        // Abaikan; banner memakai teks umum bila konfigurasi tak tersedia.
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const trendingSearches = [
     'Jersey Timnas AeroTech', 
@@ -241,55 +217,7 @@ export default function Navbar({
 
   return (
     <>
-      {/* 1. Top Announcement Utility Bar */}
-      {storefrontContent.announcement_enabled !== false && (
-      <div className="bg-black text-white font-bold tracking-wider uppercase w-full max-w-full overflow-hidden">
-        <div className="relative w-full px-4 sm:px-8 lg:px-12 h-9 flex items-center">
-          {/* Center: Promo text — absolutely centered so it's always symmetrical */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2.5 text-[11px]">
-              <Truck size={13} className="text-amber-400 shrink-0" />
-              {storefrontContent.announcement_text ? (
-                <span>{storefrontContent.announcement_text}</span>
-              ) : (
-                <>
-                  <span className="sm:hidden">
-                    GRATIS ONGKIR{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ' SELURUH INDONESIA'} • GARANSI 14 HARI
-                  </span>
-                  <span className="hidden sm:inline">
-                    GRATIS ONGKIR SELURUH INDONESIA{freeShippingMin > 0 ? ` MIN. ${formatRupiah(freeShippingMin)}` : ''}
-                  </span>
-                  <span className="hidden md:inline text-neutral-500">|</span>
-                  <span className="hidden md:inline text-amber-400">GARANSI TUKAR UKURAN 14 HARI</span>
-                </>
-              )}
-            </div>
-          </div>
-          {/* Right: Utility links — pushed to the right */}
-          <div className="hidden lg:flex items-center gap-5 text-[11px] text-neutral-400 ml-auto pointer-events-auto">
-            <button 
-              onClick={onOpenOrders}
-              className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-            >
-              <MapPin size={12} />
-              <span>{trackLabel}</span>
-            </button>
-            <span className="hover:text-white cursor-pointer transition-colors">
-              {helpLabel}
-            </span>
-            <button 
-              onClick={currentUser ? onOpenProfile : onOpenRegister}
-              className="text-amber-400 font-extrabold hover:underline cursor-pointer"
-            >
-              {currentUser ? `Halo, ${currentUser.name}` : memberCta}
-            </button>
-            <span className="text-neutral-500 font-bold">{localeLabel}</span>
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* 2. Main Navigation Header */}
+      {/* Main Navigation Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 w-full max-w-full">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-[68px] sm:h-[84px] flex items-center justify-between gap-2 sm:gap-6">
           

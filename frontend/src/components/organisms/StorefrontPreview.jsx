@@ -23,6 +23,17 @@ export default function StorefrontPreview({ values = {} }) {
   const brand = v['storefront.brand_name'] || v['store.brand_name'] || 'TUSKO';
   const tagline = v['storefront.brand_tagline'] || 'Performance';
 
+  const heroes = parseList(v['storefront.hero_banners']);
+  const firstHero = heroes.find((h) => h && h.active !== false) || heroes[0] || null;
+
+  const heroBadge = firstHero?.badge || v['storefront.hero_badge'];
+  const heroTitle = firstHero?.title || v['storefront.hero_title'] || 'Judul Hero';
+  const heroSubtitle = firstHero?.description || v['storefront.hero_subtitle'];
+  const heroCtaPrimary = firstHero?.cta_primary || v['storefront.hero_cta_primary'];
+  const heroCtaSecondary = firstHero?.cta_secondary || v['storefront.hero_cta_secondary'];
+  const heroPriceBadge = firstHero?.price_badge || v['storefront.hero_price_badge'];
+  const heroImage = (firstHero?.image_urls && firstHero.image_urls[0]) || v['storefront.hero_image_url'];
+
   return (
     <div className="border border-neutral-300 rounded-none bg-neutral-100 overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-950 text-neutral-400 text-[10px] font-mono">
@@ -33,13 +44,6 @@ export default function StorefrontPreview({ values = {} }) {
       </div>
 
       <div className="bg-white">
-        {/* Announcement */}
-        {v['storefront.announcement_enabled'] !== false && v['storefront.announcement_text'] && (
-          <div className="bg-black text-white text-[10px] font-bold py-1.5 px-3 text-center uppercase tracking-wider">
-            {v['storefront.announcement_text']}
-          </div>
-        )}
-
         {/* Navbar mini */}
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-200">
           <div className="flex items-center gap-2 shrink-0">
@@ -64,24 +68,29 @@ export default function StorefrontPreview({ values = {} }) {
         {v['storefront.hero_enabled'] !== false && (
           <div className="bg-neutral-950 text-white px-5 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="min-w-0">
-              {v['storefront.hero_badge'] && (
-                <span className="inline-block bg-white text-black text-[9px] font-black uppercase tracking-wider px-2 py-0.5 mb-2">{v['storefront.hero_badge']}</span>
-              )}
-              <h2 className="font-black text-lg uppercase leading-tight">{v['storefront.hero_title'] || 'Judul Hero'}</h2>
-              {v['storefront.hero_subtitle'] && <p className="text-[11px] text-neutral-300 mt-1 max-w-md">{v['storefront.hero_subtitle']}</p>}
+              <div className="flex items-center gap-2 mb-2">
+                {heroBadge && (
+                  <span className="inline-block bg-white text-black text-[9px] font-black uppercase tracking-wider px-2 py-0.5">{heroBadge}</span>
+                )}
+                {heroes.length > 1 && (
+                  <span className="text-[9px] font-mono text-amber-400 uppercase">1 dari {heroes.length} slide</span>
+                )}
+              </div>
+              <h2 className="font-black text-lg uppercase leading-tight">{heroTitle}</h2>
+              {heroSubtitle && <p className="text-[11px] text-neutral-300 mt-1 max-w-md">{heroSubtitle}</p>}
               <div className="flex items-center gap-2 mt-3">
-                {v['storefront.hero_cta_primary'] && <span className="bg-white text-black text-[10px] font-black uppercase px-3 py-1.5">{v['storefront.hero_cta_primary']}</span>}
-                {v['storefront.hero_cta_secondary'] && <span className="border border-white text-white text-[10px] font-black uppercase px-3 py-1.5">{v['storefront.hero_cta_secondary']}</span>}
+                {heroCtaPrimary && <span className="bg-white text-black text-[10px] font-black uppercase px-3 py-1.5">{heroCtaPrimary}</span>}
+                {heroCtaSecondary && <span className="border border-white text-white text-[10px] font-black uppercase px-3 py-1.5">{heroCtaSecondary}</span>}
               </div>
             </div>
             <div className="relative w-full sm:w-48 h-28 bg-neutral-800 shrink-0 overflow-hidden">
-              {v['storefront.hero_image_url'] ? (
-                <img src={v['storefront.hero_image_url']} alt="Hero" className="w-full h-full object-cover" />
+              {heroImage ? (
+                <img src={heroImage} alt="Hero" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-neutral-600 text-[10px]">Gambar Hero</div>
               )}
-              {v['storefront.hero_price_badge'] && (
-                <span className="absolute bottom-0 right-0 bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5">{v['storefront.hero_price_badge']}</span>
+              {heroPriceBadge && (
+                <span className="absolute bottom-0 right-0 bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5">{heroPriceBadge}</span>
               )}
             </div>
           </div>

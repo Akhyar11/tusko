@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { categoryService } from '../services/categoryService';
+import { CATEGORY_ICON_OPTIONS } from '../utils/categoryIcons';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import ServerSideSelect from './molecules/ServerSideSelect';
 import TextInput from './molecules/TextInput';
@@ -183,17 +184,7 @@ export default function CategoryEditPage({
             <ServerSideSelect
               value={icon}
               onChange={(val) => setIcon(val)}
-              options={[
-                { value: 'Shirt', label: 'Shirt (Jersey & Pakaian)' },
-                { value: 'Footprints', label: 'Footprints (Sepatu & Sepatu Olahraga)' },
-                { value: 'Dumbbell', label: 'Dumbbell (Peralatan & Gym)' },
-                { value: 'Shield', label: 'Shield (Aksesoris & Deker)' },
-                { value: 'Zap', label: 'Zap (Running & Marathon)' },
-                { value: 'Trophy', label: 'Trophy (Futsal & Sepakbola)' },
-                { value: 'Activity', label: 'Activity (Training & Fitness)' },
-                { value: 'Sparkles', label: 'Sparkles (Koleksi Pro Player)' },
-                { value: 'Tag', label: 'Tag (Kategori Umum)' }
-              ]}
+              options={CATEGORY_ICON_OPTIONS}
               placeholder="Pilih ikon kategori..."
               required
             />
