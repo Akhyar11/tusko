@@ -96,6 +96,11 @@ export const inventoryService = {
     return res.data || res;
   },
 
+  async getItem(idOrSku) {
+    const res = await apiClient.get(`/api/inventory/${idOrSku}`);
+    return res.data || res;
+  },
+
   async getMutations(idOrSku, params = {}) {
     const url = idOrSku ? `/api/inventory/${idOrSku}/mutations` : '/api/inventory/mutations';
     const res = await apiClient.get(url);

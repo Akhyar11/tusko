@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { EyeOff, AlertCircle } from 'lucide-react';
 import ConfirmationModal from './organisms/ConfirmationModal';
-import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 
 export default function DeleteProductModal({
   product = null,
@@ -58,8 +58,12 @@ export default function DeleteProductModal({
       {!isBulk && product ? (
         <div className="bg-neutral-50 p-3 rounded-none border border-neutral-200 flex items-center gap-3">
           <img
-            src={product.image_url || PRODUCT_PLACEHOLDER_IMAGE}
+            src={normalizeImageUrl(product.image_url) || PRODUCT_PLACEHOLDER_IMAGE}
             alt={product.name}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+            }}
             className="w-14 h-14 rounded-none object-cover border border-neutral-200 bg-white shrink-0"
           />
           <div className="min-w-0 flex-1 text-xs">
@@ -88,8 +92,12 @@ export default function DeleteProductModal({
               <div key={p.id} className="pt-1.5 first:pt-0 flex items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <img
-                    src={p.image_url || PRODUCT_PLACEHOLDER_IMAGE}
+                    src={normalizeImageUrl(p.image_url) || PRODUCT_PLACEHOLDER_IMAGE}
                     alt={p.name}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                    }}
                     className="w-7 h-7 rounded-none object-cover border border-neutral-200 bg-white shrink-0"
                   />
                   <span className="font-bold text-neutral-900 truncate font-sport">{p.name}</span>

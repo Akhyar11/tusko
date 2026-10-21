@@ -40,6 +40,8 @@ class ProductResource extends JsonResource
                 'original_price' => $row->original_price !== null ? (float) $row->original_price : null,
                 'cost_price' => (float) ($row->current_cogs ?? 0),
                 'stock' => (int) $row->stock,
+                'available_for_sale_stock' => $row->available_for_sale_stock !== null ? (int) $row->available_for_sale_stock : null,
+                'effective_available_stock' => (int) ($row->effective_available_stock ?? $row->stock),
                 'is_active' => (bool) $row->is_active,
             ]);
         })->values();
@@ -90,6 +92,8 @@ class ProductResource extends JsonResource
             'cost_price' => (float) ($this->cost_price ?: round((float) $this->price * 0.65)),
             'profit_margin' => (float) $this->profit_margin,
             'stock' => (int) $this->stock,
+            'available_for_sale_stock' => $this->available_for_sale_stock !== null ? (int) $this->available_for_sale_stock : null,
+            'effective_available_stock' => (int) $this->effective_available_stock,
             'stock_minimum' => (int) $this->effective_stock_minimum,
             'min_stock' => (int) $this->effective_stock_minimum,
             'weight' => (int) ($this->weight ?: 500),
@@ -109,6 +113,7 @@ class ProductResource extends JsonResource
             'point_type' => $this->point_type ?: 'manual',
             'point_value' => (float) ($this->point_value ?: 0),
             'reward_points' => (int) $this->reward_points,
+            'gallery' => $this->images->pluck('image_url')->values()->all(),
             'images' => $this->images->map(fn ($img) => [
                 'id' => $img->id,
                 'image_url' => $img->image_url,

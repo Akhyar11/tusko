@@ -172,4 +172,17 @@ export const productService = {
     const res = await apiClient.post('/api/products/upload-image', formData);
     return res.data;
   },
+
+  /**
+   * Update available stock for sale for product or its variants.
+   * @param {string|number} idOrSlug
+   * @param {object} payload - { available_for_sale_stock?: number, variants?: Array<{id: number, available_for_sale_stock: number}> }
+   */
+  async updateAvailableStock(idOrSlug, payload) {
+    const res = await apiClient.put(`/api/products/${idOrSlug}/available-stock`, payload);
+    const updated = res.data || res;
+    const current = getCachedProducts();
+    setCachedProducts(current.map(p => (String(p.id) === String(idOrSlug) || p.slug === idOrSlug ? { ...p, ...updated } : p)));
+    return updated;
+  },
 };

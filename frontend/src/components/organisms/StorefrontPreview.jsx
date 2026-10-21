@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Heart, ShoppingCart, User } from 'lucide-react';
+import { normalizeImageUrl, PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/formatters';
 
 function parseList(value) {
   try {
@@ -85,7 +86,15 @@ export default function StorefrontPreview({ values = {} }) {
             </div>
             <div className="relative w-full sm:w-48 h-28 bg-neutral-800 shrink-0 overflow-hidden">
               {heroImage ? (
-                <img src={heroImage} alt="Hero" className="w-full h-full object-cover" />
+                <img 
+                  src={normalizeImageUrl(heroImage) || PRODUCT_PLACEHOLDER_IMAGE} 
+                  alt="Hero" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-neutral-600 text-[10px]">Gambar Hero</div>
               )}

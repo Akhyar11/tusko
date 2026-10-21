@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, Heart, Check, Loader2 } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 
 export default function ProductCard({ 
   product, 
@@ -134,9 +134,13 @@ export default function ProductCard({
           title="Klik untuk melihat detail produk"
         >
           <img 
-            src={product.image_url} 
+            src={normalizeImageUrl(product.image_url) || PRODUCT_PLACEHOLDER_IMAGE} 
             alt={product.name} 
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+            }}
             className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
               isOutOfStock ? 'grayscale opacity-75' : ''
             }`}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, normalizeImageUrl, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
 
 /**
  * HeroCampaignBanner — Carousel Slide Hero Berbasis Produk Storefront (Benchmark: adidas Editorial).
@@ -100,11 +100,12 @@ export default function HeroCampaignBanner({
 
   // Persiapkan gambar-gambar produk untuk template kombinasi
   const rawImages = currentSlide.image_urls || [];
-  const slideImages = Array.isArray(rawImages) && rawImages.length > 0
+  const baseImages = Array.isArray(rawImages) && rawImages.length > 0
     ? rawImages
     : (currentSlide.product?.image_url 
         ? [currentSlide.product.image_url] 
         : ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1600&q=80']);
+  const slideImages = baseImages.map(img => normalizeImageUrl(img));
 
   const primaryImage = slideImages[0];
   const galleryImages = slideImages.slice(1, 4);
@@ -173,15 +174,27 @@ export default function HeroCampaignBanner({
             /* Gaya 1: Foto Utama Besar + Aksentuasi Mini Galeri */
             <div className="w-full h-full relative">
               <img
-                src={primaryImage}
+                src={primaryImage || PRODUCT_PLACEHOLDER_IMAGE}
                 alt={titleText}
                 className="w-full h-full object-cover object-center animate-in fade-in duration-500"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                }}
               />
               {galleryImages.length > 0 && (
                 <div className="absolute bottom-4 left-4 hidden sm:flex items-center gap-2 bg-black/75 backdrop-blur-xs p-2 border border-neutral-700 rounded-none z-10">
                   {galleryImages.map((imgUrl, i) => (
                     <div key={i} className="w-12 h-12 lg:w-14 lg:h-14 overflow-hidden border border-neutral-600 rounded-none">
-                      <img src={imgUrl} alt={`Angle ${i + 1}`} className="w-full h-full object-cover" />
+                      <img 
+                        src={imgUrl || PRODUCT_PLACEHOLDER_IMAGE} 
+                        alt={`Angle ${i + 1}`} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -191,15 +204,39 @@ export default function HeroCampaignBanner({
             /* Gaya 2: Grid Multi-Angle Bersanding */
             <div className="w-full h-full grid grid-cols-2 gap-1 p-1 bg-black">
               <div className="relative h-full overflow-hidden">
-                <img src={primaryImage} alt={titleText} className="w-full h-full object-cover" />
+                <img 
+                  src={primaryImage || PRODUCT_PLACEHOLDER_IMAGE} 
+                  alt={titleText} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                  }}
+                />
               </div>
               <div className="flex flex-col gap-1 h-full overflow-hidden">
                 <div className="flex-1 overflow-hidden">
-                  <img src={slideImages[1] || primaryImage} alt="Detail Produk" className="w-full h-full object-cover" />
+                  <img 
+                    src={slideImages[1] || primaryImage || PRODUCT_PLACEHOLDER_IMAGE} 
+                    alt="Detail Produk" 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                    }}
+                  />
                 </div>
                 {slideImages[2] && (
                   <div className="flex-1 overflow-hidden">
-                    <img src={slideImages[2]} alt="Sudut Lain" className="w-full h-full object-cover" />
+                    <img 
+                      src={slideImages[2] || PRODUCT_PLACEHOLDER_IMAGE} 
+                      alt="Sudut Lain" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -208,9 +245,13 @@ export default function HeroCampaignBanner({
             /* Gaya 3: Full Cover Editorial */
             <div className="w-full h-full relative">
               <img
-                src={primaryImage}
+                src={primaryImage || PRODUCT_PLACEHOLDER_IMAGE}
                 alt={titleText}
                 className="w-full h-full object-cover object-center animate-in fade-in duration-500"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                }}
               />
             </div>
           )}

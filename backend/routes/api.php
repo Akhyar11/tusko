@@ -62,12 +62,14 @@ Route::prefix('products')->group(function () {
     Route::post('/', [ProductController::class, 'store']);
     Route::post('/upload-image', [ProductController::class, 'uploadImage']);
     Route::match(['put', 'patch'], '/{idOrSlug}', [ProductController::class, 'update']);
+    Route::put('/{idOrSlug}/available-stock', [ProductController::class, 'updateAvailableStock']);
     Route::delete('/{idOrSlug}', [ProductController::class, 'destroy']);
     Route::post('/{idOrSlug}/toggle-status', [ProductController::class, 'toggleStatus']);
     Route::get('/{idOrSlug}/reviews', [\App\Http\Controllers\Api\ProductReviewController::class, 'indexForProduct']);
     Route::get('/{idOrSlug}', [ProductController::class, 'show']);
 });
 Route::post('/upload', [ProductController::class, 'uploadImage']);
+Route::get('/storage/{path}', [\App\Http\Controllers\Api\StorageProxyController::class, 'serve'])->where('path', '.*');
 
 Route::prefix('cart')->middleware('auth.optional')->group(function () {
     Route::get('/', [CartController::class, 'index']);

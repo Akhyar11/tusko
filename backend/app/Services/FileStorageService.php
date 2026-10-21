@@ -216,9 +216,10 @@ class FileStorageService
         }
 
         // If not a data URI and not http, treat as existing storage path
+        $cleanPath = self::extractStoragePath($value) ?? $value;
         return [
-            'path' => $value,
-            'url' => self::url($value),
+            'path' => $cleanPath,
+            'url' => self::url($cleanPath),
         ];
     }
 
@@ -231,11 +232,21 @@ class FileStorageService
             return null;
         }
 
-        if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
-            return $pathOrUrl;
+        $trimmed = trim($pathOrUrl);
+
+        if (str_starts_with($trimmed, 'http://') || str_starts_with($trimmed, 'https://')) {
+            $host = parse_url($trimmed, PHP_URL_HOST) ?: '';
+            if (str_contains($host, 'r2.dev')) {
+                $clean = self::extractStoragePath($trimmed) ?? $trimmed;
+                return Storage::disk(self::disk())->url($clean);
+            }
+
+            return $trimmed;
         }
 
-        return Storage::disk(self::disk())->url($pathOrUrl);
+        $clean = self::extractStoragePath($trimmed) ?? $trimmed;
+
+        return Storage::disk(self::disk())->url($clean);
     }
 
     /**
@@ -257,16 +268,21 @@ class FileStorageService
                 return null;
             }
             $cleanPath = ltrim($parsedPath, '/');
-
-            // If path contains 'storage/', strip it for public disk paths (e.g. /storage/products/xyz.png -> products/xyz.png)
-            if (str_starts_with($cleanPath, 'storage/')) {
-                $cleanPath = substr($cleanPath, 8);
-            }
-
-            return $cleanPath ?: null;
+        } else {
+            $cleanPath = ltrim($trimmed, '/');
         }
 
-        return ltrim($trimmed, '/');
+        // Bersihkan prefix api/storage/ atau storage/ yang mungkin terbawa dari UI proxy
+        while (str_starts_with($cleanPath, 'api/storage/') || str_starts_with($cleanPath, 'storage/')) {
+            if (str_starts_with($cleanPath, 'api/storage/')) {
+                $cleanPath = substr($cleanPath, 12);
+            } elseif (str_starts_with($cleanPath, 'storage/')) {
+                $cleanPath = substr($cleanPath, 8);
+            }
+            $cleanPath = ltrim($cleanPath, '/');
+        }
+
+        return $cleanPath ?: null;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMutation;
 use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
@@ -191,6 +192,9 @@ class ProductController extends Controller
         }
         if ($request->has('imageUrl') && !$request->has('image_url')) {
             $request->merge(['image_url' => $request->input('imageUrl')]);
+        }
+        if ($request->has('gallery') && !$request->has('images')) {
+            $request->merge(['images' => $request->input('gallery')]);
         }
         if ($request->has('galleryUrls') && !$request->has('images')) {
             $request->merge(['images' => $request->input('galleryUrls')]);
@@ -448,6 +452,9 @@ class ProductController extends Controller
         }
         if ($request->has('imageUrl') && !$request->has('image_url')) {
             $request->merge(['image_url' => $request->input('imageUrl')]);
+        }
+        if ($request->has('gallery') && !$request->has('images')) {
+            $request->merge(['images' => $request->input('gallery')]);
         }
         if ($request->has('galleryUrls') && !$request->has('images')) {
             $request->merge(['images' => $request->input('galleryUrls')]);
@@ -837,7 +844,110 @@ class ProductController extends Controller
             ],
         ], 201);
     }
+
+    /**
+     * Memperbarui kuota stok yang tersedia untuk dijual (Available Stock for Sale)
+     * pada produk atau masing-masing variannya.
+     */
+    public function updateAvailableStock(Request $request, string $idOrSlug): JsonResponse
+    {
+        $product = Product::where('id', $idOrSlug)
+            ->orWhere('slug', $idOrSlug)
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'available_for_sale_stock' => 'nullable|integer|min:0',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'required_with:variants|integer',
+            'variants.*.available_for_sale_stock' => 'required_with:variants|integer|min:0',
+        ], [
+            'available_for_sale_stock.min' => 'Stok yang dapat dijual tidak boleh negatif.',
+            'variants.*.available_for_sale_stock.min' => 'Stok varian yang dapat dijual tidak boleh negatif.',
+        ]);
+
+        $hasVariants = $product->variants()->exists();
+
+        if ($hasVariants && !empty($validated['variants'])) {
+            $totalAllocated = 0;
+            $errors = [];
+
+            foreach ($validated['variants'] as $varInput) {
+                /** @var \App\Models\ProductVariant|null $variant */
+                $variant = ProductVariant::where('product_id', $product->id)
+                    ->where('id', $varInput['id'])
+                    ->first();
+
+                if (!$variant) {
+                    $errors["variant_{$varInput['id']}"] = ["Varian ID {$varInput['id']} tidak ditemukan pada produk ini."];
+                    continue;
+                }
+
+                $newAvailable = (int) $varInput['available_for_sale_stock'];
+                $physicalStock = (int) $variant->stock;
+
+                // Syarat: suatu product/variant harus memiliki stock terlebih dahulu
+                if ($physicalStock <= 0 && $newAvailable > 0) {
+                    $errors["variant_{$variant->id}"] = ["Varian {$variant->variant_name} belum memiliki stok fisik. Alokasi stok hanya dapat dilakukan jika stok fisik > 0."];
+                    continue;
+                }
+
+                if ($newAvailable > $physicalStock) {
+                    $errors["variant_{$variant->id}"] = ["Alokasi stok varian {$variant->variant_name} ({$newAvailable}) tidak boleh melebihi stok fisik ({$physicalStock})."];
+                    continue;
+                }
+
+                $variant->available_for_sale_stock = $newAvailable;
+                $variant->save();
+                $totalAllocated += $newAvailable;
+            }
+
+            if (!empty($errors)) {
+                return response()->json([
+                    'message' => 'Terdapat kesalahan alokasi stok varian.',
+                    'errors' => $errors,
+                ], 422);
+            }
+
+            $product->available_for_sale_stock = $totalAllocated;
+            $product->save();
+        } else {
+            // Produk tunggal tanpa varian
+            $newAvailable = (int) ($validated['available_for_sale_stock'] ?? 0);
+            $physicalStock = (int) $product->stock;
+
+            if ($physicalStock <= 0 && $newAvailable > 0) {
+                return response()->json([
+                    'message' => 'Produk belum memiliki stok fisik. Alokasi stok hanya dapat dilakukan jika stok fisik > 0.',
+                    'errors' => ['available_for_sale_stock' => ['Produk belum memiliki stok fisik.']],
+                ], 422);
+            }
+
+            if ($newAvailable > $physicalStock) {
+                return response()->json([
+                    'message' => "Alokasi stok ({$newAvailable}) tidak boleh melebihi stok fisik ({$physicalStock}).",
+                    'errors' => ['available_for_sale_stock' => ["Alokasi stok tidak boleh melebihi {$physicalStock} unit."]],
+                ], 422);
+            }
+
+            $product->available_for_sale_stock = $newAvailable;
+            $product->save();
+        }
+
+        $product->load(['variants', 'categories', 'images']);
+
+        return response()->json([
+            'message' => 'Alokasi stok etalase produk berhasil diperbarui.',
+            'data' => new ProductResource($product),
+        ]);
+    }
 }
+
 
 
 

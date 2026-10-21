@@ -23,6 +23,7 @@ class ProductVariant extends Model
         'current_cogs',
         'weight_grams',
         'stock',
+        'available_for_sale_stock',
         'is_active',
     ];
 
@@ -32,8 +33,22 @@ class ProductVariant extends Model
         'current_cogs' => 'decimal:2',
         'weight_grams' => 'decimal:2',
         'stock' => 'integer',
+        'available_for_sale_stock' => 'integer',
         'is_active' => 'boolean',
     ];
+
+    protected $appends = [
+        'effective_available_stock',
+    ];
+
+    public function getEffectiveAvailableStockAttribute(): int
+    {
+        if ($this->available_for_sale_stock !== null) {
+            return min((int) $this->stock, max(0, (int) $this->available_for_sale_stock));
+        }
+
+        return max(0, (int) $this->stock);
+    }
 
     public function product(): BelongsTo
     {

@@ -160,6 +160,7 @@ export default function StockManagementPage({
 
   // Terapkan hasil mutasi dari StockMutationPage (halaman terpisah)
   const handleSaveMutation = (result) => {
+    fetchData();
     if (!result || !result.log) return;
     setInventory((prev) =>
       prev.map((item) =>
@@ -186,17 +187,23 @@ export default function StockManagementPage({
       sortable: true,
       width: 'min-w-[240px]',
       render: (_, item) => {
+        const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
         return (
           <div>
             <div className="font-sport font-black text-neutral-950 text-xs uppercase line-clamp-1">
               {item.name}
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-neutral-500 font-mono">
+            <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[10px] text-neutral-500 font-mono">
               <span className="bg-neutral-100 px-1.5 py-0.2 rounded-none font-bold text-neutral-700 border border-neutral-200">
                 {item.sku}
               </span>
               <span>•</span>
               <span>{item.category_name}</span>
+              {hasVariants && (
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded-none font-sport font-bold text-[9px] uppercase tracking-wider">
+                  {item.variants.length} Varian
+                </span>
+              )}
             </div>
           </div>
         );
@@ -209,10 +216,10 @@ export default function StockManagementPage({
       render: (_, item) => (
         <div>
           <div className="font-semibold text-neutral-900 text-xs">
-            {item.warehouse_name}
+            {item.warehouse_name || 'Gudang Utama'}
           </div>
           <div className="text-[10px] text-neutral-500 font-mono">
-            Kode: {item.warehouse_code} • Bin: {item.warehouse_bin || '-'}
+            Kode: {item.warehouse_code || 'WH-CGK-01'} • Bin: {item.warehouse_bin || '-'}
           </div>
         </div>
       )
@@ -222,20 +229,38 @@ export default function StockManagementPage({
       label: 'Stok Fisik (On-Hand)',
       sortable: true,
       align: 'center',
-      width: 'w-36',
-      render: (stock, item) => (
-        <div className="font-mono font-black text-sm text-neutral-950">
-          {stock}{' '}
-          <span className="text-[10px] font-normal text-neutral-500">unit</span>
-        </div>
-      )
+      width: 'w-40',
+      render: (stock, item) => {
+        const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+        return (
+          <div className="flex flex-col items-center">
+            <div className="font-mono font-black text-sm text-neutral-950">
+              {stock}{' '}
+              <span className="text-[10px] font-normal text-neutral-500">unit</span>
+            </div>
+            {hasVariants && (
+              <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+                {item.variants.map((v) => (
+                  <span
+                    key={v.id}
+                    className="text-[9px] font-mono px-1 py-0.2 bg-neutral-100 border border-neutral-200 text-neutral-700 rounded-none"
+                    title={`Stok Fisik ${v.variant_name}: ${v.stock} unit`}
+                  >
+                    {v.variant_name}: <strong>{v.stock}</strong>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      }
     },
     {
       key: 'reserved_stock',
       label: 'Stok Terpesan',
       sortable: true,
       align: 'center',
-      width: 'w-36',
+      width: 'w-32',
       render: (_, item) => (
         <div className="font-mono font-bold text-xs text-amber-700">
           {Number(item?.reserved_stock || 0)}{' '}
@@ -245,16 +270,50 @@ export default function StockManagementPage({
     },
     {
       key: 'available_stock',
-      label: 'Stok Siap Jual',
+      label: 'Stok Siap Jual (Etalase)',
       sortable: true,
       align: 'center',
-      width: 'w-36',
+      width: 'w-44',
       render: (_, item) => {
-        const avail = Math.max(0, (Number(item.stock) || 0) - (Number(item.reserved_stock) || 0));
+        const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+        const avail = item.effective_available_stock !== undefined && item.effective_available_stock !== null
+          ? Number(item.effective_available_stock)
+          : Math.max(0, (Number(item.stock) || 0) - (Number(item.reserved_stock) || 0));
+
+        const isQuotaLimited = item.available_for_sale_stock !== null && item.available_for_sale_stock !== undefined;
+
         return (
-          <div className={`font-mono font-black text-sm ${avail === 0 ? 'text-red-700' : 'text-emerald-700'}`}>
-            {avail}{' '}
-            <span className="text-[10px] font-normal text-neutral-500">unit</span>
+          <div className="flex flex-col items-center">
+            <div className={`font-mono font-black text-sm ${avail === 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+              {avail}{' '}
+              <span className="text-[10px] font-normal text-neutral-500">unit</span>
+            </div>
+            {isQuotaLimited && (
+              <span
+                className="text-[9px] font-sport font-black uppercase text-amber-900 bg-amber-50 border border-amber-200 px-1 py-0.2 mt-0.5 rounded-none"
+                title={`Kuota etalase dibatasi manual: ${item.available_for_sale_stock} unit`}
+              >
+                Kuota: {item.available_for_sale_stock}
+              </span>
+            )}
+            {hasVariants && (
+              <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+                {item.variants.map((v) => {
+                  const varAvail = v.effective_available_stock !== undefined && v.effective_available_stock !== null
+                    ? Number(v.effective_available_stock)
+                    : Number(v.stock);
+                  return (
+                    <span
+                      key={v.id}
+                      className="text-[9px] font-mono px-1 py-0.2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-none"
+                      title={`Kuota Etalase ${v.variant_name}: ${varAvail} unit siap jual`}
+                    >
+                      {v.variant_name}: <strong>{varAvail}</strong>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       }
@@ -267,7 +326,7 @@ export default function StockManagementPage({
       render: (_, item) => {
         const onHand = Number(item.stock) || 0;
         const isOut = onHand === 0;
-        const isLow = onHand <= item.stock_minimum;
+        const isLow = onHand <= (item.stock_minimum || item.min_stock || 5);
 
         return (
           <span className={`inline-block px-2.5 py-1 text-[10px] font-sport font-black uppercase rounded-none border tracking-wider ${
@@ -311,7 +370,7 @@ export default function StockManagementPage({
               <div 
                 className={`absolute right-0 ${
                   isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
-                } w-48 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100`}
+                } w-52 bg-white border border-neutral-300 rounded-none shadow-xl z-50 py-1 text-left animate-in fade-in zoom-in-95 duration-100`}
               >
                 {/* 1. Restok Tambah */}
                 <button

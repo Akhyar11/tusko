@@ -1824,6 +1824,7 @@ export default function App() {
             onCategoriesChange={setCategories}
             onNavigateToCategories={() => setCurrentView('categories-admin')}
             onOpenCategoryMaster={() => setCurrentView('categories-admin')}
+            onShowToast={showToast}
           />
         ) : currentView === 'profile' ? (
           <ProfilePage

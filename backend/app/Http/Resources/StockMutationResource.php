@@ -17,8 +17,11 @@ class StockMutationResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
+            'product_variant_id' => $this->product_variant_id,
             'product_name' => $this->product?->name,
-            'sku' => $this->product?->sku,
+            'variant_name' => $this->productVariant?->variant_name,
+            'sku' => $this->productVariant?->sku ?: $this->product?->sku,
+            'product_sku' => $this->product?->sku,
             'type' => $this->type,
             'quantity' => (int) $this->quantity,
             'stock_before' => (int) $this->stock_before,

@@ -65,16 +65,24 @@ class InventoryService
      */
     public function availableStock(Product $product, ?ProductVariant $variant = null): int
     {
+        $allocatedSaleStock = $variant
+            ? $variant->available_for_sale_stock
+            : $product->available_for_sale_stock;
+
         $query = InventoryBalance::query()
             ->where('product_id', $product->id)
             ->when($variant, fn ($q) => $q->where('product_variant_id', $variant->id))
             ->when(! $variant, fn ($q) => $q->whereNull('product_variant_id'));
 
-        if ((clone $query)->exists()) {
-            return max(0, (int) $query->sum('available_stock'));
+        $physicalAvailable = (clone $query)->exists()
+            ? max(0, (int) $query->sum('available_stock'))
+            : max(0, (int) ($variant ? $variant->stock : $product->stock));
+
+        if ($allocatedSaleStock !== null) {
+            return min($physicalAvailable, max(0, (int) $allocatedSaleStock));
         }
 
-        return max(0, (int) ($variant ? $variant->stock : $product->stock));
+        return $physicalAvailable;
     }
 
     /**

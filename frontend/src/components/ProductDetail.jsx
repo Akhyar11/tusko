@@ -19,7 +19,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 import { sizeChartService } from '../services/sizeChartService';
 import ProductReviewsSection from './organisms/ProductReviewsSection';
 
@@ -39,24 +39,27 @@ export default function ProductDetail({
   const displayImages = useMemo(() => {
     const list = [];
     if (product.image_url && typeof product.image_url === 'string' && product.image_url.trim()) {
-      list.push(product.image_url.trim());
+      list.push(normalizeImageUrl(product.image_url.trim()));
     }
     if (Array.isArray(product.gallery)) {
       product.gallery.forEach((img) => {
-        if (img && typeof img === 'string' && img.trim() && !list.includes(img.trim())) {
-          list.push(img.trim());
+        const raw = typeof img === 'string' ? img.trim() : img?.image_url?.trim();
+        const norm = normalizeImageUrl(raw);
+        if (norm && !list.includes(norm)) {
+          list.push(norm);
         }
       });
     }
     if (Array.isArray(product.images)) {
       product.images.forEach((img) => {
-        const url = typeof img === 'string' ? img.trim() : img?.image_url?.trim();
-        if (url && !list.includes(url)) {
-          list.push(url);
+        const raw = typeof img === 'string' ? img.trim() : img?.image_url?.trim();
+        const norm = normalizeImageUrl(raw);
+        if (norm && !list.includes(norm)) {
+          list.push(norm);
         }
       });
     }
-    return list.length > 0 ? list : [product.image_url || PRODUCT_PLACEHOLDER_IMAGE].filter(Boolean);
+    return list.length > 0 ? list : [PRODUCT_PLACEHOLDER_IMAGE];
   }, [product]);
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -109,7 +112,9 @@ export default function ProductDetail({
   // Current dynamic pricing and stock
   const basePrice = Number(product.price || 0);
   const currentPrice = selectedVariant ? Number(selectedVariant.price) : basePrice;
-  const currentStock = selectedVariant ? Number(selectedVariant.stock ?? 0) : Number(product.stock ?? 0);
+  const currentStock = selectedVariant 
+    ? Number(selectedVariant.effective_available_stock ?? selectedVariant.available_for_sale_stock ?? selectedVariant.stock ?? 0)
+    : Number(product.effective_available_stock ?? product.available_for_sale_stock ?? product.stock ?? 0);
   const minStock = Number(product.stock_minimum ?? 5);
   const isOutOfStock = currentStock <= 0;
   const isLowStock = !isOutOfStock && currentStock <= minStock;
@@ -504,7 +509,9 @@ export default function ProductDetail({
                       const match = product.variants.find((v) => {
                         return v.size === sz && Object.entries(selectedOptions).every(([c, val]) => c === 'size' || v[c] === val);
                       });
-                      optionStock = match ? Number(match.stock ?? 0) : 0;
+                      optionStock = match 
+                        ? Number(match.effective_available_stock ?? match.available_for_sale_stock ?? match.stock ?? 0) 
+                        : 0;
                     }
 
                     const optOutOfStock = optionStock <= 0;

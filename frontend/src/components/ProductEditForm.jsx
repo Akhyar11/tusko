@@ -31,7 +31,7 @@ import {
   Tags,
   Boxes
 } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 import FormTipsPanel from './organisms/FormTipsPanel';
 import { generateProductSku, generateVariantSku } from '../utils/productSku';
 import ServerSideSelect from './molecules/ServerSideSelect';
@@ -229,9 +229,12 @@ export default function ProductEditForm({
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState(() => {
     if (Array.isArray(product.gallery) && product.gallery.length > 0) {
-      return [...product.gallery];
+      return product.gallery.map(img => typeof img === 'string' ? img : img?.image_url).filter(Boolean);
     }
-    return product.image_url ? [product.image_url] : [];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      return product.images.map(img => typeof img === 'string' ? img : img?.image_url).filter(Boolean);
+    }
+    return [];
   });
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [newGalleryInput, setNewGalleryInput] = useState('');
@@ -302,8 +305,14 @@ export default function ProductEditForm({
     );
     setStock(product.stock || 0);
     setStockMinimum(product.stock_minimum || 5);
-    setImageUrl(product.image_url || '');
-    setGalleryUrls(Array.isArray(product.gallery) ? [...product.gallery] : [product.image_url]);
+    const initialGallery = (
+      Array.isArray(product.gallery) && product.gallery.length > 0
+        ? product.gallery.map(img => typeof img === 'string' ? img : img?.image_url)
+        : Array.isArray(product.images) && product.images.length > 0
+        ? product.images.map(img => typeof img === 'string' ? img : img?.image_url)
+        : []
+    ).filter(Boolean);
+    setGalleryUrls(initialGallery);
     setVariantsList(Array.isArray(product.variants) ? [...product.variants] : []);
   };
 
@@ -341,7 +350,7 @@ export default function ProductEditForm({
       const res = await productService.uploadImage(file);
       const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
       if (uploadedUrl) {
-        setImageUrl(uploadedUrl);
+        setImageUrl(normalizeImageUrl(uploadedUrl));
       }
     } catch (err) {
       console.warn('Upload gambar langsung gagal, fallback ke Data URL:', err);
@@ -356,28 +365,36 @@ export default function ProductEditForm({
   };
 
   const handleGalleryFilesUpload = async (filesOrEvent) => {
-    const files = Array.isArray(filesOrEvent)
+    const rawFiles = Array.isArray(filesOrEvent)
       ? filesOrEvent
       : filesOrEvent?.target
       ? Array.from(filesOrEvent.target.files || [])
       : [filesOrEvent].filter(Boolean);
+    const files = rawFiles.filter(f => f && f.type && f.type.startsWith('image/'));
     if (files.length === 0) return;
+
+    // Buat instant local preview untuk setiap foto agar langsung tampil di grid
+    const localPreviews = files.map(f => URL.createObjectURL(f));
+    setGalleryUrls(prev => [...prev, ...localPreviews]);
 
     try {
       setIsUploadingGallery(true);
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const previewUrl = localPreviews[i];
         try {
           const res = await productService.uploadImage(file);
           const uploadedUrl = res?.url || res?.data?.url || (typeof res === 'string' ? res : null);
-          if (uploadedUrl) {
-            setGalleryUrls(prev => [...prev, uploadedUrl]);
+          const finalUrl = normalizeImageUrl(uploadedUrl) || previewUrl;
+          if (finalUrl) {
+            setGalleryUrls(prev => prev.map(u => (u === previewUrl ? finalUrl : u)));
           }
         } catch (err) {
-          console.warn('Upload gambar galeri gagal, fallback ke Data URL:', err);
+          console.warn('Upload gambar galeri ke cloud gagal, fallback ke Data URL:', err);
           const reader = new FileReader();
           reader.onload = (event) => {
-            setGalleryUrls(prev => [...prev, event.target.result]);
+            const dataUrl = event.target.result;
+            setGalleryUrls(prev => prev.map(u => (u === previewUrl ? dataUrl : u)));
           };
           reader.readAsDataURL(file);
         }
@@ -583,7 +600,9 @@ export default function ProductEditForm({
       stock: Number(stock) || 0,
       stock_minimum: Number(stockMinimum) || 5,
       image_url: imageUrl.trim(),
-      gallery: galleryUrls.length > 0 ? galleryUrls : (imageUrl.trim() ? [imageUrl.trim()] : []),
+      gallery: galleryUrls.filter(Boolean),
+      galleryUrls: galleryUrls.filter(Boolean),
+      images: galleryUrls.filter(Boolean),
       specifications: specificationsObj,
       variants: hasVariants ? variantsList : []
     };
@@ -1469,9 +1488,13 @@ export default function ProductEditForm({
               ) : (
                 <div className="relative aspect-video w-full overflow-hidden border border-neutral-300 bg-neutral-100 rounded-none group">
                   <img
-                    src={imageUrl}
+                    src={normalizeImageUrl(imageUrl)}
                     alt="Foto Utama"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                    }}
                   />
                   {isUploadingMainImage && (
                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 text-white z-10">
@@ -1578,15 +1601,26 @@ export default function ProductEditForm({
               {galleryUrls.length > 0 && (
                 <div className="grid grid-cols-4 gap-2 pt-2">
                   {galleryUrls.map((url, idx) => (
-                    <div key={idx} className="relative aspect-square overflow-hidden border border-neutral-300 rounded-none group">
-                      <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                    <div key={idx} className="relative aspect-square overflow-hidden border border-neutral-300 rounded-none group bg-neutral-100">
+                      <img
+                        src={normalizeImageUrl(url)}
+                        alt={`Gallery ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                      <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-neutral-950/80 text-amber-400 text-[9px] font-sport font-black uppercase tracking-wider pointer-events-none">
+                        #{idx + 1}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveGalleryUrl(idx)}
                         className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-none"
                         title="Hapus foto ini"
                       >
-                        <Trash2 size={14} className="text-rose-400" />
+                        <Trash2 size={16} className="text-rose-400" />
                       </button>
                     </div>
                   ))}

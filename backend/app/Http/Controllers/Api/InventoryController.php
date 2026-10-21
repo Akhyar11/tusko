@@ -22,7 +22,7 @@ class InventoryController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Product::query()->with(['category', 'images']);
+        $query = Product::query()->with(['category', 'images', 'variants']);
 
         // 1. Filter Status Stok (safe, low, out_of_stock)
         $stockFilter = $request->query('stock_status', $request->query('status', 'all'));
@@ -159,7 +159,7 @@ class InventoryController extends Controller
             ], 422);
         }
 
-        $product = Product::with(['category', 'images'])
+        $product = Product::with(['category', 'images', 'variants'])
             ->where(function ($q) use ($targetIdOrSku) {
                 if (is_numeric($targetIdOrSku)) {
                     $q->where('id', (int) $targetIdOrSku)->orWhere('sku', $targetIdOrSku);
@@ -169,8 +169,118 @@ class InventoryController extends Controller
             })
             ->firstOrFail();
 
+        if ($request->has('items') && is_array($request->input('items'))) {
+            $validated = $request->validate([
+                'items' => 'required|array|min:1',
+                'items.*.product_variant_id' => 'nullable|integer|exists:product_variants,id',
+                'items.*.variant_id' => 'nullable|integer|exists:product_variants,id',
+                'items.*.quantity' => 'nullable|integer|min:0',
+                'items.*.available_for_sale_stock' => 'nullable|integer|min:0',
+                'cost_price' => 'nullable|numeric|min:0',
+                'supplier' => 'nullable|string|max:255',
+                'po_number' => 'nullable|string|max:100',
+                'warehouse_bin' => 'nullable|string|max:100',
+                'notes' => 'nullable|string|max:500',
+                'operator' => 'nullable|string|max:100',
+                'sync_to_cashflow' => 'nullable|boolean',
+            ]);
+
+            $supplier = $validated['supplier'] ?? null;
+            $poNumber = $validated['po_number'] ?? ('PO/' . date('Ymd') . '/' . mt_rand(1000, 9999));
+            $operator = $validated['operator'] ?? 'Admin Gudang';
+            $syncCashflow = filter_var($validated['sync_to_cashflow'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $cost = (float) ($validated['cost_price'] ?? ($product->cost_price ?? 0));
+
+            $totalAdded = 0;
+            $mutations = [];
+
+            \Illuminate\Support\Facades\DB::transaction(function () use (
+                $product, $validated, $supplier, $poNumber, $operator, &$totalAdded, &$mutations
+            ) {
+                foreach ($validated['items'] as $item) {
+                    $vId = $item['product_variant_id'] ?? $item['variant_id'] ?? null;
+                    $variant = $vId ? $product->variants()->where('id', $vId)->first() : null;
+                    $qty = (int) ($item['quantity'] ?? 0);
+
+                    if ($qty > 0) {
+                        $vNote = $variant ? " [Varian: {$variant->variant_name}]" : '';
+                        $notes = $validated['notes'] ?? ("Penerimaan barang masuk +{$qty} unit{$vNote}" . ($supplier ? " dari {$supplier}" : ''));
+                        $mut = $this->inventoryService->increase($product, $qty, [
+                            'reference_type' => 'manual_restock',
+                            'reference_id' => $poNumber,
+                            'notes' => $notes,
+                            'created_by' => $operator,
+                        ], $variant);
+                        $mutations[] = $mut;
+                        $totalAdded += $qty;
+                    }
+
+                    if (array_key_exists('available_for_sale_stock', $item) && $item['available_for_sale_stock'] !== null) {
+                        $avail = (int) $item['available_for_sale_stock'];
+                        if ($variant) {
+                            $variant->refresh();
+                            if ($avail <= $variant->stock) {
+                                $variant->available_for_sale_stock = $avail;
+                                $variant->save();
+                            }
+                        } else {
+                            $product->refresh();
+                            if ($avail <= $product->stock) {
+                                $product->available_for_sale_stock = $avail;
+                                $product->save();
+                            }
+                        }
+                    }
+                }
+
+                if ($product->variants()->exists()) {
+                    $product->available_for_sale_stock = $product->variants()->sum('available_for_sale_stock');
+                    $product->save();
+                }
+
+                $updateData = [];
+                if (array_key_exists('cost_price', $validated) && $validated['cost_price'] !== null) {
+                    $updateData['cost_price'] = $validated['cost_price'];
+                }
+                if (!empty($validated['warehouse_bin'])) {
+                    $updateData['warehouse_bin'] = $validated['warehouse_bin'];
+                }
+                if (!empty($updateData)) {
+                    $product->update($updateData);
+                }
+            });
+
+            $totalCost = $totalAdded * $cost;
+            if ($syncCashflow && $totalCost > 0) {
+                \App\Models\Transaction::create([
+                    'transaction_number' => \App\Models\Transaction::generateTransactionNumber('expense'),
+                    'type' => 'expense',
+                    'category' => 'restock',
+                    'category_label' => 'Pengadaan Stok Produk',
+                    'amount' => $totalCost,
+                    'description' => "Pengadaan restock {$totalAdded}x {$product->name} (PO: {$poNumber})",
+                    'payment_method' => 'Kas Toko / Pengadaan Supplier',
+                    'status' => 'settled',
+                    'customer_name' => $supplier ?: 'Supplier Gudang',
+                    'notes' => $validated['notes'] ?? 'Restok multi-varian',
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Berhasil menambahkan +{$totalAdded} unit stok untuk {$product->name}.",
+                'data' => [
+                    'product' => new InventoryProductResource($product->fresh(['category', 'images', 'variants'])),
+                    'mutations_count' => count($mutations),
+                ],
+            ], 200);
+        }
+
         $validated = $request->validate([
+            'product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'variant_id' => 'nullable|integer|exists:product_variants,id',
             'quantity' => 'required|integer|min:1',
+            'available_for_sale_stock' => 'nullable|integer|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'supplier' => 'nullable|string|max:255',
             'po_number' => 'nullable|string|max:100',
@@ -180,10 +290,25 @@ class InventoryController extends Controller
             'sync_to_cashflow' => 'nullable|boolean',
         ]);
 
+        $variantId = $validated['product_variant_id'] ?? $validated['variant_id'] ?? null;
+        /** @var \App\Models\ProductVariant|null $variant */
+        $variant = null;
+        if ($variantId) {
+            $variant = $product->variants()->where('id', $variantId)->first();
+            if (!$variant) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Varian yang dipilih tidak ditemukan pada produk ini.',
+                    'errors' => ['product_variant_id' => ['Varian tidak sesuai dengan produk.']],
+                ], 422);
+            }
+        }
+
         $quantity = (int) $validated['quantity'];
         $supplier = $validated['supplier'] ?? null;
         $poNumber = $validated['po_number'] ?? ('PO/' . date('Ymd') . '/' . mt_rand(1000, 9999));
-        $notes = $validated['notes'] ?? ("Penerimaan barang masuk +{$quantity} unit" . ($supplier ? " dari {$supplier}" : ''));
+        $variantNote = $variant ? " [Varian: {$variant->variant_name}]" : '';
+        $notes = $validated['notes'] ?? ("Penerimaan barang masuk +{$quantity} unit{$variantNote}" . ($supplier ? " dari {$supplier}" : ''));
         $operator = $validated['operator'] ?? 'Admin Gudang';
 
         try {
@@ -192,12 +317,31 @@ class InventoryController extends Controller
                 'reference_id' => $poNumber,
                 'notes' => $notes,
                 'created_by' => $operator,
-            ]);
+            ], $variant);
         } catch (RuntimeException $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 422);
+        }
+
+        if (array_key_exists('available_for_sale_stock', $validated) && $validated['available_for_sale_stock'] !== null) {
+            $avail = (int) $validated['available_for_sale_stock'];
+            if ($variant) {
+                $variant->refresh();
+                if ($avail <= $variant->stock) {
+                    $variant->available_for_sale_stock = $avail;
+                    $variant->save();
+                    $product->available_for_sale_stock = $product->variants()->sum('available_for_sale_stock');
+                    $product->save();
+                }
+            } else {
+                $product->refresh();
+                if ($avail <= $product->stock) {
+                    $product->available_for_sale_stock = $avail;
+                    $product->save();
+                }
+            }
         }
 
         // Atribut non-stok (harga pokok & lokasi rak) tetap diperbarui pada produk.
@@ -224,7 +368,7 @@ class InventoryController extends Controller
                 'category' => 'restock',
                 'category_label' => 'Pengadaan Stok Produk',
                 'amount' => $totalCost,
-                'description' => "Pengadaan restock {$quantity}x {$product->name} (PO: {$mutation->reference_id})",
+                'description' => "Pengadaan restock {$quantity}x {$product->name}" . ($variant ? " ({$variant->variant_name})" : '') . " (PO: {$mutation->reference_id})",
                 'payment_method' => 'Kas Toko / Pengadaan Supplier',
                 'status' => 'settled',
                 'customer_name' => $supplier ?: 'Supplier Gudang',
@@ -232,12 +376,15 @@ class InventoryController extends Controller
             ]);
         }
 
+        $variantText = $variant ? " ({$variant->variant_name})" : '';
+
         return response()->json([
             'status' => 'success',
-            'message' => "Berhasil menambahkan +{$quantity} unit stok untuk {$product->name}.",
+            'message' => "Berhasil menambahkan +{$quantity} unit stok untuk {$product->name}{$variantText}.",
             'data' => [
-                'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
-                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
+                'product' => new InventoryProductResource($product->fresh(['category', 'images', 'variants'])),
+                'variant' => $variant ? $variant->fresh() : null,
+                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load(['product', 'productVariant'])),
             ],
         ], 200);
     }
@@ -307,7 +454,7 @@ class InventoryController extends Controller
             ], 422);
         }
 
-        $product = Product::with(['category', 'images'])
+        $product = Product::with(['category', 'images', 'variants'])
             ->where(function ($q) use ($targetIdOrSku) {
                 if (is_numeric($targetIdOrSku)) {
                     $q->where('id', (int) $targetIdOrSku)->orWhere('sku', $targetIdOrSku);
@@ -318,12 +465,28 @@ class InventoryController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
+            'product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'variant_id' => 'nullable|integer|exists:product_variants,id',
             'quantity' => 'required|integer|min:1',
             'reason' => 'nullable|string|in:damage,sample,expired,loss,manual_sale,other',
             'reference' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:500',
             'operator' => 'nullable|string|max:100',
         ]);
+
+        $variantId = $validated['product_variant_id'] ?? $validated['variant_id'] ?? null;
+        /** @var \App\Models\ProductVariant|null $variant */
+        $variant = null;
+        if ($variantId) {
+            $variant = $product->variants()->where('id', $variantId)->first();
+            if (!$variant) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Varian yang dipilih tidak ditemukan pada produk ini.',
+                    'errors' => ['product_variant_id' => ['Varian tidak sesuai dengan produk.']],
+                ], 422);
+            }
+        }
 
         $quantity = (int) $validated['quantity'];
 
@@ -340,7 +503,8 @@ class InventoryController extends Controller
         $reasonLabel = $reasonLabels[$reasonKey] ?? 'Pengurangan Stok';
         $reference = $validated['reference'] ?? ('BA-DED/' . date('Ymd') . '/' . mt_rand(1000, 9999));
         $operator = $validated['operator'] ?? 'Admin Gudang';
-        $notes = $validated['notes'] ?? "Pengurangan stok -{$quantity} unit ({$reasonLabel})";
+        $variantNote = $variant ? " [Varian: {$variant->variant_name}]" : '';
+        $notes = $validated['notes'] ?? "Pengurangan stok -{$quantity} unit ({$reasonLabel}){$variantNote}";
 
         try {
             $mutation = $this->inventoryService->decrease($product, $quantity, [
@@ -348,7 +512,7 @@ class InventoryController extends Controller
                 'reference_id' => $reference,
                 'notes' => $notes,
                 'created_by' => $operator,
-            ]);
+            ], $variant);
         } catch (InsufficientStockException $e) {
             return response()->json([
                 'status' => 'error',
@@ -364,12 +528,15 @@ class InventoryController extends Controller
             ], 422);
         }
 
+        $variantText = $variant ? " ({$variant->variant_name})" : '';
+
         return response()->json([
             'status' => 'success',
-            'message' => "Berhasil mengurangi -{$quantity} unit dari stok {$product->name}.",
+            'message' => "Berhasil mengurangi -{$quantity} unit dari stok {$product->name}{$variantText}.",
             'data' => [
-                'product' => new InventoryProductResource($product->fresh(['category', 'images'])),
-                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load('product')),
+                'product' => new InventoryProductResource($product->fresh(['category', 'images', 'variants'])),
+                'variant' => $variant ? $variant->fresh() : null,
+                'mutation' => new \App\Http\Resources\StockMutationResource($mutation->load(['product', 'productVariant'])),
             ],
         ], 200);
     }

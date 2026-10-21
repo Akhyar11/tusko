@@ -22,8 +22,9 @@ import {
   SlidersHorizontal,
   X
 } from 'lucide-react';
-import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 import DeleteProductModal from './DeleteProductModal';
+import ProductStockModal from './organisms/ProductStockModal';
 import ServerSideTable from './ServerSideTable';
 import ProductHeaderActions from './organisms/ProductHeaderActions';
 import ProductFilterDrawer from './organisms/ProductFilterDrawer';
@@ -40,7 +41,8 @@ export default function ProductListPage({
   onBackToShopping = () => {},
   onCategoriesChange = () => {},
   onNavigateToCategories,
-  onOpenCategoryMaster
+  onOpenCategoryMaster,
+  onShowToast = () => {},
 }) {
   const handleOpenCategoryMaster = onNavigateToCategories || onOpenCategoryMaster || (() => {});
   // Centralized Zustand Table Store (100% Server-Side Filtering, Pagination, Limit & Sorting)
@@ -67,6 +69,7 @@ export default function ProductListPage({
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [stockModalProduct, setStockModalProduct] = useState(null);
 
   // Initial Fetch on Mount
   useEffect(() => {
@@ -204,8 +207,12 @@ export default function ProductListPage({
         return (
           <div className="flex items-center gap-3">
             <img
-              src={product.image_url || PRODUCT_PLACEHOLDER_IMAGE}
+              src={normalizeImageUrl(product.image_url) || PRODUCT_PLACEHOLDER_IMAGE}
               alt={product.name}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+              }}
               className="w-12 h-12 rounded-none object-cover border border-neutral-300 shrink-0 bg-neutral-100"
             />
             <div className="min-w-0 max-w-xs sm:max-w-sm">
@@ -433,6 +440,19 @@ export default function ProductListPage({
                 >
                   <Edit3 size={15} className="text-neutral-500" />
                   <span>Ubah Produk</span>
+                </button>
+
+                {/* 2.5 Manajemen Stok Etalase */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveActionMenuId(null);
+                    setStockModalProduct(product);
+                  }}
+                  className="w-full px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                >
+                  <Boxes size={15} className="text-neutral-500" />
+                  <span>Manajemen Stok</span>
                 </button>
 
                 {/* 3. Toggle Status Aktif/Draft */}
@@ -702,6 +722,17 @@ export default function ProductListPage({
           }
           fetchData();
         }}
+      />
+
+      {/* Modal Manajemen Stok Etalase Produk */}
+      <ProductStockModal
+        isOpen={!!stockModalProduct}
+        product={stockModalProduct}
+        onClose={() => setStockModalProduct(null)}
+        onSuccess={() => {
+          fetchData();
+        }}
+        onShowToast={onShowToast}
       />
 
     </div>

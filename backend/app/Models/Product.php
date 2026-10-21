@@ -23,6 +23,7 @@ class Product extends Model
         'original_price',
         'cost_price',
         'stock',
+        'available_for_sale_stock',
         'stock_minimum',
         'min_stock',
         'weight',
@@ -61,6 +62,7 @@ class Product extends Model
         'original_price' => 'decimal:2',
         'cost_price' => 'decimal:2',
         'stock' => 'integer',
+        'available_for_sale_stock' => 'integer',
         'stock_minimum' => 'integer',
         'min_stock' => 'integer',
         'weight' => 'integer',
@@ -80,7 +82,17 @@ class Product extends Model
         'profit_margin',
         'effective_stock_minimum',
         'reward_points',
+        'effective_available_stock',
     ];
+
+    public function getEffectiveAvailableStockAttribute(): int
+    {
+        if ($this->available_for_sale_stock !== null) {
+            return min((int) $this->stock, max(0, (int) $this->available_for_sale_stock));
+        }
+
+        return max(0, (int) $this->stock);
+    }
 
     protected static function booted(): void
     {

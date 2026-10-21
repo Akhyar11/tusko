@@ -19,7 +19,7 @@ import {
   LogIn,
   UserPlus
 } from 'lucide-react';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, PRODUCT_PLACEHOLDER_IMAGE, normalizeImageUrl } from '../utils/formatters';
 import { resolveMenuIcon } from '../utils/menuIcons';
 import SearchBar from './molecules/SearchBar';
 import UserMenuDropdown from './UserMenuDropdown';
@@ -190,8 +190,12 @@ export default function Navbar({
                     className="p-3 flex items-center gap-3 hover:bg-neutral-50 cursor-pointer transition-colors"
                   >
                     <img
-                      src={product.image_url}
-                      alt=""
+                      src={normalizeImageUrl(product.image_url) || PRODUCT_PLACEHOLDER_IMAGE}
+                      alt={product.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                      }}
                       className="w-10 h-10 object-cover border border-neutral-200 shrink-0"
                     />
                     <div className="flex-1 min-w-0">

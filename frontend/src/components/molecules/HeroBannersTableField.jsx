@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import HeroBannerModal from '../organisms/HeroBannerModal';
 import ConfirmationModal from '../organisms/ConfirmationModal';
-import { formatRupiah } from '../../utils/formatters';
+import { formatRupiah, normalizeImageUrl, PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/formatters';
 
 export default function HeroBannersTableField({
   value = '',
@@ -181,7 +181,15 @@ export default function HeroBannersTableField({
                     {/* Visual */}
                     <td className="py-3 px-3 align-middle">
                       <div className="w-14 h-14 bg-neutral-100 border border-neutral-300 rounded-none overflow-hidden shrink-0 relative">
-                        <img src={thumb} alt={banner.title} className="w-full h-full object-cover" />
+                        <img 
+                          src={normalizeImageUrl(thumb) || PRODUCT_PLACEHOLDER_IMAGE} 
+                          alt={banner.title} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                          }}
+                        />
                         {banner.image_urls && banner.image_urls.length > 1 && (
                           <span className="absolute bottom-0 right-0 bg-neutral-950/80 text-[8px] font-mono text-white px-1">
                             +{banner.image_urls.length - 1}

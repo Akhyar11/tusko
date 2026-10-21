@@ -16,7 +16,7 @@ import {
 import TextInput from '../molecules/TextInput';
 import TextArea from '../molecules/TextArea';
 import ToggleSwitch from '../molecules/ToggleSwitch';
-import { formatRupiah } from '../../utils/formatters';
+import { formatRupiah, normalizeImageUrl, PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/formatters';
 
 const TEMPLATE_STYLES = [
   { id: 'featured_gallery', label: 'Utama + Galeri', desc: 'Foto utama dominan dengan strip aksen foto galeri produk' },
@@ -54,17 +54,29 @@ export default function HeroBannerModal({
   const availableProductImages = useMemo(() => {
     if (!selectedProduct) return [];
     const imgs = [];
+    const seen = new Set();
+
     if (selectedProduct.image_url) {
-      imgs.push({ id: 'primary', url: selectedProduct.image_url, isPrimary: true });
+      const norm = normalizeImageUrl(selectedProduct.image_url);
+      if (norm) {
+        imgs.push({ id: 'primary', url: norm, isPrimary: true });
+        seen.add(norm);
+      }
     }
-    if (Array.isArray(selectedProduct.images)) {
-      selectedProduct.images.forEach((g, idx) => {
-        const url = g.image_url || g;
-        if (url && url !== selectedProduct.image_url) {
-          imgs.push({ id: `gallery-${idx}`, url, isPrimary: false });
-        }
-      });
-    }
+
+    const galleryList = Array.isArray(selectedProduct.gallery) && selectedProduct.gallery.length > 0
+      ? selectedProduct.gallery
+      : (Array.isArray(selectedProduct.images) ? selectedProduct.images : []);
+
+    galleryList.forEach((g, idx) => {
+      const raw = typeof g === 'string' ? g : (g?.image_url || '');
+      const norm = normalizeImageUrl(raw);
+      if (norm && !seen.has(norm)) {
+        imgs.push({ id: `gallery-${idx}`, url: norm, isPrimary: imgs.length === 0 });
+        seen.add(norm);
+      }
+    });
+
     return imgs;
   }, [selectedProduct]);
 
@@ -81,7 +93,10 @@ export default function HeroBannerModal({
       setCtaPrimary(initialData.cta_primary || 'BELI SEKARANG');
       setCtaSecondary(initialData.cta_secondary || 'LIHAT PRODUK');
       setTemplateStyle(initialData.template_style || 'featured_gallery');
-      setSelectedImages(Array.isArray(initialData.image_urls) ? initialData.image_urls : []);
+      const initialImgs = Array.isArray(initialData.image_urls)
+        ? initialData.image_urls.map(u => normalizeImageUrl(u)).filter(Boolean)
+        : [];
+      setSelectedImages(initialImgs);
       setIsActive(initialData.active !== false);
     } else {
       setProductId('');
@@ -115,25 +130,42 @@ export default function HeroBannerModal({
       setPriceBadge(prod.price ? `Mulai ${formatRupiah(prod.price)}` : '');
     }
 
-    // Auto-select seluruh gambar produk
+    // Auto-select seluruh gambar produk (ternormalisasi)
     const imgs = [];
-    if (prod.image_url) imgs.push(prod.image_url);
-    if (Array.isArray(prod.images)) {
-      prod.images.forEach((g) => {
-        const url = g.image_url || g;
-        if (url && !imgs.includes(url)) imgs.push(url);
-      });
+    const seen = new Set();
+    if (prod.image_url) {
+      const norm = normalizeImageUrl(prod.image_url);
+      if (norm) {
+        imgs.push(norm);
+        seen.add(norm);
+      }
     }
+
+    const galleryList = Array.isArray(prod.gallery) && prod.gallery.length > 0
+      ? prod.gallery
+      : (Array.isArray(prod.images) ? prod.images : []);
+
+    galleryList.forEach((g) => {
+      const raw = typeof g === 'string' ? g : (g?.image_url || '');
+      const norm = normalizeImageUrl(raw);
+      if (norm && !seen.has(norm)) {
+        imgs.push(norm);
+        seen.add(norm);
+      }
+    });
+
     setSelectedImages(imgs);
   };
 
   const toggleImageSelection = (url) => {
+    const targetNorm = normalizeImageUrl(url);
     setSelectedImages((prev) => {
-      if (prev.includes(url)) {
-        if (prev.length <= 1) return prev; // Minimal 1 gambar aktif
-        return prev.filter((u) => u !== url);
+      const normalizedPrev = prev.map(u => normalizeImageUrl(u));
+      if (normalizedPrev.includes(targetNorm)) {
+        if (normalizedPrev.length <= 1) return prev; // Minimal 1 gambar aktif
+        return normalizedPrev.filter((u) => u !== targetNorm);
       }
-      return [...prev, url];
+      return [...normalizedPrev, targetNorm];
     });
   };
 
@@ -157,8 +189,10 @@ export default function HeroBannerModal({
       setError('Silakan pilih produk yang ditautkan ke hero banner ini.');
       return;
     }
-    if (selectedImages.length === 0 && selectedProduct?.image_url) {
-      selectedImages.push(selectedProduct.image_url);
+    const normalizedImages = selectedImages.map(u => normalizeImageUrl(u)).filter(Boolean);
+    if (normalizedImages.length === 0 && selectedProduct?.image_url) {
+      const norm = normalizeImageUrl(selectedProduct.image_url);
+      if (norm) normalizedImages.push(norm);
     }
 
     const bannerData = {
@@ -171,7 +205,7 @@ export default function HeroBannerModal({
       cta_primary: ctaPrimary.trim() || 'BELI SEKARANG',
       cta_secondary: ctaSecondary.trim() || 'LIHAT PRODUK',
       template_style: templateStyle,
-      image_urls: selectedImages,
+      image_urls: normalizedImages,
       active: isActive,
       product: selectedProduct ? {
         id: selectedProduct.id,
@@ -179,7 +213,7 @@ export default function HeroBannerModal({
         slug: selectedProduct.slug,
         sku: selectedProduct.sku,
         price: selectedProduct.price,
-        image_url: selectedProduct.image_url,
+        image_url: normalizeImageUrl(selectedProduct.image_url),
       } : null
     };
 
@@ -187,11 +221,22 @@ export default function HeroBannerModal({
     onClose();
   };
 
-  if (!isOpen) return null;
+  const displayImages = useMemo(() => {
+    const normalizedSelected = selectedImages.map(u => normalizeImageUrl(u)).filter(Boolean);
+    if (normalizedSelected.length > 0) {
+      return normalizedSelected;
+    }
+    if (availableProductImages.length > 0) {
+      return availableProductImages.map(img => img.url);
+    }
+    if (selectedProduct?.image_url) {
+      const norm = normalizeImageUrl(selectedProduct.image_url);
+      if (norm) return [norm];
+    }
+    return ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1600&q=80'];
+  }, [selectedImages, availableProductImages, selectedProduct]);
 
-  const displayImages = selectedImages.length > 0 
-    ? selectedImages 
-    : (selectedProduct?.image_url ? [selectedProduct.image_url] : ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1600&q=80']);
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
@@ -285,7 +330,15 @@ export default function HeroBannerModal({
                           className="w-full p-2.5 flex items-center gap-3 text-left hover:bg-neutral-50 transition-colors cursor-pointer"
                         >
                           {p.image_url ? (
-                            <img src={p.image_url} alt={p.name} className="w-9 h-9 object-cover border border-neutral-200 rounded-none shrink-0" />
+                            <img 
+                              src={normalizeImageUrl(p.image_url) || PRODUCT_PLACEHOLDER_IMAGE} 
+                              alt={p.name} 
+                              className="w-9 h-9 object-cover border border-neutral-200 rounded-none shrink-0" 
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                              }}
+                            />
                           ) : (
                             <div className="w-9 h-9 bg-neutral-200 flex items-center justify-center text-neutral-500 rounded-none shrink-0">
                               <Package size={14} />
@@ -307,7 +360,15 @@ export default function HeroBannerModal({
               ) : (
                 <div className="flex items-center gap-3.5 p-3 bg-white border border-neutral-300 rounded-none">
                   {selectedProduct.image_url ? (
-                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-12 h-12 object-cover border border-neutral-200 rounded-none shrink-0" />
+                    <img 
+                      src={normalizeImageUrl(selectedProduct.image_url) || PRODUCT_PLACEHOLDER_IMAGE} 
+                      alt={selectedProduct.name} 
+                      className="w-12 h-12 object-cover border border-neutral-200 rounded-none shrink-0" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                      }}
+                    />
                   ) : (
                     <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center text-neutral-400 rounded-none shrink-0">
                       <Package size={18} />
@@ -439,7 +500,7 @@ export default function HeroBannerModal({
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   {availableProductImages.map((img) => {
-                    const isPicked = selectedImages.includes(img.url);
+                    const isPicked = selectedImages.some((u) => normalizeImageUrl(u) === normalizeImageUrl(img.url));
                     return (
                       <button
                         key={img.id}
@@ -449,7 +510,15 @@ export default function HeroBannerModal({
                           isPicked ? 'border-amber-500 ring-2 ring-amber-400/40' : 'border-neutral-300 opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={img.url} alt="Produk" className="w-full h-full object-cover" />
+                        <img 
+                          src={normalizeImageUrl(img.url) || PRODUCT_PLACEHOLDER_IMAGE} 
+                          alt="Produk" 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                          }}
+                        />
                         {isPicked && (
                           <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-amber-500 text-neutral-950 flex items-center justify-center text-[10px] font-bold">
                             ✓
@@ -511,14 +580,27 @@ export default function HeroBannerModal({
                   /* Style 1: Foto utama besar + strip galeri aksen */
                   <div className="relative aspect-video w-full overflow-hidden">
                     <img 
-                      src={displayImages[0]} 
+                      src={normalizeImageUrl(displayImages[0]) || PRODUCT_PLACEHOLDER_IMAGE} 
                       alt="Hero Preview" 
                       className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                      }}
                     />
                     {displayImages.length > 1 && (
                       <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/80 backdrop-blur-xs p-1 border border-neutral-700">
                         {displayImages.slice(1, 4).map((url, i) => (
-                          <img key={i} src={url} alt="Galeri" className="w-8 h-8 object-cover border border-neutral-600 rounded-none" />
+                          <img 
+                            key={i} 
+                            src={normalizeImageUrl(url) || PRODUCT_PLACEHOLDER_IMAGE} 
+                            alt="Galeri" 
+                            className="w-8 h-8 object-cover border border-neutral-600 rounded-none" 
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                            }}
+                          />
                         ))}
                       </div>
                     )}
@@ -533,15 +615,39 @@ export default function HeroBannerModal({
                   /* Style 2: Grid 2-3 foto bersanding */
                   <div className="grid grid-cols-2 gap-1 aspect-video w-full p-1 bg-neutral-950">
                     <div className="relative h-full overflow-hidden">
-                      <img src={displayImages[0]} alt="Hero" className="w-full h-full object-cover" />
+                      <img 
+                        src={normalizeImageUrl(displayImages[0]) || PRODUCT_PLACEHOLDER_IMAGE} 
+                        alt="Hero" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                        }}
+                      />
                     </div>
                     <div className="flex flex-col gap-1 h-full overflow-hidden">
                       <div className="flex-1 overflow-hidden">
-                        <img src={displayImages[1] || displayImages[0]} alt="Angle 2" className="w-full h-full object-cover" />
+                        <img 
+                          src={normalizeImageUrl(displayImages[1] || displayImages[0]) || PRODUCT_PLACEHOLDER_IMAGE} 
+                          alt="Angle 2" 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                          }}
+                        />
                       </div>
                       {displayImages[2] && (
                         <div className="flex-1 overflow-hidden">
-                          <img src={displayImages[2]} alt="Angle 3" className="w-full h-full object-cover" />
+                          <img 
+                            src={normalizeImageUrl(displayImages[2]) || PRODUCT_PLACEHOLDER_IMAGE} 
+                            alt="Angle 3" 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                            }}
+                          />
                         </div>
                       )}
                     </div>
@@ -549,7 +655,15 @@ export default function HeroBannerModal({
                 ) : (
                   /* Style 3: Split full cover */
                   <div className="relative aspect-video w-full overflow-hidden">
-                    <img src={displayImages[0]} alt="Hero" className="w-full h-full object-cover" />
+                    <img 
+                      src={normalizeImageUrl(displayImages[0]) || PRODUCT_PLACEHOLDER_IMAGE} 
+                      alt="Hero" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
                       <div className="font-sport font-black text-xs text-amber-400 uppercase tracking-wider">
                         {priceBadge || 'Performa Maksimal'}
