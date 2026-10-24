@@ -72,11 +72,16 @@ class ProductResource extends JsonResource
                 'code' => $this->vendor->code,
                 'company_name' => $this->vendor->company_name,
             ] : null,
-            'category' => [
-                'id' => $this->category?->id,
-                'name' => $this->category?->name,
-                'slug' => $this->category?->slug,
-            ],
+            'category' => $this->category ? [
+                'id' => $this->category->id,
+                'name' => $this->category->name,
+                'slug' => $this->category->slug,
+                'parent' => $this->category->parent ? [
+                    'id' => $this->category->parent->id,
+                    'name' => $this->category->parent->name,
+                    'slug' => $this->category->parent->slug,
+                ] : null,
+            ] : null,
             'categories' => $allCategories->map(fn ($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name,

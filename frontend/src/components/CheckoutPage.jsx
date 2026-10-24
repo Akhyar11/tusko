@@ -41,7 +41,8 @@ export default function CheckoutPage({
   onFinishOrder = () => {},
   availableExpeditions = null,
   onShowToast = () => {},
-  onNavigateLegal = () => {}
+  onNavigateLegal = () => {},
+  initialCoupon = null
 }) {
   const [addresses, setAddresses] = useState([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
@@ -332,8 +333,16 @@ export default function CheckoutPage({
   const [withInsurance, setWithInsurance] = useState(true);
 
   // Promo coupon (server-authoritative, T08.3)
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponInput, setCouponInput] = useState(() => initialCoupon?.code || '');
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    if (!initialCoupon) return null;
+    return {
+      code: initialCoupon.code,
+      title: initialCoupon.title || '',
+      discount_amount: Number(initialCoupon.discount_amount) || 0,
+      free_shipping: Boolean(initialCoupon.free_shipping),
+    };
+  });
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 

@@ -130,7 +130,7 @@ export default function Navbar({
       onSelectCategory(null);
       onSearchChange('');
     } else if (categoryName === 'Olahraga') {
-      const el = document.getElementById('sport-categories');
+      const el = document.getElementById('sport-categories') || document.getElementById('product-catalog');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     } else if (categoryName === 'Sale') {
       onSearchChange('');

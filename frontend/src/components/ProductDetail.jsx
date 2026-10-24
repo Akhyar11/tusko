@@ -9,10 +9,6 @@ import {
   Ruler, 
   ShoppingBag, 
   ArrowRight,
-  Wind,
-  Feather,
-  Shield,
-  Activity,
   Info,
   X,
   Maximize2,
@@ -239,6 +235,12 @@ export default function ProductDetail({
   const sizeLevel = (product.variant_levels || []).find((l) => l.code === 'size');
   const otherLevels = (product.variant_levels || []).filter((l) => l.code !== 'size');
 
+  // Kategori dinamis dari data produk (bukan hardcoded)
+  const category = product.category || product.categories?.[0] || null;
+  const parentCategory = category?.parent || null;
+  const categoryName = category?.name || null;
+  const categoryId = category?.id || product.category_id || null;
+
   return (
     <div className="bg-white text-black antialiased selection:bg-black selection:text-white min-h-screen pb-24 sm:pb-12">
       
@@ -249,23 +251,50 @@ export default function ProductDetail({
             <button 
               type="button" 
               onClick={onBack} 
-              className="hover:text-black underline cursor-pointer shrink-0"
+              className="hover:text-black hover:underline cursor-pointer shrink-0 uppercase"
             >
               Beranda
             </button>
-            <span className="shrink-0">/</span>
-            <button 
-              type="button" 
-              onClick={() => {
-                if (product.category_id) onSelectCategory(product.category_id);
-                onBack();
-              }} 
-              className="hover:text-black cursor-pointer shrink-0"
-            >
-              {product.category_id === 1 ? 'Apparel' : 'Sepatu'}
-            </button>
-            <span className="shrink-0">/</span>
-            <span className="text-black font-black truncate max-w-[130px] sm:max-w-none">{product.name}</span>
+            <span className="shrink-0 text-neutral-400">/</span>
+            {parentCategory?.name && (
+              <>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (parentCategory.id) onSelectCategory(parentCategory.id);
+                    else onBack();
+                  }} 
+                  className="hover:text-black hover:underline cursor-pointer shrink-0 uppercase"
+                >
+                  {parentCategory.name}
+                </button>
+                <span className="shrink-0 text-neutral-400">/</span>
+              </>
+            )}
+            {categoryName ? (
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (categoryId) onSelectCategory(categoryId);
+                  else onBack();
+                }} 
+                className="hover:text-black hover:underline cursor-pointer shrink-0 uppercase"
+              >
+                {categoryName}
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={onBack} 
+                className="hover:text-black hover:underline cursor-pointer shrink-0 uppercase"
+              >
+                Katalog
+              </button>
+            )}
+            <span className="shrink-0 text-neutral-400">/</span>
+            <span className="text-black font-black truncate max-w-[180px] sm:max-w-none uppercase">
+              {product.name}
+            </span>
           </div>
 
           <button 
@@ -645,9 +674,9 @@ export default function ProductDetail({
         <ProductReviewsSection productId={product?.id} onShowToast={onShowToast} />
       </section>
 
-      {/* 5. Editorial Narrative & Technology Overview (Benchmark: adidas Ultimashow Spec) */}
+      {/* 5. Editorial Narrative & Technical Specifications */}
       <section className="bg-neutral-50 border-t border-b border-neutral-200 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-start">
           
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 block mb-2">
@@ -666,100 +695,60 @@ export default function ProductDetail({
             </p>
           </div>
 
-          {/* Feature Highlight Grid (2x2) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="bg-white border border-neutral-200 p-3.5 sm:p-5">
-              <Wind size={24} className="text-black mb-2" />
-              <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">
-                UPPER MESH SIRKULASI
-              </h3>
-              <p className="text-[11px] text-neutral-500 leading-relaxed">
-                Ventilasi mikro untuk sirkulasi udara maksimal.
-              </p>
-            </div>
-
-            <div className="bg-white border border-neutral-200 p-3.5 sm:p-5">
-              <Feather size={24} className="text-black mb-2" />
-              <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">
-                BANTALAN EVA RINGAN
-              </h3>
-              <p className="text-[11px] text-neutral-500 leading-relaxed">
-                Meredam hentakan langkah kaki dengan lembut.
-              </p>
-            </div>
-
-            <div className="bg-white border border-neutral-200 p-3.5 sm:p-5">
-              <Shield size={24} className="text-black mb-2" />
-              <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">
-                TPU FIT COUNTER
-              </h3>
-              <p className="text-[11px] text-neutral-500 leading-relaxed">
-                Pengunci stabilitas tumit agar bebas selip.
-              </p>
-            </div>
-
-            <div className="bg-white border border-neutral-200 p-3.5 sm:p-5">
-              <Activity size={24} className="text-black mb-2" />
-              <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-tight mb-1 text-black">
-                OUTSOLE KARET TANGGUH
-              </h3>
-              <p className="text-[11px] text-neutral-500 leading-relaxed">
-                Traksi kuat di aspal basah maupun permukaan kering.
-              </p>
+          {/* Technical Specifications */}
+          <div className="bg-white border border-neutral-200 p-5 sm:p-6">
+            <h3 className="font-sport font-black text-sm sm:text-base uppercase italic tracking-tight mb-4 text-black border-b border-neutral-200 pb-2">
+              SPESIFIKASI TEKNIS
+            </h3>
+            <div className="space-y-2 text-xs sm:text-sm text-neutral-800">
+              {product.specifications && Object.keys(product.specifications).length > 0 ? (
+                Object.entries(product.specifications).map(([key, val]) => (
+                  <div key={key} className="flex justify-between py-2 border-b border-neutral-200 last:border-b-0">
+                    <span className="text-neutral-500 font-bold uppercase">{key}</span>
+                    <span className="font-extrabold text-right">{val}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between py-2 border-b border-neutral-200">
+                    <span className="text-neutral-500 font-bold uppercase">Fit</span>
+                    <span className="font-extrabold">Regular fit (potongan standar ergonomis)</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-neutral-200">
+                    <span className="text-neutral-500 font-bold uppercase">Penutup</span>
+                    <span className="font-extrabold">Lace closure (Tali sepatu standar)</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-neutral-200">
+                    <span className="text-neutral-500 font-bold uppercase">Material Upper</span>
+                    <span className="font-extrabold">Tekstil mesh fleksibel berventilasi</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-neutral-200">
+                    <span className="text-neutral-500 font-bold uppercase">Midsole</span>
+                    <span className="font-extrabold">Busa EVA peredam benturan</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-neutral-200">
+                    <span className="text-neutral-500 font-bold uppercase">Outsole</span>
+                    <span className="font-extrabold">Karet tahan aus dengan TPU heel clip</span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between py-2">
+                <span className="text-neutral-500 font-bold uppercase">Kode Produk</span>
+                <span className="font-mono font-black text-black">{selectedVariant?.sku || product.sku || 'FX3632'}</span>
+              </div>
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* 6. Technical Specifications & Size Conversion Table */}
-      <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <h2 className="font-sport font-black text-xl sm:text-3xl uppercase italic tracking-tight mb-6">
-          SPESIFIKASI TEKNIS &amp; PANDUAN UKURAN
-        </h2>
+      {/* 6. Size Conversion Table — hanya untuk produk bervarian ukuran */}
+      {hasSizeLevel && sizeChart.length > 0 && (
+        <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <h2 className="font-sport font-black text-xl sm:text-3xl uppercase italic tracking-tight mb-6">
+            PANDUAN UKURAN RESMI
+          </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Specs List */}
-          <div className="space-y-2 text-xs sm:text-sm text-neutral-800">
-            {product.specifications && Object.keys(product.specifications).length > 0 ? (
-              Object.entries(product.specifications).map(([key, val]) => (
-                <div key={key} className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">{key}</span>
-                  <span className="font-extrabold text-right">{val}</span>
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">Fit</span>
-                  <span className="font-extrabold">Regular fit (potongan standar ergonomis)</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">Penutup</span>
-                  <span className="font-extrabold">Lace closure (Tali sepatu standar)</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">Material Upper</span>
-                  <span className="font-extrabold">Tekstil mesh fleksibel berventilasi</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">Midsole</span>
-                  <span className="font-extrabold">Busa EVA peredam benturan</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-neutral-200">
-                  <span className="text-neutral-500 font-bold uppercase">Outsole</span>
-                  <span className="font-extrabold">Karet tahan aus dengan TPU heel clip</span>
-                </div>
-              </>
-            )}
-            <div className="flex justify-between py-2 border-b border-neutral-200">
-              <span className="text-neutral-500 font-bold uppercase">Kode Produk</span>
-              <span className="font-mono font-black text-black">{selectedVariant?.sku || product.sku || 'FX3632'}</span>
-            </div>
-          </div>
-
-          {/* Size Table — dinamis dari Pengaturan Sistem; hanya untuk produk bervarian ukuran */}
-          {hasSizeLevel && sizeChart.length > 0 && (
           <div className="bg-neutral-50 border border-neutral-200 p-4 sm:p-5">
             <h3 className="font-sport font-black text-xs sm:text-sm uppercase tracking-wider mb-3 text-black">
               TABEL KONVERSI UKURAN SEPATU RESMI
@@ -794,10 +783,8 @@ export default function ProductDetail({
               </table>
             </div>
           </div>
-          )}
-
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 7. Tusko Club Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">

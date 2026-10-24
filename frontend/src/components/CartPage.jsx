@@ -12,9 +12,13 @@ import {
   Tag,
   AlertCircle,
   Flame,
-  ChevronRight
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { formatRupiah } from '../utils/formatters';
+import { checkoutService } from '../services/checkoutService';
 import Checkbox from './molecules/Checkbox';
 import TextInput from './molecules/TextInput';
 import ConfirmationModal from './organisms/ConfirmationModal';
@@ -26,17 +30,26 @@ export default function CartPage({
   onRemoveItem = () => {},
   onClearCart = () => {},
   onBackToShopping = () => {},
-  onProceedToCheckout = () => {}
+  onProceedToCheckout = () => {},
+  initialVoucher = null
 }) {
-  // Selection state for items (default all selected)
+  // Selection state for items (default all selected, disinkronkan saat cart bertambah/berubah)
   const [selectedItemIds, setSelectedItemIds] = useState(() => 
     cart.map(item => item.id)
   );
 
-  const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  // Jika item keranjang baru dimuat/ditambahkan setelah mount, otomatis pilih item baru tersebut
+  const [prevCartLength, setPrevCartLength] = useState(cart.length);
+  if (cart.length !== prevCartLength) {
+    setPrevCartLength(cart.length);
+    // Tambahkan item yang belum tercatat ke selectedItemIds
+    setSelectedItemIds(cart.map(item => item.id));
+  }
+
+  const [promoCode, setPromoCode] = useState(() => initialVoucher?.code || '');
+  const [appliedVoucher, setAppliedVoucher] = useState(() => initialVoucher || null);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [promoError, setPromoError] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
 
   // Confirmation modal state for deleting items
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'single', item } | { type: 'bulk', ids, count }
@@ -71,22 +84,6 @@ export default function CartPage({
     }
   };
 
-  // Apply promo code
-  const handleApplyPromo = (e) => {
-    e.preventDefault();
-    if (!promoCode.trim()) return;
-
-    if (promoCode.toUpperCase() === 'DISKON50' || promoCode.toUpperCase() === 'HEMAT') {
-      setPromoDiscount(50000);
-      setPromoApplied(true);
-      setPromoError('');
-    } else {
-      setPromoError('Kode promo tidak valid atau telah kedaluwarsa');
-      setPromoDiscount(0);
-      setPromoApplied(false);
-    }
-  };
-
   // Calculations for selected items
   const selectedItems = useMemo(() => {
     return cart.filter(item => selectedItemIds.includes(item.id));
@@ -101,8 +98,65 @@ export default function CartPage({
   }, [selectedItems]);
 
   const totalProductDiscount = Math.max(0, totalOriginalPrice - subtotal);
-  const estimatedShipping = selectedItems.length > 0 ? (selectedItems.some(i => i.free_shipping) ? 0 : 15000) : 0;
+  const promoDiscount = appliedVoucher?.discount_amount ? Number(appliedVoucher.discount_amount) : 0;
+  const isFreeShippingVoucher = Boolean(appliedVoucher?.free_shipping);
+  const estimatedShipping = selectedItems.length > 0 ? ((selectedItems.some(i => i.free_shipping) || isFreeShippingVoucher) ? 0 : 15000) : 0;
   const grandTotal = Math.max(0, subtotal - promoDiscount + estimatedShipping);
+
+  // Apply promo code via backend API
+  const handleApplyPromo = async (e) => {
+    e?.preventDefault?.();
+    const code = promoCode.trim();
+    if (!code) return;
+
+    if (selectedItems.length === 0) {
+      setPromoError('Pilih setidaknya satu produk untuk menerapkan kupon promo.');
+      return;
+    }
+
+    setIsApplyingPromo(true);
+    setPromoError('');
+    try {
+      const itemsPayload = selectedItems.map(item => ({
+        product_id: item.product_id ?? item.id,
+        product_variant_id: item.product_variant_id ?? null,
+        quantity: item.quantity,
+      }));
+
+      const result = await checkoutService.validateVoucher({
+        code,
+        items: itemsPayload,
+        subtotal
+      });
+
+      if (result?.valid) {
+        setAppliedVoucher({
+          code: result.code || code.toUpperCase(),
+          title: result.message,
+          discount_amount: Number(result.discount_amount) || 0,
+          free_shipping: Boolean(result.free_shipping),
+          discount_type: result.discount_type,
+          discount_value: result.discount_value,
+        });
+        setPromoError('');
+      } else {
+        setAppliedVoucher(null);
+        setPromoError(result?.message || 'Kode kupon promo tidak valid.');
+      }
+    } catch (err) {
+      setAppliedVoucher(null);
+      const msg = err?.data?.message || err?.response?.data?.message || err?.message || 'Gagal memvalidasi kupon promo.';
+      setPromoError(msg);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedVoucher(null);
+    setPromoCode('');
+    setPromoError('');
+  };
 
   // Group cart items by seller (identitas toko diambil dinamis dari data API, tanpa hardcode)
   const groupedCart = useMemo(() => {
@@ -416,39 +470,92 @@ export default function CartPage({
             </h3>
 
             {/* Promo Voucher Form */}
-            <form onSubmit={handleApplyPromo} className="space-y-2">
+            <div className="space-y-2">
               <label className="text-xs font-sport font-bold uppercase text-black flex items-center gap-1.5">
                 <Tag size={14} className="text-amber-500" />
-                <span>Kupon Promo (Coba: "DISKON50")</span>
+                <span>Kupon Promo</span>
               </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <TextInput
-                    value={promoCode}
-                    onChange={setPromoCode}
-                    placeholder="Kode Kupon..."
-                    weight="mono"
-                    className="uppercase"
-                  />
+
+              {appliedVoucher ? (
+                <div className="p-3 bg-amber-400/20 border border-amber-400 rounded-none flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-black shrink-0" />
+                    <div>
+                      <span className="font-sport font-black uppercase text-black block">{appliedVoucher.code}</span>
+                      <span className="text-[10px] font-sport font-bold uppercase text-neutral-700">
+                        {appliedVoucher.free_shipping && appliedVoucher.discount_amount > 0
+                          ? `Hemat ${formatRupiah(appliedVoucher.discount_amount)} + Gratis Ongkir`
+                          : appliedVoucher.free_shipping
+                          ? 'Gratis Ongkir'
+                          : `Hemat ${formatRupiah(appliedVoucher.discount_amount)}`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemovePromo}
+                    className="text-xs font-sport font-black uppercase text-rose-600 hover:text-rose-800 cursor-pointer flex items-center gap-1"
+                    title="Hapus Kupon"
+                  >
+                    <X size={14} />
+                    <span>Hapus</span>
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none transition-colors cursor-pointer"
-                >
-                  Terapkan
-                </button>
-              </div>
-              {promoApplied && (
-                <p className="text-[11px] font-sport font-bold uppercase text-black bg-amber-400/20 border border-amber-400 p-2 rounded-none">
-                  ✓ Promo berhasil diterapkan (-{formatRupiah(promoDiscount)})
+              ) : (
+                <form onSubmit={handleApplyPromo} className="space-y-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <TextInput
+                        value={promoCode}
+                        onChange={setPromoCode}
+                        placeholder="Kode Kupon..."
+                        weight="mono"
+                        className="uppercase"
+                        disabled={isApplyingPromo}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isApplyingPromo || !promoCode.trim()}
+                      className="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-sport font-black uppercase tracking-wider rounded-none transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+                    >
+                      {isApplyingPromo ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          <span>Cek...</span>
+                        </>
+                      ) : (
+                        <span>Terapkan</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {appliedVoucher && (
+                <p className="text-[11px] font-sport font-bold uppercase text-black bg-amber-400/20 border border-amber-400 p-2 rounded-none flex items-center gap-1.5">
+                  <Sparkles size={13} className="text-black shrink-0" />
+                  <span>{appliedVoucher.title || `Voucher ${appliedVoucher.code} berhasil diterapkan.`}</span>
                 </p>
               )}
+
               {promoError && (
-                <p className="text-[11px] font-sport font-bold uppercase text-red-600 bg-red-50 border border-red-200 p-2 rounded-none">
-                  {promoError}
-                </p>
+                <div className="p-3 bg-red-50 border-l-4 border-red-600 text-red-700 rounded-none flex items-center justify-between text-[11px] font-sport font-bold uppercase">
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle size={14} className="text-red-600 shrink-0" />
+                    <span>{promoError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPromoError('')}
+                    className="text-red-600 hover:text-red-800 cursor-pointer shrink-0 ml-2"
+                    title="Tutup pesan"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
               )}
-            </form>
+            </div>
 
             {/* Breakdown */}
             <div className="space-y-2.5 pt-3 border-t border-neutral-200 text-xs text-neutral-700">
@@ -521,7 +628,8 @@ export default function CartPage({
               disabled={selectedItems.length === 0}
               onClick={() => onProceedToCheckout({ 
                 selectedItems, 
-                grandTotal: selectedItems.length > 0 ? grandTotal + 1000 : 0 
+                grandTotal: selectedItems.length > 0 ? grandTotal + 1000 : 0,
+                voucher: appliedVoucher
               })}
               className="w-full py-3.5 px-4 bg-black hover:bg-neutral-800 text-white font-sport font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 -skew-x-3 hover:skew-x-0"
             >

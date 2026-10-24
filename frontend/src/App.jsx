@@ -71,7 +71,6 @@ import PurchaseOrderCreatePage from './components/PurchaseOrderCreatePage';
 import HeroCampaignBanner from './components/HeroCampaignBanner';
 import PromoBanner from './components/PromoBanner';
 import PopularChipsBar from './components/PopularChipsBar';
-import SportCategoriesSection from './components/SportCategoriesSection';
 import TuskoClubBanner from './components/TuskoClubBanner';
 import Footer from './components/Footer';
 import AdminSidebar from './components/AdminSidebar';
@@ -111,7 +110,7 @@ import { useOrderTableStore } from './stores/useOrderTableStore';
 import { useMenuStore } from './stores/useMenuStore';
 import { isViewAllowedByMenus } from './utils/menuAccess';
 import { formatRupiah } from './utils/formatters';
-import { CheckCircle2, AlertCircle, X, Filter } from 'lucide-react';
+import { CheckCircle2, AlertCircle, X, Filter, Loader2 } from 'lucide-react';
 
 const VALID_VIEWS = [
   'admin-dashboard',
@@ -382,20 +381,45 @@ const getViewFromPathOrHash = () => {
     if (rawPath === '/cart') return 'cart';
     if (rawPath === '/checkout') return 'checkout';
     if (rawPath === '/order-success') return 'order-success';
+    const hashFull = window.location.hash.replace(/^#\/?/, '').trim();
+    const hashCheck = hashFull.split('?')[0].trim();
     if (rawPath === '') {
-      const hashCheck = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
       if (!hashCheck || hashCheck === 'catalog') {
         return 'catalog';
       }
     }
 
-    const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0].trim();
-    if (rawHash === 'admin/dashboard' || rawHash === 'admin') {
+    if (hashCheck === 'admin/dashboard' || hashCheck === 'admin') {
       return 'admin-dashboard';
     }
-    if (rawHash && VALID_VIEWS.includes(rawHash)) {
-      return rawHash;
+    if (hashCheck && VALID_VIEWS.includes(hashCheck)) {
+      return hashCheck;
     }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
+// Ekstraksi parameter detail dari URL hash atau search
+const getProductParamFromUrl = () => {
+  try {
+    const hashFull = window.location.hash.replace(/^#\/?/, '').trim();
+    if (hashFull.startsWith('detail')) {
+      const qIndex = hashFull.indexOf('?');
+      if (qIndex !== -1) {
+        const params = new URLSearchParams(hashFull.slice(qIndex + 1));
+        const id = params.get('id') || params.get('slug');
+        if (id) return id;
+      }
+      const slashParts = hashFull.split('/');
+      if (slashParts.length > 1 && slashParts[1] && !slashParts[1].startsWith('?')) {
+        return slashParts[1].split('?')[0];
+      }
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchId = urlParams.get('id') || urlParams.get('product_id') || urlParams.get('slug');
+    if (searchId) return searchId;
   } catch {
     // ignore
   }
@@ -414,6 +438,8 @@ const getInitialView = () => {
 
   if (rawView && VALID_VIEWS.includes(rawView)) {
     if (rawView === 'detail') {
+      const urlProdParam = getProductParamFromUrl();
+      if (urlProdParam) return 'detail';
       try {
         const savedProdId = localStorage.getItem('tusko_selected_product_id');
         if (!savedProdId) return 'catalog';
@@ -467,6 +493,7 @@ const getInitialView = () => {
 // Normalisasi item keranjang dari API ke bentuk yang dipakai komponen storefront.
 // Persistensi pilihan checkout agar tahan refresh (sessionStorage, prefix tusko_).
 const CHECKOUT_STORAGE_KEY = 'tusko_checkout_items';
+const CHECKOUT_COUPON_STORAGE_KEY = 'tusko_checkout_coupon';
 
 const readStoredCheckoutItems = () => {
   try {
@@ -484,6 +511,27 @@ const writeStoredCheckoutItems = (items) => {
       sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(items));
     } else {
       sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+    }
+  } catch {
+    // abaikan
+  }
+};
+
+const readStoredCheckoutCoupon = () => {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_COUPON_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredCheckoutCoupon = (coupon) => {
+  try {
+    if (coupon && typeof coupon === 'object') {
+      sessionStorage.setItem(CHECKOUT_COUPON_STORAGE_KEY, JSON.stringify(coupon));
+    } else {
+      sessionStorage.removeItem(CHECKOUT_COUPON_STORAGE_KEY);
     }
   } catch {
     // abaikan
@@ -621,6 +669,7 @@ export default function App() {
     return () => { active = false; };
   }, []);
   const [checkoutItems, setCheckoutItems] = useState([]);
+  const [checkoutCoupon, setCheckoutCoupon] = useState(() => readStoredCheckoutCoupon());
   const [myOrderRef, setMyOrderRef] = useState(null);
   const [myOrderInitial, setMyOrderInitial] = useState(null);
   const [myOrderAutoPay, setMyOrderAutoPay] = useState(false);
@@ -741,7 +790,9 @@ export default function App() {
 
     // Bersihkan state belanja milik sesi login agar tidak terbawa ke sesi guest.
     writeStoredCheckoutItems([]);
+    writeStoredCheckoutCoupon(null);
     setCheckoutItems([]);
+    setCheckoutCoupon(null);
     setCart([]);
 
     showToast('Anda telah keluar dari akun (Logout).');
@@ -991,6 +1042,12 @@ export default function App() {
       if (window.location.pathname !== '/' || window.location.hash) {
         window.history.pushState(null, '', '/' + window.location.search);
       }
+    } else if (currentView === 'detail') {
+      const prodParam = selectedProduct?.id || getProductParamFromUrl();
+      const targetHash = prodParam ? `#/detail?id=${prodParam}` : '#/detail';
+      if (window.location.hash !== targetHash) {
+        window.history.pushState(null, '', targetHash);
+      }
     } else {
       const targetHash = `#/${currentView}`;
       if (window.location.hash !== targetHash) {
@@ -1051,6 +1108,53 @@ export default function App() {
       })
       .catch(() => setCurrentView('stock-opname'));
   }, [currentView, editingOpname]);
+
+  // Restore/Hydrate halaman detail produk saat reload (mis. #/detail?id=...)
+  const [isLoadingProductDetail, setIsLoadingProductDetail] = useState(false);
+  useEffect(() => {
+    if (currentView !== 'detail') return;
+    const prodParam = getProductParamFromUrl() || (selectedProduct?.id ? String(selectedProduct.id) : null) || (() => {
+      try {
+        return localStorage.getItem('tusko_selected_product_id');
+      } catch {
+        return null;
+      }
+    })();
+
+    if (!prodParam) {
+      setCurrentView('catalog');
+      return;
+    }
+
+    if (selectedProduct && (String(selectedProduct.id) === String(prodParam) || selectedProduct.slug === prodParam)) {
+      return;
+    }
+
+    const localMatch = products.find(p => String(p.id) === String(prodParam) || p.slug === prodParam);
+    if (localMatch) {
+      setSelectedProduct(localMatch);
+      return;
+    }
+
+    setIsLoadingProductDetail(true);
+    productService.getProduct(prodParam)
+      .then((data) => {
+        if (data && (data.id || data.name)) {
+          setSelectedProduct(data);
+        } else {
+          showToast('Produk tidak ditemukan atau telah dihapus.', { type: 'error' });
+          setCurrentView('catalog');
+        }
+      })
+      .catch((err) => {
+        console.warn('Gagal memuat detail produk:', err);
+        showToast('Gagal memuat detail produk.', { type: 'error' });
+        setCurrentView('catalog');
+      })
+      .finally(() => {
+        setIsLoadingProductDetail(false);
+      });
+  }, [currentView, products]);
 
   // Unique locations from product catalog
   const uniqueLocations = useMemo(() => {
@@ -2495,12 +2599,15 @@ export default function App() {
           <CheckoutPage
             checkoutItems={checkoutItems}
             availableExpeditions={expeditions}
+            initialCoupon={checkoutCoupon}
             onBackToCart={() => setCurrentView('cart')}
             onShowToast={showToast}
             onNavigateLegal={(key) => setCurrentView(key)}
             onFinishOrder={async (order) => {
               // Order selesai dibuat → bersihkan persistensi checkout.
               writeStoredCheckoutItems([]);
+              writeStoredCheckoutCoupon(null);
+              setCheckoutCoupon(null);
               // Hapus item yang sudah di-checkout dari keranjang server (mendukung checkout sebagian).
               try {
                 await Promise.all(
@@ -2575,27 +2682,39 @@ export default function App() {
           <CartPage
             cart={cart}
             isLoading={isLoadingCart}
+            initialVoucher={checkoutCoupon}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveCartItem}
             onClearCart={handleClearCart}
             onBackToShopping={() => setCurrentView('catalog')}
-            onProceedToCheckout={({ selectedItems }) => {
+            onProceedToCheckout={({ selectedItems, voucher }) => {
               setCheckoutItems(selectedItems);
               writeStoredCheckoutItems(selectedItems);
+              setCheckoutCoupon(voucher || null);
+              writeStoredCheckoutCoupon(voucher || null);
               setCurrentView('checkout');
             }}
           />
-        ) : currentView === 'detail' && selectedProduct ? (
-          <ProductDetail
-            product={selectedProduct}
-            onBack={() => setCurrentView('catalog')}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            onSelectCategory={handleSelectCategory}
-            onOpenRegister={() => setCurrentView('register')}
-            onOpenCart={handleOpenCart}
-            onShowToast={showToast}
-          />
+        ) : currentView === 'detail' ? (
+          isLoadingProductDetail || !selectedProduct ? (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4 py-20">
+              <Loader2 className="animate-spin text-amber-500" size={36} />
+              <p className="font-sport font-black uppercase tracking-wider text-xs text-neutral-600">
+                Memuat Detail Produk...
+              </p>
+            </div>
+          ) : (
+            <ProductDetail
+              product={selectedProduct}
+              onBack={() => setCurrentView('catalog')}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              onSelectCategory={handleSelectCategory}
+              onOpenRegister={() => setCurrentView('register')}
+              onOpenCart={handleOpenCart}
+              onShowToast={showToast}
+            />
+          )
         ) : (
           <>
             {/* 3. Hero Campaign Banner Carousel */}
@@ -2641,25 +2760,6 @@ export default function App() {
               }}
             />
 
-            {/* 5. Kategori Pilihan Olahraga (Swipeable di Mobile, 4-Kolom di Desktop) */}
-            <SportCategoriesSection
-              content={storefrontContent}
-              onSelectSport={(sport) => {
-                if (sport.categoryId) {
-                  setSelectedCategoryId(sport.categoryId);
-                } else if (sport.query) {
-                  setSearchQuery(sport.query);
-                }
-                const el = document.getElementById('product-catalog');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              onViewAll={() => {
-                setSelectedCategoryId(null);
-                setSearchQuery('');
-                const el = document.getElementById('product-catalog');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-            />
 
             <div className="px-4 sm:px-8 lg:px-12">
               <PromoBanner
